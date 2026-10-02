@@ -2,6 +2,7 @@
 
 import { formatDate } from '@/lib/date-format';
 import { Sidebar } from './Sidebar';
+import { Clock } from 'lucide-react';
 
 export function AppShell({
   children,
@@ -22,7 +23,10 @@ export function AppShell({
             <h1 className="title">{title}</h1>
             <div className="sub">{subtitle}</div>
           </div>
-          <span className="date-chip">◷ &nbsp; {formatDate(new Date())}</span>
+          <span className="date-chip">
+            <Clock size={12} style={{ marginRight: 8, verticalAlign: 'middle' }} />
+            {formatDate(new Date())}
+          </span>
         </header>
         {children}
       </main>
