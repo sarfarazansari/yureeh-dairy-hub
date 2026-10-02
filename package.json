@@ -1,0 +1,35 @@
+{
+  "name": "yureeh-dairy-hub",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\""
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.57.0",
+    "date-fns": "^4.1.0",
+    "dayjs": "^1.11.23",
+    "lucide-react": "^0.468.0",
+    "next": "^16.3.8",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "recharts": "^2.15.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.29.0",
+    "eslint-config-next": "^16.3.6",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^4.1.0",
+    "typescript": "^5.8.0"
+  }
+}
