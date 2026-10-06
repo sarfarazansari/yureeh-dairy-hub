@@ -36,6 +36,7 @@ export type BuffaloDetail = {
   notes: string | null;
   buffalo_purchases: Array<{
     id: string;
+    vendor_id: string | null;
     purchase_price: number;
     amount_paid: number;
     amount_pending: number;
@@ -43,11 +44,16 @@ export type BuffaloDetail = {
     payment_status: string;
     payment_due_date: string | null;
     payment_terms: string | null;
+    payment_method: PurchasePaymentMethod | null;
+    transaction_reference: string | null;
+    notes: string | null;
     vendors: {
       name: string;
       mobile: string | null;
       address: string | null;
       village_city: string | null;
+      state: string | null;
+      notes: string | null;
     } | null;
   }>;
 };
@@ -125,7 +131,7 @@ export async function getBuffaloDetails(
   const { data, error } = await client
     .from('buffaloes')
     .select(
-      'id,buffalo_code,name,breed,current_status,identification_mark,color,age_at_purchase_months,notes,buffalo_purchases(*,vendors(name,mobile,address,village_city))',
+      'id,buffalo_code,name,breed,current_status,identification_mark,color,age_at_purchase_months,notes,buffalo_purchases(*,vendors(name,mobile,address,village_city,state,notes))',
     )
     .eq('buffalo_code', buffaloCode)
     .maybeSingle();
