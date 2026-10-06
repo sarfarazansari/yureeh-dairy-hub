@@ -65,15 +65,16 @@ export async function deleteMilkEntry(client: SupabaseClient, entryId: string) {
 
 export async function hasDuplicateMilkEntry(
   client: SupabaseClient,
-  input: { customerId: string; businessDate: string; shift: 'MORNING' | 'EVENING' },
+  input: { customerId: string; businessDate: string; shift: 'MORNING' | 'EVENING'; excludeEntryId?: string },
 ) {
-  const { count, error } = await client
+  let query = client
     .from('milk_entries')
     .select('id', { count: 'exact', head: true })
     .eq('customer_id', input.customerId)
     .eq('business_date', input.businessDate)
     .eq('shift', input.shift)
     .is('deleted_at', null);
+  if (input.excludeEntryId) query = query.neq('id', input.excludeEntryId);
   if (error) throw new Error('Could not check for an existing milk entry.');
   return (count ?? 0) > 0;
 }
