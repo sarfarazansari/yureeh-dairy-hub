@@ -7,6 +7,7 @@ import type {
 
 export type MilkPoolReconciliationRow = {
   business_date: string;
+  opening_balance_litres: number;
   production_litres: number;
   customer_delivery_litres: number;
   household_use_litres: number;
