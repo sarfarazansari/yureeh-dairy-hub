@@ -9,6 +9,8 @@ import { BUFFALO_STATUSES, type BuffaloDetail } from '../types';
 
 export function BuffaloStatusForm({ buffalo }: { buffalo: BuffaloDetail }) {
   const mutation = useChangeBuffaloStatus();
+
+  const STATUSES = BUFFALO_STATUSES;
   const [status, setStatus] = useState<(typeof STATUSES)[number]>(
     buffalo.current_status as (typeof STATUSES)[number],
   );
