@@ -1,142 +1,133 @@
 'use client';
 
-import { money, milkTxt } from '@/lib/farm-format';
-import { getBuffaloProductionHistory, type BuffaloProductionHistoryRecord } from '@/features/buffalo-production/services/buffalo-production.service';
-import { changeBuffaloStatus, getBuffaloDetails, recordBuffaloPurchasePayment, updateBuffaloProfile, type BuffaloDetail } from './services/buffalo.service';
 import Link from 'next/link';
+import { useMemo, useState } from 'react';
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts';
+
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatDate } from '@/lib/date-format';
+import { money, milkTxt } from '@/lib/farm-format';
 
-const statuses = ['ACTIVE', 'DRY', 'SOLD', 'DECEASED', 'OTHER'] as const;
-const paymentMethods = ['CASH', 'UPI', 'BANK_TRANSFER', 'OTHER'] as const;
+import {
+  useBuffaloDetail,
+  useBuffaloProductionHistory,
+} from './hooks/use-buffaloes';
+import { BuffaloProfileForm } from './components/BuffaloProfileForm';
+import { BuffaloPurchasePaymentForm } from './components/BuffaloPurchasePaymentForm';
+import { BuffaloStatusForm } from './components/BuffaloStatusForm';
 
 export default function BuffaloDetailPage({ code }: { code: string }) {
-  const [b, setB] = useState<BuffaloDetail | null>(null);
-  const [rows, setRows] = useState<BuffaloProductionHistoryRecord[]>([]);
-  const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [status, setStatus] = useState<(typeof statuses)[number]>('ACTIVE');
-  const [statusDate, setStatusDate] = useState(new Date().toISOString().slice(0, 10));
-  const [statusNotes, setStatusNotes] = useState('');
-  const [paymentAmount, setPaymentAmount] = useState('');
-  const [paymentDate, setPaymentDate] = useState(new Date().toISOString().slice(0, 10));
-  const [paymentMethod, setPaymentMethod] = useState<(typeof paymentMethods)[number]>('CASH');
-  const [paymentReference, setPaymentReference] = useState('');
-  const [paymentNotes, setPaymentNotes] = useState('');
   const [editing, setEditing] = useState(false);
-  const [editCode, setEditCode] = useState('');
-  const [editName, setEditName] = useState('');
-  const [editBreed, setEditBreed] = useState('');
-  const [editColor, setEditColor] = useState('');
-  const [editIdentification, setEditIdentification] = useState('');
-  const [editAgeMonths, setEditAgeMonths] = useState('');
-  const [editNotes, setEditNotes] = useState('');
+  const buffaloQuery = useBuffaloDetail(code);
+  const buffalo = buffaloQuery.data;
+  const productionQuery = useBuffaloProductionHistory(buffalo?.id);
 
-  async function load() {
-    if (!supabase) return;
-    const buffalo = await getBuffaloDetails(supabase, code);
-    setB(buffalo);
-    if (buffalo) {
-      setStatus(buffalo.current_status as (typeof statuses)[number]);
-      setRows(await getBuffaloProductionHistory(supabase, buffalo.id));
-    }
-  }
+  const purchase = buffalo?.buffalo_purchases?.[0];
+  const production = productionQuery.data ?? [];
 
-  useEffect(() => {
-    void load().catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Could not load buffalo details.'));
-  }, [code]);
+  const summary = useMemo(() => {
+    const total = production.reduce(
+      (sum, row) => sum + Number(row.milk_quantity),
+      0,
+    );
+    const days = new Set(production.map((row) => row.business_date)).size;
 
-  function startEdit() {
-    if (!b) return;
-    setEditCode(b.buffalo_code); setEditName(b.name ?? ''); setEditBreed(b.breed ?? '');
-    setEditColor(b.color ?? ''); setEditIdentification(b.identification_mark ?? '');
-    setEditNotes('');
-    setEditing(true);
-  }
+    const daily = Array.from(
+      new Set(production.map((row) => row.business_date)),
+    )
+      .sort()
+      .map((date) => {
+        const records = production.filter((row) => row.business_date === date);
+        const morning = records
+          .filter((row) => row.shift === 'MORNING')
+          .reduce((sum, row) => sum + Number(row.milk_quantity), 0);
+        const evening = records
+          .filter((row) => row.shift === 'EVENING')
+          .reduce((sum, row) => sum + Number(row.milk_quantity), 0);
 
-  async function saveProfile() {
-    if (!supabase || !b) return;
-    if (!editCode.trim() || !editBreed.trim()) { setError('Buffalo code and breed are required.'); return; }
-    const age = editAgeMonths.trim() ? Number(editAgeMonths) : null;
-    if (age !== null && (!Number.isInteger(age) || age < 0)) { setError('Age at purchase must be a whole number of months.'); return; }
-    setBusy(true); setError('');
-    try {
-      await updateBuffaloProfile(supabase, b.id, {
-        buffalo_code: editCode, name: editName, breed: editBreed, color: editColor,
-        identification_mark: editIdentification, age_at_purchase_months: age, notes: editNotes,
+        return {
+          date: formatDate(date, 'D MMM'),
+          morning,
+          evening,
+          milk: morning + evening,
+        };
       });
-      setEditing(false); await load();
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not update buffalo profile.'); }
-    finally { setBusy(false); }
+
+    return { total, days, daily };
+  }, [production]);
+
+  if (buffaloQuery.isPending) {
+    return <AppShell title="Buffalo details"><div className="empty">Loading buffalo…</div></AppShell>;
   }
 
-  async function saveStatus() {
-    if (!supabase || !b || status === b.current_status) return;
-    setBusy(true); setError('');
-    try { await changeBuffaloStatus(supabase, b.id, status, statusDate, statusNotes); setStatusNotes(''); await load(); }
-    catch (e) { setError(e instanceof Error ? e.message : 'Could not change buffalo status.'); }
-    finally { setBusy(false); }
+  if (buffaloQuery.isError) {
+    return (
+      <AppShell title="Buffalo details">
+        <div className="empty">{buffaloQuery.error.message}</div>
+      </AppShell>
+    );
   }
 
-  async function savePayment() {
-    if (!supabase || !b) return;
-    const amount = Number(paymentAmount);
-    if (!Number.isFinite(amount) || amount <= 0) { setError('Enter a valid payment amount.'); return; }
-    const pending = Number(b.buffalo_purchases[0]?.amount_pending ?? 0);
-    if (amount > pending) { setError('Payment cannot be greater than the pending purchase balance.'); return; }
-    setBusy(true); setError('');
-    try {
-      await recordBuffaloPurchasePayment(supabase, b.id, {
-        payment_date: paymentDate, amount, payment_method: paymentMethod,
-        transaction_reference: paymentReference, notes: paymentNotes,
-      });
-      setPaymentAmount(''); setPaymentReference(''); setPaymentNotes(''); await load();
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not record purchase payment.'); }
-    finally { setBusy(false); }
+  if (!buffalo) {
+    return (
+      <AppShell title="Buffalo details">
+        <div className="empty">Buffalo not found.</div>
+      </AppShell>
+    );
   }
-
-  const purchase = b?.buffalo_purchases?.[0];
-  const total = rows.reduce((sum, row) => sum + Number(row.milk_quantity), 0);
-  const days = new Set(rows.map((row) => row.business_date)).size;
-  const daily = Array.from(new Set(rows.map((row) => row.business_date))).sort().map((date) => {
-    const dated = rows.filter((row) => row.business_date === date);
-    return {
-      date,
-      morning: dated.filter((row) => row.shift === 'MORNING').reduce((sum, row) => sum + Number(row.milk_quantity), 0),
-      evening: dated.filter((row) => row.shift === 'EVENING').reduce((sum, row) => sum + Number(row.milk_quantity), 0),
-    };
-  });
-  const trend = daily.map((row) => ({ ...row, date: formatDate(row.date, 'D MMM'), milk: row.morning + row.evening }));
 
   return (
-    <AppShell title={b?.name ? `${b.buffalo_code} — ${b.name}` : (b?.buffalo_code ?? 'Buffalo details')} subtitle={`${b?.breed ?? 'Breed not entered'} · ${b?.current_status ?? ''}`}>
-      <Link href="/buffaloes" style={{ fontSize: 12, color: '#277452' }}>← All buffaloes</Link>
-      {b && <div style={{ marginTop: 12, marginBottom: 12 }}><button className="btn" type="button" onClick={startEdit}>Edit buffalo</button></div>}
-      {editing && <div className="card" style={{ marginBottom: 14 }}>
-        <h2 className="section-title">Edit buffalo profile</h2>
-        <div className="grid two">
-          <div className="field"><label>Buffalo Code</label><input value={editCode} onChange={(e) => setEditCode(e.target.value)} /></div>
-          <div className="field"><label>Name</label><input value={editName} onChange={(e) => setEditName(e.target.value)} /></div>
-          <div className="field"><label>Breed</label><input value={editBreed} onChange={(e) => setEditBreed(e.target.value)} /></div>
-          <div className="field"><label>Color</label><input value={editColor} onChange={(e) => setEditColor(e.target.value)} /></div>
-          <div className="field"><label>Identification Mark</label><input value={editIdentification} onChange={(e) => setEditIdentification(e.target.value)} /></div>
-          <div className="field"><label>Age at Purchase · Months</label><input type="number" min="0" step="1" value={editAgeMonths} onChange={(e) => setEditAgeMonths(e.target.value)} /></div>
-        </div>
-        <div className="field"><label>Notes</label><input value={editNotes} onChange={(e) => setEditNotes(e.target.value)} /></div>
-        <button className="btn" type="button" disabled={busy} onClick={() => void saveProfile()}>Save changes</button>{' '}
-        <button className="btn" type="button" disabled={busy} onClick={() => setEditing(false)}>Cancel</button>
+    <AppShell
+      title={buffalo.name ? `${buffalo.buffalo_code} — ${buffalo.name}` : buffalo.buffalo_code}
+      subtitle={`${buffalo.breed ?? 'Breed not entered'} · ${buffalo.current_status}`}
+    >
+      <div className="row" style={{ marginBottom: 14 }}>
+        <Link href="/buffaloes" style={{ fontSize: 12, color: '#277452' }}>
+          ← All buffaloes
+        </Link>
+        <button className="btn" type="button" onClick={() => setEditing((value) => !value)}>
+          {editing ? 'Close edit' : 'Edit buffalo'}
+        </button>
       </div>
-      {error && <p className="auth-message" role="alert">{error}</p>}
+
+      {editing && (
+        <BuffaloProfileForm buffalo={buffalo} onCancel={() => setEditing(false)} />
+      )}
 
       <div className="grid kpis">
-        <KPI label="TOTAL MILK PRODUCED" value={milkTxt(total)} foot={`${days} days with records`} />
-        <KPI label="AVG PER RECORDED DAY" value={days ? milkTxt(total / days) : '—'} foot="Recorded production days" />
-        <KPI label="PRODUCTION RECORDS" value={String(rows.length)} foot="One row per date and shift" />
-        <KPI label="BALANCE DUE" value={purchase ? money(Number(purchase.amount_pending)) : '—'} foot={purchase ? `Paid ${money(Number(purchase.amount_paid))} of ${money(Number(purchase.purchase_price))}` : 'No purchase record'} />
+        <KPI
+          label="TOTAL MILK PRODUCED"
+          value={milkTxt(summary.total)}
+          foot={`${summary.days} days with records`}
+        />
+        <KPI
+          label="AVG PER RECORDED DAY"
+          value={summary.days ? milkTxt(summary.total / summary.days) : '—'}
+          foot="Recorded production days"
+        />
+        <KPI
+          label="PRODUCTION RECORDS"
+          value={String(production.length)}
+          foot="One row per date and shift"
+        />
+        <KPI
+          label="BALANCE DUE"
+          value={purchase ? money(Number(purchase.amount_pending)) : '—'}
+          foot={
+            purchase
+              ? `Paid ${money(Number(purchase.amount_paid))} of ${money(Number(purchase.purchase_price))}`
+              : 'No purchase record'
+          }
+        />
       </div>
 
       <div className="grid two">
@@ -144,60 +135,126 @@ export default function BuffaloDetailPage({ code }: { code: string }) {
           <h2 className="section-title">Milk production trend</h2>
           <div className="chart">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trend}>
-                <CartesianGrid vertical={false} stroke="#eef1ed" /><XAxis dataKey="date" tickLine={false} axisLine={false} tick={{ fontSize: 9, fill: '#9ba69f' }} /><YAxis hide /><Tooltip />
-                <Area type="monotone" dataKey="milk" name="Total milk" stroke="#267052" fill="#367d5d22" />
-                <Area type="monotone" dataKey="morning" name="Morning" stroke="#d7a85e" fill="transparent" />
+              <AreaChart data={summary.daily}>
+                <CartesianGrid vertical={false} stroke="#eef1ed" />
+                <XAxis dataKey="date" tickLine={false} axisLine={false} />
+                <YAxis hide />
+                <Tooltip />
+                <Area
+                  type="monotone"
+                  dataKey="milk"
+                  name="Total milk"
+                  stroke="#267052"
+                  fill="#367d5d22"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="morning"
+                  name="Morning"
+                  stroke="#d7a85e"
+                  fill="transparent"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
-        <div className="card">
-          <h2 className="section-title">Purchase and vendor</h2>
-          <p className="sub">Purchase date: {formatDate(purchase?.purchase_date)}</p>
-          <p className="sub">Vendor: {purchase?.vendors?.name ?? '—'} {purchase?.vendors?.mobile ? `· ${purchase.vendors.mobile}` : ''}</p>
-          <p className="sub">Purchase location: {purchase?.vendors?.village_city ?? purchase?.vendors?.address ?? '—'}</p>
-          <p className="sub">Payment type: {purchase?.payment_status === 'PAID' ? 'Paid in Full' : purchase?.payment_status === 'PARTIAL' ? 'Partial Credit' : purchase?.payment_status === 'CREDIT' ? 'Full Credit' : '—'} · Udhaar due: {formatDate(purchase?.payment_due_date)}</p>
-          <p className="sub">Udhaar terms: {purchase?.payment_terms ?? '—'}</p>
-          <p className="sub">Identification: {b?.identification_mark ?? '—'} · Color: {b?.color ?? '—'}</p>
-        </div>
+
+        <PurchaseSummary buffalo={buffalo} />
       </div>
 
       <div style={{ height: 14 }} />
+
       <div className="grid two">
-        <div className="card">
-          <h2 className="section-title">Purchase payment</h2>
-          <p className="sub">Pending: {money(Number(purchase?.amount_pending ?? 0))}</p>
-          <div className="grid two">
-            <div className="field"><label>Payment Date</label><input type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} /></div>
-            <div className="field"><label>Amount · ₹</label><input type="number" min="0.01" step="0.01" value={paymentAmount} onChange={(e) => setPaymentAmount(e.target.value)} /></div>
-            <div className="field"><label>Method</label><select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as (typeof paymentMethods)[number])}>{paymentMethods.map((method) => <option key={method}>{method}</option>)}</select></div>
-            <div className="field"><label>Reference</label><input value={paymentReference} onChange={(e) => setPaymentReference(e.target.value)} placeholder="Optional transaction reference" /></div>
-          </div>
-          <div className="field"><label>Notes</label><input value={paymentNotes} onChange={(e) => setPaymentNotes(e.target.value)} placeholder="Optional" /></div>
-          <button className="btn" type="button" disabled={busy || !purchase || Number(purchase.amount_pending) <= 0} onClick={() => void savePayment()}>Record payment</button>
-        </div>
-
-        <div className="card">
-          <h2 className="section-title">Buffalo status</h2>
-          <p className="sub">Current status: <b>{b?.current_status ?? '—'}</b>. Changes are recorded as lifecycle history.</p>
-          <div className="grid two">
-            <div className="field"><label>Status</label><select value={status} onChange={(e) => setStatus(e.target.value as (typeof statuses)[number])}>{statuses.map((value) => <option key={value}>{value}</option>)}</select></div>
-            <div className="field"><label>Effective Date</label><input type="date" value={statusDate} onChange={(e) => setStatusDate(e.target.value)} /></div>
-          </div>
-          <div className="field"><label>Reason / Notes</label><input value={statusNotes} onChange={(e) => setStatusNotes(e.target.value)} placeholder="Optional" /></div>
-          <button className="btn" type="button" disabled={busy || !b || status === b.current_status} onClick={() => void saveStatus()}>Save status change</button>
-        </div>
+        <BuffaloPurchasePaymentForm buffalo={buffalo} />
+        <BuffaloStatusForm buffalo={buffalo} />
       </div>
 
       <div style={{ height: 14 }} />
+
       <div className="card">
         <h2 className="section-title">Performance history</h2>
-        <div className="table-wrap"><table className="table"><thead><tr><th>DATE</th><th>SHIFT</th><th>MILK</th></tr></thead><tbody>
-          {rows.map((row) => <tr key={row.id}><td>{formatDate(row.business_date)}</td><td>{row.shift === 'MORNING' ? 'Morning' : 'Evening'}</td><td>{milkTxt(Number(row.milk_quantity))}</td></tr>)}
-        </tbody></table></div>
-        {!rows.length && <div className="empty">No performance records for this buffalo.</div>}
+
+        {productionQuery.isPending ? (
+          <div className="empty">Loading production history…</div>
+        ) : productionQuery.isError ? (
+          <div className="empty">{productionQuery.error.message}</div>
+        ) : (
+          <ProductionTable production={production} />
+        )}
       </div>
     </AppShell>
   );
+}
+
+function PurchaseSummary({
+  buffalo,
+}: {
+  buffalo: NonNullable<ReturnType<typeof useBuffaloDetail>['data']>;
+}) {
+  const purchase = buffalo.buffalo_purchases[0];
+
+  return (
+    <div className="card">
+      <h2 className="section-title">Purchase and vendor</h2>
+      <p className="sub">Purchase date: {formatDate(purchase?.purchase_date)}</p>
+      <p className="sub">
+        Vendor: {purchase?.vendors?.name ?? '—'}
+        {purchase?.vendors?.mobile ? ` · ${purchase.vendors.mobile}` : ''}
+      </p>
+      <p className="sub">
+        Purchase location: {purchase?.vendors?.village_city ?? purchase?.vendors?.address ?? '—'}
+      </p>
+      <p className="sub">
+        Payment type: {paymentTypeLabel(purchase?.payment_status)} · Udhaar due:{' '}
+        {formatDate(purchase?.payment_due_date)}
+      </p>
+      <p className="sub">Udhaar terms: {purchase?.payment_terms ?? '—'}</p>
+      <p className="sub">
+        Identification: {buffalo.identification_mark ?? '—'} · Color: {buffalo.color ?? '—'}
+      </p>
+    </div>
+  );
+}
+
+function ProductionTable({
+  production,
+}: {
+  production: Array<{
+    id: string;
+    business_date: string;
+    shift: string;
+    milk_quantity: number;
+  }>;
+}) {
+  return production.length ? (
+    <div className="table-wrap">
+      <table className="table">
+        <thead>
+          <tr>
+            <th>DATE</th>
+            <th>SHIFT</th>
+            <th>MILK</th>
+          </tr>
+        </thead>
+        <tbody>
+          {production.map((row) => (
+            <tr key={row.id}>
+              <td>{formatDate(row.business_date)}</td>
+              <td>{row.shift === 'MORNING' ? 'Morning' : 'Evening'}</td>
+              <td>{milkTxt(Number(row.milk_quantity))}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  ) : (
+    <div className="empty">No performance records for this buffalo.</div>
+  );
+}
+
+function paymentTypeLabel(status?: string) {
+  if (status === 'PAID') return 'Paid in Full';
+  if (status === 'PARTIAL') return 'Partial Credit';
+  if (status === 'CREDIT') return 'Full Credit';
+  return '—';
 }
