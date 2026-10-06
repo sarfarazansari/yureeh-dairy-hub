@@ -6,7 +6,8 @@ import { useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { formatDate } from '@/lib/date-format';
-import { buffaloPaymentType, buffaloPurchaseSchema } from '@/lib/buffalo-validation';
+import { buffaloPurchaseSchema } from './validation';
+import { getBuffaloPaymentType } from './utils';
 import { money } from '@/lib/farm-format';
 
 import {
