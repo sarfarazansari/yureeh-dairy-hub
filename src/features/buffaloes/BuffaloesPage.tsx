@@ -366,7 +366,7 @@ function HerdRow({ buffalo }: { buffalo: BuffaloListItem }) {
       <td>
         <Link
           className="date-chip"
-          href={`/buffaloes/${encodeURIComponent(buffalo.buffalo_code)}`}
+          href={`/buffaloes/${buffalo.id}`}
         >
           Edit
         </Link>
