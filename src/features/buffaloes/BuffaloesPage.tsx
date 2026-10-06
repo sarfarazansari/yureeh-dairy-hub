@@ -345,7 +345,7 @@ function HerdRow({ buffalo }: { buffalo: BuffaloListItem }) {
   return (
     <tr>
       <td>
-        <Link href={`/buffaloes/${encodeURIComponent(buffalo.buffalo_code)}`}>
+        <Link href={`/buffaloes/${buffalo.id}`}>
           <b>{buffalo.name || buffalo.buffalo_code}</b>
         </Link>
         <div className="kpi-foot">{buffalo.buffalo_code}</div>
