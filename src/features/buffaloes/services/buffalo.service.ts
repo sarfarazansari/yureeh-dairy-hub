@@ -1,65 +1,18 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-import type { BuffaloPurchaseFormValues } from '@/lib/buffalo-validation';
-
-export type BuffaloListItem = {
-  id: string;
-  buffalo_code: string;
-  name: string | null;
-  breed: string | null;
-  purchase_date: string | null;
-  current_status: string;
-  buffalo_purchases: Array<{
-    purchase_price: number;
-    amount_paid: number;
-    amount_pending: number;
-    purchase_date: string;
-    payment_status: string;
-    payment_due_date: string | null;
-    payment_terms: string | null;
-    vendors: {
-      name: string;
-      village_city: string | null;
-    } | null;
-  }>;
-};
-
-export type BuffaloDetail = {
-  id: string;
-  buffalo_code: string;
-  name: string | null;
-  breed: string | null;
-  current_status: string;
-  identification_mark: string | null;
-  color: string | null;
-  age_at_purchase_months: number | null;
-  notes: string | null;
-  buffalo_purchases: Array<{
-    id: string;
-    vendor_id: string | null;
-    purchase_price: number;
-    amount_paid: number;
-    amount_pending: number;
-    purchase_date: string;
-    payment_status: string;
-    payment_due_date: string | null;
-    payment_terms: string | null;
-    payment_method: PurchasePaymentMethod | null;
-    transaction_reference: string | null;
-    notes: string | null;
-    vendors: {
-      name: string;
-      mobile: string | null;
-      address: string | null;
-      village_city: string | null;
-      state: string | null;
-      notes: string | null;
-    } | null;
-  }>;
-};
-
-type PurchasePaymentMethod = 'CASH' | 'UPI' | 'BANK_TRANSFER' | 'OTHER';
-type BuffaloStatus = 'ACTIVE' | 'SOLD' | 'DECEASED' | 'DRY' | 'OTHER';
+import type { BuffaloPurchaseFormValues } from '../validation';
+import type {
+  BuffaloDetail,
+  BuffaloListItem,
+  BuffaloPaymentMethod,
+  BuffaloPurchaseEditInput,
+  BuffaloPurchasePayment,
+  BuffaloPurchasePaymentInput,
+  BuffaloProfileEditInput,
+  BuffaloStatus,
+  BuffaloStatusHistory,
+  BuffaloVendorEditInput,
+} from '../types';
 
 export async function getBuffaloDirectory(client: SupabaseClient) {
   const { data, error } = await client
@@ -157,13 +110,7 @@ export async function getBuffaloDetails(
 export async function recordBuffaloPurchasePayment(
   client: SupabaseClient,
   buffaloId: string,
-  payment: {
-    payment_date: string;
-    amount: number;
-    payment_method: PurchasePaymentMethod;
-    transaction_reference?: string;
-    notes?: string;
-  },
+  payment: BuffaloPurchasePaymentInput,
 ) {
   const { error } = await client.rpc('record_buffalo_purchase_payment', {
     p_buffalo_id: buffaloId,
@@ -214,15 +161,7 @@ export async function changeBuffaloStatus(
 export async function updateBuffaloProfile(
   client: SupabaseClient,
   buffaloId: string,
-  profile: {
-    buffalo_code: string;
-    name?: string;
-    breed: string;
-    color?: string;
-    identification_mark?: string;
-    age_at_purchase_months?: number | null;
-    notes?: string;
-  },
+  profile: BuffaloProfileEditInput,
 ) {
   const { error } = await client.rpc('update_buffalo_profile', {
     p_buffalo_id: buffaloId,
@@ -247,42 +186,6 @@ export async function updateBuffaloProfile(
 
   throw new Error('Could not update buffalo profile. Please try again.');
 }
-
-
-export type BuffaloPurchasePayment = {
-  id: string;
-  payment_date: string;
-  amount: number;
-  payment_method: 'CASH' | 'UPI' | 'BANK_TRANSFER' | 'OTHER';
-  transaction_reference: string | null;
-  notes: string | null;
-};
-
-export type BuffaloStatusHistory = {
-  id: string;
-  status: string;
-  effective_date: string;
-  notes: string | null;
-};
-
-export type BuffaloPurchaseEditInput = {
-  purchase_date: string;
-  purchase_price: number;
-  payment_due_date?: string | null;
-  payment_terms?: string;
-  payment_method?: 'CASH' | 'UPI' | 'BANK_TRANSFER' | 'OTHER' | null;
-  transaction_reference?: string;
-  notes?: string;
-};
-
-export type BuffaloVendorEditInput = {
-  name: string;
-  mobile?: string;
-  address?: string;
-  village_city?: string;
-  state?: string;
-  notes?: string;
-};
 
 export async function updateBuffaloPurchase(
   client: SupabaseClient,

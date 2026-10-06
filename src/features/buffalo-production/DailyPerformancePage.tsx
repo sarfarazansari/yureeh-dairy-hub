@@ -5,12 +5,9 @@ import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { buffaloMilkQuantitySchema } from '@/lib/buffalo-validation';
-import {
-  getProductionSheet,
-  saveProductionSheet,
-  type BuffaloProductionAnimal,
-} from './services/buffalo-production.service';
+import { buffaloMilkQuantitySchema } from './validation';
+import type { BuffaloProductionAnimal } from './types';
+import { getProductionSheet, saveProductionSheet } from './services/buffalo-production.service';
 import { localDateKey, type MilkEntryShift } from '@/lib/milk-entry-list';
 export default function DailyPerformancePage() {
   const [rows, setRows] = useState<BuffaloProductionAnimal[]>([]),

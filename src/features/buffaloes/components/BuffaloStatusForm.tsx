@@ -3,12 +3,14 @@
 import { useState } from 'react';
 
 import { useChangeBuffaloStatus } from '../hooks/use-buffaloes';
-import type { BuffaloDetail } from '../services/buffalo.service';
+import { BUFFALO_STATUSES, type BuffaloDetail } from '../types';
 
-const STATUSES = ['ACTIVE', 'DRY', 'SOLD', 'DECEASED', 'OTHER'] as const;
+
 
 export function BuffaloStatusForm({ buffalo }: { buffalo: BuffaloDetail }) {
   const mutation = useChangeBuffaloStatus();
+
+  const STATUSES = BUFFALO_STATUSES;
   const [status, setStatus] = useState<(typeof STATUSES)[number]>(
     buffalo.current_status as (typeof STATUSES)[number],
   );

@@ -18,18 +18,19 @@ import {
   updateBuffaloProfile,
   updateBuffaloPurchase,
   updateBuffaloVendor,
-  type BuffaloDetail,
-  type BuffaloListItem,
-  type BuffaloPurchaseEditInput,
-  type BuffaloPurchasePayment,
-  type BuffaloStatusHistory,
-  type BuffaloVendorEditInput,
 } from '../services/buffalo.service';
-import {
-  getBuffaloProductionHistory,
-  type BuffaloProductionHistoryRecord,
-} from '@/features/buffalo-production/services/buffalo-production.service';
-import type { BuffaloPurchaseFormValues } from '@/lib/buffalo-validation';
+import type {
+  BuffaloDetail,
+  BuffaloListItem,
+  BuffaloPurchaseEditInput,
+  BuffaloPurchasePayment,
+  BuffaloStatusHistory,
+  BuffaloStatusChangeInput,
+  BuffaloVendorEditInput,
+} from '../types';
+import { getBuffaloProductionHistory } from '@/features/buffalo-production/services/buffalo-production.service';
+import type { BuffaloProductionHistoryRecord } from '@/features/buffalo-production/types';
+import type { BuffaloPurchaseFormValues } from '../validation';
 
 const buffaloKeys = {
   all: ['buffaloes'] as const,
@@ -115,12 +116,7 @@ type RecordPurchasePaymentInput = {
   payment: Parameters<typeof recordBuffaloPurchasePayment>[2];
 };
 
-type ChangeBuffaloStatusInput = {
-  buffaloId: string;
-  status: Parameters<typeof changeBuffaloStatus>[2];
-  effectiveDate: string;
-  notes?: string;
-};
+type ChangeBuffaloStatusInput = BuffaloStatusChangeInput;
 
 /** Mutations invalidate the affected buffalo queries instead of manually syncing local state. */
 function useBuffaloMutation<TVariables, TData = void>(
