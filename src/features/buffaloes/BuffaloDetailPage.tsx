@@ -20,16 +20,26 @@ import { money, milkTxt } from '@/lib/farm-format';
 import {
   useBuffaloDetail,
   useBuffaloProductionHistory,
+  useBuffaloPurchasePayments,
+  useBuffaloStatusHistory,
 } from './hooks/use-buffaloes';
 import { BuffaloProfileForm } from './components/BuffaloProfileForm';
+import { BuffaloPurchaseForm } from './components/BuffaloPurchaseForm';
 import { BuffaloPurchasePaymentForm } from './components/BuffaloPurchasePaymentForm';
 import { BuffaloStatusForm } from './components/BuffaloStatusForm';
+import { BuffaloVendorForm } from './components/BuffaloVendorForm';
+import {
+  BuffaloPaymentHistory,
+  BuffaloStatusHistory,
+} from './components/BuffaloHistory';
 
 export default function BuffaloDetailPage({ code }: { code: string }) {
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState<'profile' | 'purchase' | 'vendor' | null>(null);
   const buffaloQuery = useBuffaloDetail(code);
   const buffalo = buffaloQuery.data;
   const productionQuery = useBuffaloProductionHistory(buffalo?.id);
+  const paymentsQuery = useBuffaloPurchasePayments(buffalo?.id);
+  const statusHistoryQuery = useBuffaloStatusHistory(buffalo?.id);
 
   const purchase = buffalo?.buffalo_purchases?.[0];
   const production = productionQuery.data ?? [];
@@ -94,13 +104,39 @@ export default function BuffaloDetailPage({ code }: { code: string }) {
         <Link href="/buffaloes" style={{ fontSize: 12, color: '#277452' }}>
           ← All buffaloes
         </Link>
-        <button className="btn" type="button" onClick={() => setEditing((value) => !value)}>
-          {editing ? 'Close edit' : 'Edit buffalo'}
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => setEditing((value) => (value === 'profile' ? null : 'profile'))}
+          >
+            Edit profile
+          </button>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => setEditing((value) => (value === 'purchase' ? null : 'purchase'))}
+          >
+            Edit purchase
+          </button>
+          <button
+            className="btn"
+            type="button"
+            onClick={() => setEditing((value) => (value === 'vendor' ? null : 'vendor'))}
+          >
+            Edit vendor
+          </button>
+        </div>
       </div>
 
-      {editing && (
-        <BuffaloProfileForm buffalo={buffalo} onCancel={() => setEditing(false)} />
+      {editing === 'profile' && (
+        <BuffaloProfileForm buffalo={buffalo} onCancel={() => setEditing(null)} />
+      )}
+      {editing === 'purchase' && (
+        <BuffaloPurchaseForm buffalo={buffalo} onCancel={() => setEditing(null)} />
+      )}
+      {editing === 'vendor' && (
+        <BuffaloVendorForm buffalo={buffalo} onCancel={() => setEditing(null)} />
       )}
 
       <div className="grid kpis">
@@ -171,8 +207,23 @@ export default function BuffaloDetailPage({ code }: { code: string }) {
 
       <div style={{ height: 14 }} />
 
+      <div className="grid two">
+        <BuffaloPaymentHistory payments={paymentsQuery.data ?? []} />
+        <BuffaloStatusHistory history={statusHistoryQuery.data ?? []} />
+      </div>
+
+      <div style={{ height: 14 }} />
+
       <div className="card">
-        <h2 className="section-title">Performance history</h2>
+        <div className="row">
+          <div>
+            <h2 className="section-title">Performance history</h2>
+            <p className="sub">Milk recorded for this buffalo by date and shift.</p>
+          </div>
+          <Link className="date-chip" href="/buffalo-production">
+            Open production
+          </Link>
+        </div>
 
         {productionQuery.isPending ? (
           <div className="empty">Loading production history…</div>
