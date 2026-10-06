@@ -98,12 +98,6 @@ export default function EntriesPage() {
   const customersQuery = useMilkEntryCustomersQuery();
   const updateMutation = useUpdateMilkEntryMutation();
   const deleteMutation = useDeleteMilkEntryMutation();
-  const editDuplicateQuery = useMilkEntryDuplicateQuery({
-    customerId: editing?.customer_id ?? '',
-    businessDate: editing?.business_date ?? '',
-    shift: editing?.shift ?? 'MORNING',
-    excludeEntryId: editing?.id,
-  });
 
   const rows = listQuery.data?.rows ?? [];
   const total = listQuery.data?.total ?? 0;
@@ -114,6 +108,14 @@ export default function EntriesPage() {
   const [pendingDelete, setPendingDelete] = useState<MilkEntryListRow | null>(null);
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
+
+  const editDuplicateQuery = useMilkEntryDuplicateQuery({
+    customerId: editing?.customer_id ?? '',
+    businessDate: editing?.business_date ?? '',
+    shift: editing?.shift ?? 'MORNING',
+    excludeEntryId: editing?.id,
+  });
+
 
   function replaceParams(next: URLSearchParams) {
     router.replace(getMilkEntryListUrl(pathname, next), { scroll: false });
