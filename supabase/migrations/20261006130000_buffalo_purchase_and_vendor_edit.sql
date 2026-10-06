@@ -109,7 +109,7 @@ as $$
 declare
   owner_id uuid := auth.uid();
   purchase_row public.buffalo_purchases%rowtype;
-  vendor_id uuid;
+  target_vendor_id uuid;
 begin
   if owner_id is null then
     raise exception using errcode = '42501', message = 'Sign in to edit vendor details.';
@@ -130,9 +130,9 @@ begin
     raise exception using errcode = 'P0002', message = 'Buffalo purchase record was not found.';
   end if;
 
-  vendor_id := purchase_row.vendor_id;
+  target_vendor_id := purchase_row.vendor_id;
 
-  if vendor_id is null then
+  if target_vendor_id is null then
     insert into public.vendors(user_id, name, mobile, address, village_city, state, notes)
     values (
       owner_id,
@@ -143,7 +143,7 @@ begin
       nullif(btrim(p_state), ''),
       nullif(btrim(p_notes), '')
     )
-    returning id into vendor_id;
+    returning id into target_vendor_id;
   else
     update public.vendors
     set
@@ -153,16 +153,16 @@ begin
       village_city = nullif(btrim(p_village_city), ''),
       state = nullif(btrim(p_state), ''),
       notes = nullif(btrim(p_notes), '')
-    where id = vendor_id
+    where id = target_vendor_id
       and user_id = owner_id;
   end if;
 
   update public.buffalo_purchases
-  set vendor_id = vendor_id
+  set vendor_id = target_vendor_id
   where id = purchase_row.id
     and user_id = owner_id;
 
-  return vendor_id;
+  return target_vendor_id;
 end;
 $$;
 
