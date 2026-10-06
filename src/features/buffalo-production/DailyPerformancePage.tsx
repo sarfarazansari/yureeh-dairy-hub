@@ -7,11 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { buffaloMilkQuantitySchema } from './validation';
 import type { BuffaloProductionAnimal } from './types';
-import {
-  getProductionSheet,
-  saveProductionSheet,
-  type BuffaloProductionAnimal,
-} from './services/buffalo-production.service';
+import { getProductionSheet, saveProductionSheet } from './services/buffalo-production.service';
 import { localDateKey, type MilkEntryShift } from '@/lib/milk-entry-list';
 export default function DailyPerformancePage() {
   const [rows, setRows] = useState<BuffaloProductionAnimal[]>([]),
