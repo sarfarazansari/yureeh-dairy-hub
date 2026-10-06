@@ -20,7 +20,7 @@ export const buffaloMilkQuantitySchema = z
 export const buffaloPurchaseSchema = z.object({
   buffalo_code: z.string().trim().min(1, 'Buffalo code is required.').transform((value) => value.toUpperCase()),
   breed: z.string().trim().min(1, 'Breed is required.'),
-  purchase_date: z.string().min(1, 'Purchase date is required()')
+  purchase_date: z.string().min(1, 'Purchase date is required.')
     .refine((value) => {
       if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return false;
       const parsed = new Date(`${value}T00:00:00Z`);
