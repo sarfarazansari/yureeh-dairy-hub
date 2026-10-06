@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 import { useUpdateBuffaloVendor } from '../hooks/use-buffaloes';
-import type { BuffaloDetail } from '../services/buffalo.service';
+import type { BuffaloDetail } from '../types';
 
 export function BuffaloVendorForm({
   buffalo,
