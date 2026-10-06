@@ -189,7 +189,7 @@ export default function BuffaloDetailPage({ code }: { code: string }) {
 function PurchaseSummary({
   buffalo,
 }: {
-  buffalo: NonNullable<ReturnType<typeof useBuffaloDetail>['data']>;
+  buffalo: BuffaloDetail;
 }) {
   const purchase = buffalo.buffalo_purchases[0];
 
