@@ -20,7 +20,9 @@ export function BuffaloProfileForm({
   const [identificationMark, setIdentificationMark] = useState(
     buffalo.identification_mark ?? '',
   );
-  const [ageMonths, setAgeMonths] = useState(\n    buffalo.age_at_purchase_months == null ? '' : String(buffalo.age_at_purchase_months),\n  );
+  const [ageMonths, setAgeMonths] = useState(
+    buffalo.age_at_purchase_months == null ? '' : String(buffalo.age_at_purchase_months),
+  );
   const [notes, setNotes] = useState(buffalo.notes ?? '');
 
   async function handleSave() {
