@@ -67,6 +67,7 @@ export function useMilkEntryDuplicateQuery(input: {
   customerId: string;
   businessDate: string;
   shift: 'MORNING' | 'EVENING';
+  excludeEntryId?: string;
 }) {
   return useQuery<boolean, Error>({
     queryKey: milkQueryKeys.duplicate(input),
