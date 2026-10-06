@@ -34,7 +34,7 @@ import type { BuffaloPurchaseFormValues } from '@/lib/buffalo-validation';
 const buffaloKeys = {
   all: ['buffaloes'] as const,
   directory: () => [...buffaloKeys.all, 'directory'] as const,
-  detail: (code: string) => [...buffaloKeys.all, 'detail', code] as const,
+  detail: (id: string) => [...buffaloKeys.all, 'detail', id] as const,
   production: (buffaloId: string) => [...buffaloKeys.all, 'production', buffaloId] as const,
   payments: (buffaloId: string) => [...buffaloKeys.all, 'payments', buffaloId] as const,
   statusHistory: (buffaloId: string) => [...buffaloKeys.all, 'status-history', buffaloId] as const,
@@ -57,11 +57,11 @@ export function useBuffaloDirectory() {
 }
 
 /** Fetch one buffalo and its purchase information. */
-export function useBuffaloDetail(code: string) {
+export function useBuffaloDetail(id: string) {
   return useQuery<BuffaloDetail | null>({
-    queryKey: buffaloKeys.detail(code),
-    queryFn: () => getBuffaloDetails(getClient(), code),
-    enabled: Boolean(code),
+    queryKey: buffaloKeys.detail(id),
+    queryFn: () => getBuffaloDetails(getClient(), id),
+    enabled: Boolean(id),
   });
 }
 
