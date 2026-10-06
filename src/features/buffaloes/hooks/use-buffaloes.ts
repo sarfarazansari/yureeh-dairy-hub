@@ -29,7 +29,7 @@ import {
   getBuffaloProductionHistory,
   type BuffaloProductionHistoryRecord,
 } from '@/features/buffalo-production/services/buffalo-production.service';
-import type { BuffaloPurchaseFormValues } from '@/lib/buffalo-validation';
+import type { BuffaloPurchaseFormValues } from '../validation';
 
 const buffaloKeys = {
   all: ['buffaloes'] as const,
