@@ -324,8 +324,8 @@ begin
       buffalo_id,
       p_purchase_date,
       p_advance_paid,
-      'CASH'::public.payment_method,
-      'Initial payment recorded at buffalo purchase.'
+      'OTHER'::public.payment_method,
+      'Initial payment recorded at buffalo purchase; original payment method was not captured.'
     );
   end if;
 
