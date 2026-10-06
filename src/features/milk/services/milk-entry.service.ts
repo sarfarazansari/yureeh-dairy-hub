@@ -13,21 +13,20 @@ export async function createMilkEntry(
     entry.applied_rate,
     entry.fat,
   );
-  const { error } = await client.from('milk_entries').insert({
-    user_id: userId,
-    business_date: entry.business_date,
-    shift: entry.shift,
-    customer_id: entry.customer_id,
-    milk_quantity: entry.milk_quantity,
-    fat: entry.fat,
-    pricing_type: entry.pricing_type,
-    applied_rate: entry.applied_rate,
-    calculated_amount: calculatedAmount,
-    notes: entry.notes?.trim() || null,
+  const { error } = await client.rpc('create_milk_entry_with_pool', {
+    p_business_date: entry.business_date,
+    p_shift: entry.shift,
+    p_customer_id: entry.customer_id,
+    p_milk_quantity: entry.milk_quantity,
+    p_fat: entry.fat,
+    p_pricing_type: entry.pricing_type,
+    p_applied_rate: entry.applied_rate,
+    p_calculated_amount: calculatedAmount,
+    p_notes: entry.notes?.trim() || null,
   });
 
   if (error)
-    throw new Error('Could not save the milk entry. Please review the details and try again.');
+    throw new Error(error.message || 'Could not save the milk entry. Please review the details and try again.');
 }
 
 export async function updateMilkEntry(
@@ -41,35 +40,28 @@ export async function updateMilkEntry(
     entry.applied_rate,
     entry.fat,
   );
-  const { data, error } = await client
-    .from('milk_entries')
-    .update({
-      business_date: entry.business_date,
-      shift: entry.shift,
-      customer_id: entry.customer_id,
-      milk_quantity: entry.milk_quantity,
-      fat: entry.fat,
-      pricing_type: entry.pricing_type,
-      applied_rate: entry.applied_rate,
-      calculated_amount: calculatedAmount,
-      notes: entry.notes?.trim() || null,
-    })
-    .eq('id', entryId)
-    .select('id')
-    .single();
+  const { error } = await client.rpc('update_milk_entry_with_pool', {
+    p_entry_id: entryId,
+    p_business_date: entry.business_date,
+    p_shift: entry.shift,
+    p_customer_id: entry.customer_id,
+    p_milk_quantity: entry.milk_quantity,
+    p_fat: entry.fat,
+    p_pricing_type: entry.pricing_type,
+    p_applied_rate: entry.applied_rate,
+    p_calculated_amount: calculatedAmount,
+    p_notes: entry.notes?.trim() || null,
+  });
 
-  if (error || !data) throw new Error('Could not update the milk entry. Please try again.');
+  if (error) throw new Error(error.message || 'Could not update the milk entry. Please try again.');
 }
 
 export async function deleteMilkEntry(client: SupabaseClient, entryId: string) {
-  const { data, error } = await client
-    .from('milk_entries')
-    .update({ deleted_at: new Date().toISOString() })
-    .eq('id', entryId)
-    .select('id')
-    .single();
+  const { error } = await client.rpc('delete_milk_entry_with_pool', {
+    p_entry_id: entryId,
+  });
 
-  if (error || !data) throw new Error('Could not delete the milk entry. Please try again.');
+  if (error) throw new Error(error.message || 'Could not delete the milk entry. Please try again.');
 }
 
 export async function hasDuplicateMilkEntry(
