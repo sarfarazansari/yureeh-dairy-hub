@@ -1,5 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import type { MilkEntryShift } from '@/lib/milk-entry-list';
+
 import type {
   BuffaloProductionAnimal,
   BuffaloProductionHistoryRecord,
