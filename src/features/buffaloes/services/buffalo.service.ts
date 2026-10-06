@@ -55,6 +55,7 @@ export async function createBuffaloPurchase(client: SupabaseClient, purchase: Bu
 export type BuffaloDetail = {
   id: string; buffalo_code: string; name: string | null; breed: string | null; current_status: string;
   identification_mark: string | null; color: string | null;
+  age_at_purchase_months: number | null; notes: string | null;
   buffalo_purchases: Array<{
     id: string; purchase_price: number; amount_paid: number; amount_pending: number; purchase_date: string;
     payment_status: string; payment_due_date: string | null; payment_terms: string | null;
@@ -69,7 +70,7 @@ export async function getBuffaloDetails(
   const { data, error } = await client
     .from('buffaloes')
     .select(
-      'id,buffalo_code,name,breed,current_status,identification_mark,color,buffalo_purchases(*,vendors(name,mobile,address,village_city))',
+      'id,buffalo_code,name,breed,current_status,identification_mark,color,age_at_purchase_months,notes,buffalo_purchases(*,vendors(name,mobile,address,village_city))',
     )
     .eq('buffalo_code', buffaloCode)
     .maybeSingle();
