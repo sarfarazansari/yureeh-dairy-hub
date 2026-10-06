@@ -99,3 +99,20 @@ export async function changeBuffaloStatus(
   });
   if (error) throw new Error(error.code === '23514' || error.code === 'P0002' ? error.message : 'Could not change buffalo status. Please try again.');
 }
+
+
+export async function updateBuffaloProfile(client: SupabaseClient, buffaloId: string, profile: {
+  buffalo_code: string; name?: string; breed: string; color?: string; identification_mark?: string;
+  age_at_purchase_months?: number | null; notes?: string;
+}) {
+  const { error } = await client.rpc('update_buffalo_profile', {
+    p_buffalo_id: buffaloId, p_buffalo_code: profile.buffalo_code, p_name: profile.name?.trim() || null,
+    p_breed: profile.breed.trim(), p_color: profile.color?.trim() || null,
+    p_identification_mark: profile.identification_mark?.trim() || null,
+    p_age_at_purchase_months: profile.age_at_purchase_months ?? null, p_notes: profile.notes?.trim() || null,
+  });
+  if (error) {
+    if (error.code === '23505' || error.code === '23514' || error.code === 'P0002') throw new Error(error.message);
+    throw new Error('Could not update buffalo profile. Please try again.');
+  }
+}
