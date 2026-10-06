@@ -14,8 +14,16 @@ import {
   getBuffaloDirectory,
   recordBuffaloPurchasePayment,
   updateBuffaloProfile,
+  updateBuffaloPurchase,
+  updateBuffaloVendor,
+  getBuffaloPurchasePayments,
+  getBuffaloStatusHistory,
+  type BuffaloPurchaseEditInput,
+  type BuffaloVendorEditInput,
   type BuffaloDetail,
   type BuffaloListItem,
+  type BuffaloPurchasePayment,
+  type BuffaloStatusHistory,
 } from '../services/buffalo.service';
 import {
   getBuffaloProductionHistory,
@@ -28,6 +36,8 @@ const buffaloKeys = {
   directory: () => [...buffaloKeys.all, 'directory'] as const,
   detail: (code: string) => [...buffaloKeys.all, 'detail', code] as const,
   production: (buffaloId: string) => [...buffaloKeys.all, 'production', buffaloId] as const,
+  payments: (buffaloId: string) => [...buffaloKeys.all, 'payments', buffaloId] as const,
+  statusHistory: (buffaloId: string) => [...buffaloKeys.all, 'status-history', buffaloId] as const,
 };
 
 function getClient() {
@@ -56,6 +66,22 @@ export function useBuffaloDetail(code: string) {
 }
 
 /** Fetch production history for a buffalo detail view. */
+export function useBuffaloPurchasePayments(buffaloId: string | undefined) {
+  return useQuery<BuffaloPurchasePayment[]>({
+    queryKey: buffaloKeys.payments(buffaloId ?? ''),
+    queryFn: () => getBuffaloPurchasePayments(getClient(), buffaloId!),
+    enabled: Boolean(buffaloId),
+  });
+}
+
+export function useBuffaloStatusHistory(buffaloId: string | undefined) {
+  return useQuery<BuffaloStatusHistory[]>({
+    queryKey: buffaloKeys.statusHistory(buffaloId ?? ''),
+    queryFn: () => getBuffaloStatusHistory(getClient(), buffaloId!),
+    enabled: Boolean(buffaloId),
+  });
+}
+
 export function useBuffaloProductionHistory(buffaloId: string | undefined) {
   return useQuery<BuffaloProductionHistoryRecord[]>({
     queryKey: buffaloKeys.production(buffaloId ?? ''),
@@ -74,6 +100,16 @@ type UpdateBuffaloProfileInput = {
   profile: Parameters<typeof updateBuffaloProfile>[2];
 };
 
+type UpdateBuffaloPurchaseInput = {
+  buffaloId: string;
+  purchase: BuffaloPurchaseEditInput;
+};
+
+type UpdateBuffaloVendorInput = {
+  buffaloId: string;
+  vendor: BuffaloVendorEditInput;
+};
+
 type RecordPurchasePaymentInput = {
   buffaloId: string;
   payment: Parameters<typeof recordBuffaloPurchasePayment>[2];
@@ -84,7 +120,7 @@ type ChangeBuffaloStatusInput = {
   status: Parameters<typeof changeBuffaloStatus>[2];
   effectiveDate: string;
   notes?: string;
-}
+};
 
 /** Mutations invalidate the affected buffalo queries instead of manually syncing local state. */
 function useBuffaloMutation<TVariables, TData = void>(
@@ -107,6 +143,18 @@ export function useCreateBuffaloPurchase() {
 export function useUpdateBuffaloProfile() {
   return useBuffaloMutation(({ buffaloId, profile }: UpdateBuffaloProfileInput) =>
     updateBuffaloProfile(getClient(), buffaloId, profile),
+  );
+}
+
+export function useUpdateBuffaloPurchase() {
+  return useBuffaloMutation(({ buffaloId, purchase }: UpdateBuffaloPurchaseInput) =>
+    updateBuffaloPurchase(getClient(), buffaloId, purchase),
+  );
+}
+
+export function useUpdateBuffaloVendor() {
+  return useBuffaloMutation(({ buffaloId, vendor }: UpdateBuffaloVendorInput) =>
+    updateBuffaloVendor(getClient(), buffaloId, vendor),
   );
 }
 
