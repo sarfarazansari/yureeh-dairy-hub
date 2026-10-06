@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { buffaloPaymentTypes, type BuffaloPaymentType } from './types';
+export { getBuffaloPaymentType as buffaloPaymentType } from './utils';
 
 const requiredNumber = (label: string) =>
   z.string()
