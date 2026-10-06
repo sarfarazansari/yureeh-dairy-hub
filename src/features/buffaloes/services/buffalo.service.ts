@@ -126,14 +126,14 @@ export async function createBuffaloPurchase(
 
 export async function getBuffaloDetails(
   client: SupabaseClient,
-  buffaloCode: string,
+  buffaloId: string,
 ) {
   const { data, error } = await client
     .from('buffaloes')
     .select(
       'id,buffalo_code,name,breed,current_status,identification_mark,color,age_at_purchase_months,notes,buffalo_purchases(*,vendors(name,mobile,address,village_city,state,notes))',
     )
-    .eq('buffalo_code', buffaloCode)
+    .eq('id', buffaloId)
     .maybeSingle();
 
   if (error) {
