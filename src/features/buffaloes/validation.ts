@@ -10,14 +10,6 @@ const requiredNumber = (label: string) =>
     .refine((value) => Number.isFinite(Number(value)), `${label} must be a valid number.`)
     .transform(Number);
 
-export const buffaloMilkQuantitySchema = z
-  .string()
-  .trim()
-  .min(1, 'Enter a milk quantity or leave the field blank.')
-  .refine((value) => /^\\d+(\\.\\d{1,3})?$/.test(value), 'Enter a non-negative quantity with at most 3 decimal places.')
-  .transform(Number)
-  .refine((value) => Number.isFinite(value) && value >= 0, 'Milk quantity must be zero or greater.');
-
 export const buffaloPurchaseSchema = z.object({
   buffalo_code: z.string().trim().min(1, 'Buffalo code is required.').transform((value) => value.toUpperCase()),
   breed: z.string().trim().min(1, 'Breed is required.'),
