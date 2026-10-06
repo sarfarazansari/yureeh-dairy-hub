@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { money } from '@/lib/farm-format';
 
 import { useUpdateBuffaloPurchase } from '../hooks/use-buffaloes';
-import type { BuffaloDetail } from '../services/buffalo.service';
+import type { BuffaloDetail } from '../types';
 
 const PAYMENT_METHODS = ['CASH', 'UPI', 'BANK_TRANSFER', 'OTHER'] as const;
 
