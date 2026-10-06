@@ -1,6 +1,12 @@
 -- Buffalo lifecycle and purchase-payment history.
 -- These are append-only business events; existing purchase snapshots remain intact.
 
+-- The purchase primary key is globally unique, but tenant-scoped composite
+-- foreign keys are used throughout the schema for ownership integrity.
+alter table public.buffalo_purchases
+  add constraint buffalo_purchases_user_id_id_key unique (user_id, id);
+
+
 create table public.buffalo_purchase_payments (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
