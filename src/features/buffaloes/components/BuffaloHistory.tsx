@@ -1,10 +1,7 @@
 import { formatDate } from '@/lib/date-format';
 import { money } from '@/lib/farm-format';
 
-import type {
-  BuffaloPurchasePayment,
-  BuffaloStatusHistory,
-} from '../services/buffalo.service';
+import type { BuffaloPurchasePayment, BuffaloStatusHistory } from '../types';
 
 export function BuffaloPaymentHistory({
   payments,
