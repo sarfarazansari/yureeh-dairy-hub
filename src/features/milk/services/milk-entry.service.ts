@@ -75,6 +75,7 @@ export async function hasDuplicateMilkEntry(
     .eq('shift', input.shift)
     .is('deleted_at', null);
   if (input.excludeEntryId) query = query.neq('id', input.excludeEntryId);
+  const { count, error } = await query;
   if (error) throw new Error('Could not check for an existing milk entry.');
   return (count ?? 0) > 0;
 }
