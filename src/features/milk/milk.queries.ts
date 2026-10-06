@@ -33,6 +33,7 @@ export const milkQueryKeys = {
     customerId: string;
     businessDate: string;
     shift: 'MORNING' | 'EVENING';
+    excludeEntryId?: string;
   }) => [...milkQueryKeys.all, 'duplicate', input] as const,
   pool: (from: string, to: string) => [...milkQueryKeys.all, 'pool', from, to] as const,
 };
