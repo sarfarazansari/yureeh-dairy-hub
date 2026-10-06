@@ -17,6 +17,7 @@ import {
 } from './services/sales-analytics.service';
 import type { MilkEntry } from '@/lib/analytics';
 import { getAnalyticsDateRange, type AnalyticsDatePreset } from '@/lib/analytics-date-range';
+import { useMilkPoolReconciliationQuery } from '@/features/milk/milk.queries';
 export default function SalesAnalyticsPage() {
   const now = new Date(),
     today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -57,6 +58,12 @@ export default function SalesAnalyticsPage() {
       active = false;
     };
   }, [from, to, customerId]);
+  const poolQuery = useMilkPoolReconciliationQuery(from, to);
+  const poolRows = poolQuery.data ?? [];
+  const poolProduced = poolRows.reduce((sum, row) => sum + Number(row.production_litres), 0);
+  const poolDelivered = poolRows.reduce((sum, row) => sum + Number(row.customer_delivery_litres), 0);
+  const poolOtherUse = poolRows.reduce((sum, row) => sum + Number(row.household_use_litres) + Number(row.wastage_litres) + Number(row.other_use_litres), 0);
+  const poolClosing = poolRows.length ? Number(poolRows[poolRows.length - 1].closing_balance_litres) : null;
   const total = rows.reduce((s, r) => s + Number(r.milk_quantity), 0),
     rev = rows.reduce((s, r) => s + Number(r.calculated_amount), 0),
     den = rows.reduce((s, r) => s + (r.fat == null ? 0 : Number(r.milk_quantity)), 0),
@@ -182,6 +189,27 @@ export default function SalesAnalyticsPage() {
         </div>
       </div>
       {error && <p className="auth-message">{error}</p>}
+      <div className="card" style={{ marginBottom: 14 }}>
+        <div className="row">
+          <div>
+            <h2 className="section-title">Milk pool reconciliation</h2>
+            <p className="kpi-foot">Production and customer sales are now connected through the farm milk movement ledger.</p>
+          </div>
+          <Link href="/milk-pool" style={{ fontSize: 10, color: '#277452' }}>Open milk pool →</Link>
+        </div>
+        {poolQuery.isPending ? (
+          <div className="empty">Loading pool reconciliation…</div>
+        ) : poolQuery.isError ? (
+          <p className="auth-message">{poolQuery.error.message}</p>
+        ) : (
+          <div className="grid four">
+            <div><div className="kpi-label">PRODUCED</div><b>{milkTxt(poolProduced)}</b></div>
+            <div><div className="kpi-label">DELIVERED</div><b>{milkTxt(poolDelivered)}</b></div>
+            <div><div className="kpi-label">OTHER USE / WASTAGE</div><b>{milkTxt(poolOtherUse)}</b></div>
+            <div><div className="kpi-label">CLOSING POOL</div><b>{poolClosing === null ? '—' : milkTxt(poolClosing)}</b></div>
+          </div>
+        )}
+      </div>
       <div className="grid kpis">
         <KPI
           label="TOTAL MILK SOLD"
