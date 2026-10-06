@@ -82,7 +82,7 @@ export default function DailyPerformancePage() {
           <div>
             <h2 className="section-title">Herd production entry</h2>
             <p className="kpi-foot">
-              Only active buffaloes are listed and editable. Historical production remains available in buffalo history. Saving
+              Buffaloes are listed according to their status on the selected date. Only buffaloes that were active on that date are editable. Saving
               production also updates the farm milk pool.
             </p>
           </div>
