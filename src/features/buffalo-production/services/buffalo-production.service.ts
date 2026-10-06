@@ -20,7 +20,7 @@ export async function getProductionSheet(
     client
       .from('buffaloes')
       .select('id,buffalo_code,name,current_status')
-      .in('current_status', ['ACTIVE', 'DRY'])
+      .eq('current_status', 'ACTIVE')
       .order('buffalo_code'),
     client
       .from('buffalo_milk_production')
