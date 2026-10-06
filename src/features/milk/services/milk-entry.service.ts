@@ -4,7 +4,6 @@ import type { MilkEntryFormValues } from '@/lib/milk-entry-validation';
 
 export async function createMilkEntry(
   client: SupabaseClient,
-  userId: string,
   entry: MilkEntryFormValues,
 ) {
   const calculatedAmount = calculateEntryAmount(
