@@ -28,10 +28,8 @@ import type {
   BuffaloStatusChangeInput,
   BuffaloVendorEditInput,
 } from '../types';
-import {
-  getBuffaloProductionHistory,
-  type BuffaloProductionHistoryRecord,
-} from '@/features/buffalo-production/services/buffalo-production.service';
+import { getBuffaloProductionHistory } from '@/features/buffalo-production/services/buffalo-production.service';
+import type { BuffaloProductionHistoryRecord } from '@/features/buffalo-production/types';
 import type { BuffaloPurchaseFormValues } from '../validation';
 
 const buffaloKeys = {
