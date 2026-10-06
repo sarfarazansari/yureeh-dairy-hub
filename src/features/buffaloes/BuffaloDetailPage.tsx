@@ -2,7 +2,7 @@
 
 import { money, milkTxt } from '@/lib/farm-format';
 import { getBuffaloProductionHistory, type BuffaloProductionHistoryRecord } from '@/features/buffalo-production/services/buffalo-production.service';
-import { changeBuffaloStatus, getBuffaloDetails, recordBuffaloPurchasePayment, type BuffaloDetail } from './services/buffalo.service';
+import { changeBuffaloStatus, getBuffaloDetails, recordBuffaloPurchasePayment, updateBuffaloProfile, type BuffaloDetail } from './services/buffalo.service';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
@@ -27,6 +27,14 @@ export default function BuffaloDetailPage({ code }: { code: string }) {
   const [paymentMethod, setPaymentMethod] = useState<(typeof paymentMethods)[number]>('CASH');
   const [paymentReference, setPaymentReference] = useState('');
   const [paymentNotes, setPaymentNotes] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [editCode, setEditCode] = useState('');
+  const [editName, setEditName] = useState('');
+  const [editBreed, setEditBreed] = useState('');
+  const [editColor, setEditColor] = useState('');
+  const [editIdentification, setEditIdentification] = useState('');
+  const [editAgeMonths, setEditAgeMonths] = useState('');
+  const [editNotes, setEditNotes] = useState('');
 
   async function load() {
     if (!supabase) return;
@@ -41,6 +49,30 @@ export default function BuffaloDetailPage({ code }: { code: string }) {
   useEffect(() => {
     void load().catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'Could not load buffalo details.'));
   }, [code]);
+
+  function startEdit() {
+    if (!b) return;
+    setEditCode(b.buffalo_code); setEditName(b.name ?? ''); setEditBreed(b.breed ?? '');
+    setEditColor(b.color ?? ''); setEditIdentification(b.identification_mark ?? '');
+    setEditNotes('');
+    setEditing(true);
+  }
+
+  async function saveProfile() {
+    if (!supabase || !b) return;
+    if (!editCode.trim() || !editBreed.trim()) { setError('Buffalo code and breed are required.'); return; }
+    const age = editAgeMonths.trim() ? Number(editAgeMonths) : null;
+    if (age !== null && (!Number.isInteger(age) || age < 0)) { setError('Age at purchase must be a whole number of months.'); return; }
+    setBusy(true); setError('');
+    try {
+      await updateBuffaloProfile(supabase, b.id, {
+        buffalo_code: editCode, name: editName, breed: editBreed, color: editColor,
+        identification_mark: editIdentification, age_at_purchase_months: age, notes: editNotes,
+      });
+      setEditing(false); await load();
+    } catch (e) { setError(e instanceof Error ? e.message : 'Could not update buffalo profile.'); }
+    finally { setBusy(false); }
+  }
 
   async function saveStatus() {
     if (!supabase || !b || status === b.current_status) return;
@@ -83,6 +115,21 @@ export default function BuffaloDetailPage({ code }: { code: string }) {
   return (
     <AppShell title={b?.name ? `${b.buffalo_code} — ${b.name}` : (b?.buffalo_code ?? 'Buffalo details')} subtitle={`${b?.breed ?? 'Breed not entered'} · ${b?.current_status ?? ''}`}>
       <Link href="/buffaloes" style={{ fontSize: 12, color: '#277452' }}>← All buffaloes</Link>
+      {b && <div style={{ marginTop: 12, marginBottom: 12 }}><button className="btn" type="button" onClick={startEdit}>Edit buffalo</button></div>}
+      {editing && <div className="card" style={{ marginBottom: 14 }}>
+        <h2 className="section-title">Edit buffalo profile</h2>
+        <div className="grid two">
+          <div className="field"><label>Buffalo Code</label><input value={editCode} onChange={(e) => setEditCode(e.target.value)} /></div>
+          <div className="field"><label>Name</label><input value={editName} onChange={(e) => setEditName(e.target.value)} /></div>
+          <div className="field"><label>Breed</label><input value={editBreed} onChange={(e) => setEditBreed(e.target.value)} /></div>
+          <div className="field"><label>Color</label><input value={editColor} onChange={(e) => setEditColor(e.target.value)} /></div>
+          <div className="field"><label>Identification Mark</label><input value={editIdentification} onChange={(e) => setEditIdentification(e.target.value)} /></div>
+          <div className="field"><label>Age at Purchase · Months</label><input type="number" min="0" step="1" value={editAgeMonths} onChange={(e) => setEditAgeMonths(e.target.value)} /></div>
+        </div>
+        <div className="field"><label>Notes</label><input value={editNotes} onChange={(e) => setEditNotes(e.target.value)} /></div>
+        <button className="btn" type="button" disabled={busy} onClick={() => void saveProfile()}>Save changes</button>{' '}
+        <button className="btn" type="button" disabled={busy} onClick={() => setEditing(false)}>Cancel</button>
+      </div>
       {error && <p className="auth-message" role="alert">{error}</p>}
 
       <div className="grid kpis">
