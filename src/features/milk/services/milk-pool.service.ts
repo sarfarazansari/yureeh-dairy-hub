@@ -58,3 +58,51 @@ export async function recordMilkPoolMovement(
   }
   return String(data);
 }
+
+
+export type MilkDeliveryContext = {
+  herdEntryExists: boolean;
+  productionLitres: number;
+  customerDeliveryLitres: number;
+  availablePoolLitres: number;
+};
+
+export async function getMilkDeliveryContext(
+  client: SupabaseClient,
+  businessDate: string,
+  shift: 'MORNING' | 'EVENING',
+): Promise<MilkDeliveryContext> {
+  const [herdResult, poolResult] = await Promise.all([
+    client
+      .from('buffalo_milk_production')
+      .select('id', { count: 'exact', head: true })
+      .eq('business_date', businessDate)
+      .eq('shift', shift),
+    client.rpc('get_milk_pool_reconciliation', {
+      p_start_date: businessDate,
+      p_end_date: businessDate,
+    }),
+  ]);
+
+  if (herdResult.error) {
+    throw new Error(herdResult.error.message || 'Could not check herd production for the selected date and shift.');
+  }
+  if (poolResult.error) {
+    throw new Error(poolResult.error.message || 'Could not load the milk pool for the selected date.');
+  }
+
+  const row = (poolResult.data ?? [])[0] as
+    | {
+        production_litres: number | string;
+        customer_delivery_litres: number | string;
+        closing_balance_litres: number | string;
+      }
+    | undefined;
+
+  return {
+    herdEntryExists: (herdResult.count ?? 0) > 0,
+    productionLitres: row ? Number(row.production_litres) : 0,
+    customerDeliveryLitres: row ? Number(row.customer_delivery_litres) : 0,
+    availablePoolLitres: row ? Number(row.closing_balance_litres) : 0,
+  };
+}
