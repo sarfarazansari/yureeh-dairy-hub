@@ -1,4 +1,6 @@
-import { z } from 'zod';
+export { buffaloMilkQuantitySchema, buffaloPaymentType, buffaloPaymentTypes, buffaloPurchaseSchema } from '@/features/buffaloes/validation';
+export type { BuffaloPaymentType, BuffaloPurchaseForm, BuffaloPurchaseFormValues } from '@/features/buffaloes/validation';
+
 
 export const buffaloPaymentTypes = ['PAID_IN_FULL', 'PARTIAL_CREDIT', 'FULL_CREDIT'] as const;
 export type BuffaloPaymentType = (typeof buffaloPaymentTypes)[number];
