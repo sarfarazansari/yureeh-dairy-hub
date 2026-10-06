@@ -60,6 +60,25 @@ Avoid unnecessary abstractions.
 
 Comments should explain WHY, not WHAT.
 
+TYPE / INTERFACE / HELPER MANAGEMENT
+
+Before creating a new type, interface, enum, schema, formula, or helper:
+
+1. Search the existing module and shared application code first.
+2. Reuse an existing definition when the domain meaning is the same.
+3. Do not create duplicate types that describe the same entity or value.
+4. Each feature/module must own its module-specific types and interfaces in a dedicated types file (or clearly separated type files when justified).
+5. Module-specific helper functions belong inside that module.
+6. Helpers used by multiple modules belong in the central shared lib/helpers area.
+7. Generic business formulas and calculations must have one canonical implementation and be reused by all consumers.
+8. Do not define domain types ad hoc inside page components, hooks, or services when a canonical module/shared type exists.
+9. Keep database, service, form, and UI representations aligned; transform at an explicit boundary when their shapes genuinely differ.
+10. A new abstraction is justified only when it represents a real domain distinction or removes meaningful duplication. Do not abstract merely for abstraction's sake.
+11. After refactoring, remove obsolete duplicate definitions rather than leaving competing canonical sources.
+
+These rules apply to every module, including modules that were already implemented. New modules must follow them from the first implementation.
+
+
 --------------------------------------------------
 
 DOMAIN RULES
