@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 
-import { BUFFALO_STATUSES, type BuffaloDetail } from '../types';
-
 import { useChangeBuffaloStatus } from '../hooks/use-buffaloes';
 import { BUFFALO_STATUSES, type BuffaloDetail } from '../types';
 
