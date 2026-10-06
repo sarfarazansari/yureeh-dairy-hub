@@ -1,7 +1,9 @@
 -- Reconciliation includes the true ledger opening balance before the selected range,
 -- so the closing balance is a rolling farm pool balance rather than a range-only net.
 
-create or replace function public.get_milk_pool_reconciliation(
+drop function if exists public.get_milk_pool_reconciliation(date, date);
+
+create function public.get_milk_pool_reconciliation(
   p_start_date date,
   p_end_date date
 )
