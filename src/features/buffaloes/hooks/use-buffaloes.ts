@@ -18,13 +18,16 @@ import {
   updateBuffaloProfile,
   updateBuffaloPurchase,
   updateBuffaloVendor,
-  type BuffaloDetail,
-  type BuffaloListItem,
-  type BuffaloPurchaseEditInput,
-  type BuffaloPurchasePayment,
-  type BuffaloStatusHistory,
-  type BuffaloVendorEditInput,
 } from '../services/buffalo.service';
+import type {
+  BuffaloDetail,
+  BuffaloListItem,
+  BuffaloPurchaseEditInput,
+  BuffaloPurchasePayment,
+  BuffaloStatusHistory,
+  BuffaloStatusChangeInput,
+  BuffaloVendorEditInput,
+} from '../types';
 import {
   getBuffaloProductionHistory,
   type BuffaloProductionHistoryRecord,
@@ -115,12 +118,7 @@ type RecordPurchasePaymentInput = {
   payment: Parameters<typeof recordBuffaloPurchasePayment>[2];
 };
 
-type ChangeBuffaloStatusInput = {
-  buffaloId: string;
-  status: Parameters<typeof changeBuffaloStatus>[2];
-  effectiveDate: string;
-  notes?: string;
-};
+type ChangeBuffaloStatusInput = BuffaloStatusChangeInput;
 
 /** Mutations invalidate the affected buffalo queries instead of manually syncing local state. */
 function useBuffaloMutation<TVariables, TData = void>(
