@@ -24,6 +24,7 @@ import { milkEntrySchema } from '@/lib/milk-entry-validation';
 
 import {
   useDeleteMilkEntryMutation,
+  useMilkDeliveryContextQuery,
   useMilkEntryCustomersQuery,
   useMilkEntryDuplicateQuery,
   useMilkEntryListQuery,
@@ -116,6 +117,11 @@ export default function EntriesPage() {
     excludeEntryId: editing?.id,
   });
 
+  const editDeliveryContextQuery = useMilkDeliveryContextQuery(
+    editing?.business_date ?? '',
+    editing?.shift ?? 'MORNING',
+  );
+
 
   function replaceParams(next: URLSearchParams) {
     router.replace(getMilkEntryListUrl(pathname, next), { scroll: false });
@@ -197,6 +203,22 @@ export default function EntriesPage() {
         if (!next[key]) next[key] = issue.message;
       }
       setEditErrors(next);
+      return;
+    }
+
+    if (editDeliveryContextQuery.isPending) {
+      setMessage('Checking herd production for the selected date and shift…');
+      return;
+    }
+    if (editDeliveryContextQuery.isError) {
+      setEditErrors((current) => ({ ...current, form: editDeliveryContextQuery.error.message }));
+      setMessage(editDeliveryContextQuery.error.message);
+      return;
+    }
+    if (!editDeliveryContextQuery.data?.herdEntryExists) {
+      const errorMessage = 'Herd entry is required before a customer delivery can use this date and shift.';
+      setEditErrors((current) => ({ ...current, form: errorMessage }));
+      setMessage(errorMessage);
       return;
     }
 
@@ -435,6 +457,18 @@ export default function EntriesPage() {
               <div className="field"><label htmlFor="edit-pricing-type">Pricing type</label><select id="edit-pricing-type" value={editing.pricing_type} onChange={(event) => setEditing({ ...editing, pricing_type: event.target.value as PricingType, fat: '' })}><option value="FIXED_PER_LITRE">Fixed per litre</option><option value="FAT_BASED">Fat based</option></select></div>
             </div>
             <div className="field"><label htmlFor="edit-entry-notes">Notes (optional)</label><textarea id="edit-entry-notes" value={editing.notes} onChange={(event) => setEditing({ ...editing, notes: event.target.value })} rows={2} /></div>
+            {editDeliveryContextQuery.isError && <p className="field-error">{editDeliveryContextQuery.error.message}</p>}
+            {!editDeliveryContextQuery.isError && !editDeliveryContextQuery.isPending && !editDeliveryContextQuery.data?.herdEntryExists && (
+              <p className="auth-message" role="alert">Herd entry is required for {editing.business_date} · {editing.shift === 'MORNING' ? 'Morning' : 'Evening'} before this delivery can be saved.</p>
+            )}
+            {!editDeliveryContextQuery.isError && !editDeliveryContextQuery.isPending && editDeliveryContextQuery.data?.herdEntryExists && (
+              <p className="kpi-foot">
+                Available milk pool: <b>{milkTxt(editDeliveryContextQuery.data.availablePoolLitres)}</b>
+                {Number(editing.milk_quantity) > editDeliveryContextQuery.data.availablePoolLitres
+                  ? ' · ⚠️ This delivery exceeds the available pool and will still be recorded.'
+                  : ''}
+              </p>
+            )}
             {editDuplicateQuery.data && <p className="field-error">Another milk entry already exists for this customer, date, and shift.</p>}
             {editErrors.form && <p className="field-error">{editErrors.form}</p>}
             <p className="kpi-foot edit-original">Original: {editing._original.milk_quantity} L · {editing._original.fat ?? 'no fat'} · {editing._original.pricing_type} · ₹{editing._original.applied_rate} · {money(editing._original.calculated_amount)}</p>
