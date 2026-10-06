@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { useChangeBuffaloStatus } from '../hooks/use-buffaloes';
 import { BUFFALO_STATUSES, type BuffaloDetail } from '../types';
 
-const STATUSES = ['ACTIVE', 'DRY', 'SOLD', 'DECEASED', 'OTHER'] as const;
+
 
 export function BuffaloStatusForm({ buffalo }: { buffalo: BuffaloDetail }) {
   const mutation = useChangeBuffaloStatus();
