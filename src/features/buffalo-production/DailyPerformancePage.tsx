@@ -1,100 +1,80 @@
 'use client';
 
-import { milkTxt } from '@/lib/farm-format';
+import { useEffect, useMemo, useState } from 'react';
+
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
-import { useEffect, useRef, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { milkTxt } from '@/lib/farm-format';
+import { localDateKey, type MilkEntryShift } from '@/lib/milk-entry-list';
 import { buffaloMilkQuantitySchema } from './validation';
 import type { BuffaloProductionAnimal } from './types';
-import { getProductionSheet, saveProductionSheet } from './services/buffalo-production.service';
-import { localDateKey, type MilkEntryShift } from '@/lib/milk-entry-list';
-export default function DailyPerformancePage() {
-  const [rows, setRows] = useState<BuffaloProductionAnimal[]>([]),
-    [date, setDate] = useState(() => localDateKey(new Date())),
-    [shift, setShift] = useState<MilkEntryShift>('MORNING'),
-    [values, setValues] = useState<Record<string, string>>({}),
-    [busy, setBusy] = useState(false),
-    [loading, setLoading] = useState(true),
-    [message, setMessage] = useState(''),
-    [error, setError] = useState('');
-  const loadVersion = useRef(0);
-  async function load() {
-    const version = ++loadVersion.current;
-    if (!supabase) {
-      setLoading(false);
-      return;
-    }
+import {
+  useProductionSheetQuery,
+  useSaveProductionSheetMutation,
+} from './buffalo-production.queries';
 
-    setLoading(true);
-    setError('');
-    try {
-      const { buffaloes, production } = await getProductionSheet(supabase, date, shift);
-      if (version !== loadVersion.current) return;
-      setRows(buffaloes);
-      setValues(
-        Object.fromEntries(
-          buffaloes.map((buffalo) => {
-            const saved = production.find((record) => record.buffalo_id === buffalo.id);
-            return [buffalo.id, saved ? String(saved.milk_quantity) : ''];
-          }),
-        ),
-      );
-    } catch (loadError) {
-      if (version === loadVersion.current) {
-        setError(loadError instanceof Error ? loadError.message : 'Could not load production.');
-      }
-    } finally {
-      if (version === loadVersion.current) setLoading(false);
-    }
-  }
+export default function DailyPerformancePage() {
+  const [date, setDate] = useState(() => localDateKey());
+  const [shift, setShift] = useState<MilkEntryShift>('MORNING');
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const sheetQuery = useProductionSheetQuery(date, shift);
+  const saveMutation = useSaveProductionSheetMutation();
+  const rows: BuffaloProductionAnimal[] = sheetQuery.data?.buffaloes ?? [];
+
   useEffect(() => {
-    const task = window.setTimeout(() => void load(), 0);
-    return () => window.clearTimeout(task);
-  }, [date, shift]);
-  const setValue = (id: string, value: string) => {
-    setValues((current) => ({ ...current, [id]: value }));
-    setMessage('');
-  };
-  const total = rows.reduce(
-      (sum, animal) => sum + (values[animal.id]?.trim() ? Number(values[animal.id]) : 0),
-      0,
-    ),
-    recorded = rows.filter((animal) => values[animal.id]?.trim()).length;
+    const production = sheetQuery.data?.production ?? [];
+    setValues(
+      Object.fromEntries(
+        rows.map((buffalo) => {
+          const saved = production.find((record) => record.buffalo_id === buffalo.id);
+          return [buffalo.id, saved ? String(saved.milk_quantity) : ''];
+        }),
+      ),
+    );
+  }, [sheetQuery.data, rows]);
+
+  const total = useMemo(
+    () =>
+      rows.reduce(
+        (sum, animal) => sum + (values[animal.id]?.trim() ? Number(values[animal.id]) : 0),
+        0,
+      ),
+    [rows, values],
+  );
+  const recorded = rows.filter((animal) => values[animal.id]?.trim()).length;
+
   async function save() {
-    if (!supabase) return;
-    setBusy(true);
     setMessage('');
     setError('');
     try {
-      const submitted = [] as {
-        buffalo_id: string;
-        milk_quantity: number;
-      }[];
+      const submitted: { buffalo_id: string; milk_quantity: number }[] = [];
       for (const animal of rows) {
         const value = (values[animal.id] ?? '').trim();
         if (!value) continue;
         const parsed = buffaloMilkQuantitySchema.safeParse(value);
-        if (!parsed.success)
+        if (!parsed.success) {
           throw new Error(
             `${animal.name || animal.buffalo_code}: ${parsed.error.issues[0]?.message ?? 'Enter a valid quantity.'}`,
           );
+        }
         submitted.push({ buffalo_id: animal.id, milk_quantity: parsed.data });
       }
-      await saveProductionSheet(supabase, {
+
+      await saveMutation.mutateAsync({
         businessDate: date,
         shift,
         buffaloIds: rows.map((animal) => animal.id),
         records: submitted,
       });
       setMessage('Production saved. Blank fields have no record; entered zero is recorded.');
-      await load();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Could not save production.');
-    } finally {
-      setBusy(false);
     }
   }
+
   return (
     <AppShell title="Daily performance" subtitle="Record buffalo milk production by date and shift">
       <div className="card">
@@ -102,8 +82,8 @@ export default function DailyPerformancePage() {
           <div>
             <h2 className="section-title">Herd production entry</h2>
             <p className="kpi-foot">
-              Active and dry buffaloes are listed; other historical statuses are excluded. Fat,
-              feed, health and medicine notes belong to other records.
+              Active and dry buffaloes are listed; other historical statuses are excluded. Saving
+              production also updates the farm milk pool.
             </p>
           </div>
           <label className="field production-date">
@@ -112,11 +92,12 @@ export default function DailyPerformancePage() {
               type="date"
               className="date-chip"
               value={date}
-              disabled={busy}
+              disabled={saveMutation.isPending}
               onChange={(event) => setDate(event.target.value)}
             />
           </label>
         </div>
+
         <div className="date-range-segment" role="group" aria-label="Production shift">
           {(['MORNING', 'EVENING'] as const).map((value) => (
             <button
@@ -124,44 +105,37 @@ export default function DailyPerformancePage() {
               key={value}
               className={`date-chip ${shift === value ? 'active' : ''}`}
               aria-pressed={shift === value}
-              disabled={busy || loading}
+              disabled={saveMutation.isPending || sheetQuery.isFetching}
               onClick={() => setShift(value)}
             >
               {value === 'MORNING' ? 'Morning' : 'Evening'}
             </button>
           ))}
         </div>
+
         <div className="row production-total">
-          <span>
-            {recorded} of {rows.length} buffaloes recorded
-          </span>
+          <span>{recorded} of {rows.length} buffaloes recorded</span>
           <b>{milkTxt(total)}</b>
         </div>
-        {error && (
-          <p className="auth-message" role="alert">
-            {error}
-          </p>
+
+        {error && <p className="auth-message" role="alert">{error}</p>}
+        {sheetQuery.isError && (
+          <p className="auth-message" role="alert">{sheetQuery.error.message}</p>
         )}
-        {loading ? (
+
+        {sheetQuery.isPending ? (
           <div className="empty">Loading buffaloes and saved production…</div>
         ) : (
           <div className="table-wrap">
             <table className="table">
-              <thead>
-                <tr>
-                  <th>BUFFALO</th>
-                  <th>MILK (L)</th>
-                  <th>STATUS</th>
-                </tr>
-              </thead>
+              <thead><tr><th>BUFFALO</th><th>MILK (L)</th><th>STATUS</th></tr></thead>
               <tbody>
                 {rows.map((animal) => (
                   <tr key={animal.id}>
                     <td>
                       <b>{animal.name || animal.buffalo_code}</b>
                       <div className="kpi-foot">
-                        {animal.buffalo_code}
-                        {animal.current_status === 'DRY' ? ' · Dry' : ''}
+                        {animal.buffalo_code}{animal.current_status === 'DRY' ? ' · Dry' : ''}
                       </div>
                     </td>
                     <td>
@@ -173,18 +147,19 @@ export default function DailyPerformancePage() {
                         step="0.001"
                         inputMode="decimal"
                         placeholder="No record"
-                        disabled={busy || loading}
+                        disabled={saveMutation.isPending || sheetQuery.isFetching}
                         value={values[animal.id] ?? ''}
-                        onChange={(event) => setValue(animal.id, event.target.value)}
+                        onChange={(event) => {
+                          setValues((current) => ({ ...current, [animal.id]: event.target.value }));
+                          setMessage('');
+                        }}
                       />
                     </td>
                     <td>
                       {values[animal.id]?.trim() ? (
-                        Number(values[animal.id]) === 0 ? (
-                          <span className="tag gold">Recorded · 0 L</span>
-                        ) : (
-                          <span className="tag">Recorded</span>
-                        )
+                        Number(values[animal.id]) === 0
+                          ? <span className="tag gold">Recorded · 0 L</span>
+                          : <span className="tag">Recorded</span>
                       ) : (
                         <span className="kpi-foot">No record</span>
                       )}
@@ -195,18 +170,13 @@ export default function DailyPerformancePage() {
             </table>
           </div>
         )}
-        {!loading && !rows.length && (
-          <div className="empty">
-            No active or dry buffaloes found. Add relevant buffaloes before recording production.
-          </div>
+
+        {!sheetQuery.isPending && !rows.length && (
+          <div className="empty">No active or dry buffaloes found. Add relevant buffaloes before recording production.</div>
         )}
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-        <button
-          className="btn"
-          disabled={busy || loading || !rows.length}
-          onClick={() => void save()}
-        >
-          {busy ? 'Saving…' : 'Save production'}
+        <button className="btn" disabled={saveMutation.isPending || sheetQuery.isPending || !rows.length} onClick={() => void save()}>
+          {saveMutation.isPending ? 'Saving…' : 'Save production'}
         </button>
       </div>
     </AppShell>
