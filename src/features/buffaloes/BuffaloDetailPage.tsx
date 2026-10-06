@@ -151,9 +151,9 @@ export default function BuffaloDetailPage({ code }: { code: string }) {
           foot="Recorded production days"
         />
         <KPI
-          label="PRODUCTION RECORDS"
-          value={String(production.length)}
-          foot="One row per date and shift"
+          label="PURCHASE PRICE"
+          value={purchase ? money(Number(purchase.purchase_price)) : '—'}
+          foot={purchase ? `Paid ${money(Number(purchase.amount_paid))}` : 'No purchase record'}
         />
         <KPI
           label="BALANCE DUE"
@@ -167,6 +167,7 @@ export default function BuffaloDetailPage({ code }: { code: string }) {
       </div>
 
       <div className="grid two">
+        <ProfileSummary buffalo={buffalo} />
         <div className="card">
           <h2 className="section-title">Milk production trend</h2>
           <div className="chart">
@@ -237,6 +238,22 @@ export default function BuffaloDetailPage({ code }: { code: string }) {
   );
 }
 
+function ProfileSummary({ buffalo }: { buffalo: BuffaloDetail }) {
+  return (
+    <div className="card">
+      <h2 className="section-title">Buffalo profile</h2>
+      <p className="sub">Code: <b>{buffalo.buffalo_code}</b></p>
+      <p className="sub">Breed: {buffalo.breed || '—'}</p>
+      <p className="sub">
+        Age at purchase: {buffalo.age_at_purchase_months == null ? '—' : `${buffalo.age_at_purchase_months} months`}
+      </p>
+      <p className="sub">Color: {buffalo.color || '—'}</p>
+      <p className="sub">Identification: {buffalo.identification_mark || '—'}</p>
+      <p className="sub">Notes: {buffalo.notes || '—'}</p>
+    </div>
+  );
+}
+
 function PurchaseSummary({
   buffalo,
 }: {
@@ -249,17 +266,25 @@ function PurchaseSummary({
       <h2 className="section-title">Purchase and vendor</h2>
       <p className="sub">Purchase date: {formatDate(purchase?.purchase_date)}</p>
       <p className="sub">
+        Purchase price: {purchase ? money(Number(purchase.purchase_price)) : '—'} · Paid:{' '}
+        {purchase ? money(Number(purchase.amount_paid)) : '—'}
+      </p>
+      <p className="sub">
         Vendor: {purchase?.vendors?.name ?? '—'}
         {purchase?.vendors?.mobile ? ` · ${purchase.vendors.mobile}` : ''}
       </p>
       <p className="sub">
-        Purchase location: {purchase?.vendors?.village_city ?? purchase?.vendors?.address ?? '—'}
+        Location: {purchase?.vendors?.village_city ?? purchase?.vendors?.address ?? '—'}
+        {purchase?.vendors?.state ? `, ${purchase.vendors.state}` : ''}
       </p>
+      <p className="sub">Vendor mobile: {purchase?.vendors?.mobile ?? '—'}</p>
       <p className="sub">
         Payment type: {paymentTypeLabel(purchase?.payment_status)} · Udhaar due:{' '}
         {formatDate(purchase?.payment_due_date)}
       </p>
       <p className="sub">Udhaar terms: {purchase?.payment_terms ?? '—'}</p>
+      <p className="sub">Reference: {purchase?.transaction_reference ?? '—'}</p>
+      <p className="sub">Purchase notes: {purchase?.notes ?? '—'}</p>
       <p className="sub">
         Identification: {buffalo.identification_mark ?? '—'} · Color: {buffalo.color ?? '—'}
       </p>
