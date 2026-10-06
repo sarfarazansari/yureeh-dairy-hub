@@ -62,18 +62,37 @@ export type BuffaloDetail = {
   }>;
 };
 
-export async function getBuffaloDetails(client: SupabaseClient, buffaloCode: string) {
-  const { data, error } = await client.from('buffaloes').select(
-    'id,buffalo_code,name,breed,current_status,identification_mark,color,buffalo_purchases(*,vendors(name,mobile,address,village_city))',
-  ).eq('buffalo_code', buffaloCode).maybeSingle();
-  if (error) throw new Error('Could not load buffalo details. Please try again.');
-  if (!data) return null;
-  return {
+export async function getBuffaloDetails(
+  client: SupabaseClient,
+  buffaloCode: string,
+) {
+  const { data, error } = await client
+    .from('buffaloes')
+    .select(
+      'id,buffalo_code,name,breed,current_status,identification_mark,color,buffalo_purchases(*,vendors(name,mobile,address,village_city))',
+    )
+    .eq('buffalo_code', buffaloCode)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error('Could not load buffalo details. Please try again.');
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const buffaloDetail = {
     ...data,
-    buffalo_purchases: (data.buffalo_purchases ?? []).map((p) => ({
-      ...p, purchase_price: Number(p.purchase_price), amount_paid: Number(p.amount_paid), amount_pending: Number(p.amount_pending),
+    buffalo_purchases: (data.buffalo_purchases ?? []).map((purchase) => ({
+      ...purchase,
+      purchase_price: Number(purchase.purchase_price),
+      amount_paid: Number(purchase.amount_paid),
+      amount_pending: Number(purchase.amount_pending),
     })),
-  }) as BuffaloDetail;
+  };
+
+  return buffaloDetail as BuffaloDetail;
 }
 
 export async function recordBuffaloPurchasePayment(
