@@ -33,9 +33,9 @@ import {
   BuffaloStatusHistory,
 } from './components/BuffaloHistory';
 
-export default function BuffaloDetailPage({ code }: { code: string }) {
+export default function BuffaloDetailPage({ id }: { id: string }) {
   const [editing, setEditing] = useState<'profile' | 'purchase' | 'vendor' | null>(null);
-  const buffaloQuery = useBuffaloDetail(code);
+  const buffaloQuery = useBuffaloDetail(id);
   const buffalo = buffaloQuery.data;
   const productionQuery = useBuffaloProductionHistory(buffalo?.id);
   const paymentsQuery = useBuffaloPurchasePayments(buffalo?.id);
