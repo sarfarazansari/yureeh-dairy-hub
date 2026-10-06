@@ -32,7 +32,7 @@ import {
   BuffaloPaymentHistory,
   BuffaloStatusHistory,
 } from './components/BuffaloHistory';
-import { BuffaloDetail } from './services/buffalo.service';
+import type { BuffaloDetail } from './types';
 
 export default function BuffaloDetailPage({ id }: { id: string }) {
   const [editing, setEditing] = useState<'profile' | 'purchase' | 'vendor' | null>(null);
