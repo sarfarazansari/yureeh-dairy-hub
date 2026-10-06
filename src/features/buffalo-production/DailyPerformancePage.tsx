@@ -82,7 +82,7 @@ export default function DailyPerformancePage() {
           <div>
             <h2 className="section-title">Herd production entry</h2>
             <p className="kpi-foot">
-              Active and dry buffaloes are listed; other historical statuses are excluded. Saving
+              Only active buffaloes are listed and editable. Historical production remains available in buffalo history. Saving
               production also updates the farm milk pool.
             </p>
           </div>
@@ -135,7 +135,7 @@ export default function DailyPerformancePage() {
                     <td>
                       <b>{animal.name || animal.buffalo_code}</b>
                       <div className="kpi-foot">
-                        {animal.buffalo_code}{animal.current_status === 'DRY' ? ' · Dry' : ''}
+                        {animal.buffalo_code}
                       </div>
                     </td>
                     <td>
@@ -172,7 +172,7 @@ export default function DailyPerformancePage() {
         )}
 
         {!sheetQuery.isPending && !rows.length && (
-          <div className="empty">No active or dry buffaloes found. Add relevant buffaloes before recording production.</div>
+          <div className="empty">No active buffaloes found. Add active buffaloes before recording production.</div>
         )}
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
         <button className="btn" disabled={saveMutation.isPending || sheetQuery.isPending || !rows.length} onClick={() => void save()}>
