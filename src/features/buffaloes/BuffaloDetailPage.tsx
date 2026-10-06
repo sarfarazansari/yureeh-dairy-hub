@@ -220,7 +220,7 @@ export default function BuffaloDetailPage({ code }: { code: string }) {
             <h2 className="section-title">Performance history</h2>
             <p className="sub">Milk recorded for this buffalo by date and shift.</p>
           </div>
-          <Link className="date-chip" href="/buffalo-production">
+          <Link className="date-chip" href="/daily-performance">
             Open production
           </Link>
         </div>
