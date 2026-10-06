@@ -241,3 +241,127 @@ export async function updateBuffaloProfile(
 
   throw new Error('Could not update buffalo profile. Please try again.');
 }
+
+
+export type BuffaloPurchasePayment = {
+  id: string;
+  payment_date: string;
+  amount: number;
+  payment_method: 'CASH' | 'UPI' | 'BANK_TRANSFER' | 'OTHER';
+  transaction_reference: string | null;
+  notes: string | null;
+};
+
+export type BuffaloStatusHistory = {
+  id: string;
+  status: string;
+  effective_date: string;
+  notes: string | null;
+};
+
+export type BuffaloPurchaseEditInput = {
+  purchase_date: string;
+  purchase_price: number;
+  payment_due_date?: string | null;
+  payment_terms?: string;
+  payment_method?: 'CASH' | 'UPI' | 'BANK_TRANSFER' | 'OTHER' | null;
+  transaction_reference?: string;
+  notes?: string;
+};
+
+export type BuffaloVendorEditInput = {
+  name: string;
+  mobile?: string;
+  address?: string;
+  village_city?: string;
+  state?: string;
+  notes?: string;
+};
+
+export async function updateBuffaloPurchase(
+  client: SupabaseClient,
+  buffaloId: string,
+  input: BuffaloPurchaseEditInput,
+) {
+  const { error } = await client.rpc('update_buffalo_purchase', {
+    p_buffalo_id: buffaloId,
+    p_purchase_date: input.purchase_date,
+    p_purchase_price: input.purchase_price,
+    p_payment_due_date: input.payment_due_date || null,
+    p_payment_terms: input.payment_terms?.trim() || null,
+    p_payment_method: input.payment_method || null,
+    p_transaction_reference: input.transaction_reference?.trim() || null,
+    p_notes: input.notes?.trim() || null,
+  });
+
+  if (!error) return;
+
+  if (error.code === '23514' || error.code === 'P0002') {
+    throw new Error(error.message);
+  }
+
+  throw new Error('Could not update purchase details. Please try again.');
+}
+
+export async function updateBuffaloVendor(
+  client: SupabaseClient,
+  buffaloId: string,
+  input: BuffaloVendorEditInput,
+) {
+  const { error } = await client.rpc('update_buffalo_vendor', {
+    p_buffalo_id: buffaloId,
+    p_name: input.name.trim(),
+    p_mobile: input.mobile?.trim() || null,
+    p_address: input.address?.trim() || null,
+    p_village_city: input.village_city?.trim() || null,
+    p_state: input.state?.trim() || null,
+    p_notes: input.notes?.trim() || null,
+  });
+
+  if (!error) return;
+
+  if (error.code === '23514' || error.code === 'P0002') {
+    throw new Error(error.message);
+  }
+
+  throw new Error('Could not update vendor details. Please try again.');
+}
+
+export async function getBuffaloPurchasePayments(
+  client: SupabaseClient,
+  buffaloId: string,
+) {
+  const { data, error } = await client
+    .from('buffalo_purchase_payments')
+    .select('id,payment_date,amount,payment_method,transaction_reference,notes')
+    .eq('buffalo_id', buffaloId)
+    .order('payment_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error('Could not load payment history. Please try again.');
+  }
+
+  return (data ?? []).map((payment) => ({
+    ...payment,
+    amount: Number(payment.amount),
+  })) as BuffaloPurchasePayment[];
+}
+
+export async function getBuffaloStatusHistory(
+  client: SupabaseClient,
+  buffaloId: string,
+) {
+  const { data, error } = await client
+    .from('buffalo_status_history')
+    .select('id,status,effective_date,notes')
+    .eq('buffalo_id', buffaloId)
+    .order('effective_date', { ascending: false })
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error('Could not load status history. Please try again.');
+  }
+
+  return (data ?? []) as BuffaloStatusHistory[];
+}
