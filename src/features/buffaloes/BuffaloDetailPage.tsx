@@ -32,6 +32,7 @@ import {
   BuffaloPaymentHistory,
   BuffaloStatusHistory,
 } from './components/BuffaloHistory';
+import { BuffaloDetail } from './services/buffalo.service';
 
 export default function BuffaloDetailPage({ id }: { id: string }) {
   const [editing, setEditing] = useState<'profile' | 'purchase' | 'vendor' | null>(null);
@@ -76,12 +77,12 @@ export default function BuffaloDetailPage({ id }: { id: string }) {
   }, [production]);
 
   if (buffaloQuery.isPending) {
-    return <AppShell title="Buffalo details"><div className="empty">Loading buffalo…</div></AppShell>;
+    return <AppShell title="Buffalo details" subtitle=""><div className="empty">Loading buffalo…</div></AppShell>;
   }
 
   if (buffaloQuery.isError) {
     return (
-      <AppShell title="Buffalo details">
+      <AppShell title="Buffalo details" subtitle="">
         <div className="empty">{buffaloQuery.error.message}</div>
       </AppShell>
     );
@@ -89,7 +90,7 @@ export default function BuffaloDetailPage({ id }: { id: string }) {
 
   if (!buffalo) {
     return (
-      <AppShell title="Buffalo details">
+      <AppShell title="Buffalo details" subtitle="">
         <div className="empty">Buffalo not found.</div>
       </AppShell>
     );
@@ -299,7 +300,7 @@ function ProductionTable({
     id: string;
     business_date: string;
     shift: string;
-    milk_quantity: number;
+    milk_quantity: number | string;
   }>;
 }) {
   return production.length ? (

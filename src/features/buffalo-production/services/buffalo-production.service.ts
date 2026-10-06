@@ -21,7 +21,7 @@ export type BuffaloProductionHistoryRecord = BuffaloProductionRecord & { id: str
 
 export type BuffaloProductionInput = {
   buffalo_id: string;
-  milk_quantity: number;
+  milk_quantity: number | string;
 };
 
 export async function getProductionSheet(
