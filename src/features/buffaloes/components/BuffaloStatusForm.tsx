@@ -3,7 +3,7 @@
 import { useState } from 'react';
 
 import { useChangeBuffaloStatus } from '../hooks/use-buffaloes';
-import type { BuffaloDetail } from '../services/buffalo.service';
+import { BUFFALO_STATUSES, type BuffaloDetail } from '../types';
 
 const STATUSES = ['ACTIVE', 'DRY', 'SOLD', 'DECEASED', 'OTHER'] as const;
 
