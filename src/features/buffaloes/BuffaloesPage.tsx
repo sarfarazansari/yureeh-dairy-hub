@@ -29,7 +29,12 @@ const INITIAL_FORM = {
 };
 
 function getToday() {
-  return new Date().toISOString().slice(0, 10);
+  const today = new Date();
+  return [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, '0'),
+    String(today.getDate()).padStart(2, '0'),
+  ].join('-');
 }
 
 function paymentLabel(status?: string) {
