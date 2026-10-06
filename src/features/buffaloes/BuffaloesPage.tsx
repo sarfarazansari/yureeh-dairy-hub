@@ -14,7 +14,7 @@ import {
   useBuffaloDirectory,
   useCreateBuffaloPurchase,
 } from './hooks/use-buffaloes';
-import type { BuffaloListItem } from './services/buffalo.service';
+import type { BuffaloListItem } from './types';
 
 const INITIAL_FORM = {
   buffalo_code: '',
