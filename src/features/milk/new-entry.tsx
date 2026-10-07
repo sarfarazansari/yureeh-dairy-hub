@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
@@ -132,7 +132,12 @@ export default function NewEntryForm() {
                 type="date"
                 value={date}
                 disabled={createMutation.isPending}
-                onChange={(event) => setDate(event.target.value)}
+                onChange={(event) => {
+                  setDate(event.target.value);
+                  setPricingTypeOverride(null);
+                  setRateOverride(null);
+                  setFat('');
+                }}
                 aria-invalid={!!errors.business_date}
               />
               {errors.business_date && <small className="field-error">{errors.business_date}</small>}
