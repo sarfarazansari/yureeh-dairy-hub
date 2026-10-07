@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { Dialog } from '@/app/dialog';
 import type { FeedPurchaseListRow } from '@/lib/feed-purchase-types';
 
 type Props = {
@@ -19,22 +20,19 @@ const money = (value: number | string) =>
 export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, onDelete }: Props) {
   const pages = Math.max(1, Math.ceil(count / pageSize));
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<FeedPurchaseListRow | null>(null);
 
   useEffect(() => {
     if (page >= pages) onPageChange(Math.max(0, pages - 1));
   }, [page, pages, onPageChange]);
 
-  async function handleDelete(row: FeedPurchaseListRow) {
-    if (!row.can_edit_delete || deletingId) return;
+  async function confirmDelete() {
+    if (!deleteTarget || deletingId) return;
 
-    const confirmed = window.confirm(
-      `Delete this ${row.feed_item_name} purchase? The purchase and its stock-in will be reversed.`,
-    );
-    if (!confirmed) return;
-
-    setDeletingId(row.id);
+    setDeletingId(deleteTarget.id);
     try {
-      await onDelete(row.id);
+      await onDelete(deleteTarget.id);
+      setDeleteTarget(null);
     } finally {
       setDeletingId(null);
     }
@@ -87,7 +85,7 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
                         type="button"
                         className="date-chip"
                         disabled={deletingId === row.id}
-                        onClick={() => void handleDelete(row)}
+                        onClick={() => setDeleteTarget(row)}
                       >
                         {deletingId === row.id ? 'Deleting…' : 'Delete'}
                       </button>
@@ -115,6 +113,65 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
           </button>
         </div>
       )}
+
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open && !deletingId) setDeleteTarget(null);
+        }}
+        labelledBy="feed-purchase-delete-title"
+        className="delete-dialog"
+      >
+        <div className="dialog-header">
+          <div>
+            <p className="eyebrow">FEED PURCHASE</p>
+            <h2 id="feed-purchase-delete-title" className="dialog-title">Delete purchase?</h2>
+            <p className="dialog-description">
+              This will remove the purchase from the active archive and reverse its stock-in movement.
+            </p>
+          </div>
+          <button
+            type="button"
+            className="dialog-close"
+            onClick={() => setDeleteTarget(null)}
+            disabled={Boolean(deletingId)}
+            aria-label="Close delete dialog"
+          >
+            ×
+          </button>
+        </div>
+
+        {deleteTarget && (
+          <div className="delete-summary">
+            <span>Feed item</span>
+            <b>{deleteTarget.feed_item_name}</b>
+            <span>
+              {Number(deleteTarget.purchase_quantity).toLocaleString('en-IN')} {deleteTarget.purchase_unit}
+              {' · '}
+              {money(deleteTarget.total_amount)}
+            </span>
+          </div>
+        )}
+
+        <div className="dialog-footer">
+          <button
+            type="button"
+            className="btn secondary"
+            onClick={() => setDeleteTarget(null)}
+            disabled={Boolean(deletingId)}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className="btn destructive"
+            onClick={() => void confirmDelete()}
+            disabled={Boolean(deletingId)}
+          >
+            {deletingId ? 'Deleting…' : 'Delete purchase'}
+          </button>
+        </div>
+      </Dialog>
     </div>
   );
 }
