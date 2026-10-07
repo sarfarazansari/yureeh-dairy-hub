@@ -21,6 +21,7 @@ export type FeedPurchase = {
 export type FeedPurchaseListRow = FeedPurchase & {
   feed_item_name: string;
   vendor_name: string | null;
+  payment_status: FeedPurchasePaymentStatus;
 };
 
 export type FeedPurchasePreview = {
