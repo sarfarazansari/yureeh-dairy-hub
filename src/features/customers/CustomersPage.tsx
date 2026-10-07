@@ -11,6 +11,7 @@ import { TimedNotice } from '@/components/ui/TimedNotice';
 import {
   useCreateCustomerMutation,
   useCustomerDirectoryQuery,
+  useUpdateCustomerMutation,
   useSetCustomerActiveMutation,
   useUpdateCustomerPricingMutation,
 } from './customer.queries';
@@ -26,11 +27,13 @@ export default function CustomersPage() {
   const directoryQuery = useCustomerDirectoryQuery();
   const createMutation = useCreateCustomerMutation();
   const pricingMutation = useUpdateCustomerPricingMutation();
+  const editMutation = useUpdateCustomerMutation();
   const statusMutation = useSetCustomerActiveMutation();
   const rows = directoryQuery.data?.customers ?? [];
   const entries = directoryQuery.data?.entries ?? [];
   const busy = createMutation.isPending;
   const pricingBusy = pricingMutation.isPending;
+  const editBusy = editMutation.isPending;
   async function create(event: React.FormEvent) {
     event.preventDefault();
     if (!supabase) return;
@@ -51,6 +54,37 @@ export default function CustomersPage() {
       setMessage('Customer added.');
     } catch (createError) {
       setMessage(createError instanceof Error ? createError.message : 'Could not add customer.');
+    }
+  }
+
+  function openEdit(customer: CustomerSummary) {
+    setEditCustomer(customer);
+    setEditName(customer.name);
+    setEditPhone(customer.phone ?? '');
+    setEditAddress(customer.address ?? '');
+    setEditNotes(customer.notes ?? '');
+  }
+
+  async function saveCustomer(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editCustomer) return;
+    if (!editName.trim()) {
+      setMessage('Customer name is required.');
+      return;
+    }
+    setMessage('');
+    try {
+      await editMutation.mutateAsync({
+        customerId: editCustomer.id,
+        name: editName,
+        phone: editPhone,
+        address: editAddress,
+        notes: editNotes,
+      });
+      setEditCustomer(null);
+      setMessage('Customer details updated.');
+    } catch (updateError) {
+      setMessage(updateError instanceof Error ? updateError.message : 'Could not update customer.');
     }
   }
 
@@ -174,6 +208,13 @@ export default function CustomersPage() {
                           <button
                             type="button"
                             className="date-chip"
+                            onClick={() => openEdit(c)}
+                          >
+                            Edit
+                          </button>{' '}
+                          <button
+                            type="button"
+                            className="date-chip"
                             onClick={() => openPricing(c)}
                           >
                             Rate
@@ -195,6 +236,63 @@ export default function CustomersPage() {
           )}
         </div>
       </div>
+      <Dialog
+        open={!!editCustomer}
+        onOpenChange={(open) => {
+          if (!open && !editBusy) setEditCustomer(null);
+        }}
+        labelledBy="customer-edit-title"
+      >
+        <form onSubmit={saveCustomer}>
+          <div className="dialog-header">
+            <div>
+              <p className="eyebrow">CUSTOMER PROFILE</p>
+              <h2 className="dialog-title" id="customer-edit-title">Edit customer</h2>
+              <p className="dialog-description">{editCustomer?.name}</p>
+            </div>
+            <button
+              className="dialog-close"
+              type="button"
+              aria-label="Close customer edit dialog"
+              disabled={editBusy}
+              onClick={() => setEditCustomer(null)}
+            >
+              ×
+            </button>
+          </div>
+          <div className="field">
+            <label htmlFor="customer-edit-name">Name</label>
+            <input id="customer-edit-name" required value={editName} onChange={(event) => setEditName(event.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="customer-edit-phone">Phone</label>
+            <input id="customer-edit-phone" value={editPhone} onChange={(event) => setEditPhone(event.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="customer-edit-address">Address</label>
+            <input id="customer-edit-address" value={editAddress} onChange={(event) => setEditAddress(event.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="customer-edit-notes">Notes</label>
+            <textarea
+              id="customer-edit-notes"
+              value={editNotes}
+              onChange={(event) => setEditNotes(event.target.value)}
+              rows={3}
+              style={{ border: '1px solid var(--line)', borderRadius: 8, padding: 10, resize: 'vertical' }}
+            />
+          </div>
+          <div className="dialog-footer">
+            <button type="button" className="btn secondary" disabled={editBusy} onClick={() => setEditCustomer(null)}>
+              Cancel
+            </button>
+            <button className="btn" disabled={editBusy}>
+              {editBusy ? 'Saving…' : 'Save customer'}
+            </button>
+          </div>
+        </form>
+      </Dialog>
+
       <Dialog
         open={!!pricingCustomer}
         onOpenChange={(open) => {
