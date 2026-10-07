@@ -38,9 +38,6 @@ export default function CustomerDetailPage({ id }: { id: string }) {
   const payments = paymentsQuery.data ?? [];
   const total = rows.reduce((s, r) => s + Number(r.milk_quantity), 0),
     rev = rows.reduce((s, r) => s + Number(r.calculated_amount), 0),
-    fatDen = rows.reduce((s, r) => s + (r.fat == null ? 0 : Number(r.milk_quantity)), 0),
-    fatNum = rows.reduce((s, r) => s + Number(r.milk_quantity) * Number(r.fat ?? 0), 0),
-    avgFat = fatDen ? fatNum / fatDen : null,
     paymentsTotal = payments.reduce((s, p) => s + Number(p.amount), 0),
     outstanding = Math.max(0, rev - paymentsTotal),
     daily = Array.from(new Set(rows.map((r) => r.business_date)))
