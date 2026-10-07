@@ -4,11 +4,11 @@ import type { FeedItem } from '@/lib/feed-types';
 
 export async function createFeedPurchase(client: SupabaseClient, values: {
   feedItemId: string;
-  vendorId: string;
+  vendorId?: string;
   businessDate: string;
   purchaseQuantity: number;
   rate: number;
-  paymentStatus: string;
+  paymentStatus: 'PAID' | 'PARTIAL' | 'CREDIT';
   paidAmount: number;
   paymentMethod: string;
   dueDate?: string;
