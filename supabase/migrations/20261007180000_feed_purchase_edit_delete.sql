@@ -9,6 +9,11 @@ drop function if exists public.correct_feed_purchase(
 
 drop index if exists public.feed_purchases_correction_idx;
 
+update public.feed_purchases
+set status = 'DELETED',
+    updated_at = now()
+where status = 'CORRECTED';
+
 alter table public.feed_purchases
   drop constraint if exists feed_purchases_status_check;
 
