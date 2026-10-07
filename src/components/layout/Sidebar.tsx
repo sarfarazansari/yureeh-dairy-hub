@@ -12,6 +12,7 @@ import {
   Users,
   TrendingUp,
   IndianRupee,
+  Wheat,
   Beef,
   Activity,
   Settings,
@@ -32,7 +33,13 @@ const navigationGroups = [
       { label: 'Analytics', href: '/analytics', icon: TrendingUp },
     ],
   },
-  { label: 'FARM COSTS', items: [{ label: 'Expenses', href: '/expenses', icon: IndianRupee }] },
+  {
+    label: 'FARM COSTS',
+    items: [
+      { label: 'Expenses', href: '/expenses', icon: IndianRupee },
+      { label: 'Feed', href: '/feeds/items', icon: Wheat },
+    ],
+  },
   {
     label: 'PRODUCTION',
     items: [
