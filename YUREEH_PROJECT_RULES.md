@@ -27,6 +27,13 @@ Next.js App Router.
 
 Every major module must have its own route.
 
+CRUD route convention for transaction/master modules:
+- Archive/list route: `/module`
+- New creation route: `/module/new`
+- Edit route: `/module/edit/[id]`
+- Every `/new` and `/edit/[id]` page must provide a clear back action to its module archive route.
+- Do not leave users stranded on a creation/edit page without navigation back to the archive.
+
 Do not build the application around a single app-view.tsx.
 
 Authentication/route protection must be centralized.
