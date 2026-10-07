@@ -19,12 +19,14 @@ import {
   type MilkEntryListRow,
   type MilkEntryShift,
 } from '@/lib/milk-entry-list';
-import { type PricingType } from '@/lib/analytics';
+import { calculateEntryAmount, type PricingType } from '@/lib/analytics';
 import { milkEntrySchema } from '@/lib/milk-entry-validation';
 
 import {
   useDeleteMilkEntryMutation,
+  useMilkDeliveryContextQuery,
   useMilkEntryCustomersQuery,
+  useMilkEntryDuplicateQuery,
   useMilkEntryListQuery,
   useUpdateMilkEntryMutation,
 } from './milk.queries';
@@ -108,6 +110,19 @@ export default function EntriesPage() {
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
 
+  const editDuplicateQuery = useMilkEntryDuplicateQuery({
+    customerId: editing?.customer_id ?? '',
+    businessDate: editing?.business_date ?? '',
+    shift: editing?.shift ?? 'MORNING',
+    excludeEntryId: editing?.id,
+  });
+
+  const editDeliveryContextQuery = useMilkDeliveryContextQuery(
+    editing?.business_date ?? '',
+    editing?.shift ?? 'MORNING',
+  );
+
+
   function replaceParams(next: URLSearchParams) {
     router.replace(getMilkEntryListUrl(pathname, next), { scroll: false });
   }
@@ -188,6 +203,35 @@ export default function EntriesPage() {
         if (!next[key]) next[key] = issue.message;
       }
       setEditErrors(next);
+      return;
+    }
+
+    if (editDeliveryContextQuery.isPending) {
+      setMessage('Checking herd production for the selected date and shift…');
+      return;
+    }
+    if (editDeliveryContextQuery.isError) {
+      setEditErrors((current) => ({ ...current, form: editDeliveryContextQuery.error.message }));
+      setMessage(editDeliveryContextQuery.error.message);
+      return;
+    }
+    if (!editDeliveryContextQuery.data?.herdEntryExists) {
+      const errorMessage = 'Herd entry is required before a customer delivery can use this date and shift.';
+      setEditErrors((current) => ({ ...current, form: errorMessage }));
+      setMessage(errorMessage);
+      return;
+    }
+
+    if (editDuplicateQuery.isPending) {
+      setMessage('Checking for an existing delivery…');
+      return;
+    }
+    if (editDuplicateQuery.data) {
+      setEditErrors((current) => ({
+        ...current,
+        form: 'Another milk entry already exists for this customer, date, and shift.',
+      }));
+      setMessage('Another milk entry already exists for this customer, date, and shift.');
       return;
     }
 
@@ -345,7 +389,7 @@ export default function EntriesPage() {
                       <td>{money(Number(row.calculated_amount))}</td>
                       <td>
                         <button type="button" className="date-chip" onClick={() => openEdit(row)}>Edit</button>{' '}
-                        <button type="button" className="date-chip danger-text" onClick={() => setPendingDelete(row)}>Delete</button>
+                        <button type="button" className="date-chip danger-text" onClick={() => setPendingDelete(row)}>Cancel</button>
                       </td>
                     </tr>
                   ))}
@@ -413,6 +457,20 @@ export default function EntriesPage() {
               <div className="field"><label htmlFor="edit-pricing-type">Pricing type</label><select id="edit-pricing-type" value={editing.pricing_type} onChange={(event) => setEditing({ ...editing, pricing_type: event.target.value as PricingType, fat: '' })}><option value="FIXED_PER_LITRE">Fixed per litre</option><option value="FAT_BASED">Fat based</option></select></div>
             </div>
             <div className="field"><label htmlFor="edit-entry-notes">Notes (optional)</label><textarea id="edit-entry-notes" value={editing.notes} onChange={(event) => setEditing({ ...editing, notes: event.target.value })} rows={2} /></div>
+            {editDeliveryContextQuery.isError && <p className="field-error">{editDeliveryContextQuery.error.message}</p>}
+            {!editDeliveryContextQuery.isError && !editDeliveryContextQuery.isPending && !editDeliveryContextQuery.data?.herdEntryExists && (
+              <p className="auth-message" role="alert">Herd entry is required for {editing.business_date} · {editing.shift === 'MORNING' ? 'Morning' : 'Evening'} before this delivery can be saved.</p>
+            )}
+            {!editDeliveryContextQuery.isError && !editDeliveryContextQuery.isPending && editDeliveryContextQuery.data?.herdEntryExists && (
+              <p className="kpi-foot">
+                Available milk pool: <b>{milkTxt(editDeliveryContextQuery.data.availablePoolLitres)}</b>
+                {Number(editing.milk_quantity) > editDeliveryContextQuery.data.availablePoolLitres
+                  ? ' · ⚠️ This delivery exceeds the available pool and will still be recorded.'
+                  : ''}
+              </p>
+            )}
+            {editDuplicateQuery.data && <p className="field-error">Another milk entry already exists for this customer, date, and shift.</p>}
+            {editErrors.form && <p className="field-error">{editErrors.form}</p>}
             <p className="kpi-foot edit-original">Original: {editing._original.milk_quantity} L · {editing._original.fat ?? 'no fat'} · {editing._original.pricing_type} · ₹{editing._original.applied_rate} · {money(editing._original.calculated_amount)}</p>
             <div className="dialog-footer"><button type="button" className="btn secondary" onClick={() => setEditing(null)} disabled={updateMutation.isPending}>Cancel</button><button disabled={updateMutation.isPending} className="btn">{updateMutation.isPending ? 'Saving…' : 'Save changes'}</button></div>
           </form>
@@ -423,11 +481,11 @@ export default function EntriesPage() {
         {pendingDelete && (
           <>
             <div className="dialog-header">
-              <div><h2 className="dialog-title" id="delete-entry-title">Delete milk entry?</h2><p className="dialog-description">The sale is soft-deleted and its active pool movement is reversed for audit-safe reconciliation.</p></div>
+              <div><h2 className="dialog-title" id="delete-entry-title">Cancel milk delivery?</h2><p className="dialog-description">The delivery will be cancelled, kept in audit history, and its active pool movement will be reversed.</p></div>
               <button className="dialog-close" type="button" onClick={() => setPendingDelete(null)} disabled={deleteMutation.isPending}>×</button>
             </div>
             <div className="delete-summary"><b>{pendingDelete.customers?.name ?? 'Customer'}</b><span>{formatDate(pendingDelete.business_date)} · {pendingDelete.shift}</span><span>{milkTxt(Number(pendingDelete.milk_quantity))} · {money(Number(pendingDelete.calculated_amount))}</span></div>
-            <div className="dialog-footer"><button type="button" className="btn secondary" onClick={() => setPendingDelete(null)} disabled={deleteMutation.isPending}>Cancel</button><button type="button" className="btn destructive" onClick={() => void confirmDelete()} disabled={deleteMutation.isPending}>{deleteMutation.isPending ? 'Deleting…' : 'Delete entry'}</button></div>
+            <div className="dialog-footer"><button type="button" className="btn secondary" onClick={() => setPendingDelete(null)} disabled={deleteMutation.isPending}>Cancel</button><button type="button" className="btn destructive" onClick={() => void confirmDelete()} disabled={deleteMutation.isPending}>{deleteMutation.isPending ? 'Cancelling…' : 'Cancel delivery'}</button></div>
           </>
         )}
       </Dialog>

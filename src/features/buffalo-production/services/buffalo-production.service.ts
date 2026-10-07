@@ -17,11 +17,9 @@ export async function getProductionSheet(
   shift: MilkEntryShift,
 ) {
   const [buffaloes, production] = await Promise.all([
-    client
-      .from('buffaloes')
-      .select('id,buffalo_code,name,current_status')
-      .in('current_status', ['ACTIVE', 'DRY'])
-      .order('buffalo_code'),
+    client.rpc('get_buffalo_production_sheet', {
+      p_business_date: businessDate,
+    }),
     client
       .from('buffalo_milk_production')
       .select('buffalo_id,shift,milk_quantity')

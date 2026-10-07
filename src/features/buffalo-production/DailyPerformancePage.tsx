@@ -23,9 +23,9 @@ export default function DailyPerformancePage() {
   const sheetQuery = useProductionSheetQuery(date, shift);
   const saveMutation = useSaveProductionSheetMutation();
   const rows: BuffaloProductionAnimal[] = sheetQuery.data?.buffaloes ?? [];
+  const production = sheetQuery.data?.production ?? [];
 
   useEffect(() => {
-    const production = sheetQuery.data?.production ?? [];
     setValues(
       Object.fromEntries(
         rows.map((buffalo) => {
@@ -34,7 +34,7 @@ export default function DailyPerformancePage() {
         }),
       ),
     );
-  }, [sheetQuery.data, rows]);
+  }, [sheetQuery.data?.buffaloes, sheetQuery.data?.production]);
 
   const total = useMemo(
     () =>
@@ -82,7 +82,7 @@ export default function DailyPerformancePage() {
           <div>
             <h2 className="section-title">Herd production entry</h2>
             <p className="kpi-foot">
-              Active and dry buffaloes are listed; other historical statuses are excluded. Saving
+              Buffaloes are listed according to their status on the selected date. Only buffaloes that were active on that date are editable. Saving
               production also updates the farm milk pool.
             </p>
           </div>
@@ -135,7 +135,7 @@ export default function DailyPerformancePage() {
                     <td>
                       <b>{animal.name || animal.buffalo_code}</b>
                       <div className="kpi-foot">
-                        {animal.buffalo_code}{animal.current_status === 'DRY' ? ' · Dry' : ''}
+                        {animal.buffalo_code}
                       </div>
                     </td>
                     <td>
@@ -172,7 +172,7 @@ export default function DailyPerformancePage() {
         )}
 
         {!sheetQuery.isPending && !rows.length && (
-          <div className="empty">No active or dry buffaloes found. Add relevant buffaloes before recording production.</div>
+          <div className="empty">No active buffaloes found. Add active buffaloes before recording production.</div>
         )}
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
         <button className="btn" disabled={saveMutation.isPending || sheetQuery.isPending || !rows.length} onClick={() => void save()}>

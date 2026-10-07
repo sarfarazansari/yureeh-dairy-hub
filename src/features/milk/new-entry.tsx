@@ -4,12 +4,14 @@ import { useMemo, useState } from 'react';
 
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
+import { milkTxt } from '@/lib/farm-format';
 import { calculateEntryAmount, type PricingType } from '@/lib/analytics';
 import { localDateKey } from '@/lib/milk-entry-list';
 import { milkEntrySchema } from '@/lib/milk-entry-validation';
 
 import {
   useCreateMilkEntryMutation,
+  useMilkDeliveryContextQuery,
   useMilkEntryCustomersQuery,
   useMilkEntryDuplicateQuery,
 } from './milk.queries';
@@ -27,6 +29,7 @@ export default function NewEntryForm() {
     [message, setMessage] = useState('');
 
   const customersQuery = useMilkEntryCustomersQuery();
+  const deliveryContextQuery = useMilkDeliveryContextQuery(date, shift);
   const duplicateQuery = useMilkEntryDuplicateQuery({ customerId, businessDate: date, shift });
   const createMutation = useCreateMilkEntryMutation();
   const customers = customersQuery.data ?? [];
@@ -86,6 +89,19 @@ export default function NewEntryForm() {
       }
       setErrors(next);
       setMessage('Please correct the highlighted fields.');
+      return;
+    }
+
+    if (deliveryContextQuery.isPending) {
+      setMessage('Checking herd production and the milk pool for the selected date and shift…');
+      return;
+    }
+    if (deliveryContextQuery.isError) {
+      setMessage(deliveryContextQuery.error.message);
+      return;
+    }
+    if (!deliveryContextQuery.data?.herdEntryExists) {
+      setMessage('Record the herd entry for this date and shift before recording customer milk.');
       return;
     }
 
@@ -157,6 +173,46 @@ export default function NewEntryForm() {
               An entry already exists for this customer, date and shift. Save is blocked by the
               database workflow to prevent duplicate deliveries.
             </p>
+          )}
+
+          {deliveryContextQuery.isError && (
+            <p className="auth-message" role="alert">
+              {deliveryContextQuery.error.message}
+            </p>
+          )}
+
+          {!deliveryContextQuery.isError && !deliveryContextQuery.isPending && !deliveryContextQuery.data?.herdEntryExists && (
+            <p className="auth-message" role="alert">
+              Herd entry is required before customer delivery. No herd entry has been recorded for this date and shift.
+            </p>
+          )}
+
+          {!deliveryContextQuery.isError && deliveryContextQuery.isPending && (
+            <p className="kpi-foot">Checking herd entry and today&apos;s milk pool…</p>
+          )}
+
+          {!deliveryContextQuery.isError && !deliveryContextQuery.isPending && deliveryContextQuery.data?.herdEntryExists && (
+            <div className="card" style={{ marginBottom: '1rem' }}>
+              <div className="eyebrow">MILK POOL FOR SELECTED DATE</div>
+              <div className="row">
+                <div>
+                  <strong className="title">{milkTxt(deliveryContextQuery.data.availablePoolLitres)}</strong>
+                  <p className={deliveryContextQuery.data.availablePoolLitres < 0 ? 'kpi-foot field-error' : 'kpi-foot'}>
+                    Available after recorded production, deliveries and other milk movements.
+                  </p>
+                </div>
+                <div className="kpi-foot">
+                  Produced: <b>{milkTxt(deliveryContextQuery.data.productionLitres)}</b>
+                  {' · '}
+                  Delivered: <b>{milkTxt(deliveryContextQuery.data.customerDeliveryLitres)}</b>
+                </div>
+              </div>
+              {quantity !== '' && Number.isFinite(Number(quantity)) && Number(quantity) > deliveryContextQuery.data.availablePoolLitres && (
+                <p className="auth-message" role="status">
+                  ⚠️ This delivery is {milkTxt(Number(quantity) - deliveryContextQuery.data.availablePoolLitres)} above the currently available pool. The delivery will still be recorded.
+                </p>
+              )}
+            </div>
           )}
 
           <div className={`grid ${pricingType === 'FAT_BASED' ? 'three' : 'two'}`}>
@@ -233,7 +289,7 @@ export default function NewEntryForm() {
           </div>
 
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-          <button disabled={createMutation.isPending || !!duplicateQuery.data} className="btn">
+          <button disabled={createMutation.isPending || duplicateQuery.isPending || deliveryContextQuery.isPending || deliveryContextQuery.isError || !deliveryContextQuery.data?.herdEntryExists || !!duplicateQuery.data} className="btn">
             {createMutation.isPending ? 'Saving…' : 'Save entry'}
           </button>
         </div>

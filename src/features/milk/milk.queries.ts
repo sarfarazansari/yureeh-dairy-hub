@@ -19,6 +19,7 @@ import {
 } from '@/lib/milk-entry-list';
 import {
   getMilkPoolReconciliation,
+  getMilkDeliveryContext,
   recordMilkPoolMovement,
   type RecordMilkPoolMovementInput,
 } from './services/milk-pool.service';
@@ -33,8 +34,11 @@ export const milkQueryKeys = {
     customerId: string;
     businessDate: string;
     shift: 'MORNING' | 'EVENING';
+    excludeEntryId?: string;
   }) => [...milkQueryKeys.all, 'duplicate', input] as const,
   pool: (from: string, to: string) => [...milkQueryKeys.all, 'pool', from, to] as const,
+  deliveryContext: (businessDate: string, shift: 'MORNING' | 'EVENING') =>
+    [...milkQueryKeys.all, 'delivery-context', businessDate, shift] as const,
 };
 
 const requireSupabase = () => {
@@ -63,6 +67,7 @@ export function useMilkEntryDuplicateQuery(input: {
   customerId: string;
   businessDate: string;
   shift: 'MORNING' | 'EVENING';
+  excludeEntryId?: string;
 }) {
   return useQuery<boolean, Error>({
     queryKey: milkQueryKeys.duplicate(input),
@@ -99,6 +104,17 @@ export function useDeleteMilkEntryMutation() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: milkQueryKeys.all });
     },
+  });
+}
+
+export function useMilkDeliveryContextQuery(
+  businessDate: string,
+  shift: 'MORNING' | 'EVENING',
+) {
+  return useQuery({
+    queryKey: milkQueryKeys.deliveryContext(businessDate, shift),
+    queryFn: () => getMilkDeliveryContext(requireSupabase(), businessDate, shift),
+    enabled: Boolean(businessDate && shift),
   });
 }
 
