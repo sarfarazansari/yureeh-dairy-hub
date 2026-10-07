@@ -1,4 +1,5 @@
 export type FeedPurchasePaymentStatus = 'PAID' | 'PARTIAL' | 'CREDIT';
+export type FeedPurchaseStatus = 'ACTIVE' | 'CORRECTED';
 
 export type FeedPurchase = {
   id: string;
@@ -16,6 +17,9 @@ export type FeedPurchase = {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  status: FeedPurchaseStatus;
+  correction_of_purchase_id: string | null;
+  corrected_by_purchase_id: string | null;
 };
 
 export type FeedPurchaseListRow = FeedPurchase & {
