@@ -97,9 +97,22 @@ export default function FeedItemsPage() {
       notes: notes.trim() || null,
     };
 
-    const result = id
-      ? await supabase.from('feed_items').update(values).eq('id', id)
-      : await supabase.from('feed_items').insert(values);
+    let result;
+    if (id) {
+      result = await supabase.from('feed_items').update(values).eq('id', id);
+    } else {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        setMessage(userError?.message ?? 'You must be signed in to create a feed item.');
+        setBusy(false);
+        return;
+      }
+
+      result = await supabase.from('feed_items').insert({
+        ...values,
+        user_id: userData.user.id,
+      });
+    }
 
     if (result.error) {
       setMessage(
