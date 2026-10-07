@@ -18,6 +18,7 @@ export default function EditFeedPurchasePage({ params }: { params: Promise<{ id:
   const [initialValues, setInitialValues] = useState<FeedPurchaseFormValues | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [completed, setCompleted] = useState(false);
 
   const load = useCallback(async () => {
     if (!supabase) return;
@@ -60,7 +61,7 @@ export default function EditFeedPurchasePage({ params }: { params: Promise<{ id:
     try {
       await correctFeedPurchase(supabase, id, values);
       setToast({ message: 'Purchase correction saved successfully.', type: 'success' });
-      await load();
+      setCompleted(true);
       return null;
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not save purchase correction.';
@@ -78,7 +79,12 @@ export default function EditFeedPurchasePage({ params }: { params: Promise<{ id:
           <Link className="date-chip" href="/feeds/purchases">← Back to purchases</Link>
         </div>
         <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
-        {initialValues ? (
+        {completed ? (
+          <div className="card">
+            <h2 className="section-title">Correction saved</h2>
+            <p>The original purchase has been preserved for audit and the corrected purchase is now active in the archive.</p>
+          </div>
+        ) : initialValues ? (
           <FeedPurchaseForm
             feedItems={feedItems}
             vendors={vendors}
