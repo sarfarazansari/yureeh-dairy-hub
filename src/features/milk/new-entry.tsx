@@ -40,7 +40,7 @@ export default function NewEntryForm() {
   const rate = rateOverride ?? (pricingQuery.data ? String(pricingQuery.data.rate) : customer ? String(customer.default_rate) : '');
   const ratePerLitre = pricingType === 'FAT_BASED'
     ? fat !== '' && Number.isFinite(Number(fat)) && rate !== ''
-      ? String(Number(rate) * Number(fat))
+      ? (Number(rate) * Number(fat)).toFixed(2)
       : ''
     : rate;
 
