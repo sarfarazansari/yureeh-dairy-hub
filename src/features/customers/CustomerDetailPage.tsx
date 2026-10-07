@@ -82,10 +82,6 @@ export default function CustomerDetailPage({ id }: { id: string }) {
       setPaymentMessage('Payment amount must be greater than ₹0.');
       return;
     }
-    if (amount > outstanding) {
-      setPaymentMessage(`Payment cannot be greater than the outstanding balance of ${money(outstanding)}.`);
-      return;
-    }
     try {
       await paymentMutation.mutateAsync({
         customerId: id,
