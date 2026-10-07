@@ -1,5 +1,5 @@
 export type FeedPurchasePaymentStatus = 'PAID' | 'PARTIAL' | 'CREDIT';
-export type FeedPurchaseStatus = 'ACTIVE' | 'CORRECTED';
+export type FeedPurchaseStatus = 'ACTIVE' | 'DELETED';
 
 export type FeedPurchase = {
   id: string;
@@ -18,14 +18,13 @@ export type FeedPurchase = {
   created_at: string;
   updated_at: string;
   status: FeedPurchaseStatus;
-  correction_of_purchase_id: string | null;
-  corrected_by_purchase_id: string | null;
 };
 
 export type FeedPurchaseListRow = FeedPurchase & {
   feed_item_name: string;
   vendor_name: string | null;
   payment_status: FeedPurchasePaymentStatus;
+  can_edit_delete: boolean;
 };
 
 export type FeedPurchasePreview = {

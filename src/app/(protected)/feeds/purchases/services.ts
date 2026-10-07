@@ -70,27 +70,83 @@ export async function fetchFeedPurchases(
   const { data, error, count } = await query;
   if (error) throw error;
 
-  return {
-    rows: (data ?? []).map((row) => ({
+  const rows = (data ?? []).map((row) => ({
+    ...row,
+    feed_item_name: (row.feed_items as { name: string } | null)?.name ?? '—',
+    vendor_name: (row.expense_vendors as { name: string } | null)?.name ?? null,
+    payment_status: (row.expenses as { payment_status: FeedPurchasePaymentStatus } | null)?.payment_status ?? 'CREDIT',
+    can_edit_delete: true,
+  }));
+
+  if (!rows.length) {
+    return { rows, count: count ?? 0 };
+  }
+
+  const purchaseIds = rows.map((row) => row.id);
+  const feedIds = [...new Set(rows.map((row) => row.feed_item_id))];
+
+  const { data: movements, error: movementError } = await client
+    .from('feed_inventory_movements')
+    .select('source_id, feed_item_id, created_at')
+    .eq('source_type', 'FEED_PURCHASE')
+    .in('source_id', purchaseIds);
+
+  if (movementError) throw movementError;
+
+  const originalMovementByPurchase = new Map(
+    (movements ?? []).map((movement) => [
+      movement.source_id,
+      { feedItemId: movement.feed_item_id, createdAt: movement.created_at },
+    ]),
+  );
+
+  const minCreatedAt = [...originalMovementByPurchase.values()]
+    .map((movement) => movement.createdAt)
+    .sort()[0];
+
+  if (!minCreatedAt) return { rows, count: count ?? 0 };
+
+  const { data: outboundMovements, error: outboundError } = await client
+    .from('feed_inventory_movements')
+    .select('feed_item_id, created_at')
+    .in('feed_item_id', feedIds)
+    .in('movement_type', ['CONSUMPTION', 'ADJUSTMENT_OUT'])
+    .gte('created_at', minCreatedAt);
+
+  if (outboundError) throw outboundError;
+
+  const enrichedRows = rows.map((row) => {
+    const original = originalMovementByPurchase.get(row.id);
+    const locked = original
+      ? (outboundMovements ?? []).some(
+          (movement) =>
+            movement.feed_item_id === original.feedItemId &&
+            movement.created_at > original.createdAt,
+        )
+      : true;
+
+    return {
       ...row,
-      feed_item_name: (row.feed_items as { name: string } | null)?.name ?? '—',
-      vendor_name: (row.expense_vendors as { name: string } | null)?.name ?? null,
-      payment_status: (row.expenses as { payment_status: FeedPurchasePaymentStatus } | null)?.payment_status ?? 'CREDIT',
-    })),
+      can_edit_delete: !locked,
+    };
+  });
+
+  return {
+    rows: enrichedRows,
     count: count ?? 0,
   };
 }
-
 
 export async function fetchFeedPurchaseForEdit(client: SupabaseClient, purchaseId: string) {
   const { data, error } = await client
     .from('feed_purchases')
     .select('*, expenses!inner(payment_status,paid_amount,payment_method,due_date), feed_items!inner(name,purchase_unit,base_unit,purchase_unit_quantity)')
     .eq('id', purchaseId)
+    .eq('status', 'ACTIVE')
     .maybeSingle();
 
   if (error) throw error;
-  if (!data) throw new Error('Feed purchase not found.');
+  if (!data) throw new Error('Feed purchase not found or it is locked.');
 
   const expense = data.expenses as {
     payment_status: FeedPurchasePaymentStatus;
@@ -108,7 +164,7 @@ export async function fetchFeedPurchaseForEdit(client: SupabaseClient, purchaseI
   };
 }
 
-export async function correctFeedPurchase(
+export async function editFeedPurchase(
   client: SupabaseClient,
   purchaseId: string,
   values: {
@@ -124,7 +180,7 @@ export async function correctFeedPurchase(
     notes?: string;
   },
 ) {
-  const { data, error } = await client.rpc('correct_feed_purchase', {
+  const { data, error } = await client.rpc('edit_feed_purchase', {
     p_purchase_id: purchaseId,
     p_feed_item_id: values.feedItemId,
     p_vendor_id: values.vendorId || null,
@@ -140,4 +196,12 @@ export async function correctFeedPurchase(
 
   if (error) throw error;
   return data as FeedPurchase;
+}
+
+export async function deleteFeedPurchase(client: SupabaseClient, purchaseId: string) {
+  const { error } = await client.rpc('delete_feed_purchase', {
+    p_purchase_id: purchaseId,
+  });
+
+  if (error) throw error;
 }
