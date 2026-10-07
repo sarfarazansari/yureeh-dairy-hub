@@ -112,7 +112,6 @@ export default function CustomerDetailPage({ id }: { id: string }) {
       <Link href="/customers" style={{ fontSize: 12, color: '#277452' }}>
         ← All customers
       </Link>
-      {detailQuery.isError && <p className="auth-message">{detailQuery.error.message}</p>}
       <div className="grid kpis">
         <KPI label="TOTAL MILK" value={milkTxt(total)} foot={`${rows.length} entries`} />
         <KPI label="TOTAL SALES" value={money(rev)} foot={total ? `${money(rev / total)} per litre` : 'No sales'} />
