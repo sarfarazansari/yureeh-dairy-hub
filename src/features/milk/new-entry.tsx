@@ -282,9 +282,6 @@ export default function NewEntryForm() {
                 aria-readonly="true"
                 placeholder="—"
               />
-              <small className="kpi-foot">
-                {pricingType === 'FAT_BASED' ? 'Fat × applied rate' : 'Applied rate'}
-              </small>
             </div>
             <div className="field">
               <label htmlFor="entry-rate">Applied rate</label>
