@@ -38,6 +38,11 @@ export default function NewEntryForm() {
   const customer = customers.find((item) => item.id === customerId);
   const pricingType = pricingTypeOverride ?? pricingQuery.data?.pricing_type ?? customer?.pricing_type ?? 'FIXED_PER_LITRE';
   const rate = rateOverride ?? (pricingQuery.data ? String(pricingQuery.data.rate) : customer ? String(customer.default_rate) : '');
+  const ratePerLitre = pricingType === 'FAT_BASED'
+    ? fat !== '' && Number.isFinite(Number(fat)) && rate !== ''
+      ? String(Number(rate) * Number(fat))
+      : ''
+    : rate;
 
   const amount = useMemo(() => {
     if (!quantity || !rate) return 0;
@@ -225,7 +230,7 @@ export default function NewEntryForm() {
             </div>
           )}
 
-          <div className={`grid ${pricingType === 'FAT_BASED' ? 'three' : 'two'}`}>
+          <div className="grid four">
             <div className="field">
               <label htmlFor="entry-quantity">Milk quantity (L)</label>
               <input
@@ -267,6 +272,20 @@ export default function NewEntryForm() {
                 {errors.fat && <small className="field-error">{errors.fat}</small>}
               </div>
             )}
+            <div className="field">
+              <label htmlFor="entry-rate-per-litre">Rate / L</label>
+              <input
+                id="entry-rate-per-litre"
+                type="number"
+                value={ratePerLitre}
+                readOnly
+                aria-readonly="true"
+                placeholder="—"
+              />
+              <small className="kpi-foot">
+                {pricingType === 'FAT_BASED' ? 'Fat × applied rate' : 'Applied rate'}
+              </small>
+            </div>
             <div className="field">
               <label htmlFor="entry-rate">Applied rate</label>
               <input
