@@ -100,15 +100,6 @@ begin
 
   outstanding := sales_total - payments_total;
 
-  if outstanding <= 0 then
-    raise exception using errcode = '23514', message = 'This customer has no outstanding balance.';
-  end if;
-
-  if p_amount > outstanding then
-    raise exception using errcode = '23514',
-      message = format('Payment cannot be greater than the outstanding balance of ₹%s.', to_char(outstanding, 'FM999999990.00'));
-  end if;
-
   insert into public.customer_payments(
     user_id,
     customer_id,
