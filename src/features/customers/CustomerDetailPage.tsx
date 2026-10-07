@@ -4,8 +4,7 @@ import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+
 import {
   Area,
   AreaChart,
@@ -16,30 +15,11 @@ import {
   YAxis,
 } from 'recharts';
 import { formatDate } from '@/lib/date-format';
-import {
-  getCustomerDetails,
-  type CustomerEntry,
-  type CustomerSummary,
-} from './services/customer.service';
+import { useCustomerDetailQuery } from './customer.queries';
 export default function CustomerDetailPage({ id }: { id: string }) {
-  const [c, setC] = useState<CustomerSummary | null>(null),
-    [rows, setRows] = useState<CustomerEntry[]>([]),
-    [error, setError] = useState('');
-  useEffect(() => {
-    async function load() {
-      if (!supabase) return;
-      try {
-        const details = await getCustomerDetails(supabase, id);
-        setC(details.customer);
-        setRows(details.entries);
-      } catch (loadError) {
-        setError(
-          loadError instanceof Error ? loadError.message : 'Could not load customer details.',
-        );
-      }
-    }
-    load();
-  }, [id]);
+  const detailQuery = useCustomerDetailQuery(id);
+  const c = detailQuery.data?.customer ?? null;
+  const rows = detailQuery.data?.entries ?? [];
   const total = rows.reduce((s, r) => s + Number(r.milk_quantity), 0),
     rev = rows.reduce((s, r) => s + Number(r.calculated_amount), 0),
     fatDen = rows.reduce((s, r) => s + (r.fat == null ? 0 : Number(r.milk_quantity)), 0),
@@ -63,7 +43,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
       <Link href="/customers" style={{ fontSize: 12, color: '#277452' }}>
         ← All customers
       </Link>
-      {error && <p className="auth-message">{error}</p>}
+      {detailQuery.isError && <p className="auth-message">{detailQuery.error.message}</p>}
       <div className="grid kpis">
         <KPI label="TOTAL MILK" value={milkTxt(total)} foot={`${rows.length} entries`} />
         <KPI
