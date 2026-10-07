@@ -53,6 +53,7 @@ as $$
 declare
   owner_id uuid := auth.uid();
   payment_id uuid;
+  customer_row_id uuid;
   sales_total numeric(14,2);
   payments_total numeric(14,2);
   outstanding numeric(14,2);
@@ -73,12 +74,14 @@ begin
     raise exception using errcode = '23514', message = 'Payment method is required.';
   end if;
 
-  if not exists (
-    select 1
-    from public.customers c
-    where c.id = p_customer_id
-      and c.user_id = owner_id
-  ) then
+  select c.id
+    into customer_row_id
+  from public.customers c
+  where c.id = p_customer_id
+    and c.user_id = owner_id
+  for update;
+
+  if not found then
     raise exception using errcode = 'P0002', message = 'Customer was not found.';
   end if;
 
@@ -93,7 +96,7 @@ begin
     into payments_total
   from public.customer_payments p
   where p.user_id = owner_id
-    and p.customer_id = p_customer_id;
+    and p.customer_id = customer_row_id;
 
   outstanding := sales_total - payments_total;
 
@@ -117,7 +120,7 @@ begin
   )
   values (
     owner_id,
-    p_customer_id,
+    customer_row_id,
     p_payment_date,
     p_amount,
     p_payment_method,
