@@ -50,6 +50,30 @@ export default function CustomerDetailPage({ id }: { id: string }) {
           revenue: d.reduce((s, r) => s + Number(r.calculated_amount), 0),
         };
       });
+  if (detailQuery.isPending) {
+    return (
+      <AppShell title="Customer details" subtitle="">
+        <div className="empty">Loading customer…</div>
+      </AppShell>
+    );
+  }
+
+  if (detailQuery.isError) {
+    return (
+      <AppShell title="Customer details" subtitle="">
+        <div className="empty">{detailQuery.error.message}</div>
+      </AppShell>
+    );
+  }
+
+  if (!c) {
+    return (
+      <AppShell title="Customer details" subtitle="">
+        <div className="empty">Customer not found.</div>
+      </AppShell>
+    );
+  }
+
   async function recordPayment(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setPaymentMessage('');
@@ -84,8 +108,8 @@ export default function CustomerDetailPage({ id }: { id: string }) {
 
   return (
     <AppShell
-      title={c?.name ?? 'Customer details'}
-      subtitle={`${c?.pricing_type === 'FAT_BASED' ? 'Fat based' : 'Fixed per litre'} · default rate ₹${c?.default_rate ?? '—'}`}
+      title={c.name}
+      subtitle={`${c.pricing_type === 'FAT_BASED' ? 'Fat based' : 'Fixed per litre'} · default rate ₹${c.default_rate}`}
     >
       <Link href="/customers" style={{ fontSize: 12, color: '#277452' }}>
         ← All customers
