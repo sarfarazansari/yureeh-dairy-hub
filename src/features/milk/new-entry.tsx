@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
@@ -10,9 +10,10 @@ import { localDateKey } from '@/lib/milk-entry-list';
 import { milkEntrySchema } from '@/lib/milk-entry-validation';
 
 import {
+  useActiveMilkEntryCustomersQuery,
   useCreateMilkEntryMutation,
+  useCustomerPricingQuery,
   useMilkDeliveryContextQuery,
-  useMilkEntryCustomersQuery,
   useMilkEntryDuplicateQuery,
 } from './milk.queries';
 
@@ -28,12 +29,22 @@ export default function NewEntryForm() {
     [errors, setErrors] = useState<Record<string, string>>({}),
     [message, setMessage] = useState('');
 
-  const customersQuery = useMilkEntryCustomersQuery();
+  const customersQuery = useActiveMilkEntryCustomersQuery();
+  const pricingQuery = useCustomerPricingQuery(customerId, date);
   const deliveryContextQuery = useMilkDeliveryContextQuery(date, shift);
   const duplicateQuery = useMilkEntryDuplicateQuery({ customerId, businessDate: date, shift });
   const createMutation = useCreateMilkEntryMutation();
   const customers = customersQuery.data ?? [];
   const customer = customers.find((item) => item.id === customerId);
+
+  useEffect(() => {
+    if (!customerId || pricingQuery.isPending || pricingQuery.isError) return;
+    const pricing = pricingQuery.data;
+    if (!pricing) return;
+    setPricingType(pricing.pricing_type);
+    setRate(String(pricing.rate));
+    setFat('');
+  }, [customerId, pricingQuery.data, pricingQuery.isError, pricingQuery.isPending]);
 
   const amount = useMemo(() => {
     if (!quantity || !rate) return 0;
@@ -162,8 +173,11 @@ export default function NewEntryForm() {
                 ))}
               </select>
               {errors.customer_id && <small className="field-error">{errors.customer_id}</small>}
-              {customersQuery.isError && (
+    {customersQuery.isError && (
                 <small className="field-error">{customersQuery.error.message}</small>
+              )}
+              {pricingQuery.isError && customerId && (
+                <small className="field-error">{pricingQuery.error.message}</small>
               )}
             </div>
           </div>
@@ -310,7 +324,7 @@ export default function NewEntryForm() {
           </div>
           <div className="field">
             <label htmlFor="entry-rate-snapshot">
-              Customer default rate · {customer?.default_rate ? `₹${customer.default_rate}` : '—'}
+              Effective customer rate · {pricingQuery.data ? `₹${pricingQuery.data.rate}` : customer?.default_rate ? `₹${customer.default_rate}` : '—'}
             </label>
             <input
               id="entry-rate-snapshot"
