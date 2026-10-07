@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { todayLocal } from '../../../expenses/shared';
 import type { FeedItem } from '@/lib/feed-types';
@@ -35,6 +35,7 @@ const initialValues: FeedPurchaseFormValues = {
 export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, message }: Props) {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const submittingRef = useRef(false);
 
   const feed = feedItems.find((item) => item.id === values.feedItemId);
   const preview = useMemo(
@@ -69,6 +70,10 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, message }: 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
 
+    if (submittingRef.current || busy) return;
+    submittingRef.current = true;
+    setErrors({});
+
     const parsed = feedPurchaseSchema.safeParse(values);
     if (!parsed.success) {
       const next: Record<string, string> = {};
@@ -77,13 +82,20 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, message }: 
         if (!next[key]) next[key] = issue.message;
       });
       setErrors(next);
+      submittingRef.current = false;
       return;
     }
 
-    setErrors({});
-    const error = await onSave(parsed.data);
-    if (!error) {
-      setValues({ ...initialValues, businessDate: values.businessDate });
+    try {
+      const error = await onSave(parsed.data);
+      if (!error) {
+        setValues({ ...initialValues, businessDate: values.businessDate });
+        setErrors({});
+      } else {
+        setErrors({ form: error });
+      }
+    } finally {
+      submittingRef.current = false;
     }
   }
 
@@ -280,7 +292,7 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, message }: 
         <TimedNotice message={message || errors.form} onDismiss={() => undefined} />
       )}
 
-      <button className="btn" disabled={busy || !feedItems.length}>
+      <button type="submit" className="btn" disabled={busy || submittingRef.current || !feedItems.length}>
         {busy ? 'Saving…' : 'Record purchase'}
       </button>
     </form>
