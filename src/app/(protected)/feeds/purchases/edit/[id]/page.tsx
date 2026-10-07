@@ -1,41 +1,95 @@
 'use client';
 
 import Link from 'next/link';
-import { use, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
-import { TimedNotice } from '@/components/ui/TimedNotice';
+import { Toast } from '@/components/ui/Toast';
 import { supabase } from '@/lib/supabase';
+import type { FeedItem } from '@/lib/feed-types';
+import type { ExpenseVendor } from '@/lib/expense-types';
+import { FeedPurchaseForm } from '../../components/FeedPurchaseForm';
+import { correctFeedPurchase, fetchFeedPurchaseForEdit } from '../../services';
+import type { FeedPurchaseFormValues } from '../../schema';
 
 export default function EditFeedPurchasePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
-  const [message, setMessage] = useState('Loading purchase…');
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const [vendors, setVendors] = useState<Pick<ExpenseVendor, 'id' | 'name'>[]>([]);
+  const [initialValues, setInitialValues] = useState<FeedPurchaseFormValues | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  useEffect(() => {
-    if (!supabase) {
-      setMessage('Supabase is not configured.');
-      return;
-    }
-    void supabase
-      .from('feed_purchases')
-      .select('id')
-      .eq('id', id)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error) setMessage(error.message);
-        else if (!data) setMessage('Feed purchase not found.');
-        else setMessage('Posted purchases are ledger entries. Direct in-place editing is disabled; corrections will use reversal semantics.');
+  const load = useCallback(async () => {
+    if (!supabase) return;
+    try {
+      const [feeds, vendorResult, existing] = await Promise.all([
+        supabase.from('feed_items').select('*').eq('is_active', true).order('name'),
+        supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
+        fetchFeedPurchaseForEdit(supabase, id),
+      ]);
+      if (feeds.error) throw feeds.error;
+      if (vendorResult.error) throw vendorResult.error;
+      if (existing.purchase.status !== 'ACTIVE') {
+        throw new Error('This purchase has already been corrected and cannot be edited again.');
+      }
+      setFeedItems(feeds.data ?? []);
+      setVendors(vendorResult.data ?? []);
+      setInitialValues({
+        feedItemId: existing.purchase.feed_item_id,
+        vendorId: existing.purchase.vendor_id ?? '',
+        businessDate: existing.purchase.business_date,
+        purchaseQuantity: Number(existing.purchase.purchase_quantity),
+        rate: Number(existing.purchase.rate_per_purchase_unit),
+        paymentStatus: existing.paymentStatus,
+        paidAmount: existing.paidAmount,
+        paymentMethod: existing.paymentMethod,
+        dueDate: existing.dueDate,
+        notes: existing.purchase.notes ?? '',
       });
+    } catch (error) {
+      setToast({ message: error instanceof Error ? error.message : 'Could not load purchase.', type: 'error' });
+    }
   }, [id]);
 
+  useEffect(() => { void load(); }, [load]);
+
+  async function save(values: FeedPurchaseFormValues) {
+    if (!supabase) return 'Supabase is not configured.';
+    setBusy(true);
+    setToast(null);
+    try {
+      await correctFeedPurchase(supabase, id, values);
+      setToast({ message: 'Purchase correction saved successfully.', type: 'success' });
+      await load();
+      return null;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not save purchase correction.';
+      setToast({ message, type: 'error' });
+      return message;
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
-    <AppShell title="Edit feed purchase" subtitle="Purchase corrections are handled through inventory-safe reversal semantics">
+    <AppShell title="Edit feed purchase" subtitle="Correct a posted purchase without mutating the inventory ledger">
       <div className="management-stack">
-        <div className="card">
-          <TimedNotice message={message} onDismiss={() => undefined} />
-          <div className="row" style={{ marginTop: 16 }}>
-            <Link className="date-chip" href="/feeds/purchases">Back to purchases</Link>
-          </div>
+        <div className="row">
+          <Link className="date-chip" href="/feeds/purchases">← Back to purchases</Link>
         </div>
+        <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
+        {initialValues ? (
+          <FeedPurchaseForm
+            feedItems={feedItems}
+            vendors={vendors}
+            initialValues={initialValues}
+            onSave={save}
+            busy={busy}
+            submitLabel="Save correction"
+          />
+        ) : (
+          <div className="card"><p>Loading purchase…</p></div>
+        )}
       </div>
     </AppShell>
   );
