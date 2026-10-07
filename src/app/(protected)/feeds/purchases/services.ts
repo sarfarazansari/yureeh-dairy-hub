@@ -79,3 +79,64 @@ export async function fetchFeedPurchases(
     count: count ?? 0,
   };
 }
+
+
+export async function fetchFeedPurchaseForEdit(client: SupabaseClient, purchaseId: string) {
+  const { data, error } = await client
+    .from('feed_purchases')
+    .select('*, expenses!inner(payment_status,paid_amount,payment_method,due_date), feed_items!inner(name,purchase_unit,base_unit,purchase_unit_quantity)')
+    .eq('id', purchaseId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error('Feed purchase not found.');
+
+  const expense = data.expenses as {
+    payment_status: FeedPurchasePaymentStatus;
+    paid_amount: number | string;
+    payment_method: string | null;
+    due_date: string | null;
+  };
+
+  return {
+    purchase: data as FeedPurchase,
+    paymentStatus: expense.payment_status,
+    paidAmount: Number(expense.paid_amount),
+    paymentMethod: expense.payment_method ?? 'CASH',
+    dueDate: expense.due_date ?? '',
+  };
+}
+
+export async function correctFeedPurchase(
+  client: SupabaseClient,
+  purchaseId: string,
+  values: {
+    feedItemId: string;
+    vendorId: string;
+    businessDate: string;
+    purchaseQuantity: number;
+    rate: number;
+    paymentStatus: string;
+    paidAmount: number;
+    paymentMethod: string;
+    dueDate?: string;
+    notes?: string;
+  },
+) {
+  const { data, error } = await client.rpc('correct_feed_purchase', {
+    p_purchase_id: purchaseId,
+    p_feed_item_id: values.feedItemId,
+    p_vendor_id: values.vendorId || null,
+    p_business_date: values.businessDate,
+    p_purchase_quantity: values.purchaseQuantity,
+    p_rate_per_purchase_unit: values.rate,
+    p_payment_status: values.paymentStatus,
+    p_paid_amount: values.paidAmount,
+    p_payment_method: values.paymentMethod,
+    p_due_date: values.dueDate || null,
+    p_notes: values.notes?.trim() || null,
+  });
+
+  if (error) throw error;
+  return data as FeedPurchase;
+}
