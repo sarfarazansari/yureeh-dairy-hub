@@ -31,7 +31,8 @@ export default function EditFeedConsumptionPage() {
         fetchFeedConsumptionForEdit(supabase, id),
       ]);
       setFeedItems(feeds);
-      setStock(inventory);
+      const editableStock = inventory.map((item) => item.feed_item_id === consumption.feed_item_id ? { ...item, quantity_on_hand: Number(item.quantity_on_hand) + Number(consumption.quantity) } : item);
+      setStock(editableStock);
       setInitialValues({
         feedItemId: consumption.feed_item_id,
         businessDate: consumption.occurred_at.slice(0, 10),
@@ -73,6 +74,7 @@ export default function EditFeedConsumptionPage() {
             busy={busy}
             initialValues={initialValues}
             submitLabel="Save changes"
+            lockFeedItem
           />
         ) : (
           <div className="card"><div className="empty">Loading consumption…</div></div>
