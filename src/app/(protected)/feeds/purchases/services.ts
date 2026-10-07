@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { FeedPurchase, FeedPurchasePreview } from '@/lib/feed-purchase-types';
+import type { FeedPurchase, FeedPurchasePreview, FeedPurchasePaymentStatus } from '@/lib/feed-purchase-types';
 import type { FeedItem } from '@/lib/feed-types';
 
 export async function createFeedPurchase(client: SupabaseClient, values: {
@@ -45,21 +45,36 @@ export function getPurchasePreview(feed: FeedItem | undefined, quantity: number,
   };
 }
 
-export async function fetchFeedPurchases(client: SupabaseClient, page: number, pageSize: number) {
+export async function fetchFeedPurchases(
+  client: SupabaseClient,
+  page: number,
+  pageSize: number,
+  filters: { from?: string; to?: string; feedItemId?: string; vendorId?: string; paymentStatus?: string } = {},
+) {
   const from = page * pageSize;
   const to = from + pageSize - 1;
-  const { data, error, count } = await client
+  let query = client
     .from('feed_purchases')
-    .select('*, feed_items!inner(name), expense_vendors(name)', { count: 'exact' })
+    .select('*, feed_items!inner(name), expense_vendors(name), expenses!inner(payment_status)', { count: 'exact' })
     .order('business_date', { ascending: false })
     .order('created_at', { ascending: false })
     .range(from, to);
+
+  if (filters.from) query = query.gte('business_date', filters.from);
+  if (filters.to) query = query.lte('business_date', filters.to);
+  if (filters.feedItemId) query = query.eq('feed_item_id', filters.feedItemId);
+  if (filters.vendorId) query = query.eq('vendor_id', filters.vendorId);
+  if (filters.paymentStatus) query = query.eq('expenses.payment_status', filters.paymentStatus);
+
+  const { data, error, count } = await query;
   if (error) throw error;
+
   return {
     rows: (data ?? []).map((row) => ({
       ...row,
       feed_item_name: (row.feed_items as { name: string } | null)?.name ?? '—',
       vendor_name: (row.expense_vendors as { name: string } | null)?.name ?? null,
+      payment_status: (row.expenses as { payment_status: FeedPurchasePaymentStatus } | null)?.payment_status ?? 'CREDIT',
     })),
     count: count ?? 0,
   };
