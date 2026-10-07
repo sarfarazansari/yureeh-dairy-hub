@@ -10,9 +10,10 @@ import { localDateKey } from '@/lib/milk-entry-list';
 import { milkEntrySchema } from '@/lib/milk-entry-validation';
 
 import {
+  useActiveMilkEntryCustomersQuery,
   useCreateMilkEntryMutation,
+  useCustomerPricingQuery,
   useMilkDeliveryContextQuery,
-  useMilkEntryCustomersQuery,
   useMilkEntryDuplicateQuery,
 } from './milk.queries';
 
@@ -22,18 +23,26 @@ export default function NewEntryForm() {
     [shift, setShift] = useState<'MORNING' | 'EVENING'>('MORNING'),
     [quantity, setQuantity] = useState(''),
     [fat, setFat] = useState(''),
-    [pricingType, setPricingType] = useState<PricingType>('FIXED_PER_LITRE'),
-    [rate, setRate] = useState(''),
+    [pricingTypeOverride, setPricingTypeOverride] = useState<PricingType | null>(null),
+    [rateOverride, setRateOverride] = useState<string | null>(null),
     [notes, setNotes] = useState(''),
     [errors, setErrors] = useState<Record<string, string>>({}),
     [message, setMessage] = useState('');
 
-  const customersQuery = useMilkEntryCustomersQuery();
+  const customersQuery = useActiveMilkEntryCustomersQuery();
+  const pricingQuery = useCustomerPricingQuery(customerId, date);
   const deliveryContextQuery = useMilkDeliveryContextQuery(date, shift);
   const duplicateQuery = useMilkEntryDuplicateQuery({ customerId, businessDate: date, shift });
   const createMutation = useCreateMilkEntryMutation();
   const customers = customersQuery.data ?? [];
   const customer = customers.find((item) => item.id === customerId);
+  const pricingType = pricingTypeOverride ?? pricingQuery.data?.pricing_type ?? customer?.pricing_type ?? 'FIXED_PER_LITRE';
+  const rate = rateOverride ?? (pricingQuery.data ? String(pricingQuery.data.rate) : customer ? String(customer.default_rate) : '');
+  const ratePerLitre = pricingType === 'FAT_BASED'
+    ? fat !== '' && Number.isFinite(Number(fat)) && rate !== ''
+      ? (Number(rate) * Number(fat)).toFixed(2)
+      : ''
+    : rate;
 
   const amount = useMemo(() => {
     if (!quantity || !rate) return 0;
@@ -51,17 +60,15 @@ export default function NewEntryForm() {
 
   function chooseCustomer(id: string) {
     setCustomerId(id);
+    setPricingTypeOverride(null);
+    setRateOverride(null);
     setErrors((current) => ({ ...current, customer_id: '' }));
     const selected = customers.find((item) => item.id === id);
-    if (selected) {
-      setPricingType(selected.pricing_type);
-      setRate(String(selected.default_rate));
-      setFat('');
-    }
+    if (selected) setFat('');
   }
 
   function changePricingType(value: PricingType) {
-    setPricingType(value);
+    setPricingTypeOverride(value);
     setErrors((current) => ({ ...current, fat: '' }));
     if (value !== 'FAT_BASED') setFat('');
   }
@@ -130,7 +137,12 @@ export default function NewEntryForm() {
                 type="date"
                 value={date}
                 disabled={createMutation.isPending}
-                onChange={(event) => setDate(event.target.value)}
+                onChange={(event) => {
+                  setDate(event.target.value);
+                  setPricingTypeOverride(null);
+                  setRateOverride(null);
+                  setFat('');
+                }}
                 aria-invalid={!!errors.business_date}
               />
               {errors.business_date && <small className="field-error">{errors.business_date}</small>}
@@ -162,8 +174,11 @@ export default function NewEntryForm() {
                 ))}
               </select>
               {errors.customer_id && <small className="field-error">{errors.customer_id}</small>}
-              {customersQuery.isError && (
+    {customersQuery.isError && (
                 <small className="field-error">{customersQuery.error.message}</small>
+              )}
+              {pricingQuery.isError && customerId && (
+                <small className="field-error">{pricingQuery.error.message}</small>
               )}
             </div>
           </div>
@@ -215,7 +230,7 @@ export default function NewEntryForm() {
             </div>
           )}
 
-          <div className={`grid ${pricingType === 'FAT_BASED' ? 'three' : 'two'}`}>
+          <div className="grid four">
             <div className="field">
               <label htmlFor="entry-quantity">Milk quantity (L)</label>
               <input
@@ -258,6 +273,17 @@ export default function NewEntryForm() {
               </div>
             )}
             <div className="field">
+              <label htmlFor="entry-rate-per-litre">Rate / L</label>
+              <input
+                id="entry-rate-per-litre"
+                type="number"
+                value={ratePerLitre}
+                readOnly
+                aria-readonly="true"
+                placeholder="—"
+              />
+            </div>
+            <div className="field">
               <label htmlFor="entry-rate">Applied rate</label>
               <input
                 id="entry-rate"
@@ -268,7 +294,7 @@ export default function NewEntryForm() {
                 value={rate}
                 disabled={createMutation.isPending}
                 onChange={(event) => {
-                  setRate(event.target.value);
+                  setRateOverride(event.target.value);
                   setErrors((current) => ({ ...current, applied_rate: '' }));
                 }}
                 aria-invalid={!!errors.applied_rate}
@@ -310,13 +336,13 @@ export default function NewEntryForm() {
           </div>
           <div className="field">
             <label htmlFor="entry-rate-snapshot">
-              Customer default rate · {customer?.default_rate ? `₹${customer.default_rate}` : '—'}
+              Effective customer rate · {pricingQuery.data ? `₹${pricingQuery.data.rate}` : customer?.default_rate ? `₹${customer.default_rate}` : '—'}
             </label>
             <input
               id="entry-rate-snapshot"
               value={rate}
               onChange={(event) => {
-                setRate(event.target.value);
+                setRateOverride(event.target.value);
                 setErrors((current) => ({ ...current, applied_rate: '' }));
               }}
               type="number"

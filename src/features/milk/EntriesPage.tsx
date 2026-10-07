@@ -80,17 +80,14 @@ export default function EntriesPage() {
   const pricing: PricingType | '' =
     rawPricing === 'FAT_BASED' || rawPricing === 'FIXED_PER_LITRE' ? rawPricing : '';
 
-  const filters: MilkEntryFilters = useMemo(
-    () => ({
-      from,
-      to,
-      customerSearch: querySearch,
-      customerId,
-      shift,
-      pricingType: pricing,
-    }),
-    [from, to, querySearch, customerId, shift, pricing],
-  );
+  const filters: MilkEntryFilters = {
+    from,
+    to,
+    customerSearch: querySearch,
+    customerId,
+    shift,
+    pricingType: pricing,
+  };
   const pagination = useMemo(() => ({ page, pageSize: MILK_ENTRY_PAGE_SIZE }), [page]);
   const dateError =
     range === 'custom' && (!isValidBusinessDate(from) || !isValidBusinessDate(to) || from > to);
