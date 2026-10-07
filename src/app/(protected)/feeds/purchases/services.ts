@@ -169,11 +169,11 @@ export async function editFeedPurchase(
   purchaseId: string,
   values: {
     feedItemId: string;
-    vendorId: string;
+    vendorId?: string;
     businessDate: string;
     purchaseQuantity: number;
     rate: number;
-    paymentStatus: string;
+    paymentStatus: 'PAID' | 'PARTIAL' | 'CREDIT';
     paidAmount: number;
     paymentMethod: string;
     dueDate?: string;
