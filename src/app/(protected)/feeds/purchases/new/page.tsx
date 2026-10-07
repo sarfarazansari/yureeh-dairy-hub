@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
-import { TimedNotice } from '@/components/ui/TimedNotice';
+import { Toast } from '@/components/ui/Toast';
 import { supabase } from '@/lib/supabase';
 import type { FeedItem } from '@/lib/feed-types';
 import type { ExpenseVendor } from '@/lib/expense-types';
@@ -14,6 +14,7 @@ export default function NewFeedPurchasePage() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [vendors, setVendors] = useState<Pick<ExpenseVendor, 'id' | 'name'>[]>([]);
   const [message, setMessage] = useState('');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [busy, setBusy] = useState(false);
 
   const loadOptions = useCallback(async () => {
@@ -28,7 +29,7 @@ export default function NewFeedPurchasePage() {
       setFeedItems(feeds.data ?? []);
       setVendors(vendorResult.data ?? []);
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Could not load purchase options.');
+      setToast({ message: error instanceof Error ? error.message : 'Could not load purchase options.', type: 'error' });
     }
   }, []);
 
@@ -38,11 +39,15 @@ export default function NewFeedPurchasePage() {
     if (!supabase) return 'Supabase is not configured.';
     setBusy(true);
     setMessage('');
+    setToast(null);
     try {
       await createFeedPurchase(supabase, values);
+      setToast({ message: 'Feed purchase recorded successfully.', type: 'success' });
       return null;
     } catch (error) {
-      return error instanceof Error ? error.message : 'Could not record feed purchase.';
+      const message = error instanceof Error ? error.message : 'Could not record feed purchase.';
+      setToast({ message, type: 'error' });
+      return message;
     } finally {
       setBusy(false);
     }
@@ -51,8 +56,8 @@ export default function NewFeedPurchasePage() {
   return (
     <AppShell title="New feed purchase" subtitle="Record feed stock-in and supplier purchase">
       <div className="management-stack">
-        {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-        <FeedPurchaseForm feedItems={feedItems} vendors={vendors} onSave={save} busy={busy} message="" />
+        <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
+        <FeedPurchaseForm feedItems={feedItems} vendors={vendors} onSave={save} busy={busy} />
       </div>
     </AppShell>
   );
