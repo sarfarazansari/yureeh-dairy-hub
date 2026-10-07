@@ -15,6 +15,13 @@ export type CustomerMilkSummary = {
   milk_quantity: number;
   calculated_amount: number;
 };
+export type CustomerPricing = {
+  pricing_type: PricingType;
+  rate: number;
+  effective_from: string;
+  effective_to: string | null;
+};
+
 export type CustomerEntry = {
   id: string;
   business_date: string;
@@ -111,6 +118,19 @@ export async function getCustomerDetails(client: SupabaseClient, customerId: str
     customer: customer.data as CustomerSummary | null,
     entries: (entries.data ?? []) as CustomerEntry[],
   };
+}
+
+export async function getCustomerPricingForDate(
+  client: SupabaseClient,
+  customerId: string,
+  businessDate: string,
+): Promise<CustomerPricing | null> {
+  const { data, error } = await client.rpc('get_customer_pricing_for_date', {
+    p_customer_id: customerId,
+    p_business_date: businessDate,
+  });
+  if (error) throw new Error('Could not load customer pricing for the selected date.');
+  return data?.[0] ? (data[0] as CustomerPricing) : null;
 }
 
 export async function getActiveCustomersForMilkEntry(client: SupabaseClient) {
