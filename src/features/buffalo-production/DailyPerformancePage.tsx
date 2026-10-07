@@ -23,9 +23,9 @@ export default function DailyPerformancePage() {
   const sheetQuery = useProductionSheetQuery(date, shift);
   const saveMutation = useSaveProductionSheetMutation();
   const rows: BuffaloProductionAnimal[] = sheetQuery.data?.buffaloes ?? [];
+  const production = sheetQuery.data?.production ?? [];
 
   useEffect(() => {
-    const production = sheetQuery.data?.production ?? [];
     setValues(
       Object.fromEntries(
         rows.map((buffalo) => {
@@ -34,7 +34,7 @@ export default function DailyPerformancePage() {
         }),
       ),
     );
-  }, [sheetQuery.data, rows]);
+  }, [rows, production]);
 
   const total = useMemo(
     () =>
