@@ -39,6 +39,7 @@ const navigationGroups = [
       { label: 'Expenses', href: '/expenses', icon: IndianRupee },
       { label: 'Feed Items', href: '/feeds/items', icon: Wheat },
       { label: 'Feed Purchases', href: '/feeds/purchases', icon: Wheat },
+      { label: 'Feed Consumption', href: '/feeds/consumption', icon: Wheat },
     ],
   },
   {
