@@ -39,7 +39,9 @@ export default function CustomerDetailPage({ id }: { id: string }) {
   const total = rows.reduce((s, r) => s + Number(r.milk_quantity), 0),
     rev = rows.reduce((s, r) => s + Number(r.calculated_amount), 0),
     paymentsTotal = payments.reduce((s, p) => s + Number(p.amount), 0),
-    outstanding = Math.max(0, rev - paymentsTotal),
+    netBalance = rev - paymentsTotal,
+    outstanding = Math.max(0, netBalance),
+    customerCredit = Math.max(0, -netBalance),
     daily = Array.from(new Set(rows.map((r) => r.business_date)))
       .sort()
       .map((date) => {
@@ -115,7 +117,11 @@ export default function CustomerDetailPage({ id }: { id: string }) {
         <KPI label="TOTAL MILK" value={milkTxt(total)} foot={`${rows.length} entries`} />
         <KPI label="TOTAL SALES" value={money(rev)} foot={total ? `${money(rev / total)} per litre` : 'No sales'} />
         <KPI label="PAYMENTS RECEIVED" value={money(paymentsTotal)} foot={`${payments.length} payment${payments.length === 1 ? '' : 's'}`} accent />
-        <KPI label="OUTSTANDING" value={money(outstanding)} foot={outstanding ? 'Amount currently receivable' : 'Fully settled'} />
+        <KPI
+          label="OUTSTANDING"
+          value={money(outstanding)}
+          foot={customerCredit ? `Customer credit: ${money(customerCredit)}` : outstanding ? 'Amount currently receivable' : 'Fully settled'}
+        />
       </div>
       <div className="card">
         <h2 className="section-title">Milk and revenue trend</h2>
@@ -159,7 +165,10 @@ export default function CustomerDetailPage({ id }: { id: string }) {
         </div>
         <div className="card">
           <h2 className="section-title">Record customer payment</h2>
-          <p className="sub">Current outstanding: <b>{money(outstanding)}</b></p>
+          <p className="sub">
+            Current outstanding: <b>{money(outstanding)}</b>
+            {customerCredit > 0 && <> · Customer credit: <b>{money(customerCredit)}</b></>}
+          </p>
           <form onSubmit={recordPayment}>
             <div className="grid two">
               <div className="field">
