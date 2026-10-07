@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
@@ -32,13 +32,10 @@ export default function DailyPerformancePage() {
     [production],
   );
   const getValue = (buffaloId: string) => values[buffaloId] ?? savedValues[buffaloId] ?? '';
-  const total = useMemo(
-    () => rows.reduce((sum, animal) => {
-      const value = getValue(animal.id);
-      return sum + (value.trim() ? Number(value) : 0);
-    }, 0),
-    [rows, values, savedValues],
-  );
+  const total = rows.reduce((sum, animal) => {
+    const value = getValue(animal.id);
+    return sum + (value.trim() ? Number(value) : 0);
+  }, 0);
   const recorded = rows.filter((animal) => getValue(animal.id).trim()).length;
 
   async function save() {
