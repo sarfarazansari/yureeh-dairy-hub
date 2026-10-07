@@ -30,8 +30,9 @@ const initialValues: FeedPurchaseFormValues = {
   notes: '',
 };
 
-export function FeedPurchaseForm({ feedItems, vendors, onSave, busy }: Props) {
-  const [values, setValues] = useState(initialValues);
+export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValues: providedInitialValues, submitLabel = 'Record purchase' }: Props) {
+  const formInitialValues = providedInitialValues ?? initialValues;
+  const [values, setValues] = useState(formInitialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const submittingRef = useRef(false);
 
@@ -87,7 +88,7 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy }: Props) {
     try {
       const error = await onSave(parsed.data);
       if (!error) {
-        setValues({ ...initialValues, businessDate: values.businessDate });
+        setValues({ ...formInitialValues, businessDate: values.businessDate });
         setErrors({});
       } else {
         setErrors({ form: error });
@@ -289,7 +290,7 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy }: Props) {
       {errors.form && <span className="auth-message">{errors.form}</span>}
 
       <button type="submit" className="btn" disabled={busy || submittingRef.current || !feedItems.length}>
-        {busy ? 'Saving…' : 'Record purchase'}
+        {busy ? 'Saving…' : submitLabel}
       </button>
     </form>
   );
