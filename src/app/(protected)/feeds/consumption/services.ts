@@ -91,8 +91,7 @@ export async function fetchFeedConsumption(
     can_edit_delete: !(later ?? []).some(
       (movement) =>
         movement.feed_item_id === row.feed_item_id &&
-        movement.created_at > row.created_at &&
-        !ids.includes(row.id),
+        movement.created_at > row.created_at,
     ),
   }));
 
