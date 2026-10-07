@@ -1263,3 +1263,43 @@ button:disabled,
     width: 150px;
   }
 }
+
+
+.app-toast {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 320px;
+  max-width: 520px;
+  padding: 13px 14px 13px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(24, 44, 38, 0.14);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.app-toast-success {
+  border-left: 4px solid #1f7a5a;
+}
+
+.app-toast-error {
+  border-left: 4px solid #c84b4b;
+}
+
+.app-toast button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}

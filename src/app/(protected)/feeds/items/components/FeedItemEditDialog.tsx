@@ -35,6 +35,7 @@ export function FeedItemEditDialog({ item, open, onOpenChange, onSave, busy }: P
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
+    if (!item) return;
     const error = await onSave(values, item.id);
     if (error) setMessage(error);
     else onOpenChange(false);

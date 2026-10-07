@@ -37,7 +37,8 @@ const navigationGroups = [
     label: 'FARM COSTS',
     items: [
       { label: 'Expenses', href: '/expenses', icon: IndianRupee },
-      { label: 'Feed', href: '/feeds/items', icon: Wheat },
+      { label: 'Feed Items', href: '/feeds/items', icon: Wheat },
+      { label: 'Feed Purchases', href: '/feeds/purchases', icon: Wheat },
     ],
   },
   {
