@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { TimedNotice } from '@/components/ui/TimedNotice';
 import { todayLocal } from '../../../expenses/shared';
 import type { FeedItem } from '@/lib/feed-types';
 import type { ExpenseVendor } from '@/lib/expense-types';
@@ -13,7 +12,6 @@ type Props = {
   vendors: Pick<ExpenseVendor, 'id' | 'name'>[];
   onSave: (values: FeedPurchaseFormValues) => Promise<string | null>;
   busy: boolean;
-  message: string;
 };
 
 const money = (value: number) =>
@@ -32,7 +30,7 @@ const initialValues: FeedPurchaseFormValues = {
   notes: '',
 };
 
-export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, message }: Props) {
+export function FeedPurchaseForm({ feedItems, vendors, onSave, busy }: Props) {
   const [values, setValues] = useState(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const submittingRef = useRef(false);
@@ -288,9 +286,7 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, message }: 
         </div>
       )}
 
-      {(message || errors.form) && (
-        <TimedNotice message={message || errors.form} onDismiss={() => undefined} />
-      )}
+      {errors.form && <span className="auth-message">{errors.form}</span>}
 
       <button type="submit" className="btn" disabled={busy || submittingRef.current || !feedItems.length}>
         {busy ? 'Saving…' : 'Record purchase'}
