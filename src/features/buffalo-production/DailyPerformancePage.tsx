@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
@@ -25,26 +25,21 @@ export default function DailyPerformancePage() {
   const rows: BuffaloProductionAnimal[] = sheetQuery.data?.buffaloes ?? [];
   const production = sheetQuery.data?.production ?? [];
 
-  useEffect(() => {
-    setValues(
-      Object.fromEntries(
-        rows.map((buffalo) => {
-          const saved = production.find((record) => record.buffalo_id === buffalo.id);
-          return [buffalo.id, saved ? String(saved.milk_quantity) : ''];
-        }),
-      ),
-    );
-  }, [sheetQuery.data?.buffaloes, sheetQuery.data?.production]);
-
-  const total = useMemo(
-    () =>
-      rows.reduce(
-        (sum, animal) => sum + (values[animal.id]?.trim() ? Number(values[animal.id]) : 0),
-        0,
-      ),
-    [rows, values],
+  const savedValues = useMemo(
+    () => Object.fromEntries(
+      production.map((record) => [record.buffalo_id, String(record.milk_quantity)]),
+    ),
+    [production],
   );
-  const recorded = rows.filter((animal) => values[animal.id]?.trim()).length;
+  const getValue = (buffaloId: string) => values[buffaloId] ?? savedValues[buffaloId] ?? '';
+  const total = useMemo(
+    () => rows.reduce((sum, animal) => {
+      const value = getValue(animal.id);
+      return sum + (value.trim() ? Number(value) : 0);
+    }, 0),
+    [rows, values, savedValues],
+  );
+  const recorded = rows.filter((animal) => getValue(animal.id).trim()).length;
 
   async function save() {
     setMessage('');
@@ -52,7 +47,7 @@ export default function DailyPerformancePage() {
     try {
       const submitted: { buffalo_id: string; milk_quantity: number }[] = [];
       for (const animal of rows) {
-        const value = (values[animal.id] ?? '').trim();
+        const value = getValue(animal.id).trim();
         if (!value) continue;
         const parsed = buffaloMilkQuantitySchema.safeParse(value);
         if (!parsed.success) {
@@ -93,7 +88,10 @@ export default function DailyPerformancePage() {
               className="date-chip"
               value={date}
               disabled={saveMutation.isPending}
-              onChange={(event) => setDate(event.target.value)}
+              onChange={(event) => {
+                setDate(event.target.value);
+                setValues({});
+              }}
             />
           </label>
         </div>
@@ -106,7 +104,10 @@ export default function DailyPerformancePage() {
               className={`date-chip ${shift === value ? 'active' : ''}`}
               aria-pressed={shift === value}
               disabled={saveMutation.isPending || sheetQuery.isFetching}
-              onClick={() => setShift(value)}
+              onClick={() => {
+                setShift(value);
+                setValues({});
+              }}
             >
               {value === 'MORNING' ? 'Morning' : 'Evening'}
             </button>
@@ -148,7 +149,7 @@ export default function DailyPerformancePage() {
                         inputMode="decimal"
                         placeholder="No record"
                         disabled={saveMutation.isPending || sheetQuery.isFetching}
-                        value={values[animal.id] ?? ''}
+                        value={getValue(animal.id)}
                         onChange={(event) => {
                           setValues((current) => ({ ...current, [animal.id]: event.target.value }));
                           setMessage('');
@@ -157,7 +158,7 @@ export default function DailyPerformancePage() {
                     </td>
                     <td>
                       {values[animal.id]?.trim() ? (
-                        Number(values[animal.id]) === 0
+                        Number(getValue(animal.id)) === 0
                           ? <span className="tag gold">Recorded · 0 L</span>
                           : <span className="tag">Recorded</span>
                       ) : (
