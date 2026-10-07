@@ -31,7 +31,24 @@ create policy "feed_purchases_select_own"
 
 create policy "feed_purchases_insert_own"
   on public.feed_purchases for insert to authenticated
-  with check (user_id = (select auth.uid()));
+  with check (
+    user_id = (select auth.uid())
+    and exists (
+      select 1 from public.feed_items f
+      where f.id = feed_item_id and f.user_id = (select auth.uid())
+    )
+    and (
+      vendor_id is null
+      or exists (
+        select 1 from public.expense_vendors v
+        where v.id = vendor_id and v.user_id = (select auth.uid())
+      )
+    )
+    and exists (
+      select 1 from public.expenses e
+      where e.id = expense_id and e.user_id = (select auth.uid())
+    )
+  );
 
 create trigger feed_purchases_updated_at
 before update on public.feed_purchases
