@@ -56,6 +56,7 @@ export async function fetchFeedPurchases(
   let query = client
     .from('feed_purchases')
     .select('*, feed_items!inner(name), expense_vendors(name), expenses!inner(payment_status)', { count: 'exact' })
+    .eq('status', 'ACTIVE')
     .order('business_date', { ascending: false })
     .order('created_at', { ascending: false })
     .range(from, to);
