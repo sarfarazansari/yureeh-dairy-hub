@@ -34,7 +34,7 @@ export default function DailyPerformancePage() {
         }),
       ),
     );
-  }, [rows, production]);
+  }, [sheetQuery.data?.buffaloes, sheetQuery.data?.production]);
 
   const total = useMemo(
     () =>
