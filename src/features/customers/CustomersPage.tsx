@@ -23,6 +23,11 @@ export default function CustomersPage() {
     [pricingCustomer, setPricingCustomer] = useState<CustomerSummary | null>(null),
     [pricingRate, setPricingRate] = useState(''),
     [pricingType, setPricingType] = useState<PricingType>('FIXED_PER_LITRE'),
+    [editCustomer, setEditCustomer] = useState<CustomerSummary | null>(null),
+    [editName, setEditName] = useState(''),
+    [editPhone, setEditPhone] = useState(''),
+    [editAddress, setEditAddress] = useState(''),
+    [editNotes, setEditNotes] = useState(''),
     [message, setMessage] = useState('');
   const directoryQuery = useCustomerDirectoryQuery();
   const createMutation = useCreateCustomerMutation();
