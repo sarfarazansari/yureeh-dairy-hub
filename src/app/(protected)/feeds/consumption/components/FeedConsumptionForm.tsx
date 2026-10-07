@@ -13,6 +13,7 @@ type Props = {
   busy: boolean;
   initialValues?: FeedConsumptionFormValues;
   submitLabel?: string;
+  lockFeedItem?: boolean;
 };
 
 export function FeedConsumptionForm({
@@ -22,6 +23,7 @@ export function FeedConsumptionForm({
   busy,
   initialValues,
   submitLabel = 'Record consumption',
+  lockFeedItem = false,
 }: Props) {
   const [values, setValues] = useState<FeedConsumptionFormValues>(
     initialValues ?? { feedItemId: '', businessDate: todayLocal(), quantity: 1, notes: '' },
@@ -91,12 +93,16 @@ export function FeedConsumptionForm({
 
         <div className="field">
           <label>Feed item</label>
-          <select value={values.feedItemId} onChange={(e) => update('feedItemId', e.target.value)}>
-            <option value="">Select feed item</option>
-            {feedItems.map((item) => (
-              <option key={item.id} value={item.id}>{item.name}</option>
-            ))}
-          </select>
+          {lockFeedItem ? (
+            <input value={selectedFeed?.name ?? '—'} readOnly />
+          ) : (
+            <select value={values.feedItemId} onChange={(e) => update('feedItemId', e.target.value)}>
+              <option value="">Select feed item</option>
+              {feedItems.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
+              ))}
+            </select>
+          )}
           {errors.feedItemId && <span className="auth-message">{errors.feedItemId}</span>}
         </div>
 
