@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { AppShell } from '@/components/layout/AppShell';
@@ -25,6 +25,7 @@ export default function FeedItemsPage() {
   const [notes, setNotes] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const editDialogRef = useRef<HTMLDialogElement>(null);
 
   async function load() {
     if (!supabase) return;
@@ -68,6 +69,15 @@ export default function FeedItemsPage() {
     setPurchaseUnit(row.purchase_unit);
     setConversion(String(row.purchase_unit_quantity));
     setNotes(row.notes ?? '');
+    setMessage('');
+    editDialogRef.current?.showModal();
+  }
+
+  function closeEditDialog() {
+    if (busy) return;
+    editDialogRef.current?.close();
+    clear();
+    setMessage('');
   }
 
   async function save(event: React.FormEvent) {
@@ -135,6 +145,9 @@ export default function FeedItemsPage() {
       );
     } else {
       setMessage(id ? 'Feed item updated.' : 'Feed item created.');
+      if (id) {
+        editDialogRef.current?.close();
+      }
       clear();
       await load();
     }
@@ -155,99 +168,50 @@ export default function FeedItemsPage() {
   return (
     <AppShell title="Feed items" subtitle="Manage the farm's physical feed master">
       <div className="management-stack">
-        <form className="card" onSubmit={save}>
+        <div className="card">
           <div className="row">
-            <h2 className="section-title">{id ? 'Edit feed item' : 'Add feed item'}</h2>
-            {id && (
-              <button type="button" className="date-chip" onClick={clear} disabled={busy}>
-                Cancel
-              </button>
-            )}
-          </div>
-
-          <div className="expense-form-grid">
-            <div className="field">
-              <label>Name</label>
-              <input
-                required
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="e.g. Poha Churi"
-              />
-            </div>
-
-            <div className="field">
-              <label>Category</label>
-              <select
-                value={category}
-                onChange={(event) => setCategory(event.target.value as FeedCategory)}
-              >
-                {FEED_CATEGORIES.map((item) => (
-                  <option key={item} value={item}>
-                    {label(item)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="field">
-              <label>Base unit</label>
-              <input
-                list="feed-unit-list"
-                value={baseUnit}
-                onChange={(event) => setBaseUnit(event.target.value)}
-                placeholder="KG"
-              />
-            </div>
-
-            <div className="field">
-              <label>Purchase unit</label>
-              <input
-                list="feed-unit-list"
-                value={purchaseUnit}
-                onChange={(event) => setPurchaseUnit(event.target.value)}
-                placeholder="BAG"
-              />
-            </div>
-
-            <div className="field">
-              <label>Base quantity per purchase unit</label>
-              <input
-                required
-                type="number"
-                min="0.001"
-                step="0.001"
-                inputMode="decimal"
-                value={conversion}
-                onChange={(event) => setConversion(event.target.value)}
-              />
-              <span className="kpi-foot">
-                Example: 1 BAG = 50 KG → enter 50.
-              </span>
-            </div>
-
-            <div className="field wide-field">
-              <label>Notes</label>
-              <input
-                value={notes}
-                onChange={(event) => setNotes(event.target.value)}
-                placeholder="Optional"
-              />
+            <div>
+              <h2 className="section-title">Add feed item</h2>
+              <p className="dialog-description">Create a physical feed master for inventory tracking.</p>
             </div>
           </div>
-
-          <datalist id="feed-unit-list">
-            {FEED_UNITS.map((unit) => (
-              <option key={unit} value={unit} />
-            ))}
-          </datalist>
-
-          {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-
-          <button className="btn" disabled={busy}>
-            {busy ? 'Saving…' : id ? 'Save changes' : 'Add feed item'}
-          </button>
-        </form>
+          <form onSubmit={save}>
+            <div className="expense-form-grid">
+              <div className="field">
+                <label>Name</label>
+                <input required value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Poha Churi" />
+              </div>
+              <div className="field">
+                <label>Category</label>
+                <select value={category} onChange={(event) => setCategory(event.target.value as FeedCategory)}>
+                  {FEED_CATEGORIES.map((item) => <option key={item} value={item}>{label(item)}</option>)}
+                </select>
+              </div>
+              <div className="field">
+                <label>Base unit</label>
+                <input list="feed-unit-list" value={baseUnit} onChange={(event) => setBaseUnit(event.target.value)} placeholder="KG" />
+              </div>
+              <div className="field">
+                <label>Purchase unit</label>
+                <input list="feed-unit-list" value={purchaseUnit} onChange={(event) => setPurchaseUnit(event.target.value)} placeholder="BAG" />
+              </div>
+              <div className="field">
+                <label>Base quantity per purchase unit</label>
+                <input required type="number" min="0.001" step="0.001" inputMode="decimal" value={conversion} onChange={(event) => setConversion(event.target.value)} />
+                <span className="kpi-foot">Example: 1 BAG = 50 KG → enter 50.</span>
+              </div>
+              <div className="field wide-field">
+                <label>Notes</label>
+                <input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Optional" />
+              </div>
+            </div>
+            <datalist id="feed-unit-list">
+              {FEED_UNITS.map((unit) => <option key={unit} value={unit} />)}
+            </datalist>
+            {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
+            <button className="btn" disabled={busy}>{busy ? 'Saving…' : 'Add feed item'}</button>
+          </form>
+        </div>
 
         <div className="card">
           <div className="row">
@@ -313,6 +277,56 @@ export default function FeedItemsPage() {
             record.
           </p>
         </div>
+        <dialog ref={editDialogRef} className="app-dialog" onCancel={(event) => { event.preventDefault(); closeEditDialog(); }}>
+          <form onSubmit={save}>
+            <div className="dialog-header">
+              <div>
+                <p className="eyebrow">FEED MASTER</p>
+                <h2 className="dialog-title">Edit feed item</h2>
+                <p className="dialog-description">Update the feed definition used for inventory and consumption tracking.</p>
+              </div>
+              <button type="button" className="dialog-close" onClick={closeEditDialog} disabled={busy} aria-label="Close edit dialog">×</button>
+            </div>
+            <div className="dialog-form-grid expense-form-grid">
+              <div className="field">
+                <label>Name</label>
+                <input required value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Poha Churi" />
+              </div>
+              <div className="field">
+                <label>Category</label>
+                <select value={category} onChange={(event) => setCategory(event.target.value as FeedCategory)}>
+                  {FEED_CATEGORIES.map((item) => <option key={item} value={item}>{label(item)}</option>)}
+                </select>
+              </div>
+              <div className="field">
+                <label>Base unit</label>
+                <input list="feed-unit-list-edit" value={baseUnit} onChange={(event) => setBaseUnit(event.target.value)} placeholder="KG" />
+              </div>
+              <div className="field">
+                <label>Purchase unit</label>
+                <input list="feed-unit-list-edit" value={purchaseUnit} onChange={(event) => setPurchaseUnit(event.target.value)} placeholder="BAG" />
+              </div>
+              <div className="field">
+                <label>Base quantity per purchase unit</label>
+                <input required type="number" min="0.001" step="0.001" inputMode="decimal" value={conversion} onChange={(event) => setConversion(event.target.value)} />
+                <span className="kpi-foot">Example: 1 BAG = 50 KG → enter 50.</span>
+              </div>
+              <div className="field wide-field">
+                <label>Notes</label>
+                <input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Optional" />
+              </div>
+            </div>
+            <datalist id="feed-unit-list-edit">
+              {FEED_UNITS.map((unit) => <option key={unit} value={unit} />)}
+            </datalist>
+            {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
+            <div className="dialog-footer">
+              <button type="button" className="btn secondary" onClick={closeEditDialog} disabled={busy}>Cancel</button>
+              <button type="submit" className="btn" disabled={busy}>{busy ? 'Saving…' : 'Save changes'}</button>
+            </div>
+          </form>
+        </dialog>
+
       </div>
     </AppShell>
   );
