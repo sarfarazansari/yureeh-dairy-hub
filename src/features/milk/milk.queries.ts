@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
 import {
+  getActiveCustomersForMilkEntry,
+  getCustomerPricingForDate,
   getMilkEntryCustomers,
   type CustomerOption,
 } from '@/features/customers/services/customer.service';
@@ -30,6 +32,9 @@ export const milkQueryKeys = {
   entries: (filters: MilkEntryFilters, pagination: MilkEntryPagination) =>
     [...milkQueryKeys.all, 'entries', filters, pagination] as const,
   customers: () => [...milkQueryKeys.all, 'customers'] as const,
+  activeCustomers: () => [...milkQueryKeys.all, 'active-customers'] as const,
+  customerPricing: (customerId: string, businessDate: string) =>
+    [...milkQueryKeys.all, 'customer-pricing', customerId, businessDate] as const,
   duplicate: (input: {
     customerId: string;
     businessDate: string;
@@ -56,10 +61,25 @@ export function useMilkEntryListQuery(
   });
 }
 
+export function useActiveMilkEntryCustomersQuery() {
+  return useQuery<CustomerOption[], Error>({
+    queryKey: milkQueryKeys.activeCustomers(),
+    queryFn: () => getActiveCustomersForMilkEntry(requireSupabase()),
+  });
+}
+
 export function useMilkEntryCustomersQuery() {
   return useQuery<CustomerOption[], Error>({
     queryKey: milkQueryKeys.customers(),
     queryFn: () => getMilkEntryCustomers(requireSupabase()),
+  });
+}
+
+export function useCustomerPricingQuery(customerId: string, businessDate: string) {
+  return useQuery({
+    queryKey: milkQueryKeys.customerPricing(customerId, businessDate),
+    queryFn: () => getCustomerPricingForDate(requireSupabase(), customerId, businessDate),
+    enabled: Boolean(customerId && businessDate),
   });
 }
 
