@@ -5,7 +5,7 @@
 create or replace function public.record_customer_rate_change()
 returns trigger
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $$
 begin
