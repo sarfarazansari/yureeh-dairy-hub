@@ -23,8 +23,8 @@ export default function NewEntryForm() {
     [shift, setShift] = useState<'MORNING' | 'EVENING'>('MORNING'),
     [quantity, setQuantity] = useState(''),
     [fat, setFat] = useState(''),
-    [pricingType, setPricingType] = useState<PricingType>('FIXED_PER_LITRE'),
-    [rate, setRate] = useState(''),
+    [pricingTypeOverride, setPricingTypeOverride] = useState<PricingType | null>(null),
+    [rateOverride, setRateOverride] = useState<string | null>(null),
     [notes, setNotes] = useState(''),
     [errors, setErrors] = useState<Record<string, string>>({}),
     [message, setMessage] = useState('');
@@ -36,15 +36,8 @@ export default function NewEntryForm() {
   const createMutation = useCreateMilkEntryMutation();
   const customers = customersQuery.data ?? [];
   const customer = customers.find((item) => item.id === customerId);
-
-  useEffect(() => {
-    if (!customerId || pricingQuery.isPending || pricingQuery.isError) return;
-    const pricing = pricingQuery.data;
-    if (!pricing) return;
-    setPricingType(pricing.pricing_type);
-    setRate(String(pricing.rate));
-    setFat('');
-  }, [customerId, pricingQuery.data, pricingQuery.isError, pricingQuery.isPending]);
+  const pricingType = pricingTypeOverride ?? pricingQuery.data?.pricing_type ?? customer?.pricing_type ?? 'FIXED_PER_LITRE';
+  const rate = rateOverride ?? (pricingQuery.data ? String(pricingQuery.data.rate) : customer ? String(customer.default_rate) : '');
 
   const amount = useMemo(() => {
     if (!quantity || !rate) return 0;
@@ -62,17 +55,15 @@ export default function NewEntryForm() {
 
   function chooseCustomer(id: string) {
     setCustomerId(id);
+    setPricingTypeOverride(null);
+    setRateOverride(null);
     setErrors((current) => ({ ...current, customer_id: '' }));
     const selected = customers.find((item) => item.id === id);
-    if (selected) {
-      setPricingType(selected.pricing_type);
-      setRate(String(selected.default_rate));
-      setFat('');
-    }
+    if (selected) setFat('');
   }
 
   function changePricingType(value: PricingType) {
-    setPricingType(value);
+    setPricingTypeOverride(value);
     setErrors((current) => ({ ...current, fat: '' }));
     if (value !== 'FAT_BASED') setFat('');
   }
@@ -282,7 +273,7 @@ export default function NewEntryForm() {
                 value={rate}
                 disabled={createMutation.isPending}
                 onChange={(event) => {
-                  setRate(event.target.value);
+                  setRateOverride(event.target.value);
                   setErrors((current) => ({ ...current, applied_rate: '' }));
                 }}
                 aria-invalid={!!errors.applied_rate}
@@ -330,7 +321,7 @@ export default function NewEntryForm() {
               id="entry-rate-snapshot"
               value={rate}
               onChange={(event) => {
-                setRate(event.target.value);
+                setRateOverride(event.target.value);
                 setErrors((current) => ({ ...current, applied_rate: '' }));
               }}
               type="number"
