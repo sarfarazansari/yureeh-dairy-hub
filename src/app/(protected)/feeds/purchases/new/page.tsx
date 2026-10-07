@@ -13,7 +13,6 @@ import type { FeedPurchaseFormValues } from '../schema';
 export default function NewFeedPurchasePage() {
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [vendors, setVendors] = useState<Pick<ExpenseVendor, 'id' | 'name'>[]>([]);
-  const [message, setMessage] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -38,7 +37,6 @@ export default function NewFeedPurchasePage() {
   async function save(values: FeedPurchaseFormValues) {
     if (!supabase) return 'Supabase is not configured.';
     setBusy(true);
-    setMessage('');
     setToast(null);
     try {
       await createFeedPurchase(supabase, values);
