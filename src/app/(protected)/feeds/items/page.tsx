@@ -1,39 +1,23 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { TimedNotice } from '@/components/ui/TimedNotice';
+import { useEffect, useMemo, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
-import {
-  FEED_CATEGORIES,
-  FEED_UNITS,
-  type FeedCategory,
-  type FeedItem,
-} from '@/lib/feed-types';
-
-const label = (value: string) => value.replaceAll('_', ' ');
+import { supabase } from '@/lib/supabase';
+import type { FeedCategory, FeedItem } from '@/lib/feed-types';
+import { FeedItemEditDialog } from './components/FeedItemEditDialog';
+import { FeedItemForm, type FeedItemFormValues } from './components/FeedItemForm';
+import { FeedItemTable } from './components/FeedItemTable';
 
 export default function FeedItemsPage() {
   const [rows, setRows] = useState<FeedItem[]>([]);
   const [search, setSearch] = useState('');
-  const [id, setId] = useState('');
-  const [name, setName] = useState('');
-  const [category, setCategory] = useState<FeedCategory>('CONCENTRATE');
-  const [baseUnit, setBaseUnit] = useState('KG');
-  const [purchaseUnit, setPurchaseUnit] = useState('KG');
-  const [conversion, setConversion] = useState('1');
-  const [notes, setNotes] = useState('');
+  const [editingItem, setEditingItem] = useState<FeedItem | null>(null);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
-  const editDialogRef = useRef<HTMLDialogElement>(null);
 
   async function load() {
     if (!supabase) return;
-    const { data, error } = await supabase
-      .from('feed_items')
-      .select('*')
-      .order('is_active', { ascending: false })
-      .order('name');
+    const { data, error } = await supabase.from('feed_items').select('*').order('is_active', { ascending: false }).order('name');
     if (error) setMessage(error.message);
     setRows(data ?? []);
   }
@@ -43,124 +27,50 @@ export default function FeedItemsPage() {
     return () => window.clearTimeout(task);
   }, []);
 
-  const visible = useMemo(
-    () =>
-      rows.filter((row) =>
-        (row.name + ' ' + row.category).toLowerCase().includes(search.trim().toLowerCase()),
-      ),
-    [rows, search],
-  );
+  const visible = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return query ? rows.filter((row) => (row.name + ' ' + row.category).toLowerCase().includes(query)) : rows;
+  }, [rows, search]);
 
-  function clear() {
-    setId('');
-    setName('');
-    setCategory('CONCENTRATE');
-    setBaseUnit('KG');
-    setPurchaseUnit('KG');
-    setConversion('1');
-    setNotes('');
-  }
+  async function save(values: FeedItemFormValues, id?: string) {
+    if (!supabase) return 'Supabase is not configured.';
+    const cleanName = values.name.trim();
+    const quantity = Number(values.conversion);
+    if (!cleanName) return 'Feed name is required.';
+    if (!Number.isFinite(quantity) || quantity <= 0) return 'Purchase unit quantity must be greater than zero.';
+    if (!values.baseUnit.trim() || !values.purchaseUnit.trim()) return 'Base unit and purchase unit are required.';
 
-  function edit(row: FeedItem) {
-    setId(row.id);
-    setName(row.name);
-    setCategory(row.category);
-    setBaseUnit(row.base_unit);
-    setPurchaseUnit(row.purchase_unit);
-    setConversion(String(row.purchase_unit_quantity));
-    setNotes(row.notes ?? '');
-    setMessage('');
-    editDialogRef.current?.showModal();
-  }
-
-  function closeEditDialog() {
-    if (busy) return;
-    editDialogRef.current?.close();
-    clear();
-    setMessage('');
-  }
-
-  async function save(event: React.FormEvent) {
-    event.preventDefault();
-    if (!supabase) return;
-
-    const cleanName = name.trim();
-    const quantity = Number(conversion);
-
-    if (!cleanName) return setMessage('Feed name is required.');
-    if (!Number.isFinite(quantity) || quantity <= 0) {
-      return setMessage('Purchase unit quantity must be greater than zero.');
-    }
-    if (!baseUnit.trim() || !purchaseUnit.trim()) {
-      return setMessage('Base unit and purchase unit are required.');
-    }
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user) return userError?.message ?? 'You must be signed in to save a feed item.';
 
     setBusy(true);
     setMessage('');
+    try {
+      const payload = {
+        name: cleanName,
+        category: values.category,
+        base_unit: values.baseUnit.trim().toUpperCase(),
+        purchase_unit: values.purchaseUnit.trim().toUpperCase(),
+        purchase_unit_quantity: quantity,
+        notes: values.notes.trim() || null,
+        user_id: userData.user.id,
+      };
+      const result = id
+        ? await supabase.from('feed_items').update(payload).eq('id', id).eq('user_id', userData.user.id).select().single()
+        : await supabase.from('feed_items').insert(payload).select().single();
 
-    const values = {
-      name: cleanName,
-      category,
-      base_unit: baseUnit.trim().toUpperCase(),
-      purchase_unit: purchaseUnit.trim().toUpperCase(),
-      purchase_unit_quantity: quantity,
-      notes: notes.trim() || null,
-    };
-
-    const { data: userData, error: userError } = await supabase.auth.getUser();
-    if (userError || !userData.user) {
-      setMessage(userError?.message ?? 'You must be signed in to save a feed item.');
-      setBusy(false);
-      return;
-    }
-
-    let result;
-    if (id) {
-      result = await supabase
-        .from('feed_items')
-        .update({
-          ...values,
-          user_id: userData.user.id,
-        })
-        .eq('id', id)
-        .eq('user_id', userData.user.id)
-        .select()
-        .single();
-    } else {
-      result = await supabase
-        .from('feed_items')
-        .insert({
-          ...values,
-          user_id: userData.user.id,
-        })
-        .select()
-        .single();
-    }
-
-    if (result.error) {
-      setMessage(
-        result.error.code === '23505'
-          ? 'A feed item with this name already exists.'
-          : result.error.message,
-      );
-    } else {
+      if (result.error) return result.error.code === '23505' ? 'A feed item with this name already exists.' : result.error.message;
       setMessage(id ? 'Feed item updated.' : 'Feed item created.');
-      if (id) {
-        editDialogRef.current?.close();
-      }
-      clear();
       await load();
+      return null;
+    } finally {
+      setBusy(false);
     }
-
-    setBusy(false);
   }
 
   async function toggle(row: FeedItem) {
     if (!supabase) return;
-    const { error } = await supabase
-      .from('feed_items')
-      .update({ is_active: !row.is_active })
-      .eq('id', row.id);
+    const { error } = await supabase.from('feed_items').update({ is_active: !row.is_active }).eq('id', row.id);
     if (error) setMessage(error.message);
     else await load();
   }
@@ -168,165 +78,9 @@ export default function FeedItemsPage() {
   return (
     <AppShell title="Feed items" subtitle="Manage the farm's physical feed master">
       <div className="management-stack">
-        <div className="card">
-          <div className="row">
-            <div>
-              <h2 className="section-title">Add feed item</h2>
-              <p className="dialog-description">Create a physical feed master for inventory tracking.</p>
-            </div>
-          </div>
-          <form onSubmit={save}>
-            <div className="expense-form-grid">
-              <div className="field">
-                <label>Name</label>
-                <input required value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Poha Churi" />
-              </div>
-              <div className="field">
-                <label>Category</label>
-                <select value={category} onChange={(event) => setCategory(event.target.value as FeedCategory)}>
-                  {FEED_CATEGORIES.map((item) => <option key={item} value={item}>{label(item)}</option>)}
-                </select>
-              </div>
-              <div className="field">
-                <label>Base unit</label>
-                <input list="feed-unit-list" value={baseUnit} onChange={(event) => setBaseUnit(event.target.value)} placeholder="KG" />
-              </div>
-              <div className="field">
-                <label>Purchase unit</label>
-                <input list="feed-unit-list" value={purchaseUnit} onChange={(event) => setPurchaseUnit(event.target.value)} placeholder="BAG" />
-              </div>
-              <div className="field">
-                <label>Base quantity per purchase unit</label>
-                <input required type="number" min="0.001" step="0.001" inputMode="decimal" value={conversion} onChange={(event) => setConversion(event.target.value)} />
-                <span className="kpi-foot">Example: 1 BAG = 50 KG → enter 50.</span>
-              </div>
-              <div className="field wide-field">
-                <label>Notes</label>
-                <input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Optional" />
-              </div>
-            </div>
-            <datalist id="feed-unit-list">
-              {FEED_UNITS.map((unit) => <option key={unit} value={unit} />)}
-            </datalist>
-            {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-            <button className="btn" disabled={busy}>{busy ? 'Saving…' : 'Add feed item'}</button>
-          </form>
-        </div>
-
-        <div className="card">
-          <div className="row">
-            <h2 className="section-title">Feed master</h2>
-            <span className="tag">{rows.filter((row) => row.is_active).length} active</span>
-          </div>
-
-          <div className="field" style={{ marginBottom: 16 }}>
-            <label>Search</label>
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search feed item"
-            />
-          </div>
-
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>NAME</th>
-                  <th>CATEGORY</th>
-                  <th>BASE UNIT</th>
-                  <th>PURCHASE UNIT</th>
-                  <th>CONVERSION</th>
-                  <th>STATUS</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((row) => (
-                  <tr key={row.id}>
-                    <td><b>{row.name}</b></td>
-                    <td>{label(row.category)}</td>
-                    <td>{row.base_unit}</td>
-                    <td>{row.purchase_unit}</td>
-                    <td>
-                      1 {row.purchase_unit} = {row.purchase_unit_quantity} {row.base_unit}
-                    </td>
-                    <td>
-                      <span className={'tag ' + (row.is_active ? '' : 'gold')}>
-                        {row.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td>
-                      <button type="button" className="date-chip" onClick={() => edit(row)}>
-                        Edit
-                      </button>{' '}
-                      <button type="button" className="date-chip" onClick={() => toggle(row)}>
-                        {row.is_active ? 'Deactivate' : 'Activate'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {!visible.length && <div className="empty">No feed items found.</div>}
-
-          <p className="kpi-foot">
-            Feed items are physical inventory masters. Expenses remain a separate accounting
-            record.
-          </p>
-        </div>
-        <dialog ref={editDialogRef} className="app-dialog" onCancel={(event) => { event.preventDefault(); closeEditDialog(); }}>
-          <form onSubmit={save}>
-            <div className="dialog-header">
-              <div>
-                <p className="eyebrow">FEED MASTER</p>
-                <h2 className="dialog-title">Edit feed item</h2>
-                <p className="dialog-description">Update the feed definition used for inventory and consumption tracking.</p>
-              </div>
-              <button type="button" className="dialog-close" onClick={closeEditDialog} disabled={busy} aria-label="Close edit dialog">×</button>
-            </div>
-            <div className="dialog-form-grid expense-form-grid">
-              <div className="field">
-                <label>Name</label>
-                <input required value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Poha Churi" />
-              </div>
-              <div className="field">
-                <label>Category</label>
-                <select value={category} onChange={(event) => setCategory(event.target.value as FeedCategory)}>
-                  {FEED_CATEGORIES.map((item) => <option key={item} value={item}>{label(item)}</option>)}
-                </select>
-              </div>
-              <div className="field">
-                <label>Base unit</label>
-                <input list="feed-unit-list-edit" value={baseUnit} onChange={(event) => setBaseUnit(event.target.value)} placeholder="KG" />
-              </div>
-              <div className="field">
-                <label>Purchase unit</label>
-                <input list="feed-unit-list-edit" value={purchaseUnit} onChange={(event) => setPurchaseUnit(event.target.value)} placeholder="BAG" />
-              </div>
-              <div className="field">
-                <label>Base quantity per purchase unit</label>
-                <input required type="number" min="0.001" step="0.001" inputMode="decimal" value={conversion} onChange={(event) => setConversion(event.target.value)} />
-                <span className="kpi-foot">Example: 1 BAG = 50 KG → enter 50.</span>
-              </div>
-              <div className="field wide-field">
-                <label>Notes</label>
-                <input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Optional" />
-              </div>
-            </div>
-            <datalist id="feed-unit-list-edit">
-              {FEED_UNITS.map((unit) => <option key={unit} value={unit} />)}
-            </datalist>
-            {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-            <div className="dialog-footer">
-              <button type="button" className="btn secondary" onClick={closeEditDialog} disabled={busy}>Cancel</button>
-              <button type="submit" className="btn" disabled={busy}>{busy ? 'Saving…' : 'Save changes'}</button>
-            </div>
-          </form>
-        </dialog>
-
+        <FeedItemForm onSave={save} busy={busy} message={message} />
+        <FeedItemTable rows={visible} activeCount={rows.filter((row) => row.is_active).length} search={search} onSearchChange={setSearch} onEdit={setEditingItem} onToggle={toggle} />
+        <FeedItemEditDialog item={editingItem} open={Boolean(editingItem)} onOpenChange={(open) => !open && setEditingItem(null)} onSave={save} busy={busy} />
       </div>
     </AppShell>
   );
