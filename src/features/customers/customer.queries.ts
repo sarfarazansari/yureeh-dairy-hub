@@ -5,9 +5,13 @@ import {
   createCustomer,
   getCustomerDetails,
   getCustomerDirectory,
+  getCustomerPayments,
+  recordCustomerPayment,
   setCustomerActive,
+  updateCustomer,
   updateCustomerPricing,
   type CustomerEntry,
+  type CustomerPayment,
   type CustomerSummary,
 } from './services/customer.service';
 
@@ -37,6 +41,14 @@ export function useCustomerDetailQuery(customerId: string) {
   });
 }
 
+export function useCustomerPaymentsQuery(customerId: string) {
+  return useQuery<CustomerPayment[], Error>({
+    queryKey: [...customerQueryKeys.detail(customerId), 'payments'],
+    queryFn: () => getCustomerPayments(requireSupabase(), customerId),
+    enabled: Boolean(customerId),
+  });
+}
+
 export function useCreateCustomerMutation() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -44,6 +56,43 @@ export function useCreateCustomerMutation() {
       createCustomer(requireSupabase(), input),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: customerQueryKeys.all });
+    },
+  });
+}
+
+export function useUpdateCustomerMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      customerId: string;
+      name: string;
+      phone?: string | null;
+      address?: string | null;
+      notes?: string | null;
+    }) =>
+      updateCustomer(requireSupabase(), input.customerId, {
+        name: input.name,
+        phone: input.phone,
+        address: input.address,
+        notes: input.notes,
+      }),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({ queryKey: customerQueryKeys.all });
+      await queryClient.invalidateQueries({ queryKey: customerQueryKeys.detail(variables.customerId) });
+    },
+  });
+}
+
+export function useRecordCustomerPaymentMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      customerId: string;
+      payment: Parameters<typeof recordCustomerPayment>[2];
+    }) => recordCustomerPayment(requireSupabase(), input.customerId, input.payment),
+    onSuccess: async (_data, variables) => {
+      await queryClient.invalidateQueries({ queryKey: customerQueryKeys.detail(variables.customerId) });
+      await queryClient.invalidateQueries({ queryKey: customerQueryKeys.directory() });
     },
   });
 }
