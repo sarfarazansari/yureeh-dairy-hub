@@ -3,56 +3,44 @@
 import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { type PricingType } from '@/lib/analytics';
 import { Dialog } from '@/app/dialog';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import {
-  createCustomer,
-  getCustomerDirectory,
-  setCustomerActive,
-  updateCustomerPricing,
-  type CustomerMilkSummary,
-  type CustomerSummary,
-} from './services/customer.service';
+  useCreateCustomerMutation,
+  useCustomerDirectoryQuery,
+  useSetCustomerActiveMutation,
+  useUpdateCustomerPricingMutation,
+} from './customer.queries';
+import type { CustomerSummary } from './services/customer.service';
 export default function CustomersPage() {
-  const [rows, setRows] = useState<CustomerSummary[]>([]),
-    [entries, setEntries] = useState<CustomerMilkSummary[]>([]),
-    [name, setName] = useState(''),
+  const [name, setName] = useState(''),
     [rate, setRate] = useState(''),
     [type, setType] = useState<PricingType>('FIXED_PER_LITRE'),
     [pricingCustomer, setPricingCustomer] = useState<CustomerSummary | null>(null),
     [pricingRate, setPricingRate] = useState(''),
     [pricingType, setPricingType] = useState<PricingType>('FIXED_PER_LITRE'),
-    [pricingBusy, setPricingBusy] = useState(false),
-    [busy, setBusy] = useState(false),
     [message, setMessage] = useState('');
-  async function load() {
-    if (!supabase) return;
-    try {
-      const directory = await getCustomerDirectory(supabase);
-      setRows(directory.customers);
-      setEntries(directory.entries);
-    } catch (loadError) {
-      setMessage(loadError instanceof Error ? loadError.message : 'Could not load customers.');
-    }
-  }
-  useEffect(() => {
-    const task = window.setTimeout(() => void load(), 0);
-    return () => window.clearTimeout(task);
-  }, []);
+  const directoryQuery = useCustomerDirectoryQuery();
+  const createMutation = useCreateCustomerMutation();
+  const pricingMutation = useUpdateCustomerPricingMutation();
+  const statusMutation = useSetCustomerActiveMutation();
+  const rows = directoryQuery.data?.customers ?? [];
+  const entries = directoryQuery.data?.entries ?? [];
+  const busy = createMutation.isPending;
+  const pricingBusy = pricingMutation.isPending;
   async function create(event: React.FormEvent) {
     event.preventDefault();
     if (!supabase) return;
-    setBusy(true);
     setMessage('');
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) throw new Error('Sign in again to add a customer.');
-      await createCustomer(supabase, {
+      await createMutation.mutateAsync({
         userId: user.id,
         name: name.trim(),
         pricingType: type,
@@ -61,13 +49,11 @@ export default function CustomersPage() {
       setName('');
       setRate('');
       setMessage('Customer added.');
-      await load();
     } catch (createError) {
       setMessage(createError instanceof Error ? createError.message : 'Could not add customer.');
-    } finally {
-      setBusy(false);
     }
   }
+
   function openPricing(customer: CustomerSummary) {
     setPricingCustomer(customer);
     setPricingRate(String(customer.default_rate));
@@ -81,29 +67,29 @@ export default function CustomersPage() {
       setMessage('Rate must be greater than zero.');
       return;
     }
-    setPricingBusy(true);
+    setMessage('');
     try {
-      if (!supabase) return;
-      await updateCustomerPricing(supabase, pricingCustomer.id, defaultRate, pricingType);
+      await pricingMutation.mutateAsync({
+        customerId: pricingCustomer.id,
+        defaultRate,
+        pricingType,
+      });
       setPricingCustomer(null);
-      await load();
+      setMessage('Pricing updated.');
     } catch (updateError) {
       setMessage(updateError instanceof Error ? updateError.message : 'Could not update pricing.');
-    } finally {
-      setPricingBusy(false);
     }
   }
+
   async function toggle(customer: CustomerSummary) {
     try {
-      if (!supabase) return;
-      await setCustomerActive(supabase, customer.id, !customer.is_active);
-      await load();
+      await statusMutation.mutateAsync({ customerId: customer.id, active: !customer.is_active });
+      setMessage(customer.is_active ? 'Customer paused.' : 'Customer activated.');
     } catch (updateError) {
-      setMessage(
-        updateError instanceof Error ? updateError.message : 'Could not update customer status.',
-      );
+      setMessage(updateError instanceof Error ? updateError.message : 'Could not update customer status.');
     }
   }
+
   return (
     <AppShell title="Customers" subtitle="Manage customer pricing and sales history">
       <div className="management-stack">
@@ -146,7 +132,11 @@ export default function CustomersPage() {
             <h2 className="section-title">Customer directory</h2>
             <span className="tag">{rows.filter((c) => c.is_active).length} active</span>
           </div>
-          {rows.length ? (
+          {directoryQuery.isPending ? (
+            <div className="empty">Loading customers…</div>
+          ) : directoryQuery.isError ? (
+            <div className="empty">{directoryQuery.error.message}</div>
+          ) : rows.length ? (
             <div className="table-wrap">
               <table className="table">
                 <thead>
