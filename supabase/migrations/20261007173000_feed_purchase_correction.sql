@@ -29,8 +29,8 @@ create or replace function public.correct_feed_purchase(
 )
 returns public.feed_purchases
 language plpgsql
-security invoker
-set search_path = public
+security definer
+set search_path = ''
 as $$
 declare
   v_user_id uuid := auth.uid();
@@ -185,6 +185,10 @@ begin
   return v_new_purchase;
 end;
 $$;
+
+revoke execute on function public.correct_feed_purchase(
+  uuid,uuid,uuid,date,numeric,numeric,text,numeric,text,date,text
+) from public, anon;
 
 grant execute on function public.correct_feed_purchase(
   uuid,uuid,uuid,date,numeric,numeric,text,numeric,text,date,text
