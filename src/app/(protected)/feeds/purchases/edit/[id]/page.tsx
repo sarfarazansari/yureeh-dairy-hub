@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { supabase } from '@/lib/supabase';
 
-export default function EditFeedPurchasePage({ params }: { params: { id: string } }) {
+export default function EditFeedPurchasePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const [message, setMessage] = useState('Loading purchase…');
 
   useEffect(() => {
@@ -17,14 +18,14 @@ export default function EditFeedPurchasePage({ params }: { params: { id: string 
     void supabase
       .from('feed_purchases')
       .select('id')
-      .eq('id', params.id)
+      .eq('id', id)
       .maybeSingle()
       .then(({ data, error }) => {
         if (error) setMessage(error.message);
         else if (!data) setMessage('Feed purchase not found.');
         else setMessage('Posted purchases are ledger entries. Direct in-place editing is disabled; corrections will use reversal semantics.');
       });
-  }, [params.id]);
+  }, [id]);
 
   return (
     <AppShell title="Edit feed purchase" subtitle="Purchase corrections are handled through inventory-safe reversal semantics">
