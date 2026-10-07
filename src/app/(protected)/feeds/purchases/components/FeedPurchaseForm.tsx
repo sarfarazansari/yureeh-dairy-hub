@@ -12,6 +12,8 @@ type Props = {
   vendors: Pick<ExpenseVendor, 'id' | 'name'>[];
   onSave: (values: FeedPurchaseFormValues) => Promise<string | null>;
   busy: boolean;
+  initialValues?: FeedPurchaseFormValues;
+  submitLabel?: string;
 };
 
 const money = (value: number) =>
