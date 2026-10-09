@@ -19,7 +19,10 @@ begin
     raise exception using errcode = '23514', message = 'Milk pool movements require a farm and business date.';
   end if;
 
-  if new.shift is null and new.movement_direction::text = 'OUT' then
+  if new.shift is null and (
+    new.movement_direction::text = 'OUT'
+    or new.movement_type in ('CUSTOMER_DELIVERY', 'HOUSEHOLD_USE', 'WASTAGE', 'OTHER_USE')
+  ) then
     raise exception using errcode = '23514', message = 'Milk outflow must belong to a morning or evening shift.';
   end if;
 
