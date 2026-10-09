@@ -77,7 +77,7 @@ begin
     select v.pricing_type,
       coalesce(sum(s.milk_quantity), 0) as milk,
       coalesce(sum(s.calculated_amount), 0) as revenue,
-      count(s.customer_id) as entry_count
+      count(s.business_date) as entry_count
     from (values ('FIXED_PER_LITRE'::text), ('FAT_BASED'::text)) v(pricing_type)
     left join sales_filtered s on s.pricing_type::text = v.pricing_type
     group by v.pricing_type
