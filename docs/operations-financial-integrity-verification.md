@@ -4,7 +4,7 @@ Branch: `feature/operations-financial-reporting-audit`
 
 ## Milk pool: per-shift balance
 
-1. Apply `20261009180000_operations_financial_integrity.sql` after all earlier migrations.
+1. Apply these migrations in timestamp order after all earlier migrations:\n\n1. `20261009180000_milk_pool_shift_balance_guard.sql`\n2. `20261009181000_buffalo_asset_carrying_value.sql`\n3. `20261009182000_financial_balance_snapshot.sql`\n4. `20261009183000_financial_report_balances.sql`
 2. Enter morning production and verify morning deliveries can use only that morning's balance.
 3. Enter evening production and verify evening deliveries use the evening balance independently.
 4. Attempt a delivery above the shift balance; expect a database error and no saved milk entry or movement.
