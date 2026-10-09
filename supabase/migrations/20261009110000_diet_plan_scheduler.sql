@@ -122,6 +122,49 @@ begin
     on conflict (user_id, plan_id, feeding_date, shift) do nothing;
   end loop;
 
+  -- Freeze the plan's quantities and eligible buffalo group for each occurrence
+  -- before its scheduled time. Later plan edits only affect future run records.
+  for v_run in
+    select r.*
+    from public.diet_feeding_runs r
+    where r.status = 'PENDING'
+      and r.snapshot_created_at is null
+      and r.feeding_date = v_today
+    order by r.scheduled_for, r.user_id, r.plan_id
+    for update skip locked
+  loop
+    insert into public.diet_feeding_run_buffaloes(user_id, run_id, buffalo_id, buffalo_name)
+    select v_run.user_id, v_run.id, b.id, b.name
+    from public.diet_plan_buffaloes pb
+    join public.buffaloes b on b.id = pb.buffalo_id and b.user_id = v_run.user_id
+    where pb.user_id = v_run.user_id and pb.plan_id = v_run.plan_id
+      and (b.purchase_date is null or b.purchase_date <= v_run.feeding_date)
+      and coalesce((
+        select h.status
+        from public.buffalo_status_history h
+        where h.user_id = v_run.user_id and h.buffalo_id = b.id
+          and h.effective_date <= v_run.feeding_date
+        order by h.effective_date desc, h.created_at desc
+        limit 1
+      ), 'OTHER'::public.buffalo_status) = 'ACTIVE'::public.buffalo_status
+    on conflict (user_id, run_id, buffalo_id) do nothing;
+
+    insert into public.diet_feeding_run_items(
+      user_id, run_id, feed_item_id, feed_item_name, base_unit, planned_quantity
+    )
+    select v_run.user_id, v_run.id, i.feed_item_id, f.name, i.base_unit,
+      case when v_run.shift = 'MORNING' then i.morning_quantity else i.evening_quantity end
+    from public.diet_plan_items i
+    join public.feed_items f on f.id = i.feed_item_id and f.user_id = v_run.user_id
+    where i.user_id = v_run.user_id and i.plan_id = v_run.plan_id
+      and (case when v_run.shift = 'MORNING' then i.morning_quantity else i.evening_quantity end) > 0
+    on conflict (user_id, run_id, feed_item_id) do nothing;
+
+    update public.diet_feeding_runs
+    set snapshot_created_at = clock_timestamp()
+    where id = v_run.id and user_id = v_run.user_id;
+  end loop;
+
   -- Runs are processed serially; inventory movement triggers lock feed rows and
   -- enforce stock/costing rules. Each run's posting is a subtransaction.
   for v_run in
@@ -161,24 +204,7 @@ begin
         continue;
       end if;
 
-      -- Snapshot eligible assigned buffaloes at occurrence time. The quantity
-      -- remains the plan's group total; it is never multiplied or auto-scaled.
-      insert into public.diet_feeding_run_buffaloes(user_id, run_id, buffalo_id, buffalo_name)
-      select v_run.user_id, v_run.id, b.id, b.name
-      from public.diet_plan_buffaloes pb
-      join public.buffaloes b on b.id = pb.buffalo_id and b.user_id = v_run.user_id
-      where pb.user_id = v_run.user_id and pb.plan_id = v_run.plan_id
-        and (b.purchase_date is null or b.purchase_date <= v_run.feeding_date)
-        and coalesce((
-          select h.status
-          from public.buffalo_status_history h
-          where h.user_id = v_run.user_id and h.buffalo_id = b.id
-            and h.effective_date <= v_run.feeding_date
-          order by h.effective_date desc, h.created_at desc
-          limit 1
-        ), 'OTHER'::public.buffalo_status) = 'ACTIVE'::public.buffalo_status
-      on conflict (user_id, run_id, buffalo_id) do nothing;
-
+      -- Buffaloes and feed quantities were snapshotted when the occurrence was created.
       if not exists (
         select 1 from public.diet_feeding_run_buffaloes rb
         where rb.user_id = v_run.user_id and rb.run_id = v_run.id
@@ -188,17 +214,6 @@ begin
         where id = v_run.id and user_id = v_run.user_id;
         continue;
       end if;
-
-      insert into public.diet_feeding_run_items(
-        user_id, run_id, feed_item_id, feed_item_name, base_unit, planned_quantity
-      )
-      select v_run.user_id, v_run.id, i.feed_item_id, f.name, i.base_unit,
-        case when v_run.shift = 'MORNING' then i.morning_quantity else i.evening_quantity end
-      from public.diet_plan_items i
-      join public.feed_items f on f.id = i.feed_item_id and f.user_id = v_run.user_id
-      where i.user_id = v_run.user_id and i.plan_id = v_run.plan_id
-        and (case when v_run.shift = 'MORNING' then i.morning_quantity else i.evening_quantity end) > 0
-      on conflict (user_id, run_id, feed_item_id) do nothing;
 
       if not exists (
         select 1 from public.diet_feeding_run_items ri
