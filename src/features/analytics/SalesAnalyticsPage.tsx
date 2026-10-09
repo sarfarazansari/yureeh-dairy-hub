@@ -11,11 +11,8 @@ import { formatDate } from '@/lib/date-format';
 import {
   getSalesAnalyticsData,
   type AnalyticsCustomer,
-  type AnalyticsExpense,
-  type AnalyticsFarmSale,
-  type AnalyticsProduction,
+  type SalesAnalyticsSummary,
 } from './services/sales-analytics.service';
-import type { MilkEntry } from '@/lib/analytics';
 import { getAnalyticsDateRange, type AnalyticsDatePreset } from '@/lib/analytics-date-range';
 import { useMilkPoolReconciliationQuery } from '@/features/milk/milk.queries';
 export default function SalesAnalyticsPage() {
@@ -25,30 +22,40 @@ export default function SalesAnalyticsPage() {
     [to, setTo] = useState(today),
     [range, setRange] = useState('today'),
     [customerId, setCustomerId] = useState(''),
-    [rows, setRows] = useState<MilkEntry[]>([]),
+    [summary, setSummary] = useState<SalesAnalyticsSummary | null>(null),
     [customers, setCustomers] = useState<AnalyticsCustomer[]>([]),
-    [expenses, setExpenses] = useState<AnalyticsExpense[]>([]),
-    [farmSales, setFarmSales] = useState<AnalyticsFarmSale[]>([]),
-    [farmProduction, setFarmProduction] = useState<AnalyticsProduction[]>([]),
     [busy, setBusy] = useState(true),
     [error, setError] = useState('');
+
   useEffect(() => {
     let active = true;
     async function load() {
-      if (!supabase) return;
+      if (!from || !to || from > to) {
+        setSummary(null);
+        setBusy(false);
+        setError('Choose a valid report date range.');
+        return;
+      }
+      if (!supabase) {
+        setSummary(null);
+        setBusy(false);
+        setError('Supabase is not configured.');
+        return;
+      }
+
       setBusy(true);
+      setSummary(null);
       setError('');
       try {
         const data = await getSalesAnalyticsData(supabase, { from, to, customerId });
         if (!active) return;
-        setRows(data.sales);
+        setSummary(data.summary);
         setCustomers(data.customers);
-        setExpenses(data.expenses);
-        setFarmSales(data.farmSales);
-        setFarmProduction(data.production);
       } catch (loadError) {
-        if (active)
+        if (active) {
+          setSummary(null);
           setError(loadError instanceof Error ? loadError.message : 'Could not load analytics.');
+        }
       } finally {
         if (active) setBusy(false);
       }
@@ -64,74 +71,33 @@ export default function SalesAnalyticsPage() {
   const poolDelivered = poolRows.reduce((sum, row) => sum + Number(row.customer_delivery_litres), 0);
   const poolOtherUse = poolRows.reduce((sum, row) => sum + Number(row.household_use_litres) + Number(row.wastage_litres) + Number(row.other_use_litres), 0);
   const poolClosing = poolRows.length ? Number(poolRows[poolRows.length - 1].closing_balance_litres) : null;
-  const total = rows.reduce((s, r) => s + Number(r.milk_quantity), 0),
-    rev = rows.reduce((s, r) => s + Number(r.calculated_amount), 0),
-    den = rows.reduce((s, r) => s + (r.fat == null ? 0 : Number(r.milk_quantity)), 0),
-    fat = den
-      ? rows.reduce((s, r) => s + Number(r.milk_quantity) * Number(r.fat ?? 0), 0) / den
-      : null,
-    days =
-      from && to
-        ? Math.max(
-            1,
-            Math.floor(
-              (new Date(`${to}T00:00:00`).getTime() - new Date(`${from}T00:00:00`).getTime()) /
-                86400000,
-            ) + 1,
-          )
-        : 1;
-  const expenseTotal = expenses.reduce((s, r) => s + Number(r.total_amount), 0),
-    farmRevenue = farmSales.reduce((s, r) => s + Number(r.calculated_amount), 0),
-    farmMilkSold = farmSales.reduce((s, r) => s + Number(r.milk_quantity), 0),
-    farmMilkProduced = farmProduction.reduce((s, r) => s + Number(r.milk_quantity), 0);
-  const daily = Array.from(new Set(rows.map((r) => r.business_date)))
-    .sort()
-    .map((date) => {
-      const a = rows.filter((r) => r.business_date === date),
-        milk = a.reduce((s, r) => s + Number(r.milk_quantity), 0),
-        qty = a.reduce((s, r) => s + (r.fat == null ? 0 : Number(r.milk_quantity)), 0);
-      return {
-        date: formatDate(date, 'D MMM'),
-        milk,
-        revenue: a.reduce((s, r) => s + Number(r.calculated_amount), 0),
-        fat: qty
-          ? a.reduce((s, r) => s + Number(r.milk_quantity) * Number(r.fat ?? 0), 0) / qty
-          : null,
-      };
-    });
-  const shifts = ['MORNING', 'EVENING'].map((shift) => {
-    const a = rows.filter((r) => r.shift === shift),
-      q = a.reduce((s, r) => s + Number(r.milk_quantity), 0),
-      known = a.reduce((s, r) => s + (r.fat == null ? 0 : Number(r.milk_quantity)), 0);
-    return {
-      shift,
-      milk: q,
-      revenue: a.reduce((s, r) => s + Number(r.calculated_amount), 0),
-      fat: known
-        ? a.reduce((s, r) => s + Number(r.milk_quantity) * Number(r.fat ?? 0), 0) / known
-        : null,
-    };
-  });
-  const contrib = customers
-    .map((c) => {
-      const a = rows.filter((r) => r.customer_id === c.id);
-      return {
-        name: c.name,
-        milk: a.reduce((s, r) => s + Number(r.milk_quantity), 0),
-        revenue: a.reduce((s, r) => s + Number(r.calculated_amount), 0),
-      };
-    })
-    .filter((x) => x.milk || x.revenue)
-    .sort((a, b) => b.revenue - a.revenue);
-  const splits = ['FIXED_PER_LITRE', 'FAT_BASED'].map((type) => {
-    const a = rows.filter((r) => r.pricing_type === type);
-    return {
-      type,
-      milk: a.reduce((s, r) => s + Number(r.milk_quantity), 0),
-      revenue: a.reduce((s, r) => s + Number(r.calculated_amount), 0),
-      count: a.length,
-    };
-  });
+  const totals = summary?.totals;
+  const total = totals?.milkSold ?? 0;
+  const rev = totals?.revenue ?? 0;
+  const fat = totals?.weightedFat ?? null;
+  const days =
+    from && to
+      ? Math.max(
+          1,
+          Math.floor(
+            (new Date(`${to}T00:00:00`).getTime() - new Date(`${from}T00:00:00`).getTime()) /
+              86400000,
+          ) + 1,
+        )
+      : 1;
+  const expenseTotal = totals?.expenseTotal ?? 0;
+  const farmRevenue = totals?.farmRevenue ?? 0;
+  const farmMilkSold = totals?.farmMilkSold ?? 0;
+  const farmMilkProduced = totals?.farmMilkProduced ?? 0;
+  const daily = (summary?.daily ?? []).map((row) => ({
+    date: formatDate(row.businessDate, 'D MMM'),
+    milk: row.milk,
+    revenue: row.revenue,
+    fat: row.fat,
+  }));
+  const shifts = summary?.shifts ?? [];
+  const contrib = summary?.customers ?? [];
+  const splits = summary?.pricing ?? [];
   return (
     <AppShell title="Sales analytics" subtitle="Farm-level milk, fat and revenue">
       <div className="row">
@@ -214,7 +180,7 @@ export default function SalesAnalyticsPage() {
         <KPI
           label="TOTAL MILK SOLD"
           value={busy ? '…' : milkTxt(total)}
-          foot={`${rows.length} entries in selected range`}
+          foot={`${totals?.entryCount ?? 0} entries in selected range`}
         />
         <KPI
           label="TOTAL REVENUE"
@@ -223,13 +189,13 @@ export default function SalesAnalyticsPage() {
         />
         <KPI
           label="WEIGHTED AVERAGE FAT"
-          value={fat === null ? '—' : `${fat.toFixed(2)}%`}
+          value={busy ? '…' : fat === null ? '—' : `${fat.toFixed(2)}%`}
           foot="Weighted by quantity"
           accent
         />
         <KPI
           label="AVERAGE DAILY MILK"
-          value={milkTxt(total / days)}
+          value={busy ? '…' : milkTxt(total / days)}
           foot={`${days} calendar ${days === 1 ? 'day' : 'days'} in range`}
         />
       </div>
@@ -342,7 +308,7 @@ export default function SalesAnalyticsPage() {
             <div className="kpi-label">OPERATING EXPENSE / LITRE PRODUCED</div>
             <b>{farmMilkProduced ? money(expenseTotal / farmMilkProduced) : '—'}</b>
             <div className="kpi-foot">
-              Sold denominator: {farmMilkSold ? money(expenseTotal / farmMilkSold) : '—'} / L
+              Sold denominator: {busy ? '…' : farmMilkSold ? money(expenseTotal / farmMilkSold) : '—'} / L
             </div>
           </div>
         </div>
