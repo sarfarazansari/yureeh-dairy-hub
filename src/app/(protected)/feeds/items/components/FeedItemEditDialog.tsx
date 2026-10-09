@@ -17,13 +17,13 @@ const label = (value: string) => value.replaceAll('_', ' ');
 
 export function FeedItemEditDialog({ item, open, onOpenChange, onSave, busy }: Props) {
   const [values, setValues] = useState<FeedItemFormValues>({
-    name: '', category: 'CONCENTRATE', baseUnit: 'KG', purchaseUnit: 'KG', conversion: '1', notes: '',
+    name: '', category: 'CONCENTRATE', baseUnit: 'KG', purchaseUnit: 'KG', conversion: '1', lowStockThreshold: '0', notes: '',
   });
   const [message, setMessage] = useState('');
 
   useEffect(() => {
     if (!item || !open) return;
-    setValues({ name: item.name, category: item.category, baseUnit: item.base_unit, purchaseUnit: item.purchase_unit, conversion: String(item.purchase_unit_quantity), notes: item.notes ?? '' });
+    setValues({ name: item.name, category: item.category, baseUnit: item.base_unit, purchaseUnit: item.purchase_unit, conversion: String(item.purchase_unit_quantity), lowStockThreshold: String(item.low_stock_threshold ?? 0), notes: item.notes ?? '' });
     setMessage('');
   }, [item, open]);
 
@@ -54,6 +54,7 @@ export function FeedItemEditDialog({ item, open, onOpenChange, onSave, busy }: P
           <div className="field"><label>Base unit</label><input list="feed-unit-list-edit" value={values.baseUnit} onChange={(e) => update('baseUnit', e.target.value)} /></div>
           <div className="field"><label>Purchase unit</label><input list="feed-unit-list-edit" value={values.purchaseUnit} onChange={(e) => update('purchaseUnit', e.target.value)} /></div>
           <div className="field"><label>Base quantity per purchase unit</label><input required type="number" min="0.001" step="0.001" inputMode="decimal" value={values.conversion} onChange={(e) => update('conversion', e.target.value)} /><span className="kpi-foot">Example: 1 BAG = 50 KG → enter 50.</span></div>
+          <div className="field"><label>Low-stock threshold ({values.baseUnit || 'base unit'})</label><input type="number" min="0" step="0.001" inputMode="decimal" value={values.lowStockThreshold} onChange={(e) => update('lowStockThreshold', e.target.value)} /><span className="kpi-foot">Set 0 to disable low-stock alerts.</span></div>
           <div className="field wide-field"><label>Notes</label><input value={values.notes} onChange={(e) => update('notes', e.target.value)} /></div>
         </div>
         <datalist id="feed-unit-list-edit">{FEED_UNITS.map((unit) => <option key={unit} value={unit} />)}</datalist>
