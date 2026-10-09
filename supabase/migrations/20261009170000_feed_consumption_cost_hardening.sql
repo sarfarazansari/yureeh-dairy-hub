@@ -45,7 +45,7 @@ begin
 
         if v_cost is null then
           if v_quantity > 0 and v_value >= 0 then
-            v_cost := round(v_value / v_quantity, 2);
+            v_cost := round(round(v_value, 2) / v_quantity, 2);
             update public.feed_inventory_movements
             set unit_cost = v_cost
             where id = v_movement.id and user_id = v_feed.user_id;
