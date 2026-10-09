@@ -173,7 +173,7 @@ export function Sidebar() {
             ref={closeButtonRef}
             className="mobile-menu-close"
             aria-label="Close navigation menu"
-            onClick={() => setMobileOpen(false)}
+            onClick={closeMobileMenu}
           >
             <X size={20} />
           </button>
