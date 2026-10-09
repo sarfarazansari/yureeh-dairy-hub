@@ -10,6 +10,7 @@ export type FeedItemFormValues = {
   baseUnit: string;
   purchaseUnit: string;
   conversion: string;
+  lowStockThreshold: string;
   notes: string;
 };
 
@@ -27,6 +28,7 @@ const initialValues: FeedItemFormValues = {
   baseUnit: 'KG',
   purchaseUnit: 'KG',
   conversion: '1',
+  lowStockThreshold: '0',
   notes: '',
 };
 
@@ -54,6 +56,7 @@ export function FeedItemForm({ onSave, busy, message }: Props) {
           <div className="field"><label>Base unit</label><input list="feed-unit-list" value={values.baseUnit} onChange={(e) => update('baseUnit', e.target.value)} placeholder="KG" /></div>
           <div className="field"><label>Purchase unit</label><input list="feed-unit-list" value={values.purchaseUnit} onChange={(e) => update('purchaseUnit', e.target.value)} placeholder="BAG" /></div>
           <div className="field"><label>Base quantity per purchase unit</label><input required type="number" min="0.001" step="0.001" inputMode="decimal" value={values.conversion} onChange={(e) => update('conversion', e.target.value)} /><span className="kpi-foot">Example: 1 BAG = 50 KG → enter 50.</span></div>
+          <div className="field"><label>Low-stock threshold ({values.baseUnit || 'base unit'})</label><input type="number" min="0" step="0.001" inputMode="decimal" value={values.lowStockThreshold} onChange={(e) => update('lowStockThreshold', e.target.value)} /><span className="kpi-foot">Set 0 to disable low-stock alerts.</span></div>
           <div className="field wide-field"><label>Notes</label><input value={values.notes} onChange={(e) => update('notes', e.target.value)} placeholder="Optional" /></div>
         </div>
         <datalist id="feed-unit-list">{FEED_UNITS.map((unit) => <option key={unit} value={unit} />)}</datalist>

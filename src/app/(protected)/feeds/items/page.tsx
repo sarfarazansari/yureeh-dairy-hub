@@ -36,8 +36,10 @@ export default function FeedItemsPage() {
     if (!supabase) return 'Supabase is not configured.';
     const cleanName = values.name.trim();
     const quantity = Number(values.conversion);
+    const lowStockThreshold = Number(values.lowStockThreshold);
     if (!cleanName) return 'Feed name is required.';
     if (!Number.isFinite(quantity) || quantity <= 0) return 'Purchase unit quantity must be greater than zero.';
+    if (!Number.isFinite(lowStockThreshold) || lowStockThreshold < 0 || !/^\d+(\.\d{1,3})?$/.test(values.lowStockThreshold.trim())) return 'Low-stock threshold must be zero or greater with at most three decimal places.';
     if (!values.baseUnit.trim() || !values.purchaseUnit.trim()) return 'Base unit and purchase unit are required.';
 
     const { data: userData, error: userError } = await supabase.auth.getUser();
@@ -52,6 +54,7 @@ export default function FeedItemsPage() {
         base_unit: values.baseUnit.trim().toUpperCase(),
         purchase_unit: values.purchaseUnit.trim().toUpperCase(),
         purchase_unit_quantity: quantity,
+        low_stock_threshold: lowStockThreshold,
         notes: values.notes.trim() || null,
         user_id: userData.user.id,
       };

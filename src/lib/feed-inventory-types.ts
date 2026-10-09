@@ -1,3 +1,5 @@
+import type { FeedCategory } from './feed-types';
+
 export type FeedInventoryMovementType =
   | 'PURCHASE'
   | 'CONSUMPTION'
@@ -34,4 +36,7 @@ export type FeedInventoryStock = {
   quantity_on_hand: number | string;
   stock_value: number | string;
   weighted_average_cost: number | string | null;
+  low_stock_threshold: number | string;
+  category: FeedCategory;
+  is_active: boolean;
 };
