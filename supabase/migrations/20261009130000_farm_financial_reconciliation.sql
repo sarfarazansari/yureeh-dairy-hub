@@ -116,6 +116,9 @@ returns table (
   dated_expense_payments numeric,
   customer_net_receivable numeric,
   supplier_outstanding numeric,
+  buffalo_purchase_cost numeric,
+  buffalo_purchase_payments numeric,
+  buffalo_purchase_outstanding numeric,
   legacy_undated_paid_amount numeric
 )
 language plpgsql
@@ -154,6 +157,12 @@ begin
         where cp.user_id = owner_id), 0),
     coalesce((select sum(e.pending_amount) from public.expenses e
       where e.user_id = owner_id and e.deleted_at is null), 0),
+    coalesce((select sum(bp.purchase_price) from public.buffalo_purchases bp
+      where bp.user_id = owner_id and bp.purchase_date between p_from and p_to), 0),
+    coalesce((select sum(bpp.amount) from public.buffalo_purchase_payments bpp
+      where bpp.user_id = owner_id and bpp.payment_date between p_from and p_to), 0),
+    coalesce((select sum(bp.amount_pending) from public.buffalo_purchases bp
+      where bp.user_id = owner_id), 0),
     coalesce((select sum(greatest(e.paid_amount - coalesce(payments.ledger_paid, 0), 0))
       from public.expenses e
       left join lateral (
