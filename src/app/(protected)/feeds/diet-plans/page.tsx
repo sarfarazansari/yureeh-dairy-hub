@@ -46,7 +46,7 @@ export default function DietPlansPage() {
         <div className="card">
           <div className="row">
             <h2 className="section-title">Diet plan archive</h2>
-            <Link className="btn" href="/feeds/diet-plans/new">New diet plan</Link>
+            <div className="row" style={{ gap: 8 }}><Link className="date-chip" href="/feeds/diet-plans/schedule">Feeding schedule</Link><Link className="btn" href="/feeds/diet-plans/new">New diet plan</Link></div>
           </div>
           <div className="expense-form-grid">
             <div className="field"><label>Search plan</label><input value={search} placeholder="Plan name" onChange={(e) => setSearch(e.target.value)} /></div>
