@@ -41,6 +41,8 @@ type EditableMilkEntry = Omit<
   applied_rate: string;
   notes: string;
   _original: {
+    business_date: string;
+    shift: MilkEntryShift;
     milk_quantity: number;
     fat: number | null;
     pricing_type: PricingType;
@@ -118,6 +120,13 @@ export default function EntriesPage() {
     editing?.business_date ?? '',
     editing?.shift ?? 'MORNING',
   );
+  const editAvailablePoolLitres = editing && editDeliveryContextQuery.data
+    ? Number(editDeliveryContextQuery.data.availablePoolLitres) +
+      (editing.business_date === editing._original.business_date &&
+      editing.shift === editing._original.shift
+        ? editing._original.milk_quantity
+        : 0)
+    : 0;
 
 
   function replaceParams(next: URLSearchParams) {
@@ -170,6 +179,8 @@ export default function EntriesPage() {
       applied_rate: String(row.applied_rate),
       notes: row.notes ?? '',
       _original: {
+        business_date: row.business_date,
+        shift: row.shift,
         milk_quantity: Number(row.milk_quantity),
         fat: row.fat,
         pricing_type: row.pricing_type,
@@ -460,9 +471,9 @@ export default function EntriesPage() {
             )}
             {!editDeliveryContextQuery.isError && !editDeliveryContextQuery.isPending && editDeliveryContextQuery.data?.herdEntryExists && (
               <p className="kpi-foot">
-                Available milk pool: <b>{milkTxt(editDeliveryContextQuery.data.availablePoolLitres)}</b>
-                {Number(editing.milk_quantity) > editDeliveryContextQuery.data.availablePoolLitres
-                  ? ' · ⚠️ This delivery exceeds the available pool and will still be recorded.'
+                Available milk pool for this shift: <b>{milkTxt(editAvailablePoolLitres)}</b>
+                {Number(editing.milk_quantity) > editAvailablePoolLitres
+                  ? ' · ⚠️ This exceeds the shift balance; the database will reject this save.'
                   : ''}
               </p>
             )}
