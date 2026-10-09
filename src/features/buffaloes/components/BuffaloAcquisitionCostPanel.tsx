@@ -5,23 +5,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 
 import { money } from '@/lib/farm-format';
+import type { BuffaloAcquisitionCost, BuffaloAcquisitionExpenseOption } from '../types';
 import { supabase } from '@/lib/supabase';
-
-type LinkedExpense = {
-  id: string;
-  business_date: string;
-  description: string | null;
-  total_amount: number | string;
-};
-
-type AcquisitionCost = {
-  id: string;
-  expense_id: string;
-  cost_date: string;
-  description: string;
-  amount: number | string;
-  notes: string | null;
-};
 
 function localDate() {
   const date = new Date();
@@ -47,7 +32,7 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd }: { buffaloId: 
         .eq('buffalo_id', buffaloId)
         .order('cost_date', { ascending: false });
       if (error) throw new Error('Could not load acquisition costs.');
-      return (data ?? []) as AcquisitionCost[];
+      return (data ?? []) as BuffaloAcquisitionCost[];
     },
   });
 
@@ -63,7 +48,7 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd }: { buffaloId: 
         .is('deleted_at', null)
         .order('business_date', { ascending: false });
       if (error) throw new Error('Could not load expenses linked to this buffalo.');
-      return (data ?? []) as LinkedExpense[];
+      return (data ?? []) as BuffaloAcquisitionExpenseOption[];
     },
   });
 
