@@ -11,6 +11,7 @@ const validDate = (label: string) =>
 const requiredMoney = (label: string) =>
   z.string().trim().min(1, `${label} is required.`)
     .refine((value) => Number.isFinite(Number(value)), `${label} must be a valid number.`)
+    .refine((value) => /^\\d+(\\.\\d{1,2})?$/.test(value), `${label} can have at most two decimal places.`)
     .transform(Number);
 
 export const buffaloSaleSchema = z.object({
