@@ -60,7 +60,7 @@ export function FeedInventoryStockTable({ rows }: Props) {
               <td>{row.weighted_average_cost === null ? '—' : money(row.weighted_average_cost)}</td>
               <td>{money(row.stock_value)}</td>
               <td><span className={itemStatus.className}>{itemStatus.label}</span></td>
-              <td><div className="row" style={{ justifyContent: 'flex-start', gap: 6 }}><Link className="date-chip" href={`/feeds/purchases/new?feedItemId=${row.feed_item_id}`}>Purchase</Link><Link className="date-chip" href={`/feeds/consumption/new?feedItemId=${row.feed_item_id}`}>Consume</Link></div></td>
+              <td><div className="row" style={{ justifyContent: 'flex-start', gap: 6 }}><Link className="date-chip" href="/feeds/purchases/new">Purchase</Link><Link className="date-chip" href="/feeds/consumption/new">Consume</Link></div></td>
             </tr>;
           })}</tbody>
         </table>
