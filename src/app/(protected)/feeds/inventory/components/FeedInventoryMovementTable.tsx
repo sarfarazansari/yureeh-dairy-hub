@@ -43,7 +43,7 @@ export function FeedInventoryMovementTable({ rows, count, page, pageSize, onPage
               <td><span className={`tag ${incoming ? '' : 'gold'}`}>{movementLabel(row.movement_type)}</span></td>
               <td><b>{movementSign(row.movement_type)}{Number(row.quantity).toLocaleString('en-IN', { maximumFractionDigits: 3 })} {row.base_unit}</b></td>
               <td>{row.unit_cost === null ? '—' : money(row.unit_cost)}</td>
-              <td>{money(Number(row.quantity) * Number(row.unit_cost ?? 0))}</td>
+              <td>{money((incoming ? 1 : -1) * Number(row.quantity) * Number(row.unit_cost ?? 0))}</td>
               <td><span>{sourceLabel(row.source_type)}</span>{row.source_id && <div className="sub">{row.source_id.slice(0, 8)}</div>}</td>
               <td>{row.notes || '—'}{row.reversal_of_movement_id && <div className="sub">Reversal of {row.reversal_of_movement_id.slice(0, 8)}</div>}</td>
             </tr>;
