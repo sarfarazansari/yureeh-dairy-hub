@@ -21,7 +21,7 @@ function todayLocal() {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 }
 
-export function BuffaloDispositionPanel({ buffalo }: { buffalo: BuffaloDetail }) {
+export function BuffaloDispositionPanel({ buffalo, mode = 'all' }: { buffalo: BuffaloDetail; mode?: 'all' | 'sale' }) {
   const saleQuery = useBuffaloSale(buffalo.id);
   const paymentsQuery = useBuffaloSalePayments(buffalo.id);
   const disposalQuery = useBuffaloDisposal(buffalo.id);
@@ -90,6 +90,8 @@ export function BuffaloDispositionPanel({ buffalo }: { buffalo: BuffaloDetail })
       </div>
     );
   }
+
+  if (mode === 'sale') return <SaleForm buffalo={buffalo} />;
 
   return (
     <div className="grid two">
