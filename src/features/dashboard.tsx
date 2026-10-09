@@ -20,17 +20,19 @@ import {
   getDashboardData,
   type DashboardCustomer,
   type DashboardHerdItem,
-  type DashboardExpense,
-  type DashboardSale,
+  type DashboardMonthlyTotals,
 } from './dashboard/services/dashboard.service';
 import type { MilkEntry } from '@/lib/analytics';
 export default function Dashboard() {
   const [entries, setEntries] = useState<MilkEntry[]>([]),
     [herd, setHerd] = useState<DashboardHerdItem[]>([]),
     [customersLive, setCustomersLive] = useState<DashboardCustomer[]>([]),
-    [monthExpenses, setMonthExpenses] = useState<DashboardExpense[]>([]),
-    [monthSales, setMonthSales] = useState<DashboardSale[]>([]),
-    [monthProduction, setMonthProduction] = useState<Array<{ milk_quantity: number }>>([]),
+    [monthSummary, setMonthSummary] = useState<DashboardMonthlyTotals>({
+      expenseTotal: 0,
+      revenue: 0,
+      milkProduced: 0,
+      milkSold: 0,
+    }),
     [loading, setLoading] = useState(true),
     [error, setError] = useState('');
   const today = new Date();
@@ -61,9 +63,7 @@ export default function Dashboard() {
         setEntries(data.entries);
         setCustomersLive(data.customers);
         setHerd(data.herd);
-        setMonthExpenses(data.expenses);
-        setMonthSales(data.monthSales);
-        setMonthProduction(data.monthProduction);
+        setMonthSummary(data.monthSummary);
       } catch (loadError) {
         if (active)
           setError(loadError instanceof Error ? loadError.message : 'Could not load farm data.');
@@ -76,10 +76,10 @@ export default function Dashboard() {
       active = false;
     };
   }, [startKey, todayKey, monthKey]);
-  const monthExpenseTotal = monthExpenses.reduce((s, e) => s + Number(e.total_amount), 0),
-    monthRevenue = monthSales.reduce((s, e) => s + Number(e.calculated_amount), 0),
-    monthProduced = monthProduction.reduce((s, e) => s + Number(e.milk_quantity), 0),
-    monthSold = monthSales.reduce((s, e) => s + Number(e.milk_quantity), 0);
+  const monthExpenseTotal = monthSummary.expenseTotal,
+    monthRevenue = monthSummary.revenue,
+    monthProduced = monthSummary.milkProduced,
+    monthSold = monthSummary.milkSold;
   const todayEntries = entries.filter((e) => e.business_date === todayKey),
     milk = (rows: MilkEntry[]) => rows.reduce((s, e) => s + Number(e.milk_quantity), 0),
     revenue = (rows: MilkEntry[]) => rows.reduce((s, e) => s + Number(e.calculated_amount), 0),
