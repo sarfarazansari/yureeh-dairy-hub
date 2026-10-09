@@ -156,6 +156,9 @@ export default function NewExpense() {
   }
   return (
     <ExpenseShell title="New expense" subtitle="Record a purchase, payment or farm cost">
+      <div className="row" style={{ marginBottom: 14 }}>
+        <Link href="/expenses" className="date-chip">← Back to expenses</Link>
+      </div>
       <form className="layout" onSubmit={save}>
         <div className="card">
           <h2 className="section-title">Expense details</h2>

@@ -12,14 +12,27 @@ export type DashboardBuffalo = { id: string; buffalo_code: string; name: string 
 export type DashboardHerdItem = DashboardBuffalo & {
   performance: { milk_quantity: number; record_count: number } | null;
 };
-export type DashboardExpense = { total_amount: number };
-export type DashboardSale = { milk_quantity: number; calculated_amount: number };
+export type DashboardMonthlyTotals = {
+  expenseTotal: number;
+  revenue: number;
+  milkProduced: number;
+  milkSold: number;
+};
+
+type DashboardAnalyticsResponse = {
+  totals?: {
+    expenseTotal?: number | string;
+    farmRevenue?: number | string;
+    farmMilkProduced?: number | string;
+    farmMilkSold?: number | string;
+  };
+};
 
 export async function getDashboardData(
   client: SupabaseClient,
   dates: { startDate: string; today: string; monthStart: string },
 ) {
-  const [entries, customers, buffaloes, todayProduction, expenses, monthSales, monthProduction] =
+  const [entries, customers, buffaloes, todayProduction, monthlySummaryResult] =
     await Promise.all([
       client
         .from('milk_entries')
@@ -35,23 +48,11 @@ export async function getDashboardData(
         .from('buffalo_milk_production')
         .select('buffalo_id,business_date,shift,milk_quantity')
         .eq('business_date', dates.today),
-      client
-        .from('expenses')
-        .select('total_amount')
-        .gte('business_date', dates.monthStart)
-        .lte('business_date', dates.today)
-        .is('deleted_at', null),
-      client
-        .from('milk_entries')
-        .select('milk_quantity,calculated_amount')
-        .gte('business_date', dates.monthStart)
-        .lte('business_date', dates.today)
-        .is('deleted_at', null),
-      client
-        .from('buffalo_milk_production')
-        .select('milk_quantity')
-        .gte('business_date', dates.monthStart)
-        .lte('business_date', dates.today),
+      client.rpc('get_sales_analytics_summary', {
+        p_from: dates.monthStart,
+        p_to: dates.today,
+        p_customer_id: null,
+      }),
     ]);
 
   if (
@@ -59,11 +60,16 @@ export async function getDashboardData(
     customers.error ||
     buffaloes.error ||
     todayProduction.error ||
-    expenses.error ||
-    monthSales.error ||
-    monthProduction.error
+    monthlySummaryResult.error
   ) {
     throw new Error('Could not load the farm dashboard. Please try again.');
+  }
+
+  const monthlyTotals = (
+    monthlySummaryResult.data as DashboardAnalyticsResponse | null
+  )?.totals;
+  if (!monthlyTotals) {
+    throw new Error('Could not load the farm dashboard summary. Please try again.');
   }
 
   const productionRows = todayProduction.data ?? [];
@@ -86,8 +92,11 @@ export async function getDashboardData(
     entries: (entries.data ?? []) as MilkEntry[],
     customers: (customers.data ?? []) as DashboardCustomer[],
     herd,
-    expenses: (expenses.data ?? []) as DashboardExpense[],
-    monthSales: (monthSales.data ?? []) as DashboardSale[],
-    monthProduction: (monthProduction.data ?? []) as Array<{ milk_quantity: number }>,
+    monthSummary: {
+      expenseTotal: Number(monthlyTotals.expenseTotal ?? 0),
+      revenue: Number(monthlyTotals.farmRevenue ?? 0),
+      milkProduced: Number(monthlyTotals.farmMilkProduced ?? 0),
+      milkSold: Number(monthlyTotals.farmMilkSold ?? 0),
+    } satisfies DashboardMonthlyTotals,
   };
 }

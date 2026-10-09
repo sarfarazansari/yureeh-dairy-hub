@@ -1303,3 +1303,352 @@ button:disabled,
   color: inherit;
   cursor: pointer;
 }
+
+
+/* Responsive shell and mobile navigation drawer */
+html {
+  min-width: 320px;
+  overflow-x: clip;
+}
+body {
+  min-width: 320px;
+  overflow-x: clip;
+}
+.app {
+  width: 100%;
+  min-width: 0;
+}
+.main {
+  width: calc(100% - 248px);
+  min-width: 0;
+  margin-left: 248px;
+  max-width: 1600px;
+}
+.topbar,
+.page-heading {
+  min-width: 0;
+}
+.page-heading {
+  overflow-wrap: anywhere;
+}
+.mobile-menu-trigger,
+.mobile-menu-close,
+.mobile-nav-backdrop {
+  display: none;
+}
+.sidebar {
+  overflow: hidden;
+}
+.nav {
+  min-width: 0;
+  overscroll-behavior-y: contain;
+}
+.nav a {
+  overflow-wrap: anywhere;
+}
+.table-wrap {
+  min-width: 0;
+}
+.card,
+.grid,
+.row,
+.layout,
+.management-stack,
+form {
+  min-width: 0;
+}
+input,
+select,
+textarea,
+button {
+  max-width: 100%;
+}
+@media (min-width: 701px) and (max-width: 1020px) {
+  .main {
+    width: calc(100% - 208px);
+    margin-left: 208px;
+  }
+  .three,
+  .grid.four,
+  .detail-grid,
+  .expense-form-grid,
+  .entry-filters,
+  .milk-entry-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .mobile-menu-trigger {
+    position: fixed;
+    z-index: 31;
+    top: max(10px, env(safe-area-inset-top));
+    left: max(10px, env(safe-area-inset-left));
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--line);
+    border-radius: 11px;
+    background: #fff;
+    color: var(--ink);
+    box-shadow: 0 4px 16px #183b3210;
+  }
+  .mobile-menu-icon {
+    display: grid;
+    gap: 4px;
+    width: 18px;
+  }
+  .mobile-menu-icon span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+  }
+  .mobile-menu-close {
+    display: grid;
+    place-items: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: #fff;
+    color: #52645a;
+  }
+  .mobile-nav-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    display: block;
+    background: rgb(13 28 22 / 44%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 180ms ease,
+      visibility 180ms ease;
+  }
+  .mobile-nav-backdrop.is-open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  .sidebar {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 40;
+    width: min(320px, calc(100vw - 48px));
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: max(16px, env(safe-area-inset-top)) 14px max(16px, env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 0;
+    border-right: 1px solid var(--line);
+    transform: translateX(-105%);
+    visibility: hidden;
+    transition:
+      transform 200ms ease,
+      visibility 200ms ease;
+    box-shadow: 8px 0 35px rgb(24 59 50 / 14%);
+  }
+  .sidebar.mobile-open {
+    transform: translateX(0);
+    visibility: visible;
+  }
+  .sidebar .brand {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    padding: 0 2px 18px;
+    gap: 10px;
+    font-size: 16px;
+    border-bottom: 1px solid var(--line);
+  }
+  .sidebar .brand-icon {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+  }
+  .sidebar .nav-label {
+    display: block;
+    padding: 16px 10px 7px;
+    font-size: 10px;
+  }
+  .sidebar .nav {
+    display: block;
+    flex: 1 1 auto;
+    width: 100%;
+    padding: 0 0 12px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .sidebar .nav a {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 11px;
+    margin: 2px 0;
+    padding: 12px 10px;
+    font-size: 14px;
+    white-space: normal;
+  }
+  .sidebar .nav a .icon {
+    display: inline-flex;
+    flex: 0 0 22px;
+    align-items: center;
+    justify-content: center;
+  }
+  .sidebar .sidebar-account {
+    position: relative;
+    inset: auto;
+    z-index: 1;
+    width: 100%;
+    flex: 0 0 auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+    background: #fff;
+  }
+  .sidebar .account-trigger {
+    justify-content: flex-start;
+    width: 100%;
+    height: auto;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: none;
+  }
+  .sidebar .account-label,
+  .sidebar .account-chevron {
+    display: initial;
+  }
+  .sidebar .account-label {
+    display: grid;
+  }
+  .sidebar .account-avatar {
+    display: grid;
+    flex: 0 0 28px;
+  }
+  .sidebar .account-menu {
+    left: 0;
+    right: 0;
+    bottom: calc(100% + 7px);
+    width: auto;
+  }
+  .main {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: calc(16px + env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  }
+  .topbar {
+    align-items: flex-start;
+    gap: 12px;
+    margin: 0 0 18px;
+    padding-left: 48px;
+  }
+  .page-heading {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  .eyebrow {
+    font-size: 9px;
+    line-height: 1.4;
+    letter-spacing: 0.07em;
+  }
+  .title {
+    font-size: clamp(21px, 6vw, 26px);
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+  .sub {
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .date-chip {
+    flex: 0 0 auto;
+    max-width: 45%;
+    padding: 8px;
+    font-size: 10px;
+    white-space: normal;
+    text-align: center;
+  }
+  .date-chip svg {
+    margin-right: 4px !important;
+  }
+  .table-wrap {
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+  .table-wrap .table {
+    width: max-content;
+    min-width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar,
+  .mobile-nav-backdrop {
+    transition: none;
+  }
+}
+
+
+/* Keep fixed account controls out of the desktop nav scroll area. */
+@media (min-width: 701px) {
+  .sidebar .nav {
+    padding-bottom: 104px;
+  }
+  .sidebar .sidebar-account {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: 16px;
+  }
+}
+@media (max-width: 700px) {
+  .topbar {
+    flex-wrap: wrap;
+  }
+  .date-chip {
+    overflow-wrap: anywhere;
+  }
+  .row {
+    flex-wrap: wrap;
+  }
+  .expense-form-grid,
+  .detail-grid,
+  .grid.four,
+  .entry-filters,
+  .milk-entry-filters {
+    min-width: 0;
+  }
+  .expense-form-grid .field,
+  .entry-filters .field,
+  .milk-entry-filters .field {
+    min-width: 0;
+  }
+  .app-toast {
+    top: max(10px, env(safe-area-inset-top));
+    right: max(10px, env(safe-area-inset-right));
+    left: max(10px, env(safe-area-inset-left));
+    min-width: 0;
+    width: auto;
+    max-width: none;
+  }
+}
+
+
+/* Prevent grid children and long KPI values from forcing horizontal overflow. */
+.grid > *,
+.layout > *,
+.expense-form-grid > *,
+.entry-filters > *,
+.milk-entry-filters > * {
+  min-width: 0;
+}
+.kpi-value,
+.kpi-label {
+  overflow-wrap: anywhere;
+}

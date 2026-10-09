@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import toast from 'react-hot-toast';
+import { Toast } from '@/components/ui/Toast';
 
 import { money } from '@/lib/farm-format';
 import type { BuffaloAcquisitionCost, BuffaloAcquisitionExpenseOption } from '../types';
@@ -20,6 +20,7 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
+  const [toastState, setToastState] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const costsQuery = useQuery({
     queryKey: ['buffalo-acquisition-costs', buffaloId],
@@ -86,7 +87,7 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }
       if (error) throw new Error(error.message || 'Could not record acquisition cost.');
     },
     onSuccess: async () => {
-      toast.success('Acquisition cost capitalized.');
+      setToastState({ message: 'Acquisition cost capitalized.', type: 'success' });
       setExpenseId('');
       setDescription('');
       setAmount('');
@@ -97,12 +98,20 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }
       ]);
     },
     onError: (error) => {
-      toast.error(error instanceof Error ? error.message : 'Could not record acquisition cost.');
+      setToastState({
+        message: error instanceof Error ? error.message : 'Could not record acquisition cost.',
+        type: 'error',
+      });
     },
   });
 
   return (
     <section className="card">
+      <Toast
+        message={toastState?.message ?? ''}
+        type={toastState?.type}
+        onDismiss={() => setToastState(null)}
+      />
       <div className="row">
         <div>
           <h2 className="section-title">Capitalized acquisition costs</h2>

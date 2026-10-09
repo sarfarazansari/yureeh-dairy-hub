@@ -222,26 +222,28 @@ export default function SalesAnalyticsPage() {
         </div>
         <div className="card">
           <h2 className="section-title">Morning vs evening</h2>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>SHIFT</th>
-                <th>MILK</th>
-                <th>REVENUE</th>
-                <th>AVG FAT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {shifts.map((x) => (
-                <tr key={x.shift}>
-                  <td>{x.shift}</td>
-                  <td>{milkTxt(x.milk)}</td>
-                  <td>{money(x.revenue)}</td>
-                  <td>{x.fat === null ? '—' : `${x.fat.toFixed(2)}%`}</td>
+          <div className="table-wrap">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>SHIFT</th>
+                  <th>MILK</th>
+                  <th>REVENUE</th>
+                  <th>AVG FAT</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {shifts.map((x) => (
+                  <tr key={x.shift}>
+                    <td>{x.shift}</td>
+                    <td>{milkTxt(x.milk)}</td>
+                    <td>{money(x.revenue)}</td>
+                    <td>{x.fat === null ? '—' : `${x.fat.toFixed(2)}%`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
           <div style={{ height: 20 }} />
           <h2 className="section-title">Pricing model</h2>
           {splits.map((x) => (
