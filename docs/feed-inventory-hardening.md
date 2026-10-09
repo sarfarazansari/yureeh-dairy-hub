@@ -5,7 +5,7 @@
 - Feed consumption previously wrote `unit_cost = NULL`, so inventory quantity decreased but inventory value did not. New consumption records snapshot the current weighted-average inventory cost.
 - Consumption creation now rejects quantities above current available stock in the database RPC, not only in the form.
 - Consumption edit restores the old movement's quantity/value before validating and costing the replacement movement.
-- Consumption edit/delete lock the feed master row while checking later activity and writing reversal movements, serializing those operations with the normal purchase/consumption flow.
+- Consumption edit/delete lock the feed master row while checking later activity and writing reversal movements, serializing those operations with the normal purchase/consumption flow. Purchase edit/delete also lock the affected feed master row(s) in deterministic order so a stock check cannot race a concurrent consumption.
 - Existing consumption movements with missing costs are backfilled in ledger creation order when a historical weighted-average cost can be derived. Rows for which the ledger has no positive quantity or has a negative value emit a database warning and remain unresolved rather than inventing a cost.
 
 ## Financial-report boundary
@@ -14,7 +14,7 @@ Feed purchases continue to create the corresponding expense transaction. The fin
 
 ## Migration
 
-Apply `supabase/migrations/20261009170000_feed_consumption_cost_hardening.sql` in development before testing this phase.
+Apply both migrations in timestamp order in development before testing this phase:\n\n1. `supabase/migrations/20261009170000_feed_consumption_cost_hardening.sql`\n2. `supabase/migrations/20261009173000_feed_purchase_lock_hardening.sql`
 
 ## Verification checklist
 
