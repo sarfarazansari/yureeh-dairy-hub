@@ -13,7 +13,7 @@ function localDate() {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd }: { buffaloId: string; canAdd: boolean }) {
+export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }: { buffaloId: string; canAdd: boolean; purchasePrice: number | null }) {
   const queryClient = useQueryClient();
   const [expenseId, setExpenseId] = useState('');
   const [costDate, setCostDate] = useState(localDate());
@@ -63,6 +63,7 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd }: { buffaloId: 
     (sum, cost) => sum + Number(cost.amount),
     0,
   );
+  const carryingValue = purchasePrice == null ? null : purchasePrice + totalCapitalized;
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -108,7 +109,10 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd }: { buffaloId: 
           <p className="sub">Link eligible costs such as transport to an existing expense assigned to this buffalo. The cost is not counted twice as an operating expense.</p>
         </div>
         <div>
-          <div className="kpi-label">TOTAL CAPITALIZED</div>
+          <div className="kpi-label">CURRENT CARRYING VALUE</div>
+          <b>{carryingValue == null ? '—' : money(carryingValue)}</b>
+          <p className="sub">Purchase price + capitalized costs; no depreciation applied</p>
+          <div className="kpi-label">CAPITALIZED COSTS</div>
           <b>{money(totalCapitalized)}</b>
         </div>
       </div>
