@@ -371,6 +371,9 @@ begin
   if not found then
     raise exception using errcode = '23503', message = 'Link the acquisition cost to an active farm expense.';
   end if;
+  if expense_row.buffalo_id is distinct from p_buffalo_id then
+    raise exception using errcode = '23514', message = 'The linked expense must already be assigned to this buffalo.';
+  end if;
   if p_amount > expense_row.total_amount then
     raise exception using errcode = '23514', message = 'Capitalized acquisition cost cannot exceed the linked expense total.';
   end if;
