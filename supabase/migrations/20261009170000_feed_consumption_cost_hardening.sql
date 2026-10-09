@@ -1,3 +1,101 @@
+-- Existing consumption rows were written without a unit-cost snapshot.
+-- Backfill in ledger creation order so historical consumption and reversal values
+-- are reflected in the current stock valuation. Same-transaction reversals are
+-- applied before replacement consumption rows.
+do $$
+declare
+  v_feed record;
+  v_movement record;
+  v_quantity numeric := 0;
+  v_value numeric := 0;
+  v_cost numeric(14,2);
+  v_original_cost numeric(14,2);
+begin
+  for v_feed in
+    select distinct user_id, feed_item_id
+    from public.feed_inventory_movements
+    order by user_id, feed_item_id
+  loop
+    v_quantity := 0;
+    v_value := 0;
+
+    for v_movement in
+      select *
+      from public.feed_inventory_movements
+      where user_id = v_feed.user_id
+        and feed_item_id = v_feed.feed_item_id
+      order by created_at,
+        case movement_type
+          when 'PURCHASE' then 1
+          when 'ADJUSTMENT_IN' then 2
+          when 'CONSUMPTION' then 3
+          when 'ADJUSTMENT_OUT' then 4
+          else 5
+        end,
+        occurred_at,
+        id
+    loop
+      if v_movement.movement_type = 'PURCHASE' then
+        v_cost := coalesce(v_movement.unit_cost, 0);
+        v_quantity := v_quantity + v_movement.quantity;
+        v_value := v_value + (v_movement.quantity * v_cost);
+
+      elsif v_movement.movement_type = 'CONSUMPTION' then
+        v_cost := v_movement.unit_cost;
+
+        if v_cost is null then
+          if v_quantity > 0 and v_value >= 0 then
+            v_cost := round(v_value / v_quantity, 2);
+            update public.feed_inventory_movements
+            set unit_cost = v_cost
+            where id = v_movement.id and user_id = v_feed.user_id;
+          else
+            raise warning
+              'Could not derive historical feed consumption cost for movement % (feed item %): stock quantity %, stock value %.',
+              v_movement.id, v_feed.feed_item_id, v_quantity, v_value;
+          end if;
+        end if;
+
+        if v_cost is not null then
+          v_value := v_value - (v_movement.quantity * v_cost);
+        end if;
+        v_quantity := v_quantity - v_movement.quantity;
+
+      elsif v_movement.movement_type = 'ADJUSTMENT_IN' then
+        v_cost := v_movement.unit_cost;
+
+        if v_movement.reversal_of_movement_id is not null then
+          select unit_cost into v_original_cost
+          from public.feed_inventory_movements
+          where id = v_movement.reversal_of_movement_id
+            and user_id = v_feed.user_id;
+
+          if v_original_cost is not null then
+            v_cost := v_original_cost;
+          end if;
+        end if;
+
+        if v_cost is distinct from v_movement.unit_cost then
+          update public.feed_inventory_movements
+          set unit_cost = v_cost
+          where id = v_movement.id and user_id = v_feed.user_id;
+        end if;
+
+        v_quantity := v_quantity + v_movement.quantity;
+        if v_cost is not null then
+          v_value := v_value + (v_movement.quantity * v_cost);
+        end if;
+
+      elsif v_movement.movement_type = 'ADJUSTMENT_OUT' then
+        v_cost := coalesce(v_movement.unit_cost, 0);
+        v_quantity := v_quantity - v_movement.quantity;
+        v_value := v_value - (v_movement.quantity * v_cost);
+      end if;
+    end loop;
+  end loop;
+end;
+$$;
+
 -- Phase 7: harden inventory-backed feed consumption.
 -- Snapshot the weighted-average stock cost at the time of consumption and
 -- prevent consuming more stock than is available. The ledger remains append-only.
@@ -198,8 +296,69 @@ begin
 end;
 $$;
 
+
+create or replace function public.delete_feed_consumption(
+  p_movement_id uuid
+)
+returns void
+language plpgsql
+security invoker
+set search_path = public
+as $
+declare
+  v_user_id uuid := auth.uid();
+  v_movement public.feed_inventory_movements;
+  v_feed public.feed_items;
+  v_later_exists boolean;
+begin
+  if v_user_id is null then raise exception 'Authentication required.'; end if;
+
+  select * into v_movement
+  from public.feed_inventory_movements
+  where id = p_movement_id
+    and user_id = v_user_id
+    and movement_type = 'CONSUMPTION'
+    and source_type = 'FEED_CONSUMPTION'
+  for update;
+
+  if not found then raise exception 'Feed consumption not found.'; end if;
+
+  select * into v_feed
+  from public.feed_items
+  where id = v_movement.feed_item_id and user_id = v_user_id
+  for update;
+
+  if not found then raise exception 'Feed item not found.'; end if;
+
+  select exists (
+    select 1
+    from public.feed_inventory_movements
+    where user_id = v_user_id
+      and feed_item_id = v_movement.feed_item_id
+      and created_at > v_movement.created_at
+  ) into v_later_exists;
+
+  if v_later_exists then
+    raise exception 'This consumption is locked because later inventory activity exists.';
+  end if;
+
+  insert into public.feed_inventory_movements (
+    user_id, feed_item_id, movement_type, quantity, unit_cost,
+    source_type, source_id, occurred_at, notes, reversal_of_movement_id
+  )
+  values (
+    v_user_id, v_movement.feed_item_id, 'ADJUSTMENT_IN',
+    v_movement.quantity, v_movement.unit_cost,
+    'FEED_CONSUMPTION_REVERSAL', v_movement.id,
+    v_movement.occurred_at, 'Reversal of feed consumption.', v_movement.id
+  );
+end;
+$;
+
 revoke all on function public.create_feed_consumption(uuid,date,numeric,text) from public, anon;
 revoke all on function public.edit_feed_consumption(uuid,date,numeric,text) from public, anon;
+revoke all on function public.delete_feed_consumption(uuid) from public, anon;
 
 grant execute on function public.create_feed_consumption(uuid,date,numeric,text) to authenticated;
 grant execute on function public.edit_feed_consumption(uuid,date,numeric,text) to authenticated;
+grant execute on function public.delete_feed_consumption(uuid) to authenticated;
