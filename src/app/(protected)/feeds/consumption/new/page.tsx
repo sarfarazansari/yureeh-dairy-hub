@@ -51,7 +51,13 @@ export default function NewFeedConsumptionPage() {
       <div className="management-stack">
         <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
         <Link className="date-chip" href="/feeds/consumption">← Back to consumption archive</Link>
-        <FeedConsumptionForm feedItems={feedItems} stock={stock} onSave={save} busy={busy} />
+        <FeedConsumptionForm
+          feedItems={feedItems}
+          stock={stock}
+          onSave={save}
+          onError={(message) => setToast({ message, type: 'error' })}
+          busy={busy}
+        />
       </div>
     </AppShell>
   );
