@@ -48,6 +48,7 @@ const navigationGroups = [
     label: 'PRODUCTION',
     items: [
       { label: 'Buffaloes', href: '/buffaloes', icon: Beef },
+      { label: 'Buffalo Sales', href: '/buffalo-sales', icon: IndianRupee },
       { label: 'Daily Performance', href: '/daily-performance', icon: Activity },
       { label: 'Buffalo Analytics', href: '/buffalo-analytics', icon: TrendingUp },
     ],
