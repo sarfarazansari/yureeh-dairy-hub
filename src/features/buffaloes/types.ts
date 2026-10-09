@@ -191,3 +191,20 @@ export type BuffaloDisposalInput = {
   reason: string;
   notes?: string;
 };
+
+
+export type BuffaloAcquisitionCost = {
+  id: string;
+  expense_id: string;
+  cost_date: string;
+  description: string;
+  amount: number | string;
+  notes: string | null;
+};
+
+export type BuffaloAcquisitionExpenseOption = {
+  id: string;
+  business_date: string;
+  description: string | null;
+  total_amount: number | string;
+};
