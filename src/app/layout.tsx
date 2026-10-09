@@ -7,7 +7,8 @@ const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Yureeh Dairy Hub',
-  description: 'Milk sales and buffalo performance management',
+  description: 'Yureeh Dairy Farm — milk sales and buffalo performance management',
+  icons: { icon: '/favicon.svg', shortcut: '/favicon.svg' },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
