@@ -19,7 +19,7 @@ begin
     raise exception using errcode = '23514', message = 'Milk pool movements require a farm and business date.';
   end if;
 
-  if new.shift is null and coalesce(new.movement_direction, '') = 'OUT' then
+  if new.shift is null and new.movement_direction::text = 'OUT' then
     raise exception using errcode = '23514', message = 'Milk outflow must belong to a morning or evening shift.';
   end if;
 
@@ -611,3 +611,37 @@ $sale_summary$;
 
 revoke all on function public.get_buffalo_sale_financial_summary(date, date) from public, anon;
 grant execute on function public.get_buffalo_sale_financial_summary(date, date) to authenticated;
+
+
+-- Keep capitalized asset costs attached to the expense that substantiates them.
+create or replace function public.guard_linked_buffalo_acquisition_expense()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $linked_acquisition_expense$
+begin
+  if exists (
+    select 1
+    from public.buffalo_acquisition_costs c
+    where c.user_id = old.user_id and c.expense_id = old.id
+  ) and (
+    new.buffalo_id is distinct from old.buffalo_id
+    or new.total_amount is distinct from old.total_amount
+    or new.business_date is distinct from old.business_date
+    or new.deleted_at is distinct from old.deleted_at
+  ) then
+    raise exception using errcode = '23514',
+      message = 'This expense supports a buffalo acquisition cost. Remove or reconcile the asset-cost link before changing its buffalo, amount, date, or deletion status.';
+  end if;
+  return new;
+end;
+$linked_acquisition_expense$;
+
+drop trigger if exists expenses_guard_buffalo_acquisition_cost on public.expenses;
+create trigger expenses_guard_buffalo_acquisition_cost
+before update of buffalo_id, total_amount, business_date, deleted_at
+on public.expenses
+for each row execute function public.guard_linked_buffalo_acquisition_expense();
+
+revoke all on function public.guard_linked_buffalo_acquisition_expense() from public, anon, authenticated;
