@@ -23,13 +23,7 @@ create index expense_payments_date_idx
 alter table public.expense_payments enable row level security;
 create policy expense_payments_select_own on public.expense_payments
   for select to authenticated using (user_id = (select auth.uid()));
-create policy expense_payments_insert_own on public.expense_payments
-  for insert to authenticated with check (user_id = (select auth.uid()));
-create policy expense_payments_update_own on public.expense_payments
-  for update to authenticated using (user_id = (select auth.uid()))
-  with check (user_id = (select auth.uid()));
-create policy expense_payments_delete_own on public.expense_payments
-  for delete to authenticated using (user_id = (select auth.uid()));
+-- Ledger writes go through the balance-validating RPC; clients can only read their own rows.
 
 create or replace function public.record_expense_payment(
   p_expense_id uuid,
@@ -41,9 +35,9 @@ create or replace function public.record_expense_payment(
 )
 returns uuid
 language plpgsql
-security invoker
+security definer
 set search_path = ''
-as $$
+as $
 declare
   owner_id uuid := auth.uid();
   expense_row public.expenses%rowtype;
