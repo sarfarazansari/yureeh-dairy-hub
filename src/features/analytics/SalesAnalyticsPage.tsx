@@ -270,7 +270,7 @@ export default function SalesAnalyticsPage() {
             </thead>
             <tbody>
               {contrib.map((c) => (
-                <tr key={c.name}>
+                <tr key={c.id}>
                   <td>{c.name}</td>
                   <td>{milkTxt(c.milk)}</td>
                   <td>{total ? `${((c.milk / total) * 100).toFixed(1)}%` : '—'}</td>
@@ -314,7 +314,8 @@ export default function SalesAnalyticsPage() {
         </div>
         <p className="kpi-foot">
           Expense per litre uses buffalo production records; expense per litre sold uses milk sales.
-          This is an operating view, not net profit.
+          Expenses follow expense entry dates and exclude costs capitalized to buffalo assets. Feed inventory
+          consumption valuation is not used in this recorded-expense view, so this is not net profit.
         </p>
       </div>
     </AppShell>
