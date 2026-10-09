@@ -37,6 +37,14 @@ export type CustomerPricing = {
   effective_to: string | null;
 };
 
+export type CustomerFinancialSummary = {
+  total_milk_quantity: number;
+  total_sales_amount: number;
+  entry_count: number;
+  total_payments_amount: number;
+  payment_count: number;
+};
+
 export type CustomerEntry = {
   id: string;
   business_date: string;
@@ -132,7 +140,7 @@ export async function setCustomerActive(
 }
 
 export async function getCustomerDetails(client: SupabaseClient, customerId: string) {
-  const [customer, entries] = await Promise.all([
+  const [customer, entries, summary] = await Promise.all([
     client.from('customers').select('*').eq('id', customerId).maybeSingle(),
     client
       .from('milk_entries')
@@ -143,13 +151,23 @@ export async function getCustomerDetails(client: SupabaseClient, customerId: str
       .is('deleted_at', null)
       .order('business_date', { ascending: false })
       .limit(500),
+    client.rpc('get_customer_financial_summary', { p_customer_id: customerId }),
   ]);
-  if (customer.error || entries.error) {
+  if (customer.error || entries.error || summary.error) {
     throw new Error('Could not load customer details. Please try again.');
   }
+
+  const totals = summary.data?.[0];
   return {
     customer: customer.data as CustomerSummary | null,
     entries: (entries.data ?? []) as CustomerEntry[],
+    financialSummary: {
+      total_milk_quantity: Number(totals?.total_milk_quantity ?? 0),
+      total_sales_amount: Number(totals?.total_sales_amount ?? 0),
+      entry_count: Number(totals?.entry_count ?? 0),
+      total_payments_amount: Number(totals?.total_payments_amount ?? 0),
+      payment_count: Number(totals?.payment_count ?? 0),
+    } as CustomerFinancialSummary,
   };
 }
 

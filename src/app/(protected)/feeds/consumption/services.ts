@@ -56,7 +56,6 @@ export async function fetchFeedConsumption(
     .range(from, to);
 
   if (filters.from) query = query.gte('occurred_at', `${filters.from}T00:00:00`);
-  if (filters.to) query = query.lt('occurred_at', `${filters.to}T00:00:00`);
   if (filters.to) {
     const end = new Date(`${filters.to}T00:00:00`);
     end.setDate(end.getDate() + 1);

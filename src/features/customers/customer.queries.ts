@@ -11,6 +11,7 @@ import {
   updateCustomer,
   updateCustomerPricing,
   type CustomerEntry,
+  type CustomerFinancialSummary,
   type CustomerPayment,
   type CustomerSummary,
 } from './services/customer.service';
@@ -34,7 +35,11 @@ export function useCustomerDirectoryQuery() {
 }
 
 export function useCustomerDetailQuery(customerId: string) {
-  return useQuery<{ customer: CustomerSummary | null; entries: CustomerEntry[] }, Error>({
+  return useQuery<{
+    customer: CustomerSummary | null;
+    entries: CustomerEntry[];
+    financialSummary: CustomerFinancialSummary;
+  }, Error>({
     queryKey: customerQueryKeys.detail(customerId),
     queryFn: () => getCustomerDetails(requireSupabase(), customerId),
     enabled: Boolean(customerId),
