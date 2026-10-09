@@ -159,10 +159,14 @@ begin
         where cp.user_id = owner_id), 0),
     coalesce((select sum(e.pending_amount) from public.expenses e
       where e.user_id = owner_id and e.deleted_at is null), 0),
-    coalesce((select sum(e.paid_amount) from public.expenses e
-      where e.user_id = owner_id and e.deleted_at is null
-        and not exists (select 1 from public.expense_payments ep
-          where ep.user_id = owner_id and ep.expense_id = e.id)), 0);
+    coalesce((select sum(greatest(e.paid_amount - coalesce(payments.ledger_paid, 0), 0))
+      from public.expenses e
+      left join lateral (
+        select sum(ep.amount) as ledger_paid
+        from public.expense_payments ep
+        where ep.user_id = owner_id and ep.expense_id = e.id
+      ) payments on true
+      where e.user_id = owner_id and e.deleted_at is null), 0);
 end;
 $$;
 
