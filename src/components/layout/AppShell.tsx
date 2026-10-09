@@ -18,13 +18,13 @@ export function AppShell({
       <Sidebar />
       <main className="main">
         <header className="topbar">
-          <div>
+          <div className="page-heading">
             <div className="eyebrow">YUREEH FARM · MANAGEMENT</div>
             <h1 className="title">{title}</h1>
             <div className="sub">{subtitle}</div>
           </div>
           <span className="date-chip">
-            <Clock size={12} style={{ marginRight: 8, verticalAlign: 'middle' }} />
+            <Clock size={12} aria-hidden="true" style={{ marginRight: 8, verticalAlign: 'middle' }} />
             {formatDate(new Date())}
           </span>
         </header>
