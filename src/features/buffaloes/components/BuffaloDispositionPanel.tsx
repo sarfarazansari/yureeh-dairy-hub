@@ -38,7 +38,7 @@ export function BuffaloDispositionPanel({ buffalo, mode = 'all' }: { buffalo: Bu
             <p className="sub">Buyer location: {sale.buyer_location || '—'}</p>
             <p className="sub">Sale price: <b>{money(Number(sale.sale_price))}</b></p>
             <p className="sub">Carrying value at sale: <b>{sale.carrying_value_at_sale == null ? "Not calculated" : money(Number(sale.carrying_value_at_sale))}</b></p>
-            <p className="sub">{sale.gain_loss_amount != null && Number(sale.gain_loss_amount) < 0 ? "Loss on sale" : "Gain on sale"}: <b>{sale.gain_loss_amount == null ? "Not calculated" : money(Math.abs(Number(sale.gain_loss_amount)))}</b></p>
+            <p className="sub">{sale.gain_loss_amount == null ? "Gain/loss on sale" : Number(sale.gain_loss_amount) < 0 ? "Loss on sale" : "Gain on sale"}: <b>{sale.gain_loss_amount == null ? "Not calculated" : money(Math.abs(Number(sale.gain_loss_amount)))}</b></p>
             <p className="sub">Received: <b>{money(Number(sale.amount_received))}</b></p>
             <p className="sub">Outstanding: <b>{money(Number(sale.amount_pending))}</b></p>
             <p className="sub">Payment status: <b>{sale.payment_status}</b></p>
