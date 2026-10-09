@@ -42,6 +42,8 @@ export default function FinancialReportsPage() {
     async function load() {
       if (!supabase) {
         setError('Supabase is not configured.');
+        setSummary(null);
+        setSaleSummary(null);
         setLoading(false);
         return;
       }
@@ -49,6 +51,7 @@ export default function FinancialReportsPage() {
       setError('');
       if (!from || !to || from > to) {
         setSummary(null);
+        setSaleSummary(null);
         setError('Choose a valid date range.');
         setLoading(false);
         return;
