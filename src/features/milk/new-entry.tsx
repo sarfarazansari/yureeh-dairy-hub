@@ -224,7 +224,7 @@ export default function NewEntryForm() {
               </div>
               {quantity !== '' && Number.isFinite(Number(quantity)) && Number(quantity) > deliveryContextQuery.data.availablePoolLitres && (
                 <p className="auth-message" role="status">
-                  ⚠️ This delivery is {milkTxt(Number(quantity) - deliveryContextQuery.data.availablePoolLitres)} above the currently available pool. The delivery will still be recorded.
+                  ⚠️ This delivery exceeds the available milk for the selected shift by {milkTxt(Number(quantity) - deliveryContextQuery.data.availablePoolLitres)}. The database will reject the save until the quantity is within the available balance.
                 </p>
               )}
             </div>
