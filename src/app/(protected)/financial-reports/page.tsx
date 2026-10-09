@@ -11,6 +11,7 @@ type BuffaloSaleSummary = {
   buffalo_sale_collections: number | string;
   buffalo_sale_outstanding: number | string;
   buffalo_sales_count: number | string;
+  buffalo_sale_outstanding_as_of: number | string;
 };
 
 type FinancialSummary = {
@@ -26,6 +27,12 @@ type FinancialSummary = {
   buffalo_purchase_payments: number | string;
   buffalo_purchase_outstanding: number | string;
   legacy_undated_paid_amount: number | string;
+  customer_receivables_as_of: number | string;
+  customer_credits_as_of: number | string;
+  supplier_outstanding_as_of_before_legacy: number | string;
+  supplier_legacy_undated_paid_amount: number | string;
+  buffalo_purchase_outstanding_as_of_before_legacy: number | string;
+  buffalo_purchase_legacy_undated_paid_amount: number | string;
 };
 
 export default function FinancialReportsPage() {
@@ -96,7 +103,7 @@ export default function FinancialReportsPage() {
             <input type="date" value={to} min={from} max={today} onChange={(e) => setTo(e.target.value)} />
           </div>
         </div>
-        <p className="kpi-foot">Period metrics use the selected dates. Outstanding balances are current all-time balances.</p>
+        <p className="kpi-foot">Period metrics use the selected dates. Current balances include all activity; historical balances are measured at the end date ({to}). Legacy undated payments are shown separately instead of being assigned invented dates.</p>
       </div>
       {error && <p className="auth-message">{error}</p>}
       <div className="grid kpis" style={{ marginTop: 15 }}>
@@ -106,26 +113,31 @@ export default function FinancialReportsPage() {
         <KPI label="OPERATING EXPENSES" value={loading ? '…' : money(value('operating_expenses'))} foot="Expense business dates in selected period" />
       </div>
       <div className="grid kpis">
+        <KPI label="CUSTOMER RECEIVABLES AT PERIOD END" value={loading ? '…' : money(value('customer_receivables_as_of'))} foot={'Balance as of ' + to} />
+        <KPI label="CUSTOMER CREDITS AT PERIOD END" value={loading ? '…' : money(value('customer_credits_as_of'))} foot={'Balance as of ' + to} />
         <KPI label="DATED EXPENSE PAYMENTS" value={loading ? '…' : money(value('dated_expense_payments'))} foot="Payments entered in the new payment ledger" />
         <KPI label="CUSTOMER RECEIVABLES" value={loading ? '…' : money(value('customer_receivables'))} foot="Amounts owed across customers" accent />
         <KPI label="CUSTOMER CREDITS" value={loading ? '…' : money(value('customer_credits'))} foot="Advance balances held for customers" />
-        <KPI label="SUPPLIER OUTSTANDING" value={loading ? '…' : money(value('supplier_outstanding'))} foot="Current unpaid expense balances" />
+        <KPI label="SUPPLIER OUTSTANDING (CURRENT)" value={loading ? '…' : money(value('supplier_outstanding'))} foot="Current unpaid expense balances" />
+        <KPI label="SUPPLIER BALANCE AT PERIOD END" value={loading ? '…' : money(value('supplier_outstanding_as_of_before_legacy'))} foot="Before undated legacy payments" />
         <KPI label="LEGACY PAID AMOUNTS" value={loading ? '…' : money(value('legacy_undated_paid_amount'))} foot="Previously recorded payments without dated ledger entries" />
       </div>
       <div className="grid kpis">
         <KPI label="BUFFALO SALE PROCEEDS" value={loading ? '…' : money(saleValue('buffalo_sale_revenue'))} foot={`${saleValue('buffalo_sales_count')} sales in selected period`} />
         <KPI label="BUFFALO SALE COLLECTIONS" value={loading ? '…' : money(saleValue('buffalo_sale_collections'))} foot="Payments received in selected period" />
-        <KPI label="BUFFALO SALE OUTSTANDING" value={loading ? '…' : money(saleValue('buffalo_sale_outstanding'))} foot="Current unpaid sale balances" accent />
+        <KPI label="BUFFALO SALE OUTSTANDING (CURRENT)" value={loading ? '…' : money(saleValue('buffalo_sale_outstanding'))} foot="Current unpaid sale balances" accent />
+        <KPI label="BUFFALO SALE OUTSTANDING AT PERIOD END" value={loading ? '…' : money(saleValue('buffalo_sale_outstanding_as_of'))} foot={'Balance as of ' + to} />
         <KPI label="BUFFALO PURCHASE COST" value={loading ? '…' : money(value('buffalo_purchase_cost'))} foot="Purchases dated in selected period" />
         <KPI label="BUFFALO PURCHASE PAYMENTS" value={loading ? '…' : money(value('buffalo_purchase_payments'))} foot="Payments made in selected period" />
-        <KPI label="BUFFALO PURCHASE OUTSTANDING" value={loading ? '…' : money(value('buffalo_purchase_outstanding'))} foot="Current unpaid acquisition balance" accent />
+        <KPI label="BUFFALO PURCHASE OUTSTANDING (CURRENT)" value={loading ? '…' : money(value('buffalo_purchase_outstanding'))} foot="Current unpaid acquisition balance" accent />
+        <KPI label="BUFFALO PURCHASE BALANCE AT PERIOD END" value={loading ? '…' : money(value('buffalo_purchase_outstanding_as_of_before_legacy'))} foot="Before undated legacy payments" />
       </div>
       <div className="card" style={{ marginTop: 15 }}>
         <h2 className="section-title">How to interpret this report</h2>
         <ul className="list">
           <li>Sales revenue is not the same as cash collected. Customer collections are shown separately.</li>
           <li>Operating expenses use the expense business date; dated expense payments use the actual payment date entered in the new ledger.</li>
-          <li>Legacy paid amounts are shown separately because their original payment dates were not stored. They are not assigned fabricated dates.</li>
+          <li>Historical supplier and buffalo-purchase balances are shown before undated legacy payments; those amounts are separated because their original dates were not stored. They are not assigned fabricated dates.</li>
           <li>Feed purchases are already linked to expenses, so they are not added a second time. Buffalo purchases are shown separately as asset acquisitions and are not included in operating expenses.</li>
           <li>Buffalo purchases and sale proceeds are asset transactions shown separately from operating expenses. Sale collections use the payment date; sale receivables are current all-time balances.</li>
           <li>This is a reconciliation summary, not a formal net-profit statement. Feed consumption costing and other accounting adjustments are not yet included.</li>
