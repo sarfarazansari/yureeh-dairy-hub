@@ -35,9 +35,10 @@ export default function CustomerDetailPage({ id }: { id: string }) {
   const [paymentMessage, setPaymentMessage] = useState('');
   const c = detailQuery.data?.customer ?? null;
   const rows = detailQuery.data?.entries ?? [];
+  const financialSummary = detailQuery.data?.financialSummary;
   const payments = paymentsQuery.data ?? [];
-  const total = rows.reduce((s, r) => s + Number(r.milk_quantity), 0),
-    rev = rows.reduce((s, r) => s + Number(r.calculated_amount), 0),
+  const total = financialSummary?.total_milk_quantity ?? 0,
+    rev = financialSummary?.total_sales_amount ?? 0,
     paymentsTotal = payments.reduce((s, p) => s + Number(p.amount), 0),
     netBalance = rev - paymentsTotal,
     outstanding = Math.max(0, netBalance),
@@ -113,7 +114,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
         ← All customers
       </Link>
       <div className="grid kpis">
-        <KPI label="TOTAL MILK" value={milkTxt(total)} foot={`${rows.length} entries`} />
+        <KPI label="TOTAL MILK" value={milkTxt(total)} foot={`${financialSummary?.entry_count ?? 0} entries`} />
         <KPI label="TOTAL SALES" value={money(rev)} foot={total ? `${money(rev / total)} per litre` : 'No sales'} />
         <KPI label="PAYMENTS RECEIVED" value={money(paymentsTotal)} foot={`${payments.length} payment${payments.length === 1 ? '' : 's'}`} accent />
         <KPI
@@ -123,7 +124,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
         />
       </div>
       <div className="card">
-        <h2 className="section-title">Milk and revenue trend</h2>
+        <h2 className="section-title">Recent milk and revenue trend</h2>
         <div className="chart">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={daily}>
@@ -172,11 +173,11 @@ export default function CustomerDetailPage({ id }: { id: string }) {
             <div className="grid two">
               <div className="field">
                 <label htmlFor="customer-payment-date">Payment date</label>
-                <input id="customer-payment-date" type="date" value={paymentDate} disabled={paymentMutation.isPending || outstanding <= 0} onChange={(event) => setPaymentDate(event.target.value)} />
+                <input id="customer-payment-date" type="date" value={paymentDate} disabled={paymentMutation.isPending} onChange={(event) => setPaymentDate(event.target.value)} />
               </div>
               <div className="field">
                 <label htmlFor="customer-payment-amount">Amount · ₹</label>
-                <input id="customer-payment-amount" type="number" min="0.01" step="0.01" value={paymentAmount} disabled={paymentMutation.isPending || outstanding <= 0} onChange={(event) => setPaymentAmount(event.target.value)} placeholder={outstanding ? outstanding.toFixed(2) : '0.00'} />
+                <input id="customer-payment-amount" type="number" min="0.01" step="0.01" value={paymentAmount} disabled={paymentMutation.isPending || outstanding <= 0} onChange={(event) => setPaymentAmount(event.target.value)} placeholder={outstanding ? outstanding.toFixed(2) : 'Advance payment'} />
               </div>
             </div>
             <div className="grid two">
@@ -200,7 +201,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
             </div>
             {paymentMessage && <p className="success-message">{paymentMessage}</p>}
             <button className="btn" disabled={paymentMutation.isPending || outstanding <= 0}>
-              {paymentMutation.isPending ? 'Recording…' : outstanding > 0 ? 'Record payment' : 'Fully settled'}
+              {paymentMutation.isPending ? 'Recording…' : outstanding > 0 ? 'Record payment' : 'Record advance'}
             </button>
           </form>
         </div>
@@ -236,7 +237,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
 
       <div style={{ height: 14 }} />
       <div className="card">
-        <h2 className="section-title">Entry history</h2>
+        <h2 className="section-title">Recent entry history (latest 500)</h2>
         <div className="table-wrap">
           <table className="table">
             <thead>
