@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import Image from 'next/image';
 import {
   Activity,
   Beef,
@@ -162,8 +163,8 @@ export function Sidebar() {
         aria-label="Application navigation"
       >
         <div className="brand">
-          <div className="brand-icon">
-            <Users size={22} />
+          <div className="brand-icon brand-logo">
+            <Image src="/favicon.svg" alt="" width={38} height={38} priority />
           </div>
           <div>
             Yureeh<span style={{ fontWeight: 400, color: '#829087' }}> Dairy Hub</span>
