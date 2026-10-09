@@ -314,8 +314,9 @@ export default function SalesAnalyticsPage() {
         </div>
         <p className="kpi-foot">
           Expense per litre uses buffalo production records; expense per litre sold uses milk sales.
-          Expenses follow expense entry dates and exclude costs capitalized to buffalo assets. Feed inventory
-          consumption valuation is not used in this recorded-expense view, so this is not net profit.
+          Farm operating figures remain farm-wide when a customer filter is selected. Expenses follow expense
+          entry dates and exclude costs capitalized to buffalo assets. Feed inventory consumption valuation
+          is not used in this recorded-expense view, so this is not net profit.
         </p>
       </div>
     </AppShell>
