@@ -140,6 +140,9 @@ begin
   if p_sale_date is null then
     raise exception using errcode = '23514', message = 'Sale date is required.';
   end if;
+  if p_sale_date > (now() at time zone 'Asia/Kolkata')::date then
+    raise exception using errcode = '23514', message = 'A completed sale cannot have a future date.';
+  end if;
   if nullif(btrim(p_buyer_name), '') is null then
     raise exception using errcode = '23514', message = 'Buyer name is required.';
   end if;
@@ -321,6 +324,9 @@ begin
   end if;
   if p_effective_date is null then
     raise exception using errcode = '23514', message = 'Disposal date is required.';
+  end if;
+  if p_effective_date > (now() at time zone 'Asia/Kolkata')::date then
+    raise exception using errcode = '23514', message = 'A completed disposal cannot have a future date.';
   end if;
   if p_disposal_type is null or p_disposal_type not in ('DEATH', 'TRANSFER_OUT', 'OTHER') then
     raise exception using errcode = '23514', message = 'Choose a valid disposal type.';
