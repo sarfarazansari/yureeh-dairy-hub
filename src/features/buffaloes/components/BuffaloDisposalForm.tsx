@@ -31,10 +31,10 @@ export function BuffaloDisposalForm({ buffalo }: { buffalo: BuffaloDetail }) {
       <h2 className="section-title">Record non-sale disposal</h2>
       <p className="sub">Use this for death, transfer out, or another permanent removal. A disposal cannot be undone through status editing.</p>
       <div className="grid two">
-        <Field label="Disposal type"><select value={type} onChange={(e) => setType(e.target.value as typeof type)}><option value="DEATH">Death</option><option value="TRANSFER_OUT">Transfer out</option><option value="OTHER">Other</option></select></Field>
-        <Field label="Effective date"><input required type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
-        <Field label="Reason"><input required value={reason} onChange={(e) => setReason(e.target.value)} /></Field>
-        <Field label="Notes"><input value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
+        <DispositionField label="Disposal type"><select value={type} onChange={(e) => setType(e.target.value as typeof type)}><option value="DEATH">Death</option><option value="TRANSFER_OUT">Transfer out</option><option value="OTHER">Other</option></select></DispositionField>
+        <DispositionField label="Effective date"><input required type="date" value={date} onChange={(e) => setDate(e.target.value)} /></DispositionField>
+        <DispositionField label="Reason"><input required value={reason} onChange={(e) => setReason(e.target.value)} /></DispositionField>
+        <DispositionField label="Notes"><input value={notes} onChange={(e) => setNotes(e.target.value)} /></DispositionField>
       </div>
       {(message || mutation.isError) && <p className="auth-message">{message || mutation.error?.message}</p>}
       <button className="btn" disabled={mutation.isPending}>{mutation.isPending ? 'Recording…' : 'Record disposal'}</button>
