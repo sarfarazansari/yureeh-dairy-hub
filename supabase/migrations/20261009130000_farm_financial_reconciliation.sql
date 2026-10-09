@@ -89,6 +89,7 @@ begin
   returning id into payment_id;
 
   new_paid := expense_row.paid_amount + p_amount;
+  perform set_config('app.allow_expense_payment_update', 'true', true);
   update public.expenses
   set paid_amount = new_paid,
       payment_status = case
@@ -172,3 +173,29 @@ $$;
 
 revoke all on function public.get_farm_financial_summary(date, date) from public, anon;
 grant execute on function public.get_farm_financial_summary(date, date) to authenticated;
+
+
+-- Prevent the legacy expense editor from overwriting ledger-derived balances.
+-- The payment RPC opts in transaction-locally immediately before updating the balance.
+create or replace function public.guard_expense_paid_amount_with_ledger()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+  if exists (
+    select 1 from public.expense_payments ep
+    where ep.user_id = old.user_id and ep.expense_id = old.id
+  ) and current_setting('app.allow_expense_payment_update', true) is distinct from 'true' then
+    raise exception using
+      errcode = '23514',
+      message = 'This expense has dated payments. Use the payment ledger to update its balance.';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger expenses_guard_paid_amount_ledger
+before update of paid_amount on public.expenses
+for each row execute function public.guard_expense_paid_amount_with_ledger();
