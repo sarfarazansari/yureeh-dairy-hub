@@ -246,8 +246,8 @@ begin
   if p_payment_date is null or p_payment_method is null then
     raise exception using errcode = '23514', message = 'Payment date and method are required.';
   end if;
-  if p_amount is null or p_amount <= 0 then
-    raise exception using errcode = '23514', message = 'Payment amount must be greater than ₹0.';
+  if p_amount is null or p_amount <= 0 or scale(p_amount) > 2 then
+    raise exception using errcode = '23514', message = 'Payment amount must be greater than ₹0 and use at most two decimal places.';
   end if;
 
   select * into sale_row
