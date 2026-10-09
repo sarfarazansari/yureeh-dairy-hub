@@ -177,13 +177,13 @@ export default function CustomerDetailPage({ id }: { id: string }) {
               </div>
               <div className="field">
                 <label htmlFor="customer-payment-amount">Amount · ₹</label>
-                <input id="customer-payment-amount" type="number" min="0.01" step="0.01" value={paymentAmount} disabled={paymentMutation.isPending || outstanding <= 0} onChange={(event) => setPaymentAmount(event.target.value)} placeholder={outstanding ? outstanding.toFixed(2) : 'Advance payment'} />
+                <input id="customer-payment-amount" type="number" min="0.01" step="0.01" value={paymentAmount} disabled={paymentMutation.isPending} onChange={(event) => setPaymentAmount(event.target.value)} placeholder={outstanding ? outstanding.toFixed(2) : 'Advance payment'} />
               </div>
             </div>
             <div className="grid two">
               <div className="field">
                 <label htmlFor="customer-payment-method">Payment method</label>
-                <select id="customer-payment-method" value={paymentMethod} disabled={paymentMutation.isPending || outstanding <= 0} onChange={(event) => setPaymentMethod(event.target.value as CustomerPaymentMethod)}>
+                <select id="customer-payment-method" value={paymentMethod} disabled={paymentMutation.isPending} onChange={(event) => setPaymentMethod(event.target.value as CustomerPaymentMethod)}>
                   <option value="CASH">Cash</option>
                   <option value="UPI">UPI</option>
                   <option value="BANK_TRANSFER">Bank transfer</option>
@@ -192,15 +192,15 @@ export default function CustomerDetailPage({ id }: { id: string }) {
               </div>
               <div className="field">
                 <label htmlFor="customer-payment-reference">Reference</label>
-                <input id="customer-payment-reference" value={paymentReference} disabled={paymentMutation.isPending || outstanding <= 0} onChange={(event) => setPaymentReference(event.target.value)} placeholder="UPI / bank reference (optional)" />
+                <input id="customer-payment-reference" value={paymentReference} disabled={paymentMutation.isPending} onChange={(event) => setPaymentReference(event.target.value)} placeholder="UPI / bank reference (optional)" />
               </div>
             </div>
             <div className="field">
               <label htmlFor="customer-payment-notes">Notes</label>
-              <input id="customer-payment-notes" value={paymentNotes} disabled={paymentMutation.isPending || outstanding <= 0} onChange={(event) => setPaymentNotes(event.target.value)} placeholder="Optional payment note" />
+              <input id="customer-payment-notes" value={paymentNotes} disabled={paymentMutation.isPending} onChange={(event) => setPaymentNotes(event.target.value)} placeholder="Optional payment note" />
             </div>
             {paymentMessage && <p className="success-message">{paymentMessage}</p>}
-            <button className="btn" disabled={paymentMutation.isPending || outstanding <= 0}>
+            <button className="btn" disabled={paymentMutation.isPending}>
               {paymentMutation.isPending ? 'Recording…' : outstanding > 0 ? 'Record payment' : 'Record advance'}
             </button>
           </form>
