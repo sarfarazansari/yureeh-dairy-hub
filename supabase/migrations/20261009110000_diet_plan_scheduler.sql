@@ -109,16 +109,16 @@ begin
     where p.status = 'ACTIVE'
       and p.start_date <= v_today
       and (p.end_date is null or p.end_date >= v_today)
-      and (s.morning_time = v_local_now::time(0) or s.evening_time = v_local_now::time(0))
+      and s.morning_time is not null and s.evening_time is not null
   loop
-    v_slot := case when v_plan.morning_time = v_local_now::time(0) then 'MORNING' else 'EVENING' end;
-    v_slot_time := case when v_slot = 'MORNING' then v_plan.morning_time else v_plan.evening_time end;
-
+    -- Create both occurrences for the day, including overdue ones. The processor
+    -- below marks missed runs failed instead of silently posting them late.
     insert into public.diet_feeding_runs(user_id, plan_id, feeding_date, shift, scheduled_for, status)
-    values (
-      v_plan.user_id, v_plan.plan_id, v_today, v_slot,
-      (v_today + v_slot_time) at time zone 'Asia/Kolkata', 'PENDING'
-    )
+    values
+      (v_plan.user_id, v_plan.plan_id, v_today, 'MORNING',
+       (v_today + v_plan.morning_time) at time zone 'Asia/Kolkata', 'PENDING'),
+      (v_plan.user_id, v_plan.plan_id, v_today, 'EVENING',
+       (v_today + v_plan.evening_time) at time zone 'Asia/Kolkata', 'PENDING')
     on conflict (user_id, plan_id, feeding_date, shift) do nothing;
   end loop;
 
@@ -127,12 +127,8 @@ begin
   for v_run in
     select r.*
     from public.diet_feeding_runs r
-    where r.status in ('PENDING', 'FAILED')
+    where r.status = 'PENDING'
       and r.scheduled_for <= v_now
-      and (
-        r.status = 'PENDING'
-        or (r.status = 'FAILED' and r.retry_count > 0)
-      )
     order by r.scheduled_for, r.user_id, r.plan_id
     for update skip locked
   loop
