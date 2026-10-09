@@ -353,7 +353,7 @@ begin
     v_movement.occurred_at, 'Reversal of feed consumption.', v_movement.id
   );
 end;
-$;
+$$;
 
 revoke all on function public.create_feed_consumption(uuid,date,numeric,text) from public, anon;
 revoke all on function public.edit_feed_consumption(uuid,date,numeric,text) from public, anon;
