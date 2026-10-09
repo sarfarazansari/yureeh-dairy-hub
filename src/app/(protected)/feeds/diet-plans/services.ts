@@ -1,14 +1,24 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { DietBuffaloOption, DietPlanDetails, DietPlanFormValues, DietPlanListRow } from '@/lib/diet-plan-types';
 
-export async function fetchDietPlans(client: SupabaseClient): Promise<DietPlanListRow[]> {
-  const { data: plans, error } = await client
-    .from('diet_plans')
-    .select('id,name,notes,start_date,end_date,status,created_at')
-    .order('created_at', { ascending: false });
+export async function fetchDietPlans(
+  client: SupabaseClient,
+  page: number,
+  pageSize: number,
+  filters: { search?: string; status?: string } = {},
+): Promise<{ rows: DietPlanListRow[]; count: number }> {
+  const from = page * pageSize;
+  const to = from + pageSize - 1;
+  let query = client.from('diet_plans')
+    .select('id,name,notes,start_date,end_date,status,created_at', { count: 'exact' })
+    .order('created_at', { ascending: false })
+    .range(from, to);
+  if (filters.search?.trim()) query = query.ilike('name', `%${filters.search.trim()}%`);
+  if (filters.status) query = query.eq('status', filters.status);
+  const { data: plans, error, count } = await query;
   if (error) throw error;
   const rows = plans ?? [];
-  if (!rows.length) return [];
+  if (!rows.length) return { rows: [], count: count ?? 0 };
 
   const ids = rows.map((plan) => plan.id);
   const [{ data: buffaloes, error: buffaloError }, { data: items, error: itemError }] = await Promise.all([
@@ -18,12 +28,15 @@ export async function fetchDietPlans(client: SupabaseClient): Promise<DietPlanLi
   if (buffaloError) throw buffaloError;
   if (itemError) throw itemError;
 
-  return rows.map((plan) => ({
-    ...plan,
-    status: plan.status as DietPlanListRow['status'],
-    buffalo_count: (buffaloes ?? []).filter((row) => row.plan_id === plan.id).length,
-    feed_count: (items ?? []).filter((row) => row.plan_id === plan.id).length,
-  }));
+  return {
+    rows: rows.map((plan) => ({
+      ...plan,
+      status: plan.status as DietPlanListRow['status'],
+      buffalo_count: (buffaloes ?? []).filter((row) => row.plan_id === plan.id).length,
+      feed_count: (items ?? []).filter((row) => row.plan_id === plan.id).length,
+    })),
+    count: count ?? 0,
+  };
 }
 
 export async function fetchDietPlanForEdit(client: SupabaseClient, id: string): Promise<DietPlanDetails> {
