@@ -28,7 +28,7 @@ function localDate() {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-export function BuffaloAcquisitionCostPanel({ buffaloId }: { buffaloId: string }) {
+export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd }: { buffaloId: string; canAdd: boolean }) {
   const queryClient = useQueryClient();
   const [expenseId, setExpenseId] = useState('');
   const [costDate, setCostDate] = useState(localDate());
@@ -150,7 +150,7 @@ export function BuffaloAcquisitionCostPanel({ buffaloId }: { buffaloId: string }
         </div>
       ) : <div className="empty">No acquisition costs capitalized yet.</div>}
 
-      <form
+      {canAdd && <form
         className="form-grid"
         onSubmit={(event) => {
           event.preventDefault();
@@ -190,8 +190,8 @@ export function BuffaloAcquisitionCostPanel({ buffaloId }: { buffaloId: string }
             {saveMutation.isPending ? 'Saving…' : 'Add acquisition cost'}
           </button>
         </div>
-      </form>
-      {!expensesQuery.isPending && !expensesQuery.isError && availableExpenses.length === 0 && (
+      </form>}
+      {canAdd && !expensesQuery.isPending && !expensesQuery.isError && availableExpenses.length === 0 && (
         <p className="sub">No unlinked active expenses are assigned to this buffalo. Create or update an expense and assign it to this buffalo first.</p>
       )}
       {expensesQuery.isError && <p className="auth-message">{expensesQuery.error.message}</p>}
