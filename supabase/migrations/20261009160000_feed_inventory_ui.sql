@@ -55,7 +55,9 @@ select
     )::numeric(14,2)
     else null
   end as weighted_average_cost,
-  f.low_stock_threshold
+  f.low_stock_threshold,
+  f.category,
+  f.is_active
 from public.feed_items f
 left join public.feed_inventory_movements m
   on m.feed_item_id = f.id
