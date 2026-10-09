@@ -1,25 +1,16 @@
 'use client';
 
-import { useState } from 'react';
 import { formatDate } from '@/lib/date-format';
 import { money } from '@/lib/farm-format';
 import {
   useBuffaloDisposal,
   useBuffaloSale,
   useBuffaloSalePayments,
-  useCreateBuffaloSale,
-  useRecordBuffaloDisposal,
-  useRecordBuffaloSalePayment,
 } from '../hooks/use-buffaloes';
-import type { BuffaloDetail, BuffaloPaymentMethod } from '../types';
-import { buffaloDisposalSchema, buffaloSalePaymentSchema, buffaloSaleSchema } from '../disposition.validation';
-
-const PAYMENT_METHODS: BuffaloPaymentMethod[] = ['CASH', 'UPI', 'BANK_TRANSFER', 'OTHER'];
-
-function todayLocal() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-}
+import type { BuffaloDetail } from '../types';
+import { BuffaloDisposalForm } from './BuffaloDisposalForm';
+import { BuffaloSaleForm } from './BuffaloSaleForm';
+import { BuffaloSalePaymentForm } from './BuffaloSalePaymentForm';
 
 export function BuffaloDispositionPanel({ buffalo, mode = 'all' }: { buffalo: BuffaloDetail; mode?: 'all' | 'sale' }) {
   const saleQuery = useBuffaloSale(buffalo.id);
@@ -56,7 +47,7 @@ export function BuffaloDispositionPanel({ buffalo, mode = 'all' }: { buffalo: Bu
           </div>
         </div>
         <div className="grid two">
-          <SalePaymentForm saleId={sale.id} pending={Number(sale.amount_pending)} />
+          <BuffaloSalePaymentForm saleId={sale.id} pending={Number(sale.amount_pending)} />
           <div className="card">
             <h2 className="section-title">Sale payment history</h2>
             {paymentsQuery.isPending ? <div className="empty">Loading payments…</div> : paymentsQuery.isError ? <div className="empty">{paymentsQuery.error.message}</div> : paymentsQuery.data?.length ? (
@@ -91,165 +82,12 @@ export function BuffaloDispositionPanel({ buffalo, mode = 'all' }: { buffalo: Bu
     );
   }
 
-  if (mode === 'sale') return <SaleForm buffalo={buffalo} />;
+  if (mode === 'sale') return <BuffaloSaleForm buffalo={buffalo} />;
 
   return (
     <div className="grid two">
-      <SaleForm buffalo={buffalo} />
-      <DisposalForm buffalo={buffalo} />
+      <BuffaloSaleForm buffalo={buffalo} />
+      <BuffaloDisposalForm buffalo={buffalo} />
     </div>
   );
-}
-
-function SaleForm({ buffalo }: { buffalo: BuffaloDetail }) {
-  const mutation = useCreateBuffaloSale();
-  const [saleDate, setSaleDate] = useState(todayLocal());
-  const [buyerName, setBuyerName] = useState('');
-  const [buyerMobile, setBuyerMobile] = useState('');
-  const [buyerLocation, setBuyerLocation] = useState('');
-  const [salePrice, setSalePrice] = useState('');
-  const [initialPayment, setInitialPayment] = useState('0');
-  const [paymentDate, setPaymentDate] = useState(todayLocal());
-  const [paymentMethod, setPaymentMethod] = useState<BuffaloPaymentMethod>('CASH');
-  const [dueDate, setDueDate] = useState('');
-  const [terms, setTerms] = useState('');
-  const [reference, setReference] = useState('');
-  const [notes, setNotes] = useState('');
-  const [message, setMessage] = useState('');
-
-  const price = Number(salePrice) || 0;
-  const paid = Number(initialPayment) || 0;
-  const pending = Math.max(0, price - paid);
-
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setMessage('');
-    const parsed = buffaloSaleSchema.safeParse({
-      sale_date: saleDate, buyer_name: buyerName, buyer_mobile: buyerMobile,
-      buyer_location: buyerLocation, sale_price: salePrice, initial_payment: initialPayment,
-      payment_method: paymentMethod, payment_date: paymentDate, payment_due_date: dueDate,
-      payment_terms: terms, transaction_reference: reference, notes,
-    });
-    if (!parsed.success) {
-      setMessage(parsed.error.issues[0]?.message ?? 'Check the sale details.');
-      return;
-    }
-    try {
-      await mutation.mutateAsync({ buffaloId: buffalo.id, input: parsed.data });
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Could not record sale.');
-    }
-  }
-
-  return (
-    <form className="card" onSubmit={submit}>
-      <h2 className="section-title">Record buffalo sale</h2>
-      <p className="sub">Recording a sale will mark this buffalo SOLD and prevent future production entries.</p>
-      <div className="grid two">
-        <Field label="Sale date"><input required type="date" value={saleDate} onChange={(e) => setSaleDate(e.target.value)} /></Field>
-        <Field label="Buyer name"><input required value={buyerName} onChange={(e) => setBuyerName(e.target.value)} /></Field>
-        <Field label="Buyer mobile"><input value={buyerMobile} onChange={(e) => setBuyerMobile(e.target.value)} /></Field>
-        <Field label="Buyer location"><input value={buyerLocation} onChange={(e) => setBuyerLocation(e.target.value)} /></Field>
-        <Field label="Sale price (₹)"><input required type="number" min="0.01" step="0.01" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} /></Field>
-        <Field label="Received now (₹)"><input required type="number" min="0" step="0.01" value={initialPayment} onChange={(e) => setInitialPayment(e.target.value)} /></Field>
-        <Field label="Outstanding"><div className="calculated-balance">{money(pending)}</div></Field>
-        {paid > 0 && <Field label="Payment date"><input required type="date" value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} /></Field>}
-        {paid > 0 && <Field label="Payment method"><select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as BuffaloPaymentMethod)}>{PAYMENT_METHODS.map((method) => <option key={method} value={method}>{method.replace('_', ' ')}</option>)}</select></Field>}
-        {pending > 0 && <Field label="Due date"><input required type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></Field>}
-        {pending > 0 && <Field label="Payment terms"><input value={terms} onChange={(e) => setTerms(e.target.value)} /></Field>}
-        <Field label="Transaction reference"><input value={reference} onChange={(e) => setReference(e.target.value)} /></Field>
-        <Field label="Notes"><input value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
-      </div>
-      {(message || mutation.isError) && <p className="auth-message">{message || mutation.error?.message}</p>}
-      <button className="btn" disabled={mutation.isPending}>{mutation.isPending ? 'Recording…' : 'Record sale'}</button>
-    </form>
-  );
-}
-
-function SalePaymentForm({ saleId, pending }: { saleId: string; pending: number }) {
-  const mutation = useRecordBuffaloSalePayment();
-  const [date, setDate] = useState(todayLocal());
-  const [amount, setAmount] = useState('');
-  const [method, setMethod] = useState<BuffaloPaymentMethod>('CASH');
-  const [reference, setReference] = useState('');
-  const [notes, setNotes] = useState('');
-  const [message, setMessage] = useState('');
-
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setMessage('');
-    const parsed = buffaloSalePaymentSchema.safeParse({ payment_date: date, amount, payment_method: method, transaction_reference: reference, notes });
-    if (!parsed.success) {
-      setMessage(parsed.error.issues[0]?.message ?? 'Check the payment details.');
-      return;
-    }
-    if (parsed.data.amount > pending) {
-      setMessage('Payment cannot exceed the outstanding balance.');
-      return;
-    }
-    try {
-      await mutation.mutateAsync({ saleId, input: parsed.data });
-      setAmount(''); setReference(''); setNotes('');
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Could not record payment.');
-    }
-  }
-
-  return (
-    <form className="card" onSubmit={submit}>
-      <h2 className="section-title">Record sale payment</h2>
-      <p className="sub">Outstanding: <b>{money(pending)}</b></p>
-      {pending <= 0 ? <div className="empty">Sale is fully paid.</div> : <>
-        <div className="grid two">
-          <Field label="Payment date"><input required type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
-          <Field label="Amount (₹)"><input required type="number" min="0.01" max={pending} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>
-          <Field label="Payment method"><select value={method} onChange={(e) => setMethod(e.target.value as BuffaloPaymentMethod)}>{PAYMENT_METHODS.map((item) => <option key={item} value={item}>{item.replace('_', ' ')}</option>)}</select></Field>
-          <Field label="Reference"><input value={reference} onChange={(e) => setReference(e.target.value)} /></Field>
-          <Field label="Notes"><input value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
-        </div>
-        {(message || mutation.isError) && <p className="auth-message">{message || mutation.error?.message}</p>}
-        <button className="btn" disabled={mutation.isPending}>{mutation.isPending ? 'Saving…' : 'Record payment'}</button>
-      </>}
-    </form>
-  );
-}
-
-function DisposalForm({ buffalo }: { buffalo: BuffaloDetail }) {
-  const mutation = useRecordBuffaloDisposal();
-  const [type, setType] = useState<'DEATH' | 'TRANSFER_OUT' | 'OTHER'>('DEATH');
-  const [date, setDate] = useState(todayLocal());
-  const [reason, setReason] = useState('');
-  const [notes, setNotes] = useState('');
-  const [message, setMessage] = useState('');
-
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setMessage('');
-    const parsed = buffaloDisposalSchema.safeParse({ disposal_type: type, effective_date: date, reason, notes });
-    if (!parsed.success) { setMessage(parsed.error.issues[0]?.message ?? 'Check the disposal details.'); return; }
-    try {
-      await mutation.mutateAsync({ buffaloId: buffalo.id, input: parsed.data });
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Could not record disposal.');
-    }
-  }
-
-  return (
-    <form className="card" onSubmit={submit}>
-      <h2 className="section-title">Record non-sale disposal</h2>
-      <p className="sub">Use this for death, transfer out, or another permanent removal. A disposal cannot be undone through status editing.</p>
-      <div className="grid two">
-        <Field label="Disposal type"><select value={type} onChange={(e) => setType(e.target.value as typeof type)}><option value="DEATH">Death</option><option value="TRANSFER_OUT">Transfer out</option><option value="OTHER">Other</option></select></Field>
-        <Field label="Effective date"><input required type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
-        <Field label="Reason"><input required value={reason} onChange={(e) => setReason(e.target.value)} /></Field>
-        <Field label="Notes"><input value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
-      </div>
-      {(message || mutation.isError) && <p className="auth-message">{message || mutation.error?.message}</p>}
-      <button className="btn" disabled={mutation.isPending}>{mutation.isPending ? 'Recording…' : 'Record disposal'}</button>
-    </form>
-  );
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div className="field"><label>{label}</label>{children}</div>;
 }
