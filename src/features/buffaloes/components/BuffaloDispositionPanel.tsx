@@ -37,6 +37,8 @@ export function BuffaloDispositionPanel({ buffalo, mode = 'all' }: { buffalo: Bu
             <p className="sub">Buyer mobile: {sale.buyer_mobile || '—'}</p>
             <p className="sub">Buyer location: {sale.buyer_location || '—'}</p>
             <p className="sub">Sale price: <b>{money(Number(sale.sale_price))}</b></p>
+            <p className="sub">Carrying value at sale: <b>{sale.carrying_value_at_sale == null ? "Not calculated" : money(Number(sale.carrying_value_at_sale))}</b></p>
+            <p className="sub">{sale.gain_loss_amount != null && Number(sale.gain_loss_amount) < 0 ? "Loss on sale" : "Gain on sale"}: <b>{sale.gain_loss_amount == null ? "Not calculated" : money(Math.abs(Number(sale.gain_loss_amount)))}</b></p>
             <p className="sub">Received: <b>{money(Number(sale.amount_received))}</b></p>
             <p className="sub">Outstanding: <b>{money(Number(sale.amount_pending))}</b></p>
             <p className="sub">Payment status: <b>{sale.payment_status}</b></p>
@@ -68,6 +70,8 @@ export function BuffaloDispositionPanel({ buffalo, mode = 'all' }: { buffalo: Bu
         <p className="sub">Type: <b>{disposal.disposal_type.replace('_', ' ')}</b></p>
         <p className="sub">Effective date: <b>{formatDate(disposal.effective_date)}</b></p>
         <p className="sub">Reason: {disposal.reason}</p>
+        <p className="sub">Carrying value at disposal: <b>{disposal.carrying_value_at_disposal == null ? "Not calculated" : money(Number(disposal.carrying_value_at_disposal))}</b></p>
+        <p className="sub">Disposal loss: <b>{disposal.disposal_loss_amount == null ? "Not calculated" : money(Number(disposal.disposal_loss_amount))}</b></p>
         <p className="sub">Notes: {disposal.notes || '—'}</p>
       </div>
     );
