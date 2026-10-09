@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 export const dietPlanSchema = z.object({
   name: z.string().trim().min(1, 'Plan name is required.').max(120),
-  notes: z.string().max(1000).optional(),
+  notes: z.string().max(1000).default(''),
   startDate: z.string().min(1, 'Start date is required.'),
-  endDate: z.string().optional(),
+  endDate: z.string().default(''),
   status: z.enum(['ACTIVE', 'PAUSED', 'STOPPED']),
   items: z.array(z.object({
     feedItemId: z.string().uuid('Select a feed item.'),
