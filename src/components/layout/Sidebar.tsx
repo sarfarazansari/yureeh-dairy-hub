@@ -101,7 +101,10 @@ export function Sidebar() {
   const triggerButtonRef = useRef<HTMLButtonElement>(null);
   const menuId = 'primary-navigation-drawer';
 
-  const closeMobileMenu = () => setMobileOpen(false);
+  const closeMobileMenu = () => {
+    setMobileOpen(false);
+    triggerButtonRef.current?.focus();
+  };
 
   useEffect(() => {
     if (!mobileOpen) return;
@@ -170,7 +173,7 @@ export function Sidebar() {
             ref={closeButtonRef}
             className="mobile-menu-close"
             aria-label="Close navigation menu"
-            onClick={closeMobileMenu}
+            onClick={() => setMobileOpen(false)}
           >
             <X size={20} />
           </button>
@@ -187,7 +190,7 @@ export function Sidebar() {
                     href={href}
                     className={active ? 'active' : ''}
                     aria-current={active ? 'page' : undefined}
-                    onClick={closeMobileMenu}
+                    onClick={() => setMobileOpen(false)}
                   >
                     <span className="icon" aria-hidden="true">
                       <Icon size={18} />
