@@ -5,6 +5,12 @@ alter table public.feed_items
   add column low_stock_threshold numeric(14,3) not null default 0
   check (low_stock_threshold >= 0);
 
+create index feed_inventory_movements_user_date_idx
+  on public.feed_inventory_movements(user_id, occurred_at desc, created_at desc);
+
+create index feed_inventory_movements_user_type_date_idx
+  on public.feed_inventory_movements(user_id, movement_type, occurred_at desc, created_at desc);
+
 create or replace view public.feed_inventory_stock
 with (security_invoker = true)
 as
