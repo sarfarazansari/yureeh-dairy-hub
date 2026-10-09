@@ -6,6 +6,13 @@ import { KPI } from '@/components/ui/KPI';
 import { supabase } from '@/lib/supabase';
 import { money, todayLocal } from '@/app/(protected)/expenses/shared';
 
+type BuffaloSaleSummary = {
+  buffalo_sale_revenue: number | string;
+  buffalo_sale_collections: number | string;
+  buffalo_sale_outstanding: number | string;
+  buffalo_sales_count: number | string;
+};
+
 type FinancialSummary = {
   milk_quantity_sold: number | string;
   milk_sales_revenue: number | string;
@@ -26,6 +33,7 @@ export default function FinancialReportsPage() {
   const [from, setFrom] = useState(`${today.slice(0, 8)}01`);
   const [to, setTo] = useState(today);
   const [summary, setSummary] = useState<FinancialSummary | null>(null);
+  const [saleSummary, setSaleSummary] = useState<BuffaloSaleSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -34,6 +42,8 @@ export default function FinancialReportsPage() {
     async function load() {
       if (!supabase) {
         setError('Supabase is not configured.');
+        setSummary(null);
+        setSaleSummary(null);
         setLoading(false);
         return;
       }
@@ -41,20 +51,23 @@ export default function FinancialReportsPage() {
       setError('');
       if (!from || !to || from > to) {
         setSummary(null);
+        setSaleSummary(null);
         setError('Choose a valid date range.');
         setLoading(false);
         return;
       }
-      const { data, error: queryError } = await supabase.rpc('get_farm_financial_summary', {
-        p_from: from,
-        p_to: to,
-      });
+      const [financialResult, saleResult] = await Promise.all([
+        supabase.rpc('get_farm_financial_summary', { p_from: from, p_to: to }),
+        supabase.rpc('get_buffalo_sale_financial_summary', { p_from: from, p_to: to }),
+      ]);
       if (!active) return;
-      if (queryError) {
-        setError(queryError.message);
+      if (financialResult.error || saleResult.error) {
+        setError(financialResult.error?.message ?? saleResult.error?.message ?? 'Could not load financial summary.');
         setSummary(null);
+        setSaleSummary(null);
       } else {
-        setSummary((data?.[0] ?? null) as FinancialSummary | null);
+        setSummary((financialResult.data?.[0] ?? null) as FinancialSummary | null);
+        setSaleSummary((saleResult.data?.[0] ?? null) as BuffaloSaleSummary | null);
       }
       setLoading(false);
     }
@@ -65,6 +78,7 @@ export default function FinancialReportsPage() {
   }, [from, to]);
 
   const value = (key: keyof FinancialSummary) => Number(summary?.[key] ?? 0);
+  const saleValue = (key: keyof BuffaloSaleSummary) => Number(saleSummary?.[key] ?? 0);
 
   return (
     <AppShell
@@ -99,6 +113,9 @@ export default function FinancialReportsPage() {
         <KPI label="LEGACY PAID AMOUNTS" value={loading ? '…' : money(value('legacy_undated_paid_amount'))} foot="Previously recorded payments without dated ledger entries" />
       </div>
       <div className="grid kpis">
+        <KPI label="BUFFALO SALE PROCEEDS" value={loading ? '…' : money(saleValue('buffalo_sale_revenue'))} foot={`${saleValue('buffalo_sales_count')} sales in selected period`} />
+        <KPI label="BUFFALO SALE COLLECTIONS" value={loading ? '…' : money(saleValue('buffalo_sale_collections'))} foot="Payments received in selected period" />
+        <KPI label="BUFFALO SALE OUTSTANDING" value={loading ? '…' : money(saleValue('buffalo_sale_outstanding'))} foot="Current unpaid sale balances" accent />
         <KPI label="BUFFALO PURCHASE COST" value={loading ? '…' : money(value('buffalo_purchase_cost'))} foot="Purchases dated in selected period" />
         <KPI label="BUFFALO PURCHASE PAYMENTS" value={loading ? '…' : money(value('buffalo_purchase_payments'))} foot="Payments made in selected period" />
         <KPI label="BUFFALO PURCHASE OUTSTANDING" value={loading ? '…' : money(value('buffalo_purchase_outstanding'))} foot="Current unpaid acquisition balance" accent />
@@ -110,7 +127,7 @@ export default function FinancialReportsPage() {
           <li>Operating expenses use the expense business date; dated expense payments use the actual payment date entered in the new ledger.</li>
           <li>Legacy paid amounts are shown separately because their original payment dates were not stored. They are not assigned fabricated dates.</li>
           <li>Feed purchases are already linked to expenses, so they are not added a second time. Buffalo purchases are shown separately as asset acquisitions and are not included in operating expenses.</li>
-          <li>Buffalo purchase cost and payments are shown by their respective dates; outstanding acquisition balances are current all-time balances.</li>
+          <li>Buffalo purchases and sale proceeds are asset transactions shown separately from operating expenses. Sale collections use the payment date; sale receivables are current all-time balances.</li>
           <li>This is a reconciliation summary, not a formal net-profit statement. Feed consumption costing and other accounting adjustments are not yet included.</li>
         </ul>
       </div>

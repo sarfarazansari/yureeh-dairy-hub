@@ -9,6 +9,13 @@ import {
 import { supabase } from '@/lib/supabase';
 import {
   changeBuffaloStatus,
+  createBuffaloSale,
+  getBuffaloSale,
+  getBuffaloSalePayments,
+  getBuffaloDisposal,
+  getBuffaloSales,
+  recordBuffaloSalePayment,
+  recordBuffaloDisposal,
   createBuffaloPurchase,
   getBuffaloDetails,
   getBuffaloDirectory,
@@ -26,6 +33,12 @@ import type {
   BuffaloPurchasePayment,
   BuffaloStatusHistory,
   BuffaloStatusChangeInput,
+  BuffaloSale,
+  BuffaloSaleInput,
+  BuffaloSalePayment,
+  BuffaloSalePaymentInput,
+  BuffaloDisposal,
+  BuffaloDisposalInput,
   BuffaloVendorEditInput,
 } from '../types';
 import { getBuffaloProductionHistory } from '@/features/buffalo-production/services/buffalo-production.service';
@@ -39,6 +52,10 @@ const buffaloKeys = {
   production: (buffaloId: string) => [...buffaloKeys.all, 'production', buffaloId] as const,
   payments: (buffaloId: string) => [...buffaloKeys.all, 'payments', buffaloId] as const,
   statusHistory: (buffaloId: string) => [...buffaloKeys.all, 'status-history', buffaloId] as const,
+  sale: (buffaloId: string) => [...buffaloKeys.all, 'sale', buffaloId] as const,
+  salePayments: (buffaloId: string) => [...buffaloKeys.all, 'sale-payments', buffaloId] as const,
+  disposal: (buffaloId: string) => [...buffaloKeys.all, 'disposal', buffaloId] as const,
+  salesArchive: (page: number, pageSize: number, filters: { from?: string; to?: string; search?: string }) => [...buffaloKeys.all, 'sales-archive', page, pageSize, filters] as const,
 };
 
 function getClient() {
@@ -165,4 +182,58 @@ export function useChangeBuffaloStatus() {
     ({ buffaloId, status, effectiveDate, notes }: ChangeBuffaloStatusInput) =>
       changeBuffaloStatus(getClient(), buffaloId, status, effectiveDate, notes),
   );
+}
+
+
+export function useBuffaloSale(buffaloId: string | undefined) {
+  return useQuery<BuffaloSale | null>({
+    queryKey: buffaloKeys.sale(buffaloId ?? ''),
+    queryFn: () => getBuffaloSale(getClient(), buffaloId!),
+    enabled: Boolean(buffaloId),
+  });
+}
+
+export function useBuffaloSalePayments(buffaloId: string | undefined) {
+  return useQuery<BuffaloSalePayment[]>({
+    queryKey: buffaloKeys.salePayments(buffaloId ?? ''),
+    queryFn: () => getBuffaloSalePayments(getClient(), buffaloId!),
+    enabled: Boolean(buffaloId),
+  });
+}
+
+export function useBuffaloDisposal(buffaloId: string | undefined) {
+  return useQuery<BuffaloDisposal | null>({
+    queryKey: buffaloKeys.disposal(buffaloId ?? ''),
+    queryFn: () => getBuffaloDisposal(getClient(), buffaloId!),
+    enabled: Boolean(buffaloId),
+  });
+}
+
+export function useCreateBuffaloSale() {
+  return useBuffaloMutation(({ buffaloId, input }: { buffaloId: string; input: BuffaloSaleInput }) =>
+    createBuffaloSale(getClient(), buffaloId, input),
+  );
+}
+
+export function useRecordBuffaloSalePayment() {
+  return useBuffaloMutation(({ saleId, input }: { saleId: string; input: BuffaloSalePaymentInput }) =>
+    recordBuffaloSalePayment(getClient(), saleId, input),
+  );
+}
+
+export function useRecordBuffaloDisposal() {
+  return useBuffaloMutation(({ buffaloId, input }: { buffaloId: string; input: BuffaloDisposalInput }) =>
+    recordBuffaloDisposal(getClient(), buffaloId, input),
+  );
+}
+
+export function useBuffaloSalesArchive(
+  page: number,
+  pageSize: number,
+  filters: { from?: string; to?: string; search?: string },
+) {
+  return useQuery({
+    queryKey: buffaloKeys.salesArchive(page, pageSize, filters),
+    queryFn: () => getBuffaloSales(getClient(), page, pageSize, filters),
+  });
 }

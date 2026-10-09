@@ -118,3 +118,72 @@ export type BuffaloStatusChangeInput = {
   effectiveDate: string;
   notes?: string;
 };
+
+
+export type BuffaloSale = {
+  id: string;
+  buffalo_id: string;
+  sale_date: string;
+  buyer_name: string;
+  buyer_mobile: string | null;
+  buyer_location: string | null;
+  sale_price: number | string;
+  amount_received: number | string;
+  amount_pending: number | string;
+  payment_status: string;
+  payment_due_date: string | null;
+  payment_terms: string | null;
+  payment_method: BuffaloPaymentMethod | null;
+  transaction_reference: string | null;
+  notes: string | null;
+  created_at: string;
+  buffaloes?: { buffalo_code: string; name: string | null };
+};
+
+export type BuffaloSalePayment = {
+  id: string;
+  payment_date: string;
+  amount: number | string;
+  payment_method: BuffaloPaymentMethod;
+  transaction_reference: string | null;
+  notes: string | null;
+};
+
+export type BuffaloDisposal = {
+  id: string;
+  buffalo_id: string;
+  disposal_type: 'DEATH' | 'TRANSFER_OUT' | 'OTHER';
+  effective_date: string;
+  reason: string;
+  notes: string | null;
+};
+
+export type BuffaloSaleInput = {
+  sale_date: string;
+  buyer_name: string;
+  buyer_mobile?: string;
+  buyer_location?: string;
+  sale_price: number;
+  initial_payment: number;
+  payment_method?: BuffaloPaymentMethod;
+  payment_date?: string;
+  payment_due_date?: string;
+  payment_terms?: string;
+  transaction_reference?: string;
+  notes?: string;
+};
+
+export type BuffaloSalePaymentInput = {
+  payment_date: string;
+  amount: number;
+  payment_method: BuffaloPaymentMethod;
+  transaction_reference?: string;
+  notes?: string;
+};
+
+export type BuffaloDisposalInput = {
+  disposal_type: 'DEATH' | 'TRANSFER_OUT' | 'OTHER';
+  effective_date: string;
+  reason: string;
+  notes?: string;
+};
