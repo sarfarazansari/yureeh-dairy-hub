@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DietBuffaloOption, DietPlanFormValues } from '@/lib/diet-plan-types';
-import type { DietPlanFormInput } from '../schema';
 import { dietPlanSchema } from '../schema';
 
 type FeedOption = { id: string; name: string; base_unit: string; category: string };
@@ -24,7 +23,7 @@ function localToday() {
 const blankItem = () => ({ feedItemId: '', morningQuantity: 0, eveningQuantity: 0 });
 
 export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, initialValues, submitLabel = 'Save diet plan' }: Props) {
-  const [values, setValues] = useState<DietPlanFormInput>(initialValues ?? {
+  const [values, setValues] = useState<DietPlanFormValues>(initialValues ?? {
     name: '', notes: '', startDate: localToday(), endDate: '', status: 'ACTIVE', items: [blankItem()], buffaloIds: [],
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -39,7 +38,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
     if (initialValues) setValues(initialValues);
   }, [initialValues]);
 
-  function setField<K extends keyof DietPlanFormInput>(key: K, value: DietPlanFormInput[K]) {
+  function setField<K extends keyof DietPlanFormValues>(key: K, value: DietPlanFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
     setErrors((current) => { const next = { ...current }; delete next[key]; return next; });
   }
@@ -86,7 +85,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
         </div>
         <div className="field">
           <label htmlFor="diet-plan-status">Status</label>
-          <select id="diet-plan-status" value={values.status} onChange={(e) => setField('status', e.target.value as DietPlanFormInput['status'])}>
+          <select id="diet-plan-status" value={values.status} onChange={(e) => setField('status', e.target.value as DietPlanFormValues['status'])}>
             <option value="ACTIVE">Active</option><option value="PAUSED">Paused</option><option value="STOPPED">Stopped</option>
           </select>
         </div>
@@ -111,9 +110,6 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
         <span className="tag">{values.buffaloIds.length} selected</span>
       </div>
       <p className="sub">Only buffaloes active on the plan start date are listed. Feed quantities below are totals for this entire group, not per buffalo.</p>
-      <div className="field">
-        <input aria-label="Search buffaloes" placeholder="Search by buffalo code or name" onChange={(e) => setField('buffaloSearch' as keyof DietPlanFormInput, e.target.value as never)} />
-      </div>
       <div className="management-stack" style={{ gap: 8, marginTop: 12 }}>
         {buffaloes.map((buffalo) => (
           <label key={buffalo.id} className="row" style={{ justifyContent: 'flex-start', gap: 10, padding: '8px 0' }}>
