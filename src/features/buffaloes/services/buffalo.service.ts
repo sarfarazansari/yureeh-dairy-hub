@@ -381,14 +381,14 @@ export async function getBuffaloSales(
 ) {
   let query = client
     .from('buffalo_sales')
-    .select('id,buffalo_id,sale_date,buyer_name,sale_price,amount_received,amount_pending,payment_status,buffaloes!inner(buffalo_code,name)', { count: 'exact' })
+    .select('id,buffalo_id,sale_date,buyer_name,buyer_mobile,sale_price,amount_received,amount_pending,payment_status,buffaloes!inner(buffalo_code,name)', { count: 'exact' })
     .order('sale_date', { ascending: false })
     .order('created_at', { ascending: false })
     .range(page * pageSize, page * pageSize + pageSize - 1);
   if (filters.from) query = query.gte('sale_date', filters.from);
   if (filters.to) query = query.lte('sale_date', filters.to);
   if (filters.search) {
-    const term = filters.search.trim().replace(/[,%()]/g, '');
+    const term = filters.search.trim().replace(/[,()%\\.*]/g, '');
     if (term) query = query.or(`buyer_name.ilike.%${term}%,buyer_mobile.ilike.%${term}%`);
   }
   const { data, error, count } = await query;
