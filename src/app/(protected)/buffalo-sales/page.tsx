@@ -34,7 +34,7 @@ export default function BuffaloSalesPage() {
         <div className="card">
           <div className="row">
             <h2 className="section-title">Sale archive</h2>
-            <Link className="date-chip" href="/buffaloes">Open herd overview</Link>
+            <div className="row" style={{ gap: 8 }}><Link className="date-chip" href="/buffaloes">Open herd overview</Link><Link className="btn" href="/buffalo-sales/new">New sale</Link></div>
           </div>
           <div className="expense-form-grid">
             <div className="field"><label>Search buyer</label><input value={search} placeholder="Buyer name or mobile" onChange={(e) => setSearch(e.target.value)} /></div>
