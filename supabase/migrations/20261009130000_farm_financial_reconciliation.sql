@@ -37,7 +37,7 @@ returns uuid
 language plpgsql
 security definer
 set search_path = ''
-as $
+as $payment_fn$
 declare
   owner_id uuid := auth.uid();
   expense_row public.expenses%rowtype;
@@ -97,7 +97,7 @@ begin
 
   return payment_id;
 end;
-$$;
+$payment_fn$;
 
 revoke all on function public.record_expense_payment(
   uuid, date, numeric, public.expense_payment_method, text, text
