@@ -14,6 +14,9 @@ type FinancialSummary = {
   dated_expense_payments: number | string;
   customer_net_receivable: number | string;
   supplier_outstanding: number | string;
+  buffalo_purchase_cost: number | string;
+  buffalo_purchase_payments: number | string;
+  buffalo_purchase_outstanding: number | string;
   legacy_undated_paid_amount: number | string;
 };
 
@@ -93,13 +96,19 @@ export default function FinancialReportsPage() {
         <KPI label="SUPPLIER OUTSTANDING" value={loading ? '…' : money(value('supplier_outstanding'))} foot="Current unpaid expense balances" />
         <KPI label="LEGACY PAID AMOUNTS" value={loading ? '…' : money(value('legacy_undated_paid_amount'))} foot="Previously recorded payments without dated ledger entries" />
       </div>
+      <div className="grid kpis">
+        <KPI label="BUFFALO PURCHASE COST" value={loading ? '…' : money(value('buffalo_purchase_cost'))} foot="Purchases dated in selected period" />
+        <KPI label="BUFFALO PURCHASE PAYMENTS" value={loading ? '…' : money(value('buffalo_purchase_payments'))} foot="Payments made in selected period" />
+        <KPI label="BUFFALO PURCHASE OUTSTANDING" value={loading ? '…' : money(value('buffalo_purchase_outstanding'))} foot="Current unpaid acquisition balance" accent />
+      </div>
       <div className="card" style={{ marginTop: 15 }}>
         <h2 className="section-title">How to interpret this report</h2>
         <ul className="list">
           <li>Sales revenue is not the same as cash collected. Customer collections are shown separately.</li>
           <li>Operating expenses use the expense business date; dated expense payments use the actual payment date entered in the new ledger.</li>
           <li>Legacy paid amounts are shown separately because their original payment dates were not stored. They are not assigned fabricated dates.</li>
-          <li>Feed purchases are already linked to expenses, so they are not added a second time.</li>
+          <li>Feed purchases are already linked to expenses, so they are not added a second time. Buffalo purchases are shown separately as asset acquisitions and are not included in operating expenses.</li>
+          <li>Buffalo purchase cost and payments are shown by their respective dates; outstanding acquisition balances are current all-time balances.</li>
           <li>This is a reconciliation summary, not a formal net-profit statement. Feed consumption costing and other accounting adjustments are not yet included.</li>
         </ul>
       </div>
