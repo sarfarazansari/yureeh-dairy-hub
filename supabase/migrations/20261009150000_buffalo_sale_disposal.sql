@@ -141,8 +141,11 @@ begin
   if nullif(btrim(p_buyer_name), '') is null then
     raise exception using errcode = '23514', message = 'Buyer name is required.';
   end if;
-  if p_sale_price is null or p_sale_price <= 0 then
-    raise exception using errcode = '23514', message = 'Sale price must be greater than ₹0.';
+  if p_sale_price is null or p_sale_price <= 0 or scale(p_sale_price) > 2 then
+    raise exception using errcode = '23514', message = 'Sale price must be greater than ₹0 and use at most two decimal places.';
+  end if;
+  if p_initial_payment is not null and scale(p_initial_payment) > 2 then
+    raise exception using errcode = '23514', message = 'Initial payment must use at most two decimal places.';
   end if;
   initial_paid := coalesce(p_initial_payment, 0);
   if initial_paid < 0 or initial_paid > p_sale_price then
@@ -311,7 +314,7 @@ begin
   if p_effective_date is null then
     raise exception using errcode = '23514', message = 'Disposal date is required.';
   end if;
-  if p_disposal_type not in ('DEATH', 'TRANSFER_OUT', 'OTHER') then
+  if p_disposal_type is null or p_disposal_type not in ('DEATH', 'TRANSFER_OUT', 'OTHER') then
     raise exception using errcode = '23514', message = 'Choose a valid disposal type.';
   end if;
   if nullif(btrim(p_reason), '') is null then
