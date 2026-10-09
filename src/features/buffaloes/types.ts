@@ -128,6 +128,8 @@ export type BuffaloSale = {
   buyer_mobile: string | null;
   buyer_location: string | null;
   sale_price: number | string;
+  carrying_value_at_sale: number | string | null;
+  gain_loss_amount: number | string | null;
   amount_received: number | string;
   amount_pending: number | string;
   payment_status: string;
@@ -155,6 +157,8 @@ export type BuffaloDisposal = {
   disposal_type: 'DEATH' | 'TRANSFER_OUT' | 'OTHER';
   effective_date: string;
   reason: string;
+  carrying_value_at_disposal: number | string | null;
+  disposal_loss_amount: number | string | null;
   notes: string | null;
 };
 
@@ -186,4 +190,21 @@ export type BuffaloDisposalInput = {
   effective_date: string;
   reason: string;
   notes?: string;
+};
+
+
+export type BuffaloAcquisitionCost = {
+  id: string;
+  expense_id: string;
+  cost_date: string;
+  description: string;
+  amount: number | string;
+  notes: string | null;
+};
+
+export type BuffaloAcquisitionExpenseOption = {
+  id: string;
+  business_date: string;
+  description: string | null;
+  total_amount: number | string;
 };

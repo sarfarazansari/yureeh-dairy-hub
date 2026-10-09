@@ -29,6 +29,7 @@ import { BuffaloPurchasePaymentForm } from './components/BuffaloPurchasePaymentF
 import { BuffaloStatusForm } from './components/BuffaloStatusForm';
 import { BuffaloVendorForm } from './components/BuffaloVendorForm';
 import { BuffaloDispositionPanel } from './components/BuffaloDispositionPanel';
+import { BuffaloAcquisitionCostPanel } from './components/BuffaloAcquisitionCostPanel';
 import {
   BuffaloPaymentHistory,
   BuffaloStatusHistory,
@@ -200,6 +201,10 @@ export default function BuffaloDetailPage({ id }: { id: string }) {
 
         <PurchaseSummary buffalo={buffalo} />
       </div>
+
+      <div style={{ height: 14 }} />
+
+      <BuffaloAcquisitionCostPanel buffaloId={buffalo.id} canAdd={['ACTIVE', 'DRY'].includes(buffalo.current_status)} purchasePrice={purchase ? Number(purchase.purchase_price) : null} />
 
       <div style={{ height: 14 }} />
 

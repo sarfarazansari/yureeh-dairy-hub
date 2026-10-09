@@ -366,7 +366,7 @@ export async function recordBuffaloDisposal(
 export async function getBuffaloDisposal(client: SupabaseClient, buffaloId: string) {
   const { data, error } = await client
     .from('buffalo_disposals')
-    .select('id,buffalo_id,disposal_type,effective_date,reason,notes')
+    .select('id,buffalo_id,disposal_type,effective_date,reason,carrying_value_at_disposal,disposal_loss_amount,notes')
     .eq('buffalo_id', buffaloId)
     .maybeSingle();
   if (error) throw new Error('Could not load buffalo disposal. Please try again.');
