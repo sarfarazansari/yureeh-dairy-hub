@@ -12,7 +12,7 @@ create table public.expense_payments (
   notes text,
   created_at timestamptz not null default now(),
   foreign key (user_id, expense_id)
-    references public.expenses(user_id, id) on delete cascade
+    references public.expenses(user_id, id) on delete restrict
 );
 
 create index expense_payments_expense_idx
