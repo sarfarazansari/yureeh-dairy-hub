@@ -35,7 +35,11 @@ export function useCustomerDirectoryQuery() {
 }
 
 export function useCustomerDetailQuery(customerId: string) {
-  return useQuery<{ customer: CustomerSummary | null; entries: CustomerEntry[]; financialSummary: CustomerFinancialSummary }, Error>({
+  return useQuery<{
+    customer: CustomerSummary | null;
+    entries: CustomerEntry[];
+    financialSummary: CustomerFinancialSummary;
+  }, Error>({
     queryKey: customerQueryKeys.detail(customerId),
     queryFn: () => getCustomerDetails(requireSupabase(), customerId),
     enabled: Boolean(customerId),
