@@ -21,8 +21,8 @@ export function FeedInventoryStockTable({ rows }: Props) {
       const matchesSearch = !term || `${row.feed_item_name} ${row.category} ${row.base_unit}`.toLowerCase().includes(term);
       const quantity = Number(row.quantity_on_hand);
       const matchesStock = stockFilter === 'ALL'
-        || (stockFilter === 'LOW' && quantity > 0 && Number(row.low_stock_threshold) > 0 && quantity <= Number(row.low_stock_threshold))
-        || (stockFilter === 'OUT' && quantity <= 0)
+        || (stockFilter === 'LOW' && row.is_active && quantity > 0 && Number(row.low_stock_threshold) > 0 && quantity <= Number(row.low_stock_threshold))
+        || (stockFilter === 'OUT' && row.is_active && quantity <= 0)
         || (stockFilter === 'INACTIVE' && !row.is_active);
       return matchesSearch && matchesStock;
     });
