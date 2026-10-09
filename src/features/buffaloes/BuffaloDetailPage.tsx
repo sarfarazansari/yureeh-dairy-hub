@@ -204,7 +204,7 @@ export default function BuffaloDetailPage({ id }: { id: string }) {
 
       <div style={{ height: 14 }} />
 
-      <BuffaloAcquisitionCostPanel buffaloId={buffalo.id} canAdd={['ACTIVE', 'DRY'].includes(buffalo.current_status)} />
+      <BuffaloAcquisitionCostPanel buffaloId={buffalo.id} canAdd={['ACTIVE', 'DRY'].includes(buffalo.current_status)} purchasePrice={purchase ? Number(purchase.purchase_price) : null} />
 
       <div style={{ height: 14 }} />
 
