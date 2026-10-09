@@ -12,6 +12,7 @@ import {
   useRecordBuffaloSalePayment,
 } from '../hooks/use-buffaloes';
 import type { BuffaloDetail, BuffaloPaymentMethod } from '../types';
+import { buffaloDisposalSchema, buffaloSalePaymentSchema, buffaloSaleSchema } from '../disposition.validation';
 
 const PAYMENT_METHODS: BuffaloPaymentMethod[] = ['CASH', 'UPI', 'BANK_TRANSFER', 'OTHER'];
 
@@ -121,24 +122,18 @@ function SaleForm({ buffalo }: { buffalo: BuffaloDetail }) {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage('');
-    if (!buyerName.trim() || price <= 0 || paid < 0 || paid > price) {
-      setMessage('Enter a buyer name, a positive sale price, and a valid initial payment.');
-      return;
-    }
-    if (pending > 0 && !dueDate) {
-      setMessage('A due date is required while sale proceeds remain outstanding.');
+    const parsed = buffaloSaleSchema.safeParse({
+      sale_date: saleDate, buyer_name: buyerName, buyer_mobile: buyerMobile,
+      buyer_location: buyerLocation, sale_price: salePrice, initial_payment: initialPayment,
+      payment_method: paymentMethod, payment_date: paymentDate, payment_due_date: dueDate,
+      payment_terms: terms, transaction_reference: reference, notes,
+    });
+    if (!parsed.success) {
+      setMessage(parsed.error.issues[0]?.message ?? 'Check the sale details.');
       return;
     }
     try {
-      await mutation.mutateAsync({
-        buffaloId: buffalo.id,
-        input: {
-          sale_date: saleDate, buyer_name: buyerName, buyer_mobile: buyerMobile,
-          buyer_location: buyerLocation, sale_price: price, initial_payment: paid,
-          payment_method: paymentMethod, payment_date: paymentDate, payment_due_date: dueDate,
-          payment_terms: terms, transaction_reference: reference, notes,
-        },
-      });
+      await mutation.mutateAsync({ buffaloId: buffalo.id, input: parsed.data });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not record sale.');
     }
@@ -181,13 +176,17 @@ function SalePaymentForm({ saleId, pending }: { saleId: string; pending: number 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage('');
-    const value = Number(amount);
-    if (value <= 0 || value > pending) {
-      setMessage('Payment must be greater than ₹0 and cannot exceed the outstanding balance.');
+    const parsed = buffaloSalePaymentSchema.safeParse({ payment_date: date, amount, payment_method: method, transaction_reference: reference, notes });
+    if (!parsed.success) {
+      setMessage(parsed.error.issues[0]?.message ?? 'Check the payment details.');
+      return;
+    }
+    if (parsed.data.amount > pending) {
+      setMessage('Payment cannot exceed the outstanding balance.');
       return;
     }
     try {
-      await mutation.mutateAsync({ saleId, input: { payment_date: date, amount: value, payment_method: method, transaction_reference: reference, notes } });
+      await mutation.mutateAsync({ saleId, input: parsed.data });
       setAmount(''); setReference(''); setNotes('');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not record payment.');
@@ -224,9 +223,10 @@ function DisposalForm({ buffalo }: { buffalo: BuffaloDetail }) {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage('');
-    if (!reason.trim()) { setMessage('A disposal reason is required.'); return; }
+    const parsed = buffaloDisposalSchema.safeParse({ disposal_type: type, effective_date: date, reason, notes });
+    if (!parsed.success) { setMessage(parsed.error.issues[0]?.message ?? 'Check the disposal details.'); return; }
     try {
-      await mutation.mutateAsync({ buffaloId: buffalo.id, input: { disposal_type: type, effective_date: date, reason, notes } });
+      await mutation.mutateAsync({ buffaloId: buffalo.id, input: parsed.data });
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not record disposal.');
     }
