@@ -71,6 +71,7 @@ export default function EditFeedConsumptionPage() {
             feedItems={feedItems}
             stock={stock}
             onSave={save}
+            onError={(message) => setToast({ message, type: 'error' })}
             busy={busy}
             initialValues={initialValues}
             submitLabel="Save changes"
