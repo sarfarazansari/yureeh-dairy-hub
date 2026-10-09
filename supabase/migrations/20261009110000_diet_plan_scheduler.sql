@@ -133,7 +133,7 @@ begin
     for update skip locked
   loop
     -- Do not automatically post a missed feeding after its scheduled minute.
-    if v_now >= v_run.scheduled_for + interval '1 minute' then
+    if v_run.retry_requested_at is null and v_now >= v_run.scheduled_for + interval '1 minute' then
       update public.diet_feeding_runs
       set status = 'FAILED',
           failure_reason = 'Scheduled time was missed. Use explicit retry after reviewing stock.',
@@ -156,7 +156,7 @@ begin
           and (p.end_date is null or p.end_date >= v_run.feeding_date)
       ) then
         update public.diet_feeding_runs
-        set status = 'SKIPPED', failure_reason = null
+        set status = 'SKIPPED', failure_reason = null, retry_requested_at = null
         where id = v_run.id and user_id = v_run.user_id;
         continue;
       end if;
@@ -259,7 +259,7 @@ begin
       end loop;
 
       update public.diet_feeding_runs
-      set status = 'POSTED', posted_at = clock_timestamp(), failure_reason = null
+      set status = 'POSTED', posted_at = clock_timestamp(), failure_reason = null, retry_requested_at = null
       where id = v_run.id and user_id = v_run.user_id;
     exception when others then
       get stacked diagnostics v_error = message_text;
@@ -267,7 +267,8 @@ begin
       update public.diet_feeding_runs
       set status = 'FAILED',
           failure_reason = left(coalesce(v_error, 'Automatic feeding failed.'), 1000),
-          retry_count = retry_count + 1
+          retry_count = retry_count + 1,
+          retry_requested_at = null
       where id = v_run.id and user_id = v_run.user_id;
     end;
   end loop;
@@ -357,3 +358,46 @@ select cron.schedule(
   '* * * * *',
   'select public.process_diet_plan_scheduler();'
 );
+
+
+-- Manual retry is an explicit operator action after stock has been reviewed/replenished.
+create or replace function public.retry_diet_feeding_run(p_run_id uuid)
+returns void
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_run public.diet_feeding_runs;
+begin
+  if v_user_id is null then
+    raise exception 'Authentication required.' using errcode = '42501';
+  end if;
+
+  select * into v_run
+  from public.diet_feeding_runs
+  where id = p_run_id and user_id = v_user_id
+  for update;
+
+  if not found then raise exception 'Feeding run not found.'; end if;
+  if v_run.status <> 'FAILED' then raise exception 'Only failed feeding runs can be retried.'; end if;
+  if exists (
+    select 1 from public.diet_feeding_run_items ri
+    where ri.user_id = v_user_id and ri.run_id = p_run_id
+      and ri.posted_movement_id is not null
+  ) then
+    raise exception 'This run already has posted inventory movements and cannot be retried.';
+  end if;
+
+  update public.diet_feeding_runs
+  set status = 'PENDING',
+      scheduled_for = clock_timestamp(),
+      failure_reason = null,
+      retry_requested_at = clock_timestamp()
+  where id = p_run_id and user_id = v_user_id;
+end;
+$$;
+
+revoke all on function public.retry_diet_feeding_run(uuid) from public, anon;
+grant execute on function public.retry_diet_feeding_run(uuid) to authenticated;
