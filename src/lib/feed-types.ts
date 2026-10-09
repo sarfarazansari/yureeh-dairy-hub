@@ -27,6 +27,7 @@ export type FeedItem = {
   base_unit: string;
   purchase_unit: string;
   purchase_unit_quantity: number | string;
+  low_stock_threshold: number | string;
   is_active: boolean;
   notes: string | null;
   created_at: string;
