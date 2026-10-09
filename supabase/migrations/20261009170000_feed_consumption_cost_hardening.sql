@@ -304,7 +304,7 @@ returns void
 language plpgsql
 security invoker
 set search_path = public
-as $
+as $$
 declare
   v_user_id uuid := auth.uid();
   v_movement public.feed_inventory_movements;
