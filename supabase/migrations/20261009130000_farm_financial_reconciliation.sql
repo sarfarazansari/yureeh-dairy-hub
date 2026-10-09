@@ -114,7 +114,8 @@ returns table (
   customer_collections numeric,
   operating_expenses numeric,
   dated_expense_payments numeric,
-  customer_net_receivable numeric,
+  customer_receivables numeric,
+  customer_credits numeric,
   supplier_outstanding numeric,
   buffalo_purchase_cost numeric,
   buffalo_purchase_payments numeric,
@@ -151,10 +152,28 @@ begin
         and e.business_date between p_from and p_to), 0),
     coalesce((select sum(ep.amount) from public.expense_payments ep
       where ep.user_id = owner_id and ep.payment_date between p_from and p_to), 0),
-    coalesce((select sum(m.calculated_amount) from public.milk_entries m
-      where m.user_id = owner_id and m.deleted_at is null), 0)
-      - coalesce((select sum(cp.amount) from public.customer_payments cp
-        where cp.user_id = owner_id), 0),
+    coalesce((select sum(greatest(coalesce(sales.total, 0) - coalesce(payments.total, 0), 0))
+      from public.customers c
+      left join lateral (
+        select sum(m.calculated_amount) as total from public.milk_entries m
+        where m.user_id = owner_id and m.customer_id = c.id and m.deleted_at is null
+      ) sales on true
+      left join lateral (
+        select sum(cp.amount) as total from public.customer_payments cp
+        where cp.user_id = owner_id and cp.customer_id = c.id
+      ) payments on true
+      where c.user_id = owner_id), 0),
+    coalesce((select sum(greatest(coalesce(payments.total, 0) - coalesce(sales.total, 0), 0))
+      from public.customers c
+      left join lateral (
+        select sum(m.calculated_amount) as total from public.milk_entries m
+        where m.user_id = owner_id and m.customer_id = c.id and m.deleted_at is null
+      ) sales on true
+      left join lateral (
+        select sum(cp.amount) as total from public.customer_payments cp
+        where cp.user_id = owner_id and cp.customer_id = c.id
+      ) payments on true
+      where c.user_id = owner_id), 0),
     coalesce((select sum(e.pending_amount) from public.expenses e
       where e.user_id = owner_id and e.deleted_at is null), 0),
     coalesce((select sum(bp.purchase_price) from public.buffalo_purchases bp
