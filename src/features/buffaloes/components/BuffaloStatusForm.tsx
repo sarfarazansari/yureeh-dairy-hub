@@ -10,7 +10,10 @@ import { BUFFALO_STATUSES, type BuffaloDetail } from '../types';
 export function BuffaloStatusForm({ buffalo }: { buffalo: BuffaloDetail }) {
   const mutation = useChangeBuffaloStatus();
 
-  const STATUSES = BUFFALO_STATUSES;
+  const isTerminal = ['SOLD', 'DECEASED', 'OTHER'].includes(buffalo.current_status);
+  const STATUSES = BUFFALO_STATUSES.filter((value) =>
+    !['SOLD', 'DECEASED', 'OTHER'].includes(value) || value === buffalo.current_status,
+  );
   const [status, setStatus] = useState<(typeof STATUSES)[number]>(
     buffalo.current_status as (typeof STATUSES)[number],
   );
@@ -40,12 +43,13 @@ export function BuffaloStatusForm({ buffalo }: { buffalo: BuffaloDetail }) {
     <div className="card">
       <h2 className="section-title">Buffalo status</h2>
       <p className="sub">
-        Current status: <b>{buffalo.current_status}</b>. Changes are recorded as lifecycle history.
+        Current status: <b>{buffalo.current_status}</b>. Sale, death, and other permanent removals must use the transaction workflows.
       </p>
 
       <div className="grid two">
         <Field label="Status">
           <select
+            disabled={isTerminal}
             value={status}
             onChange={(event) =>
               setStatus(event.target.value as (typeof STATUSES)[number])
@@ -79,7 +83,7 @@ export function BuffaloStatusForm({ buffalo }: { buffalo: BuffaloDetail }) {
       <button
         className="btn"
         type="button"
-        disabled={mutation.isPending || status === buffalo.current_status}
+        disabled={isTerminal || mutation.isPending || status === buffalo.current_status}
         onClick={() => void handleSave()}
       >
         {mutation.isPending ? 'Saving…' : 'Save status change'}
