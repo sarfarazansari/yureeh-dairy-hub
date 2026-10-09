@@ -12,7 +12,8 @@ type FinancialSummary = {
   customer_collections: number | string;
   operating_expenses: number | string;
   dated_expense_payments: number | string;
-  customer_net_receivable: number | string;
+  customer_receivables: number | string;
+  customer_credits: number | string;
   supplier_outstanding: number | string;
   buffalo_purchase_cost: number | string;
   buffalo_purchase_payments: number | string;
@@ -92,7 +93,8 @@ export default function FinancialReportsPage() {
       </div>
       <div className="grid kpis">
         <KPI label="DATED EXPENSE PAYMENTS" value={loading ? '…' : money(value('dated_expense_payments'))} foot="Payments entered in the new payment ledger" />
-        <KPI label="CUSTOMER NET RECEIVABLE" value={loading ? '…' : money(Math.max(0, value('customer_net_receivable')))} foot={value('customer_net_receivable') < 0 ? `Customer credit: ${money(Math.abs(value('customer_net_receivable')))}` : 'Current all-time net balance'} accent />
+        <KPI label="CUSTOMER RECEIVABLES" value={loading ? '…' : money(value('customer_receivables'))} foot="Amounts owed across customers" accent />
+        <KPI label="CUSTOMER CREDITS" value={loading ? '…' : money(value('customer_credits'))} foot="Advance balances held for customers" />
         <KPI label="SUPPLIER OUTSTANDING" value={loading ? '…' : money(value('supplier_outstanding'))} foot="Current unpaid expense balances" />
         <KPI label="LEGACY PAID AMOUNTS" value={loading ? '…' : money(value('legacy_undated_paid_amount'))} foot="Previously recorded payments without dated ledger entries" />
       </div>
