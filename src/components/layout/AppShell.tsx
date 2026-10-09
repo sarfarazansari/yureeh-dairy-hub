@@ -23,10 +23,6 @@ export function AppShell({
             <h1 className="title">{title}</h1>
             <div className="sub">{subtitle}</div>
           </div>
-          <span className="date-chip">
-            <Clock size={12} aria-hidden="true" style={{ marginRight: 8, verticalAlign: 'middle' }} />
-            {formatDate(new Date())}
-          </span>
         </header>
         {children}
       </main>

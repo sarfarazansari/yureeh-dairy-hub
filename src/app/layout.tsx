@@ -5,6 +5,8 @@ import { QueryProvider } from '@/components/providers/QueryProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
+const inter = Inter({ subsets: ['latin'] });
+
 export const metadata: Metadata = {
   title: 'Yureeh Dairy Hub',
   description: 'Yureeh Dairy Farm — milk sales and buffalo performance management',
