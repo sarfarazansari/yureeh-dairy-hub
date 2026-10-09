@@ -42,11 +42,11 @@ export function BuffaloSalePaymentForm({ saleId, pending }: { saleId: string; pe
       <p className="sub">Outstanding: <b>{money(pending)}</b></p>
       {pending <= 0 ? <div className="empty">Sale is fully paid.</div> : <>
         <div className="grid two">
-          <Field label="Payment date"><input required type="date" value={date} onChange={(e) => setDate(e.target.value)} /></Field>
-          <Field label="Amount (₹)"><input required type="number" min="0.01" max={pending} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>
-          <Field label="Payment method"><select value={method} onChange={(e) => setMethod(e.target.value as BuffaloPaymentMethod)}>{DISPOSITION_PAYMENT_METHODS.map((item) => <option key={item} value={item}>{item.replace('_', ' ')}</option>)}</select></Field>
-          <Field label="Reference"><input value={reference} onChange={(e) => setReference(e.target.value)} /></Field>
-          <Field label="Notes"><input value={notes} onChange={(e) => setNotes(e.target.value)} /></Field>
+          <DispositionField label="Payment date"><input required type="date" value={date} onChange={(e) => setDate(e.target.value)} /></DispositionField>
+          <DispositionField label="Amount (₹)"><input required type="number" min="0.01" max={pending} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} /></DispositionField>
+          <DispositionField label="Payment method"><select value={method} onChange={(e) => setMethod(e.target.value as BuffaloPaymentMethod)}>{DISPOSITION_PAYMENT_METHODS.map((item) => <option key={item} value={item}>{item.replace('_', ' ')}</option>)}</select></DispositionField>
+          <DispositionField label="Reference"><input value={reference} onChange={(e) => setReference(e.target.value)} /></DispositionField>
+          <DispositionField label="Notes"><input value={notes} onChange={(e) => setNotes(e.target.value)} /></DispositionField>
         </div>
         {(message || mutation.isError) && <p className="auth-message">{message || mutation.error?.message}</p>}
         <button className="btn" disabled={mutation.isPending}>{mutation.isPending ? 'Saving…' : 'Record payment'}</button>
