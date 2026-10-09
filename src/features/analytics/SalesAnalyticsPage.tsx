@@ -294,19 +294,19 @@ export default function SalesAnalyticsPage() {
         <div className="grid four">
           <div>
             <div className="kpi-label">REVENUE</div>
-            <b>{money(farmRevenue)}</b>
+            <b>{busy ? '…' : money(farmRevenue)}</b>
           </div>
           <div>
             <div className="kpi-label">EXPENSES</div>
-            <b>{money(expenseTotal)}</b>
+            <b>{busy ? '…' : money(expenseTotal)}</b>
           </div>
           <div>
             <div className="kpi-label">OPERATING SURPLUS</div>
-            <b>{money(farmRevenue - expenseTotal)}</b>
+            <b>{busy ? '…' : money(farmRevenue - expenseTotal)}</b>
           </div>
           <div>
             <div className="kpi-label">OPERATING EXPENSE / LITRE PRODUCED</div>
-            <b>{farmMilkProduced ? money(expenseTotal / farmMilkProduced) : '—'}</b>
+            <b>{busy ? '…' : farmMilkProduced ? money(expenseTotal / farmMilkProduced) : '—'}</b>
             <div className="kpi-foot">
               Sold denominator: {busy ? '…' : farmMilkSold ? money(expenseTotal / farmMilkSold) : '—'} / L
             </div>
