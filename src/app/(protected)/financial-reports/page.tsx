@@ -131,6 +131,7 @@ export default function FinancialReportsPage() {
         <KPI label="BUFFALO PURCHASE PAYMENTS" value={loading ? '…' : money(value('buffalo_purchase_payments'))} foot="Payments made in selected period" />
         <KPI label="BUFFALO PURCHASE OUTSTANDING (CURRENT)" value={loading ? '…' : money(value('buffalo_purchase_outstanding'))} foot="Current unpaid acquisition balance" accent />
         <KPI label="BUFFALO PURCHASE BALANCE AT PERIOD END" value={loading ? '…' : money(value('buffalo_purchase_outstanding_as_of_before_legacy'))} foot="Before undated legacy payments" />
+        <KPI label="BUFFALO PURCHASE LEGACY PAYMENTS" value={loading ? '…' : money(value('buffalo_purchase_legacy_undated_paid_amount'))} foot="Undated initial/legacy paid amounts" />
       </div>
       <div className="card" style={{ marginTop: 15 }}>
         <h2 className="section-title">How to interpret this report</h2>
