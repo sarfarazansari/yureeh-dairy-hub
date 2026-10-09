@@ -1,28 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+
 import type { MilkEntryShift } from '@/lib/milk-entry-list';
 
-export type BuffaloProductionAnimal = {
-  id: string;
-  buffalo_code: string;
-  name: string | null;
-  current_status?: 'ACTIVE' | 'DRY';
-};
-
-export type BuffaloProductionRecord = {
-  buffalo_id: string;
-  business_date: string;
-  shift: MilkEntryShift;
-  milk_quantity: number | string;
-};
-
-export type BuffaloProductionSheetRecord = Omit<BuffaloProductionRecord, 'business_date'>;
-
-export type BuffaloProductionHistoryRecord = BuffaloProductionRecord & { id: string };
-
-export type BuffaloProductionInput = {
-  buffalo_id: string;
-  milk_quantity: number;
-};
+import type {
+  BuffaloProductionAnimal,
+  BuffaloProductionHistoryRecord,
+  BuffaloProductionInput,
+  BuffaloProductionRecord,
+  BuffaloProductionSheetInput,
+  BuffaloProductionSheetRecord,
+} from '../types';
 
 export async function getProductionSheet(
   client: SupabaseClient,
@@ -30,11 +17,9 @@ export async function getProductionSheet(
   shift: MilkEntryShift,
 ) {
   const [buffaloes, production] = await Promise.all([
-    client
-      .from('buffaloes')
-      .select('id,buffalo_code,name,current_status')
-      .in('current_status', ['ACTIVE', 'DRY'])
-      .order('buffalo_code'),
+    client.rpc('get_buffalo_production_sheet', {
+      p_business_date: businessDate,
+    }),
     client
       .from('buffalo_milk_production')
       .select('buffalo_id,shift,milk_quantity')
@@ -54,12 +39,7 @@ export async function getProductionSheet(
 
 export async function saveProductionSheet(
   client: SupabaseClient,
-  input: {
-    businessDate: string;
-    shift: MilkEntryShift;
-    buffaloIds: string[];
-    records: BuffaloProductionInput[];
-  },
+  input: BuffaloProductionSheetInput,
 ) {
   const { error } = await client.rpc('save_buffalo_milk_production', {
     p_business_date: input.businessDate,

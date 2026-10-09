@@ -18,12 +18,8 @@ import {
 import { formatDate } from '@/lib/date-format';
 import { localDateKey } from '@/lib/milk-entry-list';
 import { getAnalyticsDateRange, type AnalyticsDatePreset } from '@/lib/analytics-date-range';
-import {
-  getBuffaloProductionRange,
-  getProducingBuffaloes,
-  type BuffaloProductionAnimal,
-  type BuffaloProductionRecord,
-} from './services/buffalo-production.service';
+import { getBuffaloProductionRange, getProducingBuffaloes } from './services/buffalo-production.service';
+import type { BuffaloProductionAnimal, BuffaloProductionRecord } from './types';
 function setPreset(value: string, setFrom: (date: string) => void, setTo: (date: string) => void) {
   const range = getAnalyticsDateRange(value as AnalyticsDatePreset);
   setFrom(range.from);
@@ -70,20 +66,12 @@ export default function BuffaloAnalyticsPage() {
   }, [from, to]);
   const total = records.reduce((sum, record) => sum + Number(record.milk_quantity), 0),
     days = new Set(
-      (
-        records as (BuffaloProductionRecord & {
-          business_date: string;
-        })[]
-      ).map((record) => record.business_date),
+      records.map((record) => record.business_date),
     ).size;
   const rows = herd.map((animal) => {
     const own = records.filter((record) => record.buffalo_id === animal.id),
       ownDays = new Set(
-        (
-          own as (BuffaloProductionRecord & {
-            business_date: string;
-          })[]
-        ).map((record) => record.business_date),
+        own.map((record) => record.business_date),
       ).size,
       morning = own.filter((record) => record.shift === 'MORNING'),
       evening = own.filter((record) => record.shift === 'EVENING'),
@@ -109,21 +97,13 @@ export default function BuffaloAnalyticsPage() {
   const sorted = [...rows].sort((a, b) => Number(b[sort] ?? -1) - Number(a[sort] ?? -1));
   const dates = Array.from(
     new Set(
-      (
-        records as (BuffaloProductionRecord & {
-          business_date: string;
-        })[]
-      ).map((record) => record.business_date),
+      records.map((record) => record.business_date),
     ),
   ).sort();
   const trend = dates.map((date) => {
     const daily = records.filter(
       (record) =>
-        (
-          record as BuffaloProductionRecord & {
-            business_date: string;
-          }
-        ).business_date === date,
+        record.business_date === date,
     );
     return {
       date: formatDate(date, 'D MMM'),

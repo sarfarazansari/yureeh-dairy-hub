@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { PricingType } from './analytics';
+import type { PricingType, Shift } from './analytics';
 
 export type MilkEntryDatePreset = 'current-month' | 'last-7-days' | 'last-15-days' | 'custom';
-export type MilkEntryShift = 'MORNING' | 'EVENING';
+export type MilkEntryShift = Shift;
 
 export type MilkEntryFilters = {
   from: string;

@@ -1,52 +1,49 @@
 'use client';
 
+import { useMemo, useState } from 'react';
+
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { milkTxt } from '@/lib/farm-format';
 import { calculateEntryAmount, type PricingType } from '@/lib/analytics';
+import { localDateKey } from '@/lib/milk-entry-list';
 import { milkEntrySchema } from '@/lib/milk-entry-validation';
-import { createMilkEntry, hasDuplicateMilkEntry } from './services/milk-entry.service';
+
 import {
-  getActiveCustomersForMilkEntry,
-  type CustomerOption,
-} from '@/features/customers/services/customer.service';
+  useActiveMilkEntryCustomersQuery,
+  useCreateMilkEntryMutation,
+  useCustomerPricingQuery,
+  useMilkDeliveryContextQuery,
+  useMilkEntryDuplicateQuery,
+} from './milk.queries';
+
 export default function NewEntryForm() {
-  const [customers, setCustomers] = useState<CustomerOption[]>([]),
-    [customerId, setCustomerId] = useState(''),
-    [date, setDate] = useState(() => {
-      const n = new Date();
-      return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
-    }),
+  const [customerId, setCustomerId] = useState(''),
+    [date, setDate] = useState(() => localDateKey()),
     [shift, setShift] = useState<'MORNING' | 'EVENING'>('MORNING'),
     [quantity, setQuantity] = useState(''),
     [fat, setFat] = useState(''),
-    [pricingType, setPricingType] = useState<PricingType>('FIXED_PER_LITRE'),
-    [rate, setRate] = useState(''),
+    [pricingTypeOverride, setPricingTypeOverride] = useState<PricingType | null>(null),
+    [rateOverride, setRateOverride] = useState<string | null>(null),
     [notes, setNotes] = useState(''),
-    [busy, setBusy] = useState(false),
-    [message, setMessage] = useState(''),
-    [duplicate, setDuplicate] = useState(false),
-    [errors, setErrors] = useState<Record<string, string>>({});
-  const submitting = useRef(false);
-  useEffect(() => {
-    let active = true;
-    async function loadCustomers() {
-      if (!supabase) return;
-      try {
-        const activeCustomers = await getActiveCustomersForMilkEntry(supabase);
-        if (active) setCustomers(activeCustomers);
-      } catch (loadError) {
-        if (active)
-          setMessage(loadError instanceof Error ? loadError.message : 'Could not load customers.');
-      }
-    }
-    void loadCustomers();
-    return () => {
-      active = false;
-    };
-  }, []);
-  const customer = customers.find((c) => c.id === customerId);
+    [errors, setErrors] = useState<Record<string, string>>({}),
+    [message, setMessage] = useState('');
+
+  const customersQuery = useActiveMilkEntryCustomersQuery();
+  const pricingQuery = useCustomerPricingQuery(customerId, date);
+  const deliveryContextQuery = useMilkDeliveryContextQuery(date, shift);
+  const duplicateQuery = useMilkEntryDuplicateQuery({ customerId, businessDate: date, shift });
+  const createMutation = useCreateMilkEntryMutation();
+  const customers = customersQuery.data ?? [];
+  const customer = customers.find((item) => item.id === customerId);
+  const pricingType = pricingTypeOverride ?? pricingQuery.data?.pricing_type ?? customer?.pricing_type ?? 'FIXED_PER_LITRE';
+  const rate = rateOverride ?? (pricingQuery.data ? String(pricingQuery.data.rate) : customer ? String(customer.default_rate) : '');
+  const ratePerLitre = pricingType === 'FAT_BASED'
+    ? fat !== '' && Number.isFinite(Number(fat)) && rate !== ''
+      ? (Number(rate) * Number(fat)).toFixed(2)
+      : ''
+    : rate;
+
   const amount = useMemo(() => {
     if (!quantity || !rate) return 0;
     try {
@@ -60,52 +57,26 @@ export default function NewEntryForm() {
       return 0;
     }
   }, [quantity, rate, pricingType, fat]);
-  useEffect(() => {
-    let active = true;
-    async function checkDuplicate() {
-      if (!supabase || !customerId || !date) {
-        setDuplicate(false);
-        return;
-      }
-      try {
-        const duplicateEntry = await hasDuplicateMilkEntry(supabase, {
-          customerId,
-          businessDate: date,
-          shift,
-        });
-        if (active) setDuplicate(duplicateEntry);
-      } catch (duplicateError) {
-        if (active)
-          setMessage(
-            duplicateError instanceof Error
-              ? duplicateError.message
-              : 'Could not check for duplicates.',
-          );
-      }
-    }
-    void checkDuplicate();
-    return () => {
-      active = false;
-    };
-  }, [customerId, date, shift]);
+
   function chooseCustomer(id: string) {
     setCustomerId(id);
+    setPricingTypeOverride(null);
+    setRateOverride(null);
     setErrors((current) => ({ ...current, customer_id: '' }));
-    const c = customers.find((x) => x.id === id);
-    if (c) {
-      setPricingType(c.pricing_type);
-      setRate(String(c.default_rate));
-      setFat('');
-    }
+    const selected = customers.find((item) => item.id === id);
+    if (selected) setFat('');
   }
+
   function changePricingType(value: PricingType) {
-    setPricingType(value);
+    setPricingTypeOverride(value);
     setErrors((current) => ({ ...current, fat: '' }));
     if (value !== 'FAT_BASED') setFat('');
   }
-  async function save(event: React.FormEvent) {
+
+  async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage('');
+
     const parsed = milkEntrySchema.safeParse({
       business_date: date,
       shift,
@@ -116,6 +87,7 @@ export default function NewEntryForm() {
       applied_rate: rate,
       notes,
     });
+
     if (!parsed.success) {
       const next: Record<string, string> = {};
       for (const issue of parsed.error.issues) {
@@ -126,42 +98,32 @@ export default function NewEntryForm() {
       setMessage('Please correct the highlighted fields.');
       return;
     }
-    setErrors({});
-    if (submitting.current) return;
-    if (!supabase) {
-      setMessage('Supabase is not configured.');
+
+    if (deliveryContextQuery.isPending) {
+      setMessage('Checking herd production and the milk pool for the selected date and shift…');
       return;
     }
-    submitting.current = true;
-    setBusy(true);
+    if (deliveryContextQuery.isError) {
+      setMessage(deliveryContextQuery.error.message);
+      return;
+    }
+    if (!deliveryContextQuery.data?.herdEntryExists) {
+      setMessage('Record the herd entry for this date and shift before recording customer milk.');
+      return;
+    }
+
+    setErrors({});
     try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error('Your session expired. Sign in again.');
-      await createMilkEntry(supabase, user.id, parsed.data);
+      await createMutation.mutateAsync(parsed.data);
       setMessage('Entry saved successfully.');
       setQuantity('');
       setFat('');
       setNotes('');
-    } catch (err) {
-      const raw =
-        err && typeof err === 'object' && 'message' in err
-          ? String(
-              (
-                err as {
-                  message: unknown;
-                }
-              ).message,
-            )
-          : 'Could not save entry.';
-      setMessage(raw);
-    } finally {
-      setBusy(false);
-      submitting.current = false;
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not save entry.');
     }
   }
+
   return (
     <AppShell title="New milk entry" subtitle="Quickly record a customer delivery">
       <form className="layout" onSubmit={save} noValidate>
@@ -174,19 +136,24 @@ export default function NewEntryForm() {
                 id="entry-date"
                 type="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                disabled={createMutation.isPending}
+                onChange={(event) => {
+                  setDate(event.target.value);
+                  setPricingTypeOverride(null);
+                  setRateOverride(null);
+                  setFat('');
+                }}
                 aria-invalid={!!errors.business_date}
               />
-              {errors.business_date && (
-                <small className="field-error">{errors.business_date}</small>
-              )}
+              {errors.business_date && <small className="field-error">{errors.business_date}</small>}
             </div>
             <div className="field">
               <label htmlFor="entry-shift">Shift</label>
               <select
                 id="entry-shift"
                 value={shift}
-                onChange={(e) => setShift(e.target.value as 'MORNING' | 'EVENING')}
+                disabled={createMutation.isPending}
+                onChange={(event) => setShift(event.target.value as 'MORNING' | 'EVENING')}
               >
                 <option value="MORNING">Morning</option>
                 <option value="EVENING">Evening</option>
@@ -197,26 +164,73 @@ export default function NewEntryForm() {
               <select
                 id="entry-customer"
                 value={customerId}
-                onChange={(e) => chooseCustomer(e.target.value)}
+                disabled={customersQuery.isPending || createMutation.isPending}
+                onChange={(event) => chooseCustomer(event.target.value)}
                 aria-invalid={!!errors.customer_id}
               >
                 <option value="">Select customer</option>
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
+                {customers.map((item) => (
+                  <option key={item.id} value={item.id}>{item.name}</option>
                 ))}
               </select>
               {errors.customer_id && <small className="field-error">{errors.customer_id}</small>}
+    {customersQuery.isError && (
+                <small className="field-error">{customersQuery.error.message}</small>
+              )}
+              {pricingQuery.isError && customerId && (
+                <small className="field-error">{pricingQuery.error.message}</small>
+              )}
             </div>
           </div>
-          {duplicate && (
+
+          {duplicateQuery.data && (
             <p className="auth-message">
-              An entry already exists for this customer, date and shift. Save another batch if this
-              is intentional.
+              An entry already exists for this customer, date and shift. Save is blocked by the
+              database workflow to prevent duplicate deliveries.
             </p>
           )}
-          <div className={`grid ${pricingType === 'FAT_BASED' ? 'three' : 'two'}`}>
+
+          {deliveryContextQuery.isError && (
+            <p className="auth-message" role="alert">
+              {deliveryContextQuery.error.message}
+            </p>
+          )}
+
+          {!deliveryContextQuery.isError && !deliveryContextQuery.isPending && !deliveryContextQuery.data?.herdEntryExists && (
+            <p className="auth-message" role="alert">
+              Herd entry is required before customer delivery. No herd entry has been recorded for this date and shift.
+            </p>
+          )}
+
+          {!deliveryContextQuery.isError && deliveryContextQuery.isPending && (
+            <p className="kpi-foot">Checking herd entry and today&apos;s milk pool…</p>
+          )}
+
+          {!deliveryContextQuery.isError && !deliveryContextQuery.isPending && deliveryContextQuery.data?.herdEntryExists && (
+            <div className="card" style={{ marginBottom: '1rem' }}>
+              <div className="eyebrow">MILK POOL FOR SELECTED DATE</div>
+              <div className="row">
+                <div>
+                  <strong className="title">{milkTxt(deliveryContextQuery.data.availablePoolLitres)}</strong>
+                  <p className={deliveryContextQuery.data.availablePoolLitres < 0 ? 'kpi-foot field-error' : 'kpi-foot'}>
+                    Available after recorded production, deliveries and other milk movements.
+                  </p>
+                </div>
+                <div className="kpi-foot">
+                  Produced: <b>{milkTxt(deliveryContextQuery.data.productionLitres)}</b>
+                  {' · '}
+                  Delivered: <b>{milkTxt(deliveryContextQuery.data.customerDeliveryLitres)}</b>
+                </div>
+              </div>
+              {quantity !== '' && Number.isFinite(Number(quantity)) && Number(quantity) > deliveryContextQuery.data.availablePoolLitres && (
+                <p className="auth-message" role="status">
+                  ⚠️ This delivery exceeds the available milk for the selected shift by {milkTxt(Number(quantity) - deliveryContextQuery.data.availablePoolLitres)}. The database will reject the save until the quantity is within the available balance.
+                </p>
+              )}
+            </div>
+          )}
+
+          <div className="grid four">
             <div className="field">
               <label htmlFor="entry-quantity">Milk quantity (L)</label>
               <input
@@ -227,15 +241,14 @@ export default function NewEntryForm() {
                 inputMode="decimal"
                 placeholder="e.g. 20.0"
                 value={quantity}
-                onChange={(e) => {
-                  setQuantity(e.target.value);
+                disabled={createMutation.isPending}
+                onChange={(event) => {
+                  setQuantity(event.target.value);
                   setErrors((current) => ({ ...current, milk_quantity: '' }));
                 }}
                 aria-invalid={!!errors.milk_quantity}
               />
-              {errors.milk_quantity && (
-                <small className="field-error">{errors.milk_quantity}</small>
-              )}
+              {errors.milk_quantity && <small className="field-error">{errors.milk_quantity}</small>}
             </div>
             {pricingType === 'FAT_BASED' && (
               <div className="field">
@@ -249,8 +262,9 @@ export default function NewEntryForm() {
                   inputMode="decimal"
                   placeholder="e.g. 7.1"
                   value={fat}
-                  onChange={(e) => {
-                    setFat(e.target.value);
+                  disabled={createMutation.isPending}
+                  onChange={(event) => {
+                    setFat(event.target.value);
                     setErrors((current) => ({ ...current, fat: '' }));
                   }}
                   aria-invalid={!!errors.fat}
@@ -258,6 +272,17 @@ export default function NewEntryForm() {
                 {errors.fat && <small className="field-error">{errors.fat}</small>}
               </div>
             )}
+            <div className="field">
+              <label htmlFor="entry-rate-per-litre">Rate / L</label>
+              <input
+                id="entry-rate-per-litre"
+                type="number"
+                value={ratePerLitre}
+                readOnly
+                aria-readonly="true"
+                placeholder="—"
+              />
+            </div>
             <div className="field">
               <label htmlFor="entry-rate">Applied rate</label>
               <input
@@ -267,8 +292,9 @@ export default function NewEntryForm() {
                 step="0.01"
                 inputMode="decimal"
                 value={rate}
-                onChange={(e) => {
-                  setRate(e.target.value);
+                disabled={createMutation.isPending}
+                onChange={(event) => {
+                  setRateOverride(event.target.value);
                   setErrors((current) => ({ ...current, applied_rate: '' }));
                 }}
                 aria-invalid={!!errors.applied_rate}
@@ -276,20 +302,24 @@ export default function NewEntryForm() {
               {errors.applied_rate && <small className="field-error">{errors.applied_rate}</small>}
             </div>
           </div>
+
           <div className="field">
             <label htmlFor="entry-notes">Notes (optional)</label>
             <input
               id="entry-notes"
               value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              disabled={createMutation.isPending}
+              onChange={(event) => setNotes(event.target.value)}
               placeholder="Add a note for this entry"
             />
           </div>
+
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-          <button disabled={busy} className="btn">
-            {busy ? 'Saving…' : 'Save entry'}
+          <button disabled={createMutation.isPending || duplicateQuery.isPending || deliveryContextQuery.isPending || deliveryContextQuery.isError || !deliveryContextQuery.data?.herdEntryExists || !!duplicateQuery.data} className="btn">
+            {createMutation.isPending ? 'Saving…' : 'Save entry'}
           </button>
         </div>
+
         <div className="card">
           <div className="eyebrow">PRICE SNAPSHOT</div>
           <div className="field">
@@ -297,7 +327,8 @@ export default function NewEntryForm() {
             <select
               id="entry-pricing-type"
               value={pricingType}
-              onChange={(e) => changePricingType(e.target.value as PricingType)}
+              disabled={createMutation.isPending}
+              onChange={(event) => changePricingType(event.target.value as PricingType)}
             >
               <option value="FIXED_PER_LITRE">Fixed per litre</option>
               <option value="FAT_BASED">Fat based</option>
@@ -305,13 +336,13 @@ export default function NewEntryForm() {
           </div>
           <div className="field">
             <label htmlFor="entry-rate-snapshot">
-              Customer default rate · {customer?.default_rate ? `₹${customer.default_rate}` : '—'}
+              Effective customer rate · {pricingQuery.data ? `₹${pricingQuery.data.rate}` : customer?.default_rate ? `₹${customer.default_rate}` : '—'}
             </label>
             <input
               id="entry-rate-snapshot"
               value={rate}
-              onChange={(e) => {
-                setRate(e.target.value);
+              onChange={(event) => {
+                setRateOverride(event.target.value);
                 setErrors((current) => ({ ...current, applied_rate: '' }));
               }}
               type="number"
@@ -324,20 +355,12 @@ export default function NewEntryForm() {
           </div>
           <div className="amount">
             <span>CALCULATED TOTAL</span>
-            <strong>
-              ₹
-              {amount.toLocaleString('en-IN', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </strong>
-            <small>
-              {pricingType === 'FAT_BASED' ? 'Quantity × fat × rate' : 'Quantity × rate'}
-            </small>
+            <strong>₹{amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong>
+            <small>{pricingType === 'FAT_BASED' ? 'Quantity × fat × rate' : 'Quantity × rate'}</small>
           </div>
           <p className="kpi-foot" style={{ lineHeight: 1.7 }}>
-            The pricing model and applied rate are stored with each entry, preserving historical
-            calculations when customer defaults change.
+            The applied rate is stored with each entry. Saving a customer delivery also records the
+            matching milk-pool movement transactionally.
           </p>
         </div>
       </form>

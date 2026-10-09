@@ -1,11 +1,12 @@
 'use client';
 
+import { localDateKey } from '@/lib/milk-entry-list';
 import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
+import { useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+
 import {
   Area,
   AreaChart,
@@ -17,34 +18,31 @@ import {
 } from 'recharts';
 import { formatDate } from '@/lib/date-format';
 import {
-  getCustomerDetails,
-  type CustomerEntry,
-  type CustomerSummary,
-} from './services/customer.service';
+  useCustomerDetailQuery,
+  useCustomerPaymentsQuery,
+  useRecordCustomerPaymentMutation,
+} from './customer.queries';
+import type { CustomerPaymentMethod } from './services/customer.service';
 export default function CustomerDetailPage({ id }: { id: string }) {
-  const [c, setC] = useState<CustomerSummary | null>(null),
-    [rows, setRows] = useState<CustomerEntry[]>([]),
-    [error, setError] = useState('');
-  useEffect(() => {
-    async function load() {
-      if (!supabase) return;
-      try {
-        const details = await getCustomerDetails(supabase, id);
-        setC(details.customer);
-        setRows(details.entries);
-      } catch (loadError) {
-        setError(
-          loadError instanceof Error ? loadError.message : 'Could not load customer details.',
-        );
-      }
-    }
-    load();
-  }, [id]);
-  const total = rows.reduce((s, r) => s + Number(r.milk_quantity), 0),
-    rev = rows.reduce((s, r) => s + Number(r.calculated_amount), 0),
-    fatDen = rows.reduce((s, r) => s + (r.fat == null ? 0 : Number(r.milk_quantity)), 0),
-    fatNum = rows.reduce((s, r) => s + Number(r.milk_quantity) * Number(r.fat ?? 0), 0),
-    avgFat = fatDen ? fatNum / fatDen : null,
+  const detailQuery = useCustomerDetailQuery(id);
+  const paymentsQuery = useCustomerPaymentsQuery(id);
+  const paymentMutation = useRecordCustomerPaymentMutation();
+  const [paymentDate, setPaymentDate] = useState(() => localDateKey());
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<CustomerPaymentMethod>('CASH');
+  const [paymentReference, setPaymentReference] = useState('');
+  const [paymentNotes, setPaymentNotes] = useState('');
+  const [paymentMessage, setPaymentMessage] = useState('');
+  const c = detailQuery.data?.customer ?? null;
+  const rows = detailQuery.data?.entries ?? [];
+  const financialSummary = detailQuery.data?.financialSummary;
+  const payments = paymentsQuery.data ?? [];
+  const total = financialSummary?.total_milk_quantity ?? 0,
+    rev = financialSummary?.total_sales_amount ?? 0,
+    paymentsTotal = financialSummary?.total_payments_amount ?? 0,
+    netBalance = rev - paymentsTotal,
+    outstanding = Math.max(0, netBalance),
+    customerCredit = Math.max(0, -netBalance),
     daily = Array.from(new Set(rows.map((r) => r.business_date)))
       .sort()
       .map((date) => {
@@ -55,38 +53,78 @@ export default function CustomerDetailPage({ id }: { id: string }) {
           revenue: d.reduce((s, r) => s + Number(r.calculated_amount), 0),
         };
       });
+  if (detailQuery.isPending) {
+    return (
+      <AppShell title="Customer details" subtitle="">
+        <div className="empty">Loading customer…</div>
+      </AppShell>
+    );
+  }
+
+  if (detailQuery.isError) {
+    return (
+      <AppShell title="Customer details" subtitle="">
+        <div className="empty">{detailQuery.error.message}</div>
+      </AppShell>
+    );
+  }
+
+  if (!c) {
+    return (
+      <AppShell title="Customer details" subtitle="">
+        <div className="empty">Customer not found.</div>
+      </AppShell>
+    );
+  }
+
+  async function recordPayment(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPaymentMessage('');
+    const amount = Number(paymentAmount);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setPaymentMessage('Payment amount must be greater than ₹0.');
+      return;
+    }
+    try {
+      await paymentMutation.mutateAsync({
+        customerId: id,
+        payment: {
+          payment_date: paymentDate,
+          amount,
+          payment_method: paymentMethod,
+          transaction_reference: paymentReference,
+          notes: paymentNotes,
+        },
+      });
+      setPaymentAmount('');
+      setPaymentReference('');
+      setPaymentNotes('');
+      setPaymentMessage('Payment recorded successfully.');
+    } catch (error) {
+      setPaymentMessage(error instanceof Error ? error.message : 'Could not record customer payment.');
+    }
+  }
+
   return (
     <AppShell
-      title={c?.name ?? 'Customer details'}
-      subtitle={`${c?.pricing_type === 'FAT_BASED' ? 'Fat based' : 'Fixed per litre'} · default rate ₹${c?.default_rate ?? '—'}`}
+      title={c.name}
+      subtitle={`${c.pricing_type === 'FAT_BASED' ? 'Fat based' : 'Fixed per litre'} · default rate ₹${c.default_rate}`}
     >
       <Link href="/customers" style={{ fontSize: 12, color: '#277452' }}>
         ← All customers
       </Link>
-      {error && <p className="auth-message">{error}</p>}
       <div className="grid kpis">
-        <KPI label="TOTAL MILK" value={milkTxt(total)} foot={`${rows.length} entries`} />
+        <KPI label="TOTAL MILK" value={milkTxt(total)} foot={`${financialSummary?.entry_count ?? 0} entries`} />
+        <KPI label="TOTAL SALES" value={money(rev)} foot={total ? `${money(rev / total)} per litre` : 'No sales'} />
+        <KPI label="PAYMENTS RECEIVED" value={money(paymentsTotal)} foot={`${financialSummary?.payment_count ?? 0} payments recorded`} accent />
         <KPI
-          label="TOTAL REVENUE"
-          value={money(rev)}
-          foot={total ? `${money(rev / total)} per litre` : 'No sales'}
-        />
-        <KPI
-          label="WEIGHTED AVG FAT"
-          value={avgFat === null ? '—' : `${avgFat.toFixed(2)}%`}
-          foot="Weighted by milk quantity"
-          accent
-        />
-        <KPI
-          label="AVG MILK PER ENTRY"
-          value={rows.length ? milkTxt(total / rows.length) : '—'}
-          foot={
-            rows.length ? `${money(rev / rows.length)} average revenue per entry` : 'No entries'
-          }
+          label="OUTSTANDING"
+          value={money(outstanding)}
+          foot={customerCredit ? `Customer credit: ${money(customerCredit)}` : outstanding ? 'Amount currently receivable' : 'Fully settled'}
         />
       </div>
       <div className="card">
-        <h2 className="section-title">Milk and revenue trend</h2>
+        <h2 className="section-title">Recent milk and revenue trend</h2>
         <div className="chart">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={daily}>
@@ -118,8 +156,88 @@ export default function CustomerDetailPage({ id }: { id: string }) {
         </div>
       </div>
       <div style={{ height: 14 }} />
+      <div className="grid two">
+        <div className="card">
+          <h2 className="section-title">Customer information</h2>
+          <p className="sub">Phone: {c.phone || '—'}</p>
+          <p className="sub">Address: {c.address || '—'}</p>
+          <p className="sub">Notes: {c.notes || '—'}</p>
+        </div>
+        <div className="card">
+          <h2 className="section-title">Record customer payment</h2>
+          <p className="sub">
+            Current outstanding: <b>{money(outstanding)}</b>
+            {customerCredit > 0 && <> · Customer credit: <b>{money(customerCredit)}</b></>}
+          </p>
+          <form onSubmit={recordPayment}>
+            <div className="grid two">
+              <div className="field">
+                <label htmlFor="customer-payment-date">Payment date</label>
+                <input id="customer-payment-date" type="date" value={paymentDate} disabled={paymentMutation.isPending} onChange={(event) => setPaymentDate(event.target.value)} />
+              </div>
+              <div className="field">
+                <label htmlFor="customer-payment-amount">Amount · ₹</label>
+                <input id="customer-payment-amount" type="number" min="0.01" step="0.01" value={paymentAmount} disabled={paymentMutation.isPending} onChange={(event) => setPaymentAmount(event.target.value)} placeholder={outstanding ? outstanding.toFixed(2) : 'Advance payment'} />
+              </div>
+            </div>
+            <div className="grid two">
+              <div className="field">
+                <label htmlFor="customer-payment-method">Payment method</label>
+                <select id="customer-payment-method" value={paymentMethod} disabled={paymentMutation.isPending} onChange={(event) => setPaymentMethod(event.target.value as CustomerPaymentMethod)}>
+                  <option value="CASH">Cash</option>
+                  <option value="UPI">UPI</option>
+                  <option value="BANK_TRANSFER">Bank transfer</option>
+                  <option value="OTHER">Other</option>
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="customer-payment-reference">Reference</label>
+                <input id="customer-payment-reference" value={paymentReference} disabled={paymentMutation.isPending} onChange={(event) => setPaymentReference(event.target.value)} placeholder="UPI / bank reference (optional)" />
+              </div>
+            </div>
+            <div className="field">
+              <label htmlFor="customer-payment-notes">Notes</label>
+              <input id="customer-payment-notes" value={paymentNotes} disabled={paymentMutation.isPending} onChange={(event) => setPaymentNotes(event.target.value)} placeholder="Optional payment note" />
+            </div>
+            {paymentMessage && <p className="success-message">{paymentMessage}</p>}
+            <button className="btn" disabled={paymentMutation.isPending}>
+              {paymentMutation.isPending ? 'Recording…' : outstanding > 0 ? 'Record payment' : 'Record advance'}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div style={{ height: 14 }} />
       <div className="card">
-        <h2 className="section-title">Entry history</h2>
+        <h2 className="section-title">Recent payment history (latest 500)</h2>
+        {paymentsQuery.isPending ? (
+          <div className="empty">Loading payments…</div>
+        ) : paymentsQuery.isError ? (
+          <div className="empty">{paymentsQuery.error.message}</div>
+        ) : payments.length ? (
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>DATE</th><th>AMOUNT</th><th>METHOD</th><th>REFERENCE</th></tr></thead>
+              <tbody>
+                {payments.map((payment) => (
+                  <tr key={payment.id}>
+                    <td>{formatDate(payment.payment_date)}</td>
+                    <td>{money(payment.amount)}</td>
+                    <td>{paymentMethodLabel(payment.payment_method)}</td>
+                    <td>{payment.transaction_reference || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="empty">No customer payments recorded yet.</div>
+        )}
+      </div>
+
+      <div style={{ height: 14 }} />
+      <div className="card">
+        <h2 className="section-title">Recent entry history (latest 500)</h2>
         <div className="table-wrap">
           <table className="table">
             <thead>
@@ -154,4 +272,12 @@ export default function CustomerDetailPage({ id }: { id: string }) {
       </div>
     </AppShell>
   );
+}
+
+
+function paymentMethodLabel(method: CustomerPaymentMethod) {
+  if (method === 'BANK_TRANSFER') return 'Bank transfer';
+  if (method === 'UPI') return 'UPI';
+  if (method === 'CASH') return 'Cash';
+  return 'Other';
 }

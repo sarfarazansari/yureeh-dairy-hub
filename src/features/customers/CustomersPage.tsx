@@ -3,56 +3,52 @@
 import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { type PricingType } from '@/lib/analytics';
 import { Dialog } from '@/app/dialog';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import {
-  createCustomer,
-  getCustomerDirectory,
-  setCustomerActive,
-  updateCustomerPricing,
-  type CustomerMilkSummary,
-  type CustomerSummary,
-} from './services/customer.service';
+  useCreateCustomerMutation,
+  useCustomerDirectoryQuery,
+  useUpdateCustomerMutation,
+  useSetCustomerActiveMutation,
+  useUpdateCustomerPricingMutation,
+} from './customer.queries';
+import type { CustomerSummary } from './services/customer.service';
 export default function CustomersPage() {
-  const [rows, setRows] = useState<CustomerSummary[]>([]),
-    [entries, setEntries] = useState<CustomerMilkSummary[]>([]),
-    [name, setName] = useState(''),
+  const [name, setName] = useState(''),
     [rate, setRate] = useState(''),
     [type, setType] = useState<PricingType>('FIXED_PER_LITRE'),
     [pricingCustomer, setPricingCustomer] = useState<CustomerSummary | null>(null),
     [pricingRate, setPricingRate] = useState(''),
     [pricingType, setPricingType] = useState<PricingType>('FIXED_PER_LITRE'),
-    [pricingBusy, setPricingBusy] = useState(false),
-    [busy, setBusy] = useState(false),
+    [editCustomer, setEditCustomer] = useState<CustomerSummary | null>(null),
+    [editName, setEditName] = useState(''),
+    [editPhone, setEditPhone] = useState(''),
+    [editAddress, setEditAddress] = useState(''),
+    [editNotes, setEditNotes] = useState(''),
     [message, setMessage] = useState('');
-  async function load() {
-    if (!supabase) return;
-    try {
-      const directory = await getCustomerDirectory(supabase);
-      setRows(directory.customers);
-      setEntries(directory.entries);
-    } catch (loadError) {
-      setMessage(loadError instanceof Error ? loadError.message : 'Could not load customers.');
-    }
-  }
-  useEffect(() => {
-    const task = window.setTimeout(() => void load(), 0);
-    return () => window.clearTimeout(task);
-  }, []);
+  const directoryQuery = useCustomerDirectoryQuery();
+  const createMutation = useCreateCustomerMutation();
+  const pricingMutation = useUpdateCustomerPricingMutation();
+  const editMutation = useUpdateCustomerMutation();
+  const statusMutation = useSetCustomerActiveMutation();
+  const rows = directoryQuery.data?.customers ?? [];
+  const entries = directoryQuery.data?.entries ?? [];
+  const busy = createMutation.isPending;
+  const pricingBusy = pricingMutation.isPending;
+  const editBusy = editMutation.isPending;
   async function create(event: React.FormEvent) {
     event.preventDefault();
     if (!supabase) return;
-    setBusy(true);
     setMessage('');
     try {
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) throw new Error('Sign in again to add a customer.');
-      await createCustomer(supabase, {
+      await createMutation.mutateAsync({
         userId: user.id,
         name: name.trim(),
         pricingType: type,
@@ -61,13 +57,42 @@ export default function CustomersPage() {
       setName('');
       setRate('');
       setMessage('Customer added.');
-      await load();
     } catch (createError) {
       setMessage(createError instanceof Error ? createError.message : 'Could not add customer.');
-    } finally {
-      setBusy(false);
     }
   }
+
+  function openEdit(customer: CustomerSummary) {
+    setEditCustomer(customer);
+    setEditName(customer.name);
+    setEditPhone(customer.phone ?? '');
+    setEditAddress(customer.address ?? '');
+    setEditNotes(customer.notes ?? '');
+  }
+
+  async function saveCustomer(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!editCustomer) return;
+    if (!editName.trim()) {
+      setMessage('Customer name is required.');
+      return;
+    }
+    setMessage('');
+    try {
+      await editMutation.mutateAsync({
+        customerId: editCustomer.id,
+        name: editName,
+        phone: editPhone,
+        address: editAddress,
+        notes: editNotes,
+      });
+      setEditCustomer(null);
+      setMessage('Customer details updated.');
+    } catch (updateError) {
+      setMessage(updateError instanceof Error ? updateError.message : 'Could not update customer.');
+    }
+  }
+
   function openPricing(customer: CustomerSummary) {
     setPricingCustomer(customer);
     setPricingRate(String(customer.default_rate));
@@ -81,29 +106,29 @@ export default function CustomersPage() {
       setMessage('Rate must be greater than zero.');
       return;
     }
-    setPricingBusy(true);
+    setMessage('');
     try {
-      if (!supabase) return;
-      await updateCustomerPricing(supabase, pricingCustomer.id, defaultRate, pricingType);
+      await pricingMutation.mutateAsync({
+        customerId: pricingCustomer.id,
+        defaultRate,
+        pricingType,
+      });
       setPricingCustomer(null);
-      await load();
+      setMessage('Pricing updated.');
     } catch (updateError) {
       setMessage(updateError instanceof Error ? updateError.message : 'Could not update pricing.');
-    } finally {
-      setPricingBusy(false);
     }
   }
+
   async function toggle(customer: CustomerSummary) {
     try {
-      if (!supabase) return;
-      await setCustomerActive(supabase, customer.id, !customer.is_active);
-      await load();
+      await statusMutation.mutateAsync({ customerId: customer.id, active: !customer.is_active });
+      setMessage(customer.is_active ? 'Customer paused.' : 'Customer activated.');
     } catch (updateError) {
-      setMessage(
-        updateError instanceof Error ? updateError.message : 'Could not update customer status.',
-      );
+      setMessage(updateError instanceof Error ? updateError.message : 'Could not update customer status.');
     }
   }
+
   return (
     <AppShell title="Customers" subtitle="Manage customer pricing and sales history">
       <div className="management-stack">
@@ -146,7 +171,11 @@ export default function CustomersPage() {
             <h2 className="section-title">Customer directory</h2>
             <span className="tag">{rows.filter((c) => c.is_active).length} active</span>
           </div>
-          {rows.length ? (
+          {directoryQuery.isPending ? (
+            <div className="empty">Loading customers…</div>
+          ) : directoryQuery.isError ? (
+            <div className="empty">{directoryQuery.error.message}</div>
+          ) : rows.length ? (
             <div className="table-wrap">
               <table className="table">
                 <thead>
@@ -184,6 +213,13 @@ export default function CustomersPage() {
                           <button
                             type="button"
                             className="date-chip"
+                            onClick={() => openEdit(c)}
+                          >
+                            Edit
+                          </button>{' '}
+                          <button
+                            type="button"
+                            className="date-chip"
                             onClick={() => openPricing(c)}
                           >
                             Rate
@@ -205,6 +241,63 @@ export default function CustomersPage() {
           )}
         </div>
       </div>
+      <Dialog
+        open={!!editCustomer}
+        onOpenChange={(open) => {
+          if (!open && !editBusy) setEditCustomer(null);
+        }}
+        labelledBy="customer-edit-title"
+      >
+        <form onSubmit={saveCustomer}>
+          <div className="dialog-header">
+            <div>
+              <p className="eyebrow">CUSTOMER PROFILE</p>
+              <h2 className="dialog-title" id="customer-edit-title">Edit customer</h2>
+              <p className="dialog-description">{editCustomer?.name}</p>
+            </div>
+            <button
+              className="dialog-close"
+              type="button"
+              aria-label="Close customer edit dialog"
+              disabled={editBusy}
+              onClick={() => setEditCustomer(null)}
+            >
+              ×
+            </button>
+          </div>
+          <div className="field">
+            <label htmlFor="customer-edit-name">Name</label>
+            <input id="customer-edit-name" required value={editName} onChange={(event) => setEditName(event.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="customer-edit-phone">Phone</label>
+            <input id="customer-edit-phone" value={editPhone} onChange={(event) => setEditPhone(event.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="customer-edit-address">Address</label>
+            <input id="customer-edit-address" value={editAddress} onChange={(event) => setEditAddress(event.target.value)} />
+          </div>
+          <div className="field">
+            <label htmlFor="customer-edit-notes">Notes</label>
+            <textarea
+              id="customer-edit-notes"
+              value={editNotes}
+              onChange={(event) => setEditNotes(event.target.value)}
+              rows={3}
+              style={{ border: '1px solid var(--line)', borderRadius: 8, padding: 10, resize: 'vertical' }}
+            />
+          </div>
+          <div className="dialog-footer">
+            <button type="button" className="btn secondary" disabled={editBusy} onClick={() => setEditCustomer(null)}>
+              Cancel
+            </button>
+            <button className="btn" disabled={editBusy}>
+              {editBusy ? 'Saving…' : 'Save customer'}
+            </button>
+          </div>
+        </form>
+      </Dialog>
+
       <Dialog
         open={!!pricingCustomer}
         onOpenChange={(open) => {
