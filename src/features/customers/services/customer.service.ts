@@ -41,6 +41,8 @@ export type CustomerFinancialSummary = {
   total_milk_quantity: number;
   total_sales_amount: number;
   entry_count: number;
+  total_payments_amount: number;
+  payment_count: number;
 };
 
 export type CustomerEntry = {
@@ -163,6 +165,8 @@ export async function getCustomerDetails(client: SupabaseClient, customerId: str
       total_milk_quantity: Number(totals?.total_milk_quantity ?? 0),
       total_sales_amount: Number(totals?.total_sales_amount ?? 0),
       entry_count: Number(totals?.entry_count ?? 0),
+      total_payments_amount: Number(totals?.total_payments_amount ?? 0),
+      payment_count: Number(totals?.payment_count ?? 0),
     } as CustomerFinancialSummary,
   };
 }
