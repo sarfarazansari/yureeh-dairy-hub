@@ -10,6 +10,7 @@ type Props = {
   feedItems: FeedItem[];
   stock: FeedInventoryStock[];
   onSave: (values: FeedConsumptionFormValues) => Promise<string | null>;
+  onError?: (message: string) => void;
   busy: boolean;
   initialValues?: FeedConsumptionFormValues;
   submitLabel?: string;
@@ -20,6 +21,7 @@ export function FeedConsumptionForm({
   feedItems,
   stock,
   onSave,
+  onError,
   busy,
   initialValues,
   submitLabel = 'Record consumption',
@@ -74,7 +76,7 @@ export function FeedConsumptionForm({
 
     try {
       const error = await onSave(parsed.data);
-      if (error) setErrors({ form: error });
+      if (error) onError?.(error);
     } finally {
       submittingRef.current = false;
     }
@@ -82,7 +84,7 @@ export function FeedConsumptionForm({
 
   return (
     <form className="card" onSubmit={submit}>
-      <h2 className="section-title">Record feed consumption</h2>
+      <h2 className="section-title">{submitLabel === 'Save changes' ? 'Edit feed consumption' : 'Record feed consumption'}</h2>
 
       <div className="expense-form-grid">
         <div className="field">
@@ -160,7 +162,6 @@ export function FeedConsumptionForm({
         </div>
       )}
 
-      {errors.form && <span className="auth-message">{errors.form}</span>}
       <button type="submit" className="btn" disabled={busy || submittingRef.current || !feedItems.length}>
         {busy ? 'Saving…' : submitLabel}
       </button>
