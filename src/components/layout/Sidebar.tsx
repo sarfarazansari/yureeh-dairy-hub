@@ -98,6 +98,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const triggerButtonRef = useRef<HTMLButtonElement>(null);
   const menuId = 'primary-navigation-drawer';
 
   const closeMobileMenu = () => setMobileOpen(false);
@@ -111,6 +112,7 @@ export function Sidebar() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setMobileOpen(false);
+        triggerButtonRef.current?.focus();
       }
     };
 
@@ -131,6 +133,7 @@ export function Sidebar() {
     <>
       <button
         type="button"
+        ref={triggerButtonRef}
         className="mobile-menu-trigger"
         aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={mobileOpen}
@@ -154,7 +157,6 @@ export function Sidebar() {
         id={menuId}
         className={`sidebar${mobileOpen ? ' mobile-open' : ''}`}
         aria-label="Application navigation"
-        aria-hidden={!mobileOpen && typeof window !== 'undefined' && window.matchMedia('(max-width: 700px)').matches}
       >
         <div className="brand">
           <div className="brand-icon">
