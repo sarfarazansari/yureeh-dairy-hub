@@ -156,7 +156,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
           );
         })}
       </div>
-      <p className="sub" style={{ marginTop: 12 }}>Scheduled slots: morning 7:00 AM and evening 7:00 PM (Asia/Kolkata). Automatic inventory posting is added in the next phase.</p>
+      <p className="sub" style={{ marginTop: 12 }}>Scheduled slots: morning and evening (Asia/Kolkata). Exact clock times will be configured with the scheduler in the next phase.</p>
       {errors.form && <div className="auth-message" role="alert">{errors.form}</div>}
       <div className="row" style={{ marginTop: 20 }}>
         <button type="submit" className="btn" disabled={busy}>{busy ? 'Saving…' : submitLabel}</button>
