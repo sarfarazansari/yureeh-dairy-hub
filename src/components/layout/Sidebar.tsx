@@ -174,11 +174,12 @@ export function Sidebar() {
             className="mobile-menu-close"
             aria-label="Close navigation menu"
             onClick={() => setMobileOpen(false)}
+            tabIndex={mobileOpen || typeof window === 'undefined' || window.matchMedia('(min-width: 701px)').matches ? 0 : -1}
           >
             <X size={20} />
           </button>
         </div>
-        <nav className="nav" aria-label="Primary">
+        <nav className="nav" aria-label="Primary" aria-hidden={!mobileOpen}>
           {navigationGroups.map((group) => (
             <div key={group.label}>
               <div className="nav-label">{group.label}</div>
@@ -191,6 +192,7 @@ export function Sidebar() {
                     className={active ? 'active' : ''}
                     aria-current={active ? 'page' : undefined}
                     onClick={() => setMobileOpen(false)}
+                    tabIndex={mobileOpen || typeof window === 'undefined' || window.matchMedia('(min-width: 701px)').matches ? 0 : -1}
                   >
                     <span className="icon" aria-hidden="true">
                       <Icon size={18} />
