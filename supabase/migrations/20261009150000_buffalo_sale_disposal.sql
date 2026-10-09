@@ -31,6 +31,8 @@ create table public.buffalo_sales (
 
 create index buffalo_sales_date_idx on public.buffalo_sales(user_id, sale_date desc);
 create index buffalo_sales_balance_idx on public.buffalo_sales(user_id, payment_status) where amount_pending > 0;
+create trigger buffalo_sales_updated_at before update on public.buffalo_sales
+  for each row execute function public.set_updated_at();
 
 create table public.buffalo_sale_payments (
   id uuid primary key default gen_random_uuid(),
