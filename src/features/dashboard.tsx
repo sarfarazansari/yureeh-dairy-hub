@@ -292,32 +292,34 @@ export default function Dashboard() {
             </Link>
           </div>
           {customerRows.length ? (
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>CUSTOMER</th>
-                  <th>PRICING</th>
-                  <th>MILK</th>
-                  <th>REVENUE</th>
-                </tr>
-              </thead>
-              <tbody>
-                {customerRows.map((c) => (
-                  <tr key={c.name}>
-                    <td>
-                      <Link href={`/customers/${c.id}`}>
-                        <b>{c.name}</b>
-                      </Link>
-                    </td>
-                    <td>
-                      <span className="tag">{c.type}</span>
-                    </td>
-                    <td>{milkTxt(c.milk)}</td>
-                    <td>{money(c.revenue)}</td>
+            <div className="table-wrap">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>CUSTOMER</th>
+                    <th>PRICING</th>
+                    <th>MILK</th>
+                    <th>REVENUE</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {customerRows.map((c) => (
+                    <tr key={c.name}>
+                      <td>
+                        <Link href={`/customers/${c.id}`}>
+                          <b>{c.name}</b>
+                        </Link>
+                      </td>
+                      <td>
+                        <span className="tag">{c.type}</span>
+                      </td>
+                      <td>{milkTxt(c.milk)}</td>
+                      <td>{money(c.revenue)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           ) : (
             <div className="empty">Customer totals appear after milk entries are recorded.</div>
           )}
