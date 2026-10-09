@@ -171,6 +171,12 @@ begin
   if buffalo_row.current_status not in ('ACTIVE', 'DRY') then
     raise exception using errcode = '23514', message = 'Only an active or dry buffalo can be sold.';
   end if;
+  if buffalo_row.purchase_date is not null and p_sale_date < buffalo_row.purchase_date then
+    raise exception using errcode = '23514', message = 'Sale date cannot be before the buffalo purchase date.';
+  end if;
+  if exists (select 1 from public.buffalo_milk_production p where p.user_id = owner_id and p.buffalo_id = p_buffalo_id and p.business_date > p_sale_date) then
+    raise exception using errcode = '23514', message = 'Sale date cannot be before an already recorded production date.';
+  end if;
   if exists (select 1 from public.buffalo_sales s where s.user_id = owner_id and s.buffalo_id = p_buffalo_id)
     or exists (select 1 from public.buffalo_disposals d where d.user_id = owner_id and d.buffalo_id = p_buffalo_id) then
     raise exception using errcode = '23514', message = 'This buffalo already has a sale or disposal record.';
@@ -333,6 +339,12 @@ begin
   end if;
   if buffalo_row.current_status not in ('ACTIVE', 'DRY') then
     raise exception using errcode = '23514', message = 'Only an active or dry buffalo can be disposed.';
+  end if;
+  if buffalo_row.purchase_date is not null and p_effective_date < buffalo_row.purchase_date then
+    raise exception using errcode = '23514', message = 'Disposal date cannot be before the buffalo purchase date.';
+  end if;
+  if exists (select 1 from public.buffalo_milk_production p where p.user_id = owner_id and p.buffalo_id = p_buffalo_id and p.business_date > p_effective_date) then
+    raise exception using errcode = '23514', message = 'Disposal date cannot be before an already recorded production date.';
   end if;
   if exists (select 1 from public.buffalo_sales s where s.user_id = owner_id and s.buffalo_id = p_buffalo_id)
     or exists (select 1 from public.buffalo_disposals d where d.user_id = owner_id and d.buffalo_id = p_buffalo_id) then
