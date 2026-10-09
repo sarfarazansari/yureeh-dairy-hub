@@ -15,6 +15,7 @@ import { Dialog } from '@/app/dialog';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 export default function ExpenseHistory() {
   const [rows, setRows] = useState<ExpenseRow[]>([]),
+    [ledgerExpenseIds, setLedgerExpenseIds] = useState<Set<string>>(new Set()),
     [categories, setCategories] = useState<
       Pick<ExpenseCategory, 'id' | 'name' | 'category_group'>[]
     >([]),
@@ -70,6 +71,17 @@ export default function ExpenseHistory() {
     ]);
     if (e.error) setMessage(e.error.message);
     setRows(e.data ?? []);
+    const expenseIds = (e.data ?? []).map((expense) => expense.id);
+    if (expenseIds.length) {
+      const { data: paymentRows, error: paymentError } = await supabase
+        .from('expense_payments')
+        .select('expense_id')
+        .in('expense_id', expenseIds);
+      if (paymentError) setMessage(paymentError.message);
+      setLedgerExpenseIds(new Set((paymentRows ?? []).map((payment) => payment.expense_id)));
+    } else {
+      setLedgerExpenseIds(new Set());
+    }
     setCategories(c.data ?? []);
     setVendors(v.data ?? []);
     setBuffaloes(b.data ?? []);
@@ -499,11 +511,19 @@ export default function ExpenseHistory() {
                     <button
                       type="button"
                       className="date-chip"
+                      disabled={ledgerExpenseIds.has(r.id)}
+                      title={ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and is locked to preserve its ledger.' : undefined}
                       onClick={() => setEditing({ ...r })}
                     >
                       Edit
                     </button>{' '}
-                    <button type="button" className="date-chip" onClick={() => setPendingDelete(r)}>
+                    <button
+                      type="button"
+                      className="date-chip"
+                      disabled={ledgerExpenseIds.has(r.id)}
+                      title={ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and cannot be deleted.' : undefined}
+                      onClick={() => setPendingDelete(r)}
+                    >
                       Delete
                     </button>
                   </td>
@@ -514,7 +534,7 @@ export default function ExpenseHistory() {
         </div>
         {!visible.length && <div className="empty">No expenses match these filters.</div>}
         <p className="kpi-foot">
-          Showing at most 1,000 most recent expenses. Deleted rows remain stored for audit history.
+          Showing at most 1,000 most recent expenses. Expenses with dated payment-ledger entries are locked against editing or deletion to preserve reconciliation.
         </p>
         <Dialog
           open={!!pendingDelete}
