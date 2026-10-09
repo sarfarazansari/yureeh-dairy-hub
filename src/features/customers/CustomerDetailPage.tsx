@@ -39,7 +39,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
   const payments = paymentsQuery.data ?? [];
   const total = financialSummary?.total_milk_quantity ?? 0,
     rev = financialSummary?.total_sales_amount ?? 0,
-    paymentsTotal = payments.reduce((s, p) => s + Number(p.amount), 0),
+    paymentsTotal = financialSummary?.total_payments_amount ?? 0,
     netBalance = rev - paymentsTotal,
     outstanding = Math.max(0, netBalance),
     customerCredit = Math.max(0, -netBalance),
@@ -116,7 +116,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
       <div className="grid kpis">
         <KPI label="TOTAL MILK" value={milkTxt(total)} foot={`${financialSummary?.entry_count ?? 0} entries`} />
         <KPI label="TOTAL SALES" value={money(rev)} foot={total ? `${money(rev / total)} per litre` : 'No sales'} />
-        <KPI label="PAYMENTS RECEIVED" value={money(paymentsTotal)} foot={`${payments.length} payment${payments.length === 1 ? '' : 's'}`} accent />
+        <KPI label="PAYMENTS RECEIVED" value={money(paymentsTotal)} foot={`${financialSummary?.payment_count ?? 0} payments recorded`} accent />
         <KPI
           label="OUTSTANDING"
           value={money(outstanding)}
@@ -209,7 +209,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
 
       <div style={{ height: 14 }} />
       <div className="card">
-        <h2 className="section-title">Payment history</h2>
+        <h2 className="section-title">Recent payment history (latest 500)</h2>
         {paymentsQuery.isPending ? (
           <div className="empty">Loading payments…</div>
         ) : paymentsQuery.isError ? (
