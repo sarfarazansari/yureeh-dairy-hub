@@ -28,6 +28,7 @@ import { BuffaloPurchaseForm } from './components/BuffaloPurchaseForm';
 import { BuffaloPurchasePaymentForm } from './components/BuffaloPurchasePaymentForm';
 import { BuffaloStatusForm } from './components/BuffaloStatusForm';
 import { BuffaloVendorForm } from './components/BuffaloVendorForm';
+import { BuffaloDispositionPanel } from './components/BuffaloDispositionPanel';
 import {
   BuffaloPaymentHistory,
   BuffaloStatusHistory,
@@ -199,6 +200,10 @@ export default function BuffaloDetailPage({ id }: { id: string }) {
 
         <PurchaseSummary buffalo={buffalo} />
       </div>
+
+      <div style={{ height: 14 }} />
+
+      <BuffaloDispositionPanel buffalo={buffalo} />
 
       <div style={{ height: 14 }} />
 
