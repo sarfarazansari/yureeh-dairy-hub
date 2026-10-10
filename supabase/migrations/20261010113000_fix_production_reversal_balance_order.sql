@@ -10,7 +10,7 @@ create or replace function public.sync_buffalo_milk_pool_receipt(
 )
 returns void
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $$
 declare
