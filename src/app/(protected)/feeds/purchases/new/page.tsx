@@ -45,7 +45,7 @@ export default function NewFeedPurchasePage() {
       if (requestKey.current?.fingerprint !== fingerprint) {
         requestKey.current = { fingerprint, key: crypto.randomUUID() };
       }
-      await createFeedPurchase(supabase, values, requestKey.current.key);
+      await createFeedPurchase(supabase, values, requestKey.current!.key);
       requestKey.current = null;
       setToast({ message: 'Feed purchase recorded successfully.', type: 'success' });
       return null;
