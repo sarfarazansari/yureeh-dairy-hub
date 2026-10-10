@@ -126,9 +126,11 @@ For each buffalo + date + shift:
 
 record milk quantity.
 
-Do NOT assume fat is measured for every buffalo.
+Do NOT measure fat for every individual buffalo.
 
-Fat belongs to milk sale/collection records where applicable.
+Record the mixed farm milk pool's fat separately once per business date and shift
+(Morning / Evening). This is a pool-level measurement, not a buffalo attribute.
+Customer sale/collection fat remains a separate value where it is measured for pricing.
 
 Do not add fields merely because they exist in another module.
 
