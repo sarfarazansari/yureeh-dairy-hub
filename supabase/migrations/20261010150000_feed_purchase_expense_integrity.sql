@@ -42,11 +42,9 @@ create unique index if not exists feed_purchase_original_stock_in_unique
 create table if not exists public.feed_purchase_idempotency (
   user_id uuid not null references auth.users(id) on delete cascade,
   idempotency_key uuid not null,
-  purchase_id uuid not null,
+  purchase_id uuid not null references public.feed_purchases(id) on delete restrict,
   created_at timestamptz not null default now(),
   primary key (user_id, idempotency_key),
-  foreign key (user_id, purchase_id)
-    references public.feed_purchases(user_id, id) on delete restrict
 );
 
 alter table public.feed_purchase_idempotency enable row level security;
@@ -141,7 +139,8 @@ begin
       errcode = '23514',
       message = 'This expense is managed by Feed Purchases. Edit or delete it from the Feed Purchases module.';
   end if;
-  return case when tg_op = 'DELETE' then old else new end;
+  if tg_op = 'DELETE' then return old; end if;
+  return new;
 end;
 $$;
 
