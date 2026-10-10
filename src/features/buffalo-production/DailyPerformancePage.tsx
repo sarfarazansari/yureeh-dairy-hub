@@ -17,6 +17,7 @@ export default function DailyPerformancePage() {
   const [date, setDate] = useState(() => localDateKey());
   const [shift, setShift] = useState<MilkEntryShift>('MORNING');
   const [values, setValues] = useState<Record<string, string>>({});
+  const [fatValue, setFatValue] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -24,6 +25,7 @@ export default function DailyPerformancePage() {
   const saveMutation = useSaveProductionSheetMutation();
   const rows: BuffaloProductionAnimal[] = sheetQuery.data?.buffaloes ?? [];
   const production = sheetQuery.data?.production ?? [];
+  const getFatValue = () => fatValue ?? sheetQuery.data?.fatPercentage ?? '';
 
   const savedValues = useMemo(
     () => Object.fromEntries(
@@ -55,13 +57,20 @@ export default function DailyPerformancePage() {
         submitted.push({ buffalo_id: animal.id, milk_quantity: parsed.data });
       }
 
+      const fat = getFatValue().trim();
+      if (fat && (!/^\\d+(\\.\\d{1,2})?$/.test(fat) || Number(fat) < 0 || Number(fat) > 100)) {
+        throw new Error('Enter pooled milk fat between 0 and 100, with at most 2 decimal places.');
+      }
+
       await saveMutation.mutateAsync({
         businessDate: date,
         shift,
         buffaloIds: rows.map((animal) => animal.id),
         records: submitted,
+        fatPercentage: fat ? Number(fat) : null,
       });
-      setMessage('Production saved. Blank fields have no record; entered zero is recorded.');
+      setFatValue(null);
+      setMessage('Production and pooled milk fat saved. Blank buffalo fields have no record; entered zero is recorded.');
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Could not save production.');
     }
@@ -88,6 +97,7 @@ export default function DailyPerformancePage() {
               onChange={(event) => {
                 setDate(event.target.value);
                 setValues({});
+                setFatValue(null);
               }}
             />
           </label>
@@ -104,11 +114,35 @@ export default function DailyPerformancePage() {
               onClick={() => {
                 setShift(value);
                 setValues({});
+                setFatValue(null);
               }}
             >
               {value === 'MORNING' ? 'Morning' : 'Evening'}
             </button>
           ))}
+        </div>
+
+        <div className="row" style={{ marginTop: 12, marginBottom: 12, alignItems: 'end' }}>
+          <label className="field" style={{ maxWidth: 320, flex: 1 }}>
+            <span>Mixed milk fat (%) · {shift === 'MORNING' ? 'Morning' : 'Evening'}</span>
+            <input
+              aria-label="Mixed milk fat percentage"
+              className="date-chip"
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              inputMode="decimal"
+              placeholder="Enter pooled milk fat"
+              disabled={saveMutation.isPending || sheetQuery.isFetching}
+              value={getFatValue()}
+              onChange={(event) => {
+                setFatValue(event.target.value);
+                setMessage('');
+              }}
+            />
+          </label>
+          <span className="kpi-foot">Enter the fat measured from the combined milk, once per shift — not per buffalo.</span>
         </div>
 
         <div className="row production-total">
