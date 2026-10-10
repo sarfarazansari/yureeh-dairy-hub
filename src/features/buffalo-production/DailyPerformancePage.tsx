@@ -58,7 +58,7 @@ export default function DailyPerformancePage() {
       }
 
       const fat = getFatValue().trim();
-      if (fat && (!/^\\d+(\\.\\d{1,2})?$/.test(fat) || Number(fat) < 0 || Number(fat) > 100)) {
+      if (fat && (!/^\d+(\.\d{1,2})?$/.test(fat) || Number(fat) < 0 || Number(fat) > 100)) {
         throw new Error('Enter pooled milk fat between 0 and 100, with at most 2 decimal places.');
       }
 
