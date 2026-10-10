@@ -44,7 +44,7 @@ create table if not exists public.feed_purchase_idempotency (
   idempotency_key uuid not null,
   purchase_id uuid not null references public.feed_purchases(id) on delete restrict,
   created_at timestamptz not null default now(),
-  primary key (user_id, idempotency_key),
+  primary key (user_id, idempotency_key)
 );
 
 alter table public.feed_purchase_idempotency enable row level security;
