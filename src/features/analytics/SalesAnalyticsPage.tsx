@@ -14,7 +14,7 @@ import {
   type SalesAnalyticsSummary,
 } from './services/sales-analytics.service';
 import { getAnalyticsDateRange, type AnalyticsDatePreset } from '@/lib/analytics-date-range';
-import { useMilkPoolReconciliationQuery } from '@/features/milk/milk.queries';
+import { useMilkPoolReconciliationQuery, useMilkPoolShiftFatQuery } from '@/features/milk/milk.queries';
 export default function SalesAnalyticsPage() {
   const now = new Date(),
     today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -66,6 +66,14 @@ export default function SalesAnalyticsPage() {
     };
   }, [from, to, customerId]);
   const poolQuery = useMilkPoolReconciliationQuery(from, to);
+  const poolFatQuery = useMilkPoolShiftFatQuery(from, to);
+  const poolFatByDate = new Map<string, { MORNING?: number; EVENING?: number }>();
+  for (const record of poolFatQuery.data ?? []) {
+    const shifts = poolFatByDate.get(record.business_date) ?? {};
+    shifts[record.shift] = Number(record.fat_percentage);
+    poolFatByDate.set(record.business_date, shifts);
+  }
+  const poolFatRows = Array.from(poolFatByDate.entries()).sort(([a], [b]) => b.localeCompare(a));
   const poolRows = poolQuery.data ?? [];
   const poolProduced = poolRows.reduce((sum, row) => sum + Number(row.production_litres), 0);
   const poolDelivered = poolRows.reduce((sum, row) => sum + Number(row.customer_delivery_litres), 0);
@@ -173,6 +181,37 @@ export default function SalesAnalyticsPage() {
             <div><div className="kpi-label">DELIVERED</div><b>{milkTxt(poolDelivered)}</b></div>
             <div><div className="kpi-label">OTHER USE / WASTAGE</div><b>{milkTxt(poolOtherUse)}</b></div>
             <div><div className="kpi-label">CLOSING POOL</div><b>{poolClosing === null ? '—' : milkTxt(poolClosing)}</b></div>
+          </div>
+        )}
+      </div>
+      <div className="card" style={{ marginBottom: 14 }}>
+        <div className="row">
+          <div>
+            <h2 className="section-title">Mixed milk fat history</h2>
+            <p className="kpi-foot">Fat measured from the combined farm milk, recorded separately for morning and evening. This is not the customer-sale weighted fat shown below.</p>
+          </div>
+          <Link href="/milk-pool" style={{ fontSize: 10, color: '#277452' }}>View in milk pool →</Link>
+        </div>
+        {poolFatQuery.isPending ? (
+          <div className="empty">Loading mixed milk fat…</div>
+        ) : poolFatQuery.isError ? (
+          <p className="auth-message">{poolFatQuery.error.message}</p>
+        ) : !poolFatRows.length ? (
+          <div className="empty">No mixed milk fat recorded for this date range.</div>
+        ) : (
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>DATE</th><th>MORNING FAT</th><th>EVENING FAT</th></tr></thead>
+              <tbody>
+                {poolFatRows.map(([dateKey, shifts]) => (
+                  <tr key={dateKey}>
+                    <td>{formatDate(dateKey)}</td>
+                    <td>{shifts.MORNING === undefined ? '—' : `${shifts.MORNING.toFixed(2)}%`}</td>
+                    <td>{shifts.EVENING === undefined ? '—' : `${shifts.EVENING.toFixed(2)}%`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
