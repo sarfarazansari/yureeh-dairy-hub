@@ -18,7 +18,8 @@ import {
 import { formatDate } from '@/lib/date-format';
 import { localDateKey } from '@/lib/milk-entry-list';
 import { getAnalyticsDateRange, type AnalyticsDatePreset } from '@/lib/analytics-date-range';
-import { getBuffaloProductionRange, getProducingBuffaloes } from './services/buffalo-production.service';
+import { getBuffaloProductionRange, getMilkPoolShiftFatHistory, getProducingBuffaloes } from './services/buffalo-production.service';
+import type { MilkPoolShiftFatRecord } from './types';
 import type { BuffaloProductionAnimal, BuffaloProductionRecord } from './types';
 function setPreset(value: string, setFrom: (date: string) => void, setTo: (date: string) => void) {
   const range = getAnalyticsDateRange(value as AnalyticsDatePreset);
@@ -32,6 +33,7 @@ export default function BuffaloAnalyticsPage() {
     [to, setTo] = useState(today),
     [range, setRange] = useState('today'),
     [records, setRecords] = useState<BuffaloProductionRecord[]>([]),
+    [fatRecords, setFatRecords] = useState<MilkPoolShiftFatRecord[]>([]),
     [herd, setHerd] = useState<BuffaloProductionAnimal[]>([]),
     [sort, setSort] = useState<'total' | 'average' | 'morning' | 'evening'>('total'),
     [busy, setBusy] = useState(true),
@@ -42,13 +44,15 @@ export default function BuffaloAnalyticsPage() {
       if (!supabase) return;
       setBusy(true);
       try {
-        const [production, buffaloes] = await Promise.all([
+        const [production, buffaloes, fatHistory] = await Promise.all([
           getBuffaloProductionRange(supabase, from, to),
           getProducingBuffaloes(supabase),
+          getMilkPoolShiftFatHistory(supabase, from, to),
         ]);
         if (!live) return;
         setRecords(production);
         setHerd(buffaloes);
+        setFatRecords(fatHistory);
         setError('');
       } catch (loadError) {
         if (live)
@@ -183,6 +187,28 @@ export default function BuffaloAnalyticsPage() {
           value={String(records.length)}
           foot="One record per buffalo, date and shift"
         />
+      </div>
+      <div style={{ height: 14 }} />
+      <div className="card">
+        <h2 className="section-title">Mixed milk fat history</h2>
+        <p className="kpi-foot">Fat is recorded once for the combined milk for each date and shift.</p>
+        <div className="table-wrap">
+          <table className="table">
+            <thead><tr><th>BUSINESS DATE</th><th>SHIFT</th><th>MIXED MILK FAT</th></tr></thead>
+            <tbody>
+              {fatRecords.map((record) => (
+                <tr key={record.business_date + record.shift}>
+                  <td>{formatDate(record.business_date)}</td>
+                  <td>{record.shift === 'MORNING' ? 'Morning' : 'Evening'}</td>
+                  <td><b>{Number(record.fat_percentage).toFixed(2)}%</b></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {!busy && !fatRecords.length && (
+          <div className="empty">No mixed milk fat records in this date range. Change the date range or record fat from Daily performance.</div>
+        )}
       </div>
       <div className="grid two">
         <div className="card">
