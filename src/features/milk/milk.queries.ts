@@ -24,6 +24,7 @@ import {
   getMilkDeliveryContext,
   recordMilkPoolMovement,
   type RecordMilkPoolMovementInput,
+  type MilkPoolShiftFatRecord,
 } from './services/milk-pool.service';
 import type { MilkEntryFormValues } from '@/lib/milk-entry-validation';
 
@@ -41,7 +42,8 @@ export const milkQueryKeys = {
     shift: 'MORNING' | 'EVENING';
     excludeEntryId?: string;
   }) => [...milkQueryKeys.all, 'duplicate', input] as const,
-  pool: (from: string, to: string) => [...milkQueryKeys.all, 'pool', from, to] as const,\n  poolFat: (from: string, to: string) => [...milkQueryKeys.all, 'pool-fat', from, to] as const,
+  pool: (from: string, to: string) => [...milkQueryKeys.all, 'pool', from, to] as const,
+  poolFat: (from: string, to: string) => [...milkQueryKeys.all, 'pool-fat', from, to] as const,
   deliveryContext: (businessDate: string, shift: 'MORNING' | 'EVENING') =>
     [...milkQueryKeys.all, 'delivery-context', businessDate, shift] as const,
 };
