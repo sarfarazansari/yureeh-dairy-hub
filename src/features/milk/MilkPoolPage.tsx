@@ -16,6 +16,7 @@ import {
 } from './milk.constants';
 import {
   useMilkPoolReconciliationQuery,
+  useMilkPoolShiftFatQuery,
   useRecordMilkPoolMovementMutation,
 } from './milk.queries';
 
@@ -35,6 +36,15 @@ export default function MilkPoolPage() {
   const [message, setMessage] = useState('');
 
   const reconciliationQuery = useMilkPoolReconciliationQuery(from, to);
+  const fatQuery = useMilkPoolShiftFatQuery(from, to);
+  const fatByDate = useMemo(() => {
+    const grouped: Record<string, { MORNING?: number; EVENING?: number }> = {};
+    for (const record of fatQuery.data ?? []) {
+      grouped[record.business_date] ??= {};
+      grouped[record.business_date][record.shift] = Number(record.fat_percentage);
+    }
+    return Object.entries(grouped).sort(([a], [b]) => b.localeCompare(a));
+  }, [fatQuery.data]);
   const recordMutation = useRecordMilkPoolMovementMutation();
   const rows = reconciliationQuery.data ?? [];
 
@@ -159,6 +169,41 @@ export default function MilkPoolPage() {
             </p>
           </div>
         </div>
+      </div>
+
+      <div className="card">
+        <div className="row production-controls">
+          <div>
+            <h2 className="section-title">Mixed milk fat by shift</h2>
+            <p className="kpi-foot">Fat measured from the combined milk pool. This is separate from each customer's sale fat.</p>
+          </div>
+          {fatQuery.isFetching && <span className="kpi-foot">Updating…</span>}
+        </div>
+        {fatQuery.isError ? (
+          <div className="list-error" role="alert">
+            <span>{fatQuery.error.message}</span>
+            <button type="button" className="btn secondary" onClick={() => void fatQuery.refetch()}>Retry</button>
+          </div>
+        ) : fatQuery.isPending ? (
+          <div className="empty">Loading mixed milk fat…</div>
+        ) : !fatByDate.length ? (
+          <div className="empty">No fat records in this date range. Enter mixed milk fat from Daily performance for each shift.</div>
+        ) : (
+          <div className="table-wrap">
+            <table className="table">
+              <thead><tr><th>DATE</th><th>MORNING FAT</th><th>EVENING FAT</th></tr></thead>
+              <tbody>
+                {fatByDate.map(([dateKey, shifts]) => (
+                  <tr key={dateKey}>
+                    <td>{dateKey}</td>
+                    <td>{shifts.MORNING === undefined ? '—' : `${shifts.MORNING.toFixed(2)}%`}</td>
+                    <td>{shifts.EVENING === undefined ? '—' : `${shifts.EVENING.toFixed(2)}%`}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       <div className="card">

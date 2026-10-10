@@ -106,3 +106,27 @@ export async function getMilkDeliveryContext(
     availablePoolLitres: row ? Number(row.available_pool_litres) : 0,
   };
 }
+
+
+export type MilkPoolShiftFatRecord = {
+  business_date: string;
+  shift: 'MORNING' | 'EVENING';
+  fat_percentage: number | string;
+};
+
+export async function getMilkPoolShiftFatHistory(
+  client: SupabaseClient,
+  from: string,
+  to: string,
+): Promise<MilkPoolShiftFatRecord[]> {
+  const { data, error } = await client
+    .from('milk_pool_shift_fat')
+    .select('business_date,shift,fat_percentage')
+    .gte('business_date', from)
+    .lte('business_date', to)
+    .order('business_date', { ascending: false })
+    .order('shift');
+
+  if (error) throw new Error(error.message || 'Could not load mixed milk fat history.');
+  return (data ?? []) as MilkPoolShiftFatRecord[];
+}

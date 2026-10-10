@@ -21,9 +21,11 @@ import {
 } from '@/lib/milk-entry-list';
 import {
   getMilkPoolReconciliation,
+  getMilkPoolShiftFatHistory,
   getMilkDeliveryContext,
   recordMilkPoolMovement,
   type RecordMilkPoolMovementInput,
+  type MilkPoolShiftFatRecord,
 } from './services/milk-pool.service';
 import type { MilkEntryFormValues } from '@/lib/milk-entry-validation';
 
@@ -42,6 +44,7 @@ export const milkQueryKeys = {
     excludeEntryId?: string;
   }) => [...milkQueryKeys.all, 'duplicate', input] as const,
   pool: (from: string, to: string) => [...milkQueryKeys.all, 'pool', from, to] as const,
+  poolFat: (from: string, to: string) => [...milkQueryKeys.all, 'pool-fat', from, to] as const,
   deliveryContext: (businessDate: string, shift: 'MORNING' | 'EVENING') =>
     [...milkQueryKeys.all, 'delivery-context', businessDate, shift] as const,
 };
@@ -154,5 +157,14 @@ export function useRecordMilkPoolMovementMutation() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: milkQueryKeys.all });
     },
+  });
+}
+
+
+export function useMilkPoolShiftFatQuery(from: string, to: string) {
+  return useQuery<MilkPoolShiftFatRecord[], Error>({
+    queryKey: milkQueryKeys.poolFat(from, to),
+    queryFn: () => getMilkPoolShiftFatHistory(requireSupabase(), from, to),
+    enabled: Boolean(from && to && from <= to),
   });
 }
