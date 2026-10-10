@@ -9,6 +9,7 @@ import type {
   BuffaloProductionRecord,
   BuffaloProductionSheetInput,
   BuffaloProductionSheetRecord,
+  MilkPoolShiftFatRecord,
 } from '../types';
 
 export async function getProductionSheet(
@@ -16,24 +17,29 @@ export async function getProductionSheet(
   businessDate: string,
   shift: MilkEntryShift,
 ) {
-  const [buffaloes, production] = await Promise.all([
-    client.rpc('get_buffalo_production_sheet', {
-      p_business_date: businessDate,
-    }),
+  const [buffaloes, production, fat] = await Promise.all([
+    client.rpc('get_buffalo_production_sheet', { p_business_date: businessDate }),
     client
       .from('buffalo_milk_production')
       .select('buffalo_id,shift,milk_quantity')
       .eq('business_date', businessDate)
       .eq('shift', shift),
+    client
+      .from('milk_pool_shift_fat')
+      .select('fat_percentage')
+      .eq('business_date', businessDate)
+      .eq('shift', shift)
+      .maybeSingle(),
   ]);
 
-  if (buffaloes.error || production.error) {
-    throw new Error('Could not load buffaloes and production records. Please try again.');
+  if (buffaloes.error || production.error || fat.error) {
+    throw new Error('Could not load buffaloes, production, and pooled milk fat. Please try again.');
   }
 
   return {
     buffaloes: (buffaloes.data ?? []) as BuffaloProductionAnimal[],
     production: (production.data ?? []) as BuffaloProductionSheetRecord[],
+    fatPercentage: fat.data?.fat_percentage == null ? '' : String(fat.data.fat_percentage),
   };
 }
 
@@ -41,19 +47,34 @@ export async function saveProductionSheet(
   client: SupabaseClient,
   input: BuffaloProductionSheetInput,
 ) {
-  const { error } = await client.rpc('save_buffalo_milk_production', {
+  const { error } = await client.rpc('save_buffalo_production_with_fat', {
     p_business_date: input.businessDate,
     p_shift: input.shift,
     p_buffalo_ids: input.buffaloIds,
     p_records: input.records,
+    p_fat_percentage: input.fatPercentage,
   });
 
   if (error) {
-    if (error.code === '22023') {
-      throw new Error(error.message);
-    }
-    throw new Error('Could not save buffalo production. Please try again.');
+    if (error.code === '22023') throw new Error(error.message);
+    throw new Error('Could not save production and pooled milk fat. Please try again.');
   }
+}
+
+export async function getMilkPoolShiftFatHistory(
+  client: SupabaseClient,
+  from: string,
+  to: string,
+) {
+  const { data, error } = await client
+    .from('milk_pool_shift_fat')
+    .select('business_date,shift,fat_percentage')
+    .gte('business_date', from)
+    .lte('business_date', to)
+    .order('business_date', { ascending: false })
+    .order('shift');
+  if (error) throw new Error('Could not load pooled milk fat history.');
+  return (data ?? []) as MilkPoolShiftFatRecord[];
 }
 
 export async function getBuffaloProductionRange(client: SupabaseClient, from: string, to: string) {
@@ -63,7 +84,6 @@ export async function getBuffaloProductionRange(client: SupabaseClient, from: st
     .gte('business_date', from)
     .lte('business_date', to)
     .order('business_date');
-
   if (error) throw new Error('Could not load production analytics. Please try again.');
   return (data ?? []) as BuffaloProductionRecord[];
 }
@@ -75,7 +95,6 @@ export async function getBuffaloProductionHistory(client: SupabaseClient, buffal
     .eq('buffalo_id', buffaloId)
     .order('business_date', { ascending: false })
     .order('shift');
-
   if (error) throw new Error('Could not load this buffalo’s production history. Please try again.');
   return (data ?? []) as BuffaloProductionHistoryRecord[];
 }
@@ -86,7 +105,6 @@ export async function getProducingBuffaloes(client: SupabaseClient) {
     .select('id,buffalo_code,name,current_status')
     .eq('current_status', 'ACTIVE')
     .order('buffalo_code');
-
   if (error) throw new Error('Could not load active buffaloes. Please try again.');
   return (data ?? []) as BuffaloProductionAnimal[];
 }

@@ -13,8 +13,9 @@ export async function createFeedPurchase(client: SupabaseClient, values: {
   paymentMethod: string;
   dueDate?: string;
   notes?: string;
-}) {
-  const { data, error } = await client.rpc('create_feed_purchase', {
+}, idempotencyKey: string) {
+  const { data, error } = await client.rpc('create_feed_purchase_idempotent', {
+    p_idempotency_key: idempotencyKey,
     p_feed_item_id: values.feedItemId,
     p_vendor_id: values.vendorId || null,
     p_business_date: values.businessDate,

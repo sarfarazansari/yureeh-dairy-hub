@@ -16,6 +16,7 @@ import { TimedNotice } from '@/components/ui/TimedNotice';
 export default function ExpenseHistory() {
   const [rows, setRows] = useState<ExpenseRow[]>([]),
     [ledgerExpenseIds, setLedgerExpenseIds] = useState<Set<string>>(new Set()),
+    [feedPurchaseExpenseIds, setFeedPurchaseExpenseIds] = useState<Set<string>>(new Set()),
     [categories, setCategories] = useState<
       Pick<ExpenseCategory, 'id' | 'name' | 'category_group'>[]
     >([]),
@@ -73,14 +74,17 @@ export default function ExpenseHistory() {
     setRows(e.data ?? []);
     const expenseIds = (e.data ?? []).map((expense) => expense.id);
     if (expenseIds.length) {
-      const { data: paymentRows, error: paymentError } = await supabase
-        .from('expense_payments')
-        .select('expense_id')
-        .in('expense_id', expenseIds);
-      if (paymentError) setMessage(paymentError.message);
-      setLedgerExpenseIds(new Set((paymentRows ?? []).map((payment) => payment.expense_id)));
+      const [paymentResult, purchaseResult] = await Promise.all([
+        supabase.from('expense_payments').select('expense_id').in('expense_id', expenseIds),
+        supabase.from('feed_purchases').select('expense_id').eq('status', 'ACTIVE').in('expense_id', expenseIds),
+      ]);
+      if (paymentResult.error) setMessage(paymentResult.error.message);
+      if (purchaseResult.error) setMessage(purchaseResult.error.message);
+      setLedgerExpenseIds(new Set((paymentResult.data ?? []).map((payment) => payment.expense_id)));
+      setFeedPurchaseExpenseIds(new Set((purchaseResult.data ?? []).map((purchase) => purchase.expense_id).filter((id): id is string => Boolean(id))));
     } else {
       setLedgerExpenseIds(new Set());
+      setFeedPurchaseExpenseIds(new Set());
     }
     setCategories(c.data ?? []);
     setVendors(v.data ?? []);
@@ -511,8 +515,8 @@ export default function ExpenseHistory() {
                     <button
                       type="button"
                       className="date-chip"
-                      disabled={ledgerExpenseIds.has(r.id)}
-                      title={ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and is locked to preserve its ledger.' : undefined}
+                      disabled={ledgerExpenseIds.has(r.id) || feedPurchaseExpenseIds.has(r.id)}
+                      title={feedPurchaseExpenseIds.has(r.id) ? 'Managed by Feed Purchases. Use the Feed Purchases module.' : ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and is locked to preserve its ledger.' : undefined}
                       onClick={() => setEditing({ ...r })}
                     >
                       Edit
@@ -520,8 +524,8 @@ export default function ExpenseHistory() {
                     <button
                       type="button"
                       className="date-chip"
-                      disabled={ledgerExpenseIds.has(r.id)}
-                      title={ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and cannot be deleted.' : undefined}
+                      disabled={ledgerExpenseIds.has(r.id) || feedPurchaseExpenseIds.has(r.id)}
+                      title={feedPurchaseExpenseIds.has(r.id) ? 'Managed by Feed Purchases. Use the Feed Purchases module.' : ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and cannot be deleted.' : undefined}
                       onClick={() => setPendingDelete(r)}
                     >
                       Delete
@@ -534,7 +538,7 @@ export default function ExpenseHistory() {
         </div>
         {!visible.length && <div className="empty">No expenses match these filters.</div>}
         <p className="kpi-foot">
-          Showing at most 1,000 most recent expenses. Expenses with dated payment-ledger entries are locked against editing or deletion to preserve reconciliation.
+          Showing at most 1,000 most recent expenses. Feed-purchase expenses are managed in Feed Purchases; expenses with dated payment-ledger entries are locked to preserve reconciliation.
         </p>
         <Dialog
           open={!!pendingDelete}
