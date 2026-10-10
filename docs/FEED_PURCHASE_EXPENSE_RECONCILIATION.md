@@ -13,7 +13,7 @@ left join public.expenses e
   on e.id = fp.expense_id and e.user_id = fp.user_id
 where fp.expense_id is null
    or e.id is null
-   or (fp.status = 'ACTIVE' and e.deleted_at is not null)
+   or e.deleted_at is not null
 order by fp.created_at desc;
 ```
 
