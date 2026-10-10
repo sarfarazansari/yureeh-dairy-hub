@@ -112,6 +112,11 @@ begin
 end;
 $$;
 
+-- Force clients through the idempotent wrapper; the wrapper invokes this RPC as its definer.
+revoke all on function public.create_feed_purchase(
+  uuid,uuid,date,numeric,numeric,text,numeric,text,date,text
+) from public, anon, authenticated;
+
 revoke all on function public.create_feed_purchase_idempotent(
   uuid,uuid,uuid,date,numeric,numeric,text,numeric,text,date,text
 ) from public, anon;
