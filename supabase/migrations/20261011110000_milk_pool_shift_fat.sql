@@ -65,3 +65,34 @@ $$;
 
 revoke all on function public.save_milk_pool_shift_fat(date, public.milk_shift, numeric) from public, anon;
 grant execute on function public.save_milk_pool_shift_fat(date, public.milk_shift, numeric) to authenticated;
+
+-- Save the animal production sheet and pooled fat in one transaction. If either
+-- validation or write fails, PostgreSQL rolls back both operations.
+create or replace function public.save_buffalo_production_with_fat(
+  p_business_date date,
+  p_shift public.milk_shift,
+  p_buffalo_ids uuid[],
+  p_records jsonb,
+  p_fat_percentage numeric
+)
+returns void
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+  perform public.save_buffalo_milk_production(
+    p_business_date, p_shift, p_buffalo_ids, p_records
+  );
+  perform public.save_milk_pool_shift_fat(
+    p_business_date, p_shift, p_fat_percentage
+  );
+end;
+$$;
+
+revoke all on function public.save_buffalo_production_with_fat(
+  date, public.milk_shift, uuid[], jsonb, numeric
+) from public, anon;
+grant execute on function public.save_buffalo_production_with_fat(
+  date, public.milk_shift, uuid[], jsonb, numeric
+) to authenticated;
