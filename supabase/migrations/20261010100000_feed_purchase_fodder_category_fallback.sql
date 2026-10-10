@@ -88,7 +88,8 @@ begin
   -- Fodder inventory names can include a specific variety/type, while
   -- accounting uses the shared "Dry Fodder" category.
   if v_category_id is null
-     and v_feed.category = 'FODDER' then
+     and v_feed.category = 'FODDER'
+     and lower(trim(v_feed.name)) like 'dry fodder %' then
     select id into v_category_id
     from public.expense_categories
     where is_active
