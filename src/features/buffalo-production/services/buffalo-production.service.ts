@@ -47,26 +47,17 @@ export async function saveProductionSheet(
   client: SupabaseClient,
   input: BuffaloProductionSheetInput,
 ) {
-  const { error: productionError } = await client.rpc('save_buffalo_milk_production', {
+  const { error } = await client.rpc('save_buffalo_production_with_fat', {
     p_business_date: input.businessDate,
     p_shift: input.shift,
     p_buffalo_ids: input.buffaloIds,
     p_records: input.records,
-  });
-
-  if (productionError) {
-    if (productionError.code === '22023') throw new Error(productionError.message);
-    throw new Error('Could not save buffalo production. Please try again.');
-  }
-
-  const { error: fatError } = await client.rpc('save_milk_pool_shift_fat', {
-    p_business_date: input.businessDate,
-    p_shift: input.shift,
     p_fat_percentage: input.fatPercentage,
   });
-  if (fatError) {
-    if (fatError.code === '22023') throw new Error(fatError.message);
-    throw new Error('Production was saved, but pooled milk fat was not saved. Please save again to retry the fat record.');
+
+  if (error) {
+    if (error.code === '22023') throw new Error(error.message);
+    throw new Error('Could not save production and pooled milk fat. Please try again.');
   }
 }
 
