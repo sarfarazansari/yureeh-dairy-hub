@@ -16,7 +16,7 @@ export default function NewFeedPurchasePage() {
   const [vendors, setVendors] = useState<Pick<ExpenseVendor, 'id' | 'name'>[]>([]);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [busy, setBusy] = useState(false);
-  const requestKey = useRef<string | null>(null);
+  const requestKey = useRef<{ fingerprint: string; key: string } | null>(null);
 
   const loadOptions = useCallback(async () => {
     if (!supabase) return;
@@ -41,9 +41,12 @@ export default function NewFeedPurchasePage() {
     setBusy(true);
     setToast(null);
     try {
-      requestKey.current ??= crypto.randomUUID();
-      await createFeedPurchase(supabase, values, requestKey.current);
-      requestKey.current = crypto.randomUUID();
+      const fingerprint = JSON.stringify(values);
+      if (requestKey.current?.fingerprint !== fingerprint) {
+        requestKey.current = { fingerprint, key: crypto.randomUUID() };
+      }
+      await createFeedPurchase(supabase, values, requestKey.current.key);
+      requestKey.current = null;
       setToast({ message: 'Feed purchase recorded successfully.', type: 'success' });
       return null;
     } catch (error) {
