@@ -99,7 +99,12 @@ export default function NewExpense() {
   }
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (busy) return;
     setMessage('');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > todayLocal()) {
+      setMessage('Business date must be today or an earlier date.');
+      return;
+    }
     if (!supabase || !category) {
       setMessage('Choose an active expense category.');
       return;
@@ -159,13 +164,13 @@ export default function NewExpense() {
       <div className="row" style={{ marginBottom: 14 }}>
         <Link href="/expenses" className="date-chip">← Back to expenses</Link>
       </div>
-      <form className="layout" onSubmit={save}>
+      <form className="layout" onSubmit={save} aria-busy={busy}>
         <div className="card">
           <h2 className="section-title">Expense details</h2>
           <div className="expense-form-grid">
             <div className="field">
               <label>Business date</label>
-              <input required type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <input required type="date" max={todayLocal()} value={date} onChange={(e) => setDate(e.target.value)} />
             </div>
             <div className="field">
               <label>Category</label>
