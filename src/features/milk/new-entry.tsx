@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
+import { LoaderCircle } from 'lucide-react';
 
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
@@ -18,6 +19,7 @@ import {
 } from './milk.queries';
 
 export default function NewEntryForm() {
+  const submittingRef = useRef(false);
   const [customerId, setCustomerId] = useState(''),
     [date, setDate] = useState(() => localDateKey()),
     [shift, setShift] = useState<'MORNING' | 'EVENING'>('MORNING'),
@@ -75,6 +77,7 @@ export default function NewEntryForm() {
 
   async function save(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submittingRef.current || createMutation.isPending) return;
     setMessage('');
 
     const parsed = milkEntrySchema.safeParse({
@@ -113,14 +116,23 @@ export default function NewEntryForm() {
     }
 
     setErrors({});
+    submittingRef.current = true;
     try {
       await createMutation.mutateAsync(parsed.data);
-      setMessage('Entry saved successfully.');
+      setCustomerId('');
+      setDate(localDateKey());
+      setShift('MORNING');
       setQuantity('');
       setFat('');
+      setPricingTypeOverride(null);
+      setRateOverride(null);
       setNotes('');
+      setErrors({});
+      setMessage('Entry saved successfully.');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not save entry.');
+    } finally {
+      submittingRef.current = false;
     }
   }
 
@@ -135,6 +147,7 @@ export default function NewEntryForm() {
               <input
                 id="entry-date"
                 type="date"
+                max={localDateKey()}
                 value={date}
                 disabled={createMutation.isPending}
                 onChange={(event) => {
@@ -315,8 +328,8 @@ export default function NewEntryForm() {
           </div>
 
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-          <button disabled={createMutation.isPending || duplicateQuery.isPending || deliveryContextQuery.isPending || deliveryContextQuery.isError || !deliveryContextQuery.data?.herdEntryExists || !!duplicateQuery.data} className="btn">
-            {createMutation.isPending ? 'Saving…' : 'Save entry'}
+          <button type="submit" disabled={createMutation.isPending || duplicateQuery.isPending || deliveryContextQuery.isPending || deliveryContextQuery.isError || !deliveryContextQuery.data?.herdEntryExists || !!duplicateQuery.data} className="btn" aria-live="polite">
+            {createMutation.isPending ? <><LoaderCircle size={16} className="animate-spin" aria-hidden="true" /> Saving…</> : 'Save entry'}
           </button>
         </div>
 
