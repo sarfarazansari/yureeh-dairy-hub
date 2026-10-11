@@ -32,7 +32,7 @@ export function BuffaloDisposalForm({ buffalo }: { buffalo: BuffaloDetail }) {
       <p className="sub">Use this for death, transfer out, or another permanent removal. A disposal cannot be undone through status editing.</p>
       <div className="grid two">
         <DispositionField label="Disposal type"><select value={type} onChange={(e) => setType(e.target.value as typeof type)}><option value="DEATH">Death</option><option value="TRANSFER_OUT">Transfer out</option><option value="OTHER">Other</option></select></DispositionField>
-        <DispositionField label="Effective date"><input required type="date" value={date} onChange={(e) => setDate(e.target.value)} /></DispositionField>
+        <DispositionField label="Effective date"><input required type="date" max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} value={date} onChange={(e) => setDate(e.target.value)} /></DispositionField>
         <DispositionField label="Reason"><input required value={reason} onChange={(e) => setReason(e.target.value)} /></DispositionField>
         <DispositionField label="Notes"><input value={notes} onChange={(e) => setNotes(e.target.value)} /></DispositionField>
       </div>
