@@ -109,6 +109,7 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
           <label>Purchase date</label>
           <input
             type="date"
+            max={todayLocal()}
             value={values.businessDate}
             onChange={(e) => update('businessDate', e.target.value)}
           />
