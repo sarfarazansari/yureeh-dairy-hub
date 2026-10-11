@@ -306,7 +306,7 @@ export default function NewExpense() {
             </div>
             <div className="field">
               <label>Due date</label>
-              <input type="date" value={due} onChange={(e) => setDue(e.target.value)} />
+              <input type="date" min={date} value={due} onChange={(e) => setDue(e.target.value)} />
             </div>
             <div className="field">
               <label>Buffalo (optional)</label>
@@ -337,8 +337,8 @@ export default function NewExpense() {
             </div>
           </div>
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-          <button className="btn" disabled={busy || !categories.length}>
-            {busy ? 'Saving…' : 'Save expense'}
+          <button className="btn" disabled={busy || !categories.length} aria-live="polite">
+            {busy ? <><span className="spinner" aria-hidden="true" /> Saving…</> : 'Save expense'}
           </button>
         </div>
         <aside className="card">
