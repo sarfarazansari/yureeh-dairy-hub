@@ -89,7 +89,7 @@ export function FeedConsumptionForm({
       <div className="expense-form-grid">
         <div className="field">
           <label>Consumption date</label>
-          <input type="date" value={values.businessDate} onChange={(e) => update('businessDate', e.target.value)} />
+          <input type="date" max={todayLocal()} value={values.businessDate} onChange={(e) => update('businessDate', e.target.value)} />
           {errors.businessDate && <span className="auth-message">{errors.businessDate}</span>}
         </div>
 
