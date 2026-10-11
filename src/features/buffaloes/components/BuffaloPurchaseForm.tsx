@@ -77,6 +77,7 @@ export function BuffaloPurchaseForm({
         <Field label="Purchase Date">
           <input
             type="date"
+            max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)}
             value={purchaseDate}
             onChange={(event) => setPurchaseDate(event.target.value)}
           />
