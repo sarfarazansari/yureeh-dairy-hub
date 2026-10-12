@@ -147,7 +147,7 @@ export default function ExpenseDetail({ params }: { params: Promise<{ id: string
                 <form className="expense-form-grid" onSubmit={recordPayment}>
                   <div className="field">
                     <label>Payment date</label>
-                    <DatePicker value={paymentDate} max={new Date().toLocaleDateString('en-CA')} onChange={setPaymentDate} ariaLabel="Payment date" />
+                    <DatePicker value={paymentDate} max={todayLocal()} onChange={setPaymentDate} ariaLabel="Payment date" />
                   </div>
                   <div className="field">
                     <label>Amount · pending {money(Number(row.pending_amount))}</label>
