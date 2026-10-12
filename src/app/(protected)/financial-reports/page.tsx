@@ -97,11 +97,11 @@ export default function FinancialReportsPage() {
         <div className="expense-form-grid">
           <div className="field">
             <label>From date</label>
-            <DatePicker value={from} max={to || today} onChange={setFrom} ariaLabel="From date" />
+            <DatePicker clearable value={from} max={to || today} onChange={setFrom} ariaLabel="From date" />
           </div>
           <div className="field">
             <label>To date</label>
-            <DatePicker value={to} min={from} max={today} onChange={setTo} ariaLabel="To date" />
+            <DatePicker clearable value={to} min={from} max={today} onChange={setTo} ariaLabel="To date" />
           </div>
         </div>
         <p className="kpi-foot">Period metrics use the selected dates. Current balances include all activity; historical balances are measured at the end date ({to}). Legacy undated payments are shown separately instead of being assigned invented dates.</p>
