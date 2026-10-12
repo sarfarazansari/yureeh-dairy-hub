@@ -182,11 +182,11 @@ export default function ExpenseHistory() {
         <div className="expense-form-grid">
           <div className="field">
             <label>From date</label>
-            <DatePicker value={from} max={to || todayLocal()} onChange={setFrom} ariaLabel="From date" />
+            <DatePicker clearable value={from} max={to || todayLocal()} onChange={setFrom} ariaLabel="From date" />
           </div>
           <div className="field">
             <label>To date</label>
-            <DatePicker value={to} min={from} max={todayLocal()} onChange={setTo} ariaLabel="To date" />
+            <DatePicker clearable value={to} min={from} max={todayLocal()} onChange={setTo} ariaLabel="To date" />
           </div>
           <div className="field">
             <label>Search</label>
