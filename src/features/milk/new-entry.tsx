@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
+import { DatePicker } from '@/components/ui/date-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { milkTxt } from '@/lib/farm-format';
@@ -132,18 +133,18 @@ export default function NewEntryForm() {
           <div className="grid three">
             <div className="field">
               <label htmlFor="entry-date">Business date</label>
-              <input
+              <DatePicker
                 id="entry-date"
-                type="date"
                 value={date}
+                max={localDateKey()}
                 disabled={createMutation.isPending}
-                onChange={(event) => {
-                  setDate(event.target.value);
+                onChange={(value) => {
+                  setDate(value);
                   setPricingTypeOverride(null);
                   setRateOverride(null);
                   setFat('');
                 }}
-                aria-invalid={!!errors.business_date}
+                ariaLabel="Business date"
               />
               {errors.business_date && <small className="field-error">{errors.business_date}</small>}
             </div>
