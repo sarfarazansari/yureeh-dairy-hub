@@ -132,6 +132,7 @@ export default function SalesAnalyticsPage() {
         </select>
         <div className="row">
           <DatePicker
+            clearable
             ariaLabel="From date"
             value={from}
             max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)}
@@ -141,6 +142,7 @@ export default function SalesAnalyticsPage() {
             }}
           />
           <DatePicker
+            clearable
             ariaLabel="To date"
             value={to}
             min={from}
