@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -165,7 +166,7 @@ export default function NewExpense() {
           <div className="expense-form-grid">
             <div className="field">
               <label>Business date</label>
-              <input required type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <DatePicker value={date} max={todayLocal()} onChange={setDate} ariaLabel="Business date" />
             </div>
             <div className="field">
               <label>Category</label>
@@ -301,7 +302,7 @@ export default function NewExpense() {
             </div>
             <div className="field">
               <label>Due date</label>
-              <input type="date" value={due} onChange={(e) => setDue(e.target.value)} />
+              <DatePicker value={due} min={date} onChange={setDue} clearable ariaLabel="Due date" />
             </div>
             <div className="field">
               <label>Buffalo (optional)</label>
