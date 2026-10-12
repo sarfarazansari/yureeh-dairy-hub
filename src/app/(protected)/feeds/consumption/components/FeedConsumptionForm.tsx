@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
+import { DatePicker } from '@/components/ui/date-picker';
 import { todayLocal } from '../../../expenses/shared';
 import type { FeedItem } from '@/lib/feed-types';
 import type { FeedInventoryStock } from '@/lib/feed-inventory-types';
@@ -89,7 +90,7 @@ export function FeedConsumptionForm({
       <div className="expense-form-grid">
         <div className="field">
           <label>Consumption date</label>
-          <input type="date" value={values.businessDate} onChange={(e) => update('businessDate', e.target.value)} />
+          <DatePicker value={values.businessDate} max={todayLocal()} onChange={(value) => update('businessDate', value)} ariaLabel="Consumption date" />
           {errors.businessDate && <span className="auth-message">{errors.businessDate}</span>}
         </div>
 
