@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '../components/ui/date-picker.css';
 :root {
   --ink: #183b32;
   --muted: #77857e;
