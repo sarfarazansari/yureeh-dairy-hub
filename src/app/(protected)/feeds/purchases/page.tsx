@@ -98,11 +98,11 @@ export default function FeedPurchasesPage() {
           <div className="expense-form-grid">
             <div className="field">
               <label>From</label>
-              <DatePicker value={from} max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setFrom(value); setPage(0); }} ariaLabel="From date" />
+              <DatePicker clearable value={from} max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setFrom(value); setPage(0); }} ariaLabel="From date" />
             </div>
             <div className="field">
               <label>To</label>
-              <DatePicker value={to} min={from} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setTo(value); setPage(0); }} ariaLabel="To date" />
+              <DatePicker clearable value={to} min={from} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setTo(value); setPage(0); }} ariaLabel="To date" />
             </div>
             <div className="field">
               <label>Feed</label>
