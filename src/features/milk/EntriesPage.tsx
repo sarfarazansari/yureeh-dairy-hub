@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
+import { DatePicker } from '@/components/ui/date-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { Dialog } from '@/app/dialog';
 import { TimedNotice } from '@/components/ui/TimedNotice';
@@ -353,11 +354,11 @@ export default function EntriesPage() {
           <div className="custom-date-range">
             <div className="field">
               <label htmlFor="entries-from">From</label>
-              <input id="entries-from" type="date" value={from} max={to} onChange={(event) => setFilter('from', event.target.value)} />
+              <DatePicker id="entries-from" value={from} max={to || today} onChange={(value) => setFilter('from', value)} ariaLabel="From date" />
             </div>
             <div className="field">
               <label htmlFor="entries-to">To</label>
-              <input id="entries-to" type="date" value={to} min={from} max={today} onChange={(event) => setFilter('to', event.target.value)} />
+              <DatePicker id="entries-to" value={to} min={from} max={today} onChange={(value) => setFilter('to', value)} ariaLabel="To date" />
             </div>
           </div>
         )}
@@ -454,7 +455,7 @@ export default function EntriesPage() {
               <button className="dialog-close" type="button" onClick={() => setEditing(null)} disabled={updateMutation.isPending}>×</button>
             </div>
             <div className="grid three dialog-form-grid">
-              <div className="field"><label htmlFor="edit-entry-date">Business date</label><input id="edit-entry-date" type="date" value={editing.business_date} onChange={(event) => setEditing({ ...editing, business_date: event.target.value })} />{editErrors.business_date && <small className="field-error">{editErrors.business_date}</small>}</div>
+              <div className="field"><label htmlFor="edit-entry-date">Business date</label><DatePicker id="edit-entry-date" value={editing.business_date} max={today} onChange={(value) => setEditing({ ...editing, business_date: value })} ariaLabel="Business date" />{editErrors.business_date && <small className="field-error">{editErrors.business_date}</small>}</div>
               <div className="field"><label htmlFor="edit-entry-shift">Shift</label><select id="edit-entry-shift" value={editing.shift} onChange={(event) => setEditing({ ...editing, shift: event.target.value as MilkEntryShift })}><option value="MORNING">Morning</option><option value="EVENING">Evening</option></select></div>
               <div className="field"><label htmlFor="edit-entry-customer">Customer</label><select id="edit-entry-customer" value={editing.customer_id} onChange={(event) => setEditing({ ...editing, customer_id: event.target.value })}><option value="">Select customer</option>{(customersQuery.data ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>{editErrors.customer_id && <small className="field-error">{editErrors.customer_id}</small>}</div>
             </div>
