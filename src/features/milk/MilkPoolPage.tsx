@@ -125,11 +125,11 @@ export default function MilkPoolPage() {
           <div className="grid two">
             <label className="field">
               <span>From</span>
-              <DatePicker value={from} max={to || localDateKey()} onChange={setFrom} ariaLabel="From date" />
+              <DatePicker clearable value={from} max={to || localDateKey()} onChange={setFrom} ariaLabel="From date" />
             </label>
             <label className="field">
               <span>To</span>
-              <DatePicker value={to} min={from} max={localDateKey()} onChange={setTo} ariaLabel="To date" />
+              <DatePicker clearable value={to} min={from} max={localDateKey()} onChange={setTo} ariaLabel="To date" />
             </label>
           </div>
         </div>
