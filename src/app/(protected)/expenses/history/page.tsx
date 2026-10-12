@@ -5,7 +5,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { calculateExpenseTotal, expensePaymentStatus } from '@/lib/expenses';
-import { ExpenseShell, money, ensureExpenseCategories } from '../shared';
+import { ExpenseShell, money, ensureExpenseCategories, todayLocal } from '../shared';
 import type {
   ExpenseBuffaloOption,
   ExpenseCategory,
@@ -182,11 +182,11 @@ export default function ExpenseHistory() {
         <div className="expense-form-grid">
           <div className="field">
             <label>From date</label>
-            <DatePicker value={from} max={to || new Date().toLocaleDateString('en-CA')} onChange={setFrom} ariaLabel="From date" />
+            <DatePicker value={from} max={to || todayLocal()} onChange={setFrom} ariaLabel="From date" />
           </div>
           <div className="field">
             <label>To date</label>
-            <DatePicker value={to} min={from} max={new Date().toLocaleDateString('en-CA')} onChange={setTo} ariaLabel="To date" />
+            <DatePicker value={to} min={from} max={todayLocal()} onChange={setTo} ariaLabel="To date" />
           </div>
           <div className="field">
             <label>Search</label>
