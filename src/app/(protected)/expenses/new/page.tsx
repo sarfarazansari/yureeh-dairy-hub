@@ -1,6 +1,7 @@
 'use client';
 import Link from 'next/link';
 import { DatePicker } from '@/components/ui/date-picker';
+import { LoaderCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -342,8 +343,8 @@ export default function NewExpense() {
             </div>
           </div>
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-          <button className="btn" disabled={busy || !categories.length}>
-            {busy ? 'Saving…' : 'Save expense'}
+          <button type="submit" className="btn" disabled={busy || !categories.length} aria-live="polite">
+            {busy ? <><LoaderCircle size={16} className="animate-spin" aria-hidden="true" /> Saving…</> : 'Save expense'}
           </button>
         </div>
         <aside className="card">
