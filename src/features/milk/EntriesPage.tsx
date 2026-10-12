@@ -354,11 +354,11 @@ export default function EntriesPage() {
           <div className="custom-date-range">
             <div className="field">
               <label htmlFor="entries-from">From</label>
-              <DatePicker id="entries-from" value={from} max={to || today} onChange={(value) => setFilter('from', value)} ariaLabel="From date" />
+              <DatePicker clearable id="entries-from" value={from} max={to || today} onChange={(value) => setFilter('from', value)} ariaLabel="From date" />
             </div>
             <div className="field">
               <label htmlFor="entries-to">To</label>
-              <DatePicker id="entries-to" value={to} min={from} max={today} onChange={(value) => setFilter('to', value)} ariaLabel="To date" />
+              <DatePicker clearable id="entries-to" value={to} min={from} max={today} onChange={(value) => setFilter('to', value)} ariaLabel="To date" />
             </div>
           </div>
         )}
