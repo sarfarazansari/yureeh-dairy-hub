@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Toast } from '@/components/ui/Toast';
 
@@ -168,7 +169,7 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }
         </label>
         <label className="field">
           <span>Cost date</span>
-          <input type="date" value={costDate} onChange={(event) => setCostDate(event.target.value)} required />
+          <DatePicker value={costDate} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={setCostDate} ariaLabel="Cost date" />
         </label>
         <label className="field">
           <span>Capitalized amount (₹)</span>
