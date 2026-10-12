@@ -39,8 +39,8 @@ export default function BuffaloSalesPage() {
           </div>
           <div className="expense-form-grid">
             <div className="field"><label>Search buyer</label><input value={search} placeholder="Buyer name or mobile" onChange={(e) => setSearch(e.target.value)} /></div>
-            <div className="field"><label>From date</label><DatePicker value={from} max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setFrom(value); setPage(0); }} ariaLabel="From date" /></div>
-            <div className="field"><label>To date</label><DatePicker value={to} min={from || undefined} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setTo(value); setPage(0); }} ariaLabel="To date" /></div>
+            <div className="field"><label>From date</label><DatePicker clearable value={from} max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setFrom(value); setPage(0); }} ariaLabel="From date" /></div>
+            <div className="field"><label>To date</label><DatePicker clearable value={to} min={from || undefined} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setTo(value); setPage(0); }} ariaLabel="To date" /></div>
           </div>
         </div>
         <div className="card">
