@@ -55,7 +55,6 @@ export function DatePicker({
   className = '',
 }: DatePickerProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const selectedDate = parseDateKey(value);
   const [open, setOpen] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(() => {
     const selected = parseDateKey(value);
