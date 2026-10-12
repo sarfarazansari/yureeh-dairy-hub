@@ -169,7 +169,7 @@ export function DatePicker({
             })}
           </div>
           <div className="shadcn-calendar-footer">
-            <button type="button" className="shadcn-calendar-today" disabled={(min && toDateKey(new Date()) < min) || (max && toDateKey(new Date()) > max)} onClick={() => chooseDate(new Date())}>Today</button>
+            <button type="button" className="shadcn-calendar-today" disabled={Boolean((min && toDateKey(new Date()) < min) || (max && toDateKey(new Date()) > max))} onClick={() => chooseDate(new Date())}>Today</button>
           </div>
         </div>
       )}
