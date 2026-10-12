@@ -2,6 +2,7 @@
 
 import { milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
+import { DatePicker } from '@/components/ui/date-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
 import { useEffect, useState } from 'react';
@@ -139,24 +140,23 @@ export default function BuffaloAnalyticsPage() {
           <option value="custom">Custom range</option>
         </select>
         <div className="row">
-          <input
-            aria-label="From date"
-            className="date-chip"
-            type="date"
+          <DatePicker
+            ariaLabel="From date"
             value={from}
-            onChange={(event) => {
+            max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)}
+            onChange={(value) => {
               setRange('custom');
-              setFrom(event.target.value);
+              setFrom(value);
             }}
           />
-          <input
-            aria-label="To date"
-            className="date-chip"
-            type="date"
+          <DatePicker
+            ariaLabel="To date"
             value={to}
-            onChange={(event) => {
+            min={from}
+            max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)}
+            onChange={(value) => {
               setRange('custom');
-              setTo(event.target.value);
+              setTo(value);
             }}
           />
         </div>
