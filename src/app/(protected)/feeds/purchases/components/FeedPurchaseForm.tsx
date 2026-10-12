@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { DatePicker } from '@/components/ui/date-picker';
 import { todayLocal } from '../../../expenses/shared';
 import type { FeedItem } from '@/lib/feed-types';
 import type { ExpenseVendor } from '@/lib/expense-types';
@@ -107,11 +108,7 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
       <div className="expense-form-grid">
         <div className="field">
           <label>Purchase date</label>
-          <input
-            type="date"
-            value={values.businessDate}
-            onChange={(e) => update('businessDate', e.target.value)}
-          />
+          <DatePicker value={values.businessDate} max={todayLocal()} onChange={(value) => update('businessDate', value)} ariaLabel="Purchase date" />
           {errors.businessDate && <span className="auth-message">{errors.businessDate}</span>}
         </div>
 
@@ -228,11 +225,7 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
         {values.paymentStatus !== 'PAID' && (
           <div className="field">
             <label>Due date</label>
-            <input
-              type="date"
-              value={values.dueDate}
-              onChange={(e) => update('dueDate', e.target.value)}
-            />
+            <DatePicker value={values.dueDate} min={values.businessDate} clearable onChange={(value) => update('dueDate', value)} ariaLabel="Due date" />
           </div>
         )}
 
