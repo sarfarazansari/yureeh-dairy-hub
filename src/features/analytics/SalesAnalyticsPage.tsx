@@ -2,6 +2,7 @@
 
 import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
+import { DatePicker } from '@/components/ui/date-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
 import { useEffect, useState } from 'react';
@@ -130,22 +131,21 @@ export default function SalesAnalyticsPage() {
           <option value="custom">Custom range</option>
         </select>
         <div className="row">
-          <input
-            className="date-chip"
-            type="date"
+          <DatePicker
             value={from}
-            onChange={(e) => {
+            max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)}
+            onChange={(value) => {
               setRange('custom');
-              setFrom(e.target.value);
+              setFrom(value);
             }}
           />
-          <input
-            className="date-chip"
-            type="date"
+          <DatePicker
             value={to}
-            onChange={(e) => {
+            min={from}
+            max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)}
+            onChange={(value) => {
               setRange('custom');
-              setTo(e.target.value);
+              setTo(value);
             }}
           />
           <select
