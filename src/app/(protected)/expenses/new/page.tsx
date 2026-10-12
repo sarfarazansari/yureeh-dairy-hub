@@ -100,7 +100,16 @@ export default function NewExpense() {
   }
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (busy) return;
     setMessage('');
+    if (!date || date > todayLocal()) {
+      setMessage('Business date must be today or an earlier date.');
+      return;
+    }
+    if (due && due < date) {
+      setMessage('Due date cannot be earlier than the business date.');
+      return;
+    }
     if (!supabase || !category) {
       setMessage('Choose an active expense category.');
       return;
