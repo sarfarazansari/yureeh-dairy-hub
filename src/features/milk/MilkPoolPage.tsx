@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
+import { DatePicker } from '@/components/ui/date-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { localDateKey, getMilkEntryPresetRange } from '@/lib/milk-entry-list';
@@ -124,11 +125,11 @@ export default function MilkPoolPage() {
           <div className="grid two">
             <label className="field">
               <span>From</span>
-              <input type="date" value={from} max={to} onChange={(event) => setFrom(event.target.value)} />
+              <DatePicker value={from} max={to || localDateKey()} onChange={setFrom} ariaLabel="From date" />
             </label>
             <label className="field">
               <span>To</span>
-              <input type="date" value={to} min={from} onChange={(event) => setTo(event.target.value)} />
+              <DatePicker value={to} min={from} max={localDateKey()} onChange={setTo} ariaLabel="To date" />
             </label>
           </div>
         </div>
@@ -215,7 +216,7 @@ export default function MilkPoolPage() {
         <form className="grid three" onSubmit={recordMovement}>
           <label className="field">
             <span>Business date</span>
-            <input type="date" value={businessDate} onChange={(event) => setBusinessDate(event.target.value)} />
+            <DatePicker value={businessDate} max={localDateKey()} onChange={setBusinessDate} ariaLabel="Business date" />
           </label>
           <label className="field">
             <span>Shift (optional)</span>
