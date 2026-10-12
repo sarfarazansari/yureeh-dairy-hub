@@ -99,7 +99,7 @@ export function DatePicker({
   const previousMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
   const nextMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
   const previousDisabled = !!min && toDateKey(new Date(previousMonth.getFullYear(), previousMonth.getMonth() + 1, 0)) < min;
-  const nextDisabled = !!max && toDateKey(nextMonth) > max.slice(0, 7) + '-31';
+  const nextDisabled = !!max && toDateKey(nextMonth) > max;
 
   function chooseDate(date: Date) {
     const key = toDateKey(date);
