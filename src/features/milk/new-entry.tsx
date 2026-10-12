@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
+import { LoaderCircle } from 'lucide-react';
 
 import { DatePicker } from '@/components/ui/date-picker';
 import { AppShell } from '@/components/layout/AppShell';
@@ -327,8 +328,8 @@ export default function NewEntryForm() {
           </div>
 
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-          <button disabled={createMutation.isPending || duplicateQuery.isPending || deliveryContextQuery.isPending || deliveryContextQuery.isError || !deliveryContextQuery.data?.herdEntryExists || !!duplicateQuery.data} className="btn">
-            {createMutation.isPending ? 'Saving…' : 'Save entry'}
+          <button type="submit" disabled={createMutation.isPending || duplicateQuery.isPending || deliveryContextQuery.isPending || deliveryContextQuery.isError || !deliveryContextQuery.data?.herdEntryExists || !!duplicateQuery.data} className="btn" aria-live="polite">
+            {createMutation.isPending ? <><LoaderCircle size={16} className="animate-spin" aria-hidden="true" /> Saving…</> : 'Save entry'}
           </button>
         </div>
 
