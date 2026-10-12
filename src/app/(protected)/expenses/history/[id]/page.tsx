@@ -1,6 +1,7 @@
 'use client';
 import { formatDate, formatDateTime } from '@/lib/date-format';
 import Link from 'next/link';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ExpenseShell, money, todayLocal } from '../../shared';
@@ -146,12 +147,7 @@ export default function ExpenseDetail({ params }: { params: Promise<{ id: string
                 <form className="expense-form-grid" onSubmit={recordPayment}>
                   <div className="field">
                     <label>Payment date</label>
-                    <input
-                      type="date"
-                      required
-                      value={paymentDate}
-                      onChange={(e) => setPaymentDate(e.target.value)}
-                    />
+                    <DatePicker value={paymentDate} max={new Date().toLocaleDateString('en-CA')} onChange={setPaymentDate} ariaLabel="Payment date" />
                   </div>
                   <div className="field">
                     <label>Amount · pending {money(Number(row.pending_amount))}</label>
