@@ -59,3 +59,15 @@ export function todayDateKey() {
     String(today.getDate()).padStart(2, '0'),
   ].join('-');
 }
+
+/** Optional date-only field; blank values remain blank while supplied values are normalized. */
+export function optionalDateKeySchema(label: string) {
+  return z
+    .string()
+    .optional()
+    .transform((value) => {
+      if (!value) return value;
+      return normalizeDateKey(value) ?? value;
+    })
+    .refine((value) => !value || isValidDateKey(value), `Enter a valid ${label.toLowerCase()}.`);
+}
