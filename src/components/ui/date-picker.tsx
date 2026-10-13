@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { normalizeDateKey } from '@/lib/date-input';
+import { normalizeDateKey } from '@/lib/date-key';
 
 type DatePickerProps = {
   id?: string;
