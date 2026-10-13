@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { dateKeySchema, todayDateKey } from '@/lib/date-input';
+import { dateKeySchema, optionalDateKeySchema, todayDateKey } from '@/lib/date-input';
 
 export const feedPurchaseSchema = z.object({
   feedItemId: z.string().uuid('Select a feed item.'),
@@ -10,7 +10,7 @@ export const feedPurchaseSchema = z.object({
   paymentStatus: z.enum(['PAID', 'PARTIAL', 'CREDIT']),
   paidAmount: z.coerce.number().min(0, 'Paid amount cannot be negative.'),
   paymentMethod: z.string().min(1),
-  dueDate: z.string().optional(),
+  dueDate: optionalDateKeySchema('Due date'),
   notes: z.string().max(1000).optional(),
 }).superRefine((value, ctx) => {
   const total = Math.round(value.purchaseQuantity * value.rate * 100) / 100;
