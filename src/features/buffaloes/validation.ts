@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { dateKeySchema } from '@/lib/date-input';
 
 import { buffaloPaymentTypes, type BuffaloPaymentType } from './types';
 export { getBuffaloPaymentType as buffaloPaymentType } from './utils';
@@ -13,12 +14,7 @@ const requiredNumber = (label: string) =>
 export const buffaloPurchaseSchema = z.object({
   buffalo_code: z.string().trim().min(1, 'Buffalo code is required.').transform((value) => value.toUpperCase()),
   breed: z.string().trim().min(1, 'Breed is required.'),
-  purchase_date: z.string().min(1, 'Purchase date is required.')
-    .refine((value) => {
-      if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return false;
-      const parsed = new Date(`${value}T00:00:00Z`);
-      return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
-    }, 'Enter a valid purchase date.'),
+  purchase_date: dateKeySchema('Purchase date'),
   purchase_price: requiredNumber('Purchase price').refine((value) => value > 0, 'Purchase price must be greater than ₹0.'),
   advance_paid: requiredNumber('Advance paid').refine((value) => value >= 0, 'Advance paid must be zero or greater.'),
   payment_type: z.enum(buffaloPaymentTypes),
