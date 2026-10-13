@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { DatePicker } from '@/components/ui/date-picker';
 import { money } from '@/lib/farm-format';
 
 import { useRecordBuffaloPurchasePayment } from '../hooks/use-buffaloes';
@@ -55,7 +56,7 @@ export function BuffaloPurchasePaymentForm({ buffalo }: { buffalo: BuffaloDetail
 
       <div className="grid two">
         <Field label="Payment Date">
-          <input type="date" value={date} onChange={(event) => setDate(event.target.value)} />
+          <DatePicker value={date} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={setDate} ariaLabel="Payment date" />
         </Field>
 
         <Field label="Amount · ₹">

@@ -8,6 +8,7 @@ import { TimedNotice } from '@/components/ui/TimedNotice';
 import { formatDate } from '@/lib/date-format';
 import { buffaloPaymentType, buffaloPurchaseSchema } from './validation';
 import { getBuffaloPaymentType } from './utils';
+import { DatePicker } from '@/components/ui/date-picker';
 import { money } from '@/lib/farm-format';
 
 import {
@@ -174,11 +175,7 @@ function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Purchase Date" error={errors.purchase_date}>
-          <input
-            type="date"
-            value={form.purchase_date}
-            onChange={(event) => onChange('purchase_date', event.target.value)}
-          />
+          <DatePicker value={form.purchase_date} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => onChange('purchase_date', value)} ariaLabel="Purchase date" />
         </Field>
 
         <Field label="Purchase Price · ₹" error={errors.purchase_price}>
@@ -246,12 +243,7 @@ function BuffaloPurchaseForm({
         </Field>
 
         <Field label={`Udhaar Due Date${hasBalance ? '' : ' (not applicable)'}`} error={errors.payment_due_date}>
-          <input
-            type="date"
-            value={form.payment_due_date}
-            disabled={!hasBalance}
-            onChange={(event) => onChange('payment_due_date', event.target.value)}
-          />
+          <DatePicker value={form.payment_due_date} min={form.purchase_date} disabled={!hasBalance} clearable onChange={(value) => onChange('payment_due_date', value)} ariaLabel="Udhaar due date" />
         </Field>
 
         <Field label="Udhaar Terms" error={errors.payment_terms}>

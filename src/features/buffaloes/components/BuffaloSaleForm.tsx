@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { DatePicker } from '@/components/ui/date-picker';
 import { money } from '@/lib/farm-format';
 import { useCreateBuffaloSale } from '../hooks/use-buffaloes';
 import type { BuffaloDetail, BuffaloPaymentMethod } from '../types';
@@ -52,16 +53,16 @@ export function BuffaloSaleForm({ buffalo }: { buffalo: BuffaloDetail }) {
       <h2 className="section-title">Record buffalo sale</h2>
       <p className="sub">Recording a sale will mark this buffalo SOLD and prevent future production entries.</p>
       <div className="grid two">
-        <DispositionField label="Sale date"><input required type="date" max={getDispositionToday()} value={saleDate} onChange={(e) => setSaleDate(e.target.value)} /></DispositionField>
+        <DispositionField label="Sale date"><DatePicker value={saleDate} max={getDispositionToday()} onChange={setSaleDate} ariaLabel="Sale date" /></DispositionField>
         <DispositionField label="Buyer name"><input required value={buyerName} onChange={(e) => setBuyerName(e.target.value)} /></DispositionField>
         <DispositionField label="Buyer mobile"><input value={buyerMobile} onChange={(e) => setBuyerMobile(e.target.value)} /></DispositionField>
         <DispositionField label="Buyer location"><input value={buyerLocation} onChange={(e) => setBuyerLocation(e.target.value)} /></DispositionField>
         <DispositionField label="Sale price (₹)"><input required type="number" min="0.01" step="0.01" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} /></DispositionField>
         <DispositionField label="Received now (₹)"><input required type="number" min="0" step="0.01" value={initialPayment} onChange={(e) => setInitialPayment(e.target.value)} /></DispositionField>
         <DispositionField label="Outstanding"><div className="calculated-balance">{money(pending)}</div></DispositionField>
-        {paid > 0 && <DispositionField label="Payment date"><input required type="date" max={getDispositionToday()} value={paymentDate} onChange={(e) => setPaymentDate(e.target.value)} /></DispositionField>}
+        {paid > 0 && <DispositionField label="Payment date"><DatePicker value={paymentDate} max={getDispositionToday()} onChange={setPaymentDate} ariaLabel="Payment date" /></DispositionField>}
         {paid > 0 && <DispositionField label="Payment method"><select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as BuffaloPaymentMethod)}>{DISPOSITION_PAYMENT_METHODS.map((method) => <option key={method} value={method}>{method.replace('_', ' ')}</option>)}</select></DispositionField>}
-        {pending > 0 && <DispositionField label="Due date"><input required type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} /></DispositionField>}
+        {pending > 0 && <DispositionField label="Due date"><DatePicker value={dueDate} min={saleDate} onChange={setDueDate} ariaLabel="Due date" /></DispositionField>}
         {pending > 0 && <DispositionField label="Payment terms"><input value={terms} onChange={(e) => setTerms(e.target.value)} /></DispositionField>}
         <DispositionField label="Transaction reference"><input value={reference} onChange={(e) => setReference(e.target.value)} /></DispositionField>
         <DispositionField label="Notes"><input value={notes} onChange={(e) => setNotes(e.target.value)} /></DispositionField>

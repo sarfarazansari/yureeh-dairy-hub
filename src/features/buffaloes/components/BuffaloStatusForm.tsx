@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { DatePicker } from '@/components/ui/date-picker';
 
 import { useChangeBuffaloStatus } from '../hooks/use-buffaloes';
 import { BUFFALO_STATUSES, type BuffaloDetail } from '../types';
@@ -62,11 +63,7 @@ export function BuffaloStatusForm({ buffalo }: { buffalo: BuffaloDetail }) {
         </Field>
 
         <Field label="Effective Date">
-          <input
-            type="date"
-            value={effectiveDate}
-            onChange={(event) => setEffectiveDate(event.target.value)}
-          />
+          <DatePicker value={effectiveDate} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={setEffectiveDate} ariaLabel="Effective date" />
         </Field>
       </div>
 
