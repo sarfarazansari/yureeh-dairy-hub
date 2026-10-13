@@ -14,6 +14,9 @@ export const feedPurchaseSchema = z.object({
   notes: z.string().max(1000).optional(),
 }).superRefine((value, ctx) => {
   const total = Math.round(value.purchaseQuantity * value.rate * 100) / 100;
+  if (value.dueDate && value.dueDate < value.businessDate) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['dueDate'], message: 'Due date cannot be earlier than purchase date.' });
+  }
   if (value.paidAmount > total) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['paidAmount'], message: 'Paid amount cannot exceed total.' });
   }
