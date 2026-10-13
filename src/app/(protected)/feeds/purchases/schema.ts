@@ -1,18 +1,22 @@
 import { z } from 'zod';
+import { dateKeySchema, optionalDateKeySchema, todayDateKey } from '@/lib/date-input';
 
 export const feedPurchaseSchema = z.object({
   feedItemId: z.string().uuid('Select a feed item.'),
   vendorId: z.string().uuid().optional().or(z.literal('')),
-  businessDate: z.string().min(1, 'Business date is required.').refine((value) => /^\d{4}-\d{2}-\d{2}$/.test(value) && value <= new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10), 'Purchase date must be today or earlier.'),
+  businessDate: dateKeySchema('Business date').refine((value) => value <= todayDateKey(), 'Purchase date must be today or earlier.'),
   purchaseQuantity: z.coerce.number().positive('Quantity must be greater than zero.'),
   rate: z.coerce.number().positive('Rate must be greater than zero.'),
   paymentStatus: z.enum(['PAID', 'PARTIAL', 'CREDIT']),
   paidAmount: z.coerce.number().min(0, 'Paid amount cannot be negative.'),
   paymentMethod: z.string().min(1),
-  dueDate: z.string().optional(),
+  dueDate: optionalDateKeySchema('Due date'),
   notes: z.string().max(1000).optional(),
 }).superRefine((value, ctx) => {
   const total = Math.round(value.purchaseQuantity * value.rate * 100) / 100;
+  if (value.dueDate && value.dueDate < value.businessDate) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['dueDate'], message: 'Due date cannot be earlier than purchase date.' });
+  }
   if (value.paidAmount > total) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['paidAmount'], message: 'Paid amount cannot exceed total.' });
   }

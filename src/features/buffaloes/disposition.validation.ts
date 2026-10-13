@@ -1,13 +1,9 @@
 import { z } from 'zod';
 import { BUFFALO_PAYMENT_METHODS } from './types';
+import { dateKeySchema, optionalDateKeySchema, todayDateKey } from '@/lib/date-input';
 
 const validDate = (label: string) =>
-  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, `${label} is required.`)
-    .refine((value) => {
-      const date = new Date(`${value}T00:00:00Z`);
-      return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
-    }, `Enter a valid ${label.toLowerCase()}.`)
-    .refine((value) => value <= new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10), `${label} cannot be in the future.`);
+  dateKeySchema(label).refine((value) => value <= todayDateKey(), `${label} cannot be in the future.`);
 
 const requiredMoney = (label: string) =>
   z.string().trim().min(1, `${label} is required.`)
@@ -23,8 +19,8 @@ export const buffaloSaleSchema = z.object({
   sale_price: requiredMoney('Sale price').refine((value) => value > 0, 'Sale price must be greater than ₹0.'),
   initial_payment: requiredMoney('Initial payment').refine((value) => value >= 0, 'Initial payment cannot be negative.'),
   payment_method: z.enum(BUFFALO_PAYMENT_METHODS).optional(),
-  payment_date: z.string().optional().refine((value) => !value || value <= new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10), 'Payment date cannot be in the future.'),
-  payment_due_date: z.string().optional(),
+  payment_date: optionalDateKeySchema('Payment date').refine((value) => !value || value <= todayDateKey(), 'Payment date cannot be in the future.'),
+  payment_due_date: optionalDateKeySchema('Payment due date'),
   payment_terms: z.string().optional(),
   transaction_reference: z.string().optional(),
   notes: z.string().optional(),
