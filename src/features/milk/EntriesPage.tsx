@@ -32,7 +32,6 @@ import {
   useMilkEntryExportQuery,
   useUpdateMilkEntryMutation,
 } from './milk.queries';
-import { MILK_ENTRY_PAGE_SIZE } from './milk.constants';
 
 type EditableMilkEntry = Omit<
   MilkEntryListRow,
