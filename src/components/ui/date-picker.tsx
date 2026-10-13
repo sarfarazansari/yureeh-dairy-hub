@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { normalizeDateKey } from '@/lib/date-input';
 
 type DatePickerProps = {
   id?: string;
@@ -19,12 +20,11 @@ type DatePickerProps = {
 const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
 function parseDateKey(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
-  const [year, month, day] = value.split('-').map(Number);
-  const date = new Date(year, month - 1, day);
-  return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
-    ? date
-    : null;
+  const normalized = normalizeDateKey(value);
+  if (!normalized) return null;
+
+  const [year, month, day] = normalized.split('-').map(Number);
+  return new Date(year, month - 1, day);
 }
 
 function toDateKey(date: Date) {
@@ -149,7 +149,7 @@ export function DatePicker({
               if (!day) return <span key={`empty-${index}`} className="shadcn-calendar-empty" aria-hidden="true" />;
               const key = toDateKey(day);
               const isDisabled = (!!min && key < min) || (!!max && key > max);
-              const isSelected = key === value;
+              const isSelected = key === (normalizeDateKey(value) ?? value);
               const isToday = key === toDateKey(new Date());
               return (
                 <button
