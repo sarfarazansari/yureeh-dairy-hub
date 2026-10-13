@@ -1733,3 +1733,15 @@ button {
     gap: 12px;
   }
 }
+
+
+/* Improve scanability of the milk entries list with subtle zebra striping. */
+.table tbody tr:nth-child(odd) {
+  background-color: #f8faf8;
+}
+.table tbody tr:nth-child(even) {
+  background-color: #ffffff;
+}
+.table tbody tr:hover {
+  background-color: #eef5f0;
+}
