@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { dateKeySchema, optionalDateKeySchema, todayDateKey } from '@/lib/date-input';
 
 import { buffaloPaymentTypes, type BuffaloPaymentType } from './types';
 export { getBuffaloPaymentType as buffaloPaymentType } from './utils';
@@ -13,21 +14,19 @@ const requiredNumber = (label: string) =>
 export const buffaloPurchaseSchema = z.object({
   buffalo_code: z.string().trim().min(1, 'Buffalo code is required.').transform((value) => value.toUpperCase()),
   breed: z.string().trim().min(1, 'Breed is required.'),
-  purchase_date: z.string().min(1, 'Purchase date is required.')
-    .refine((value) => {
-      if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(value)) return false;
-      const parsed = new Date(`${value}T00:00:00Z`);
-      return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
-    }, 'Enter a valid purchase date.'),
+  purchase_date: dateKeySchema('Purchase date').refine((value) => value <= todayDateKey(), 'Purchase date cannot be in the future.'),
   purchase_price: requiredNumber('Purchase price').refine((value) => value > 0, 'Purchase price must be greater than ₹0.'),
   advance_paid: requiredNumber('Advance paid').refine((value) => value >= 0, 'Advance paid must be zero or greater.'),
   payment_type: z.enum(buffaloPaymentTypes),
-  payment_due_date: z.string().optional(),
+  payment_due_date: optionalDateKeySchema('Udhaar due date'),
   payment_terms: z.string().optional(),
   buffalo_name: z.string().optional(),
   vendor_name: z.string().optional(),
   vendor_location: z.string().optional(),
 }).superRefine((value, context) => {
+  if (value.payment_due_date && value.payment_due_date < value.purchase_date) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ['payment_due_date'], message: 'Udhaar due date cannot be earlier than purchase date.' });
+  }
   if (value.advance_paid > value.purchase_price) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['advance_paid'], message: 'Advance paid cannot be greater than purchase price.' });
   }
