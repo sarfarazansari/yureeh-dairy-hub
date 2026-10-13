@@ -70,6 +70,7 @@ export function useMilkEntryExportQuery(filters: MilkEntryFilters) {
     queryKey: [...milkQueryKeys.all, 'entries-export', filters] as const,
     queryFn: () => getMilkEntryListAll(requireSupabase(), filters),
     staleTime: 0,
+    enabled: Boolean(filters.from && filters.to && filters.from <= filters.to),
   });
 }
 
