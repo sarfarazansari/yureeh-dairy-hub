@@ -15,6 +15,7 @@ import {
 } from './services/milk-entry.service';
 import {
   getMilkEntryList,
+  getMilkEntryListAll,
   type MilkEntryFilters,
   type MilkEntryListResult,
   type MilkEntryPagination,
@@ -61,6 +62,14 @@ export function useMilkEntryListQuery(
   return useQuery<MilkEntryListResult, Error>({
     queryKey: milkQueryKeys.entries(filters, pagination),
     queryFn: () => getMilkEntryList(requireSupabase(), filters, pagination),
+  });
+}
+
+export function useMilkEntryExportQuery(filters: MilkEntryFilters) {
+  return useQuery({
+    queryKey: [...milkQueryKeys.all, 'entries-export', filters] as const,
+    queryFn: () => getMilkEntryListAll(requireSupabase(), filters),
+    staleTime: 0,
   });
 }
 
