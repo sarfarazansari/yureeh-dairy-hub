@@ -1666,3 +1666,82 @@ button {
 .kpi-label {
   overflow-wrap: anywhere;
 }
+
+
+/* Milk entries summary and pagination controls */
+.milk-entry-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: 12px;
+  align-items: stretch;
+  margin: 18px 0;
+}
+.milk-entry-summary-card {
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--border, #e2e8e4);
+  border-radius: 10px;
+  background: var(--card, #fff);
+}
+.milk-entry-summary-card span {
+  display: block;
+  color: var(--muted-foreground, #64756d);
+  font-size: 12px;
+  margin-bottom: 7px;
+}
+.milk-entry-summary-card strong {
+  display: block;
+  color: var(--foreground, #203d33);
+  font-size: clamp(17px, 2vw, 23px);
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+.milk-entry-summary-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.page-size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted-foreground, #64756d);
+  font-size: 13px;
+  white-space: nowrap;
+}
+.page-size-control select {
+  min-width: 72px;
+}
+@media (max-width: 900px) {
+  .milk-entry-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .milk-entry-summary-actions {
+    justify-content: flex-start;
+  }
+}
+@media (max-width: 520px) {
+  .milk-entry-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .milk-entry-summary-actions {
+    flex-wrap: wrap;
+  }
+  .milk-entry-pagination {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}
+
+
+/* Improve scanability of the milk entries list with subtle zebra striping. */
+.table tbody tr:nth-child(odd) {
+  background-color: #f8faf8;
+}
+.table tbody tr:nth-child(even) {
+  background-color: #ffffff;
+}
+.table tbody tr:hover {
+  background-color: #eef5f0;
+}

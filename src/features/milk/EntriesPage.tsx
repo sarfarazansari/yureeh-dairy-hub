@@ -29,9 +29,9 @@ import {
   useMilkEntryCustomersQuery,
   useMilkEntryDuplicateQuery,
   useMilkEntryListQuery,
+  useMilkEntryExportQuery,
   useUpdateMilkEntryMutation,
 } from './milk.queries';
-import { MILK_ENTRY_PAGE_SIZE } from './milk.constants';
 
 type EditableMilkEntry = Omit<
   MilkEntryListRow,
@@ -74,6 +74,8 @@ export default function EntriesPage() {
   const to = range === 'custom' ? searchParams.get('to') ?? today : presetRange!.to;
   const pageValue = Number(searchParams.get('page') ?? '1');
   const page = Number.isSafeInteger(pageValue) && pageValue > 0 ? pageValue : 1;
+  const rawPageSize = Number(searchParams.get('pageSize') ?? '20');
+  const pageSize = [10, 20, 50, 100].includes(rawPageSize) ? rawPageSize : 20;
   const customerId = searchParams.get('customer') ?? '';
   const querySearch = (searchParams.get('q') ?? '').trim().slice(0, 100);
   const rawShift = searchParams.get('shift');
@@ -91,24 +93,75 @@ export default function EntriesPage() {
     shift,
     pricingType: pricing,
   };
-  const pagination = useMemo(() => ({ page, pageSize: MILK_ENTRY_PAGE_SIZE }), [page]);
+  const pagination = useMemo(() => ({ page, pageSize }), [page, pageSize]);
   const dateError =
     range === 'custom' && (!isValidBusinessDate(from) || !isValidBusinessDate(to) || from > to);
 
   const listQuery = useMilkEntryListQuery(filters, pagination);
+  const exportQuery = useMilkEntryExportQuery(filters);
   const customersQuery = useMilkEntryCustomersQuery();
   const updateMutation = useUpdateMilkEntryMutation();
   const deleteMutation = useDeleteMilkEntryMutation();
 
   const rows = listQuery.data?.rows ?? [];
   const total = listQuery.data?.total ?? 0;
-  const pageCount = Math.max(1, Math.ceil(total / MILK_ENTRY_PAGE_SIZE));
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const allFilteredRows = exportQuery.data ?? [];
+  const totalMilkLitres = allFilteredRows.reduce((sum, row) => sum + Number(row.milk_quantity), 0);
+  const totalSalesAmount = allFilteredRows.reduce((sum, row) => sum + Number(row.calculated_amount), 0);
 
   const [customerSearch, setCustomerSearch] = useState(querySearch);
   const [editing, setEditing] = useState<EditableMilkEntry | null>(null);
   const [pendingDelete, setPendingDelete] = useState<MilkEntryListRow | null>(null);
   const [editErrors, setEditErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
+
+  function downloadPdf() {
+    if (exportQuery.isPending || exportQuery.isError) {
+      setMessage(exportQuery.isError ? 'Could not prepare the PDF. Please retry.' : 'Preparing the PDF…');
+      if (exportQuery.isError) void exportQuery.refetch();
+      return;
+    }
+    const safe = (value: unknown) => String(value ?? '').replace(/[&<>"]/g, (character) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+    })[character] ?? character);
+    const detailRows = allFilteredRows.map((row) => `<tr>
+      <td>${safe(formatDate(row.business_date))}</td>
+      <td>${safe(row.shift === 'MORNING' ? 'Morning' : 'Evening')}</td>
+      <td>${safe(row.customers?.name ?? '—')}</td>
+      <td class="num">${safe(Number(row.milk_quantity).toFixed(3))} L</td>
+      <td class="num">${safe(row.fat == null ? '—' : `${row.fat}%`)}</td>
+      <td>${safe(row.pricing_type === 'FIXED_PER_LITRE' ? 'Fixed per litre' : 'Fat based')}</td>
+      <td class="num">${safe(money(Number(row.applied_rate)))}</td>
+      <td class="num">${safe(money(Number(row.calculated_amount)))}</td>
+    </tr>`).join('');
+    const customerName = customerId
+      ? (customersQuery.data ?? []).find((customer) => customer.id === customerId)?.name ?? 'Selected customer'
+      : 'All customers';
+    const popup = window.open('', '_blank', 'width=1000,height=800');
+    if (!popup) {
+      setMessage('Allow pop-ups to generate the PDF, then try again.');
+      return;
+    }
+    popup.document.write(`<!doctype html><html><head><title>Milk sales report</title><style>
+      body{font:12px Arial,sans-serif;color:#24352f;padding:28px}h1{font-size:22px;margin:0 0 5px}
+      .muted{color:#64756d}.summary{display:flex;gap:14px;margin:22px 0}.tile{border:1px solid #dce5df;border-radius:8px;padding:12px;flex:1}
+      .tile strong{display:block;font-size:18px;margin-top:6px}table{width:100%;border-collapse:collapse}
+      th,td{padding:9px 6px;border-bottom:1px solid #e2e8e4;text-align:left}th{font-size:10px;color:#64756d}
+      .num{text-align:right;white-space:nowrap}.total{font-weight:bold}@media print{body{padding:0}.no-print{display:none}}
+    </style></head><body><h1>Yureeh Farm — Milk Sales Report</h1>
+    <div class="muted">${safe(customerName)} · ${safe(from)} to ${safe(to)} · Generated ${safe(new Date().toLocaleDateString('en-IN'))}</div>
+    <div class="summary"><div class="tile">Total milk<strong>${safe(milkTxt(totalMilkLitres))}</strong></div>
+    <div class="tile">Total sales<strong>${safe(money(totalSalesAmount))}</strong></div>
+    <div class="tile">Entries<strong>${allFilteredRows.length}</strong></div></div>
+    <table><thead><tr><th>Date</th><th>Shift</th><th>Customer</th><th class="num">Milk</th><th class="num">Fat</th><th>Pricing</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead>
+    <tbody>${detailRows}<tr class="total"><td colspan="3">TOTAL</td><td class="num">${safe(milkTxt(totalMilkLitres))}</td><td colspan="3"></td><td class="num">${safe(money(totalSalesAmount))}</td></tr></tbody></table>
+    <p class="muted">This report summarizes recorded milk sales for the selected filters. It is not a tax invoice or a payment receipt.</p>
+    <button class="no-print" onclick="window.print()">Print / Save as PDF</button></body></html>`);
+    popup.document.close();
+    popup.focus();
+    popup.setTimeout(() => popup.print(), 300);
+  }
 
   const editDuplicateQuery = useMilkEntryDuplicateQuery({
     customerId: editing?.customer_id ?? '',
@@ -373,6 +426,18 @@ export default function EntriesPage() {
           </div>
         )}
 
+        <div className="milk-entry-summary" aria-live="polite">
+          <div className="milk-entry-summary-card"><span>Total milk sold</span><strong>{exportQuery.isPending ? 'Calculating…' : milkTxt(totalMilkLitres)}</strong></div>
+          <div className="milk-entry-summary-card"><span>Total sales amount</span><strong>{exportQuery.isPending ? 'Calculating…' : money(totalSalesAmount)}</strong></div>
+          <div className="milk-entry-summary-card"><span>Matching entries</span><strong>{exportQuery.isPending ? '…' : allFilteredRows.length}</strong></div>
+          <div className="milk-entry-summary-actions">
+            <button type="button" className="btn" onClick={downloadPdf} disabled={exportQuery.isPending || exportQuery.isError || !allFilteredRows.length}>
+              {exportQuery.isPending ? 'Preparing…' : 'Export PDF'}
+            </button>
+            {exportQuery.isError && <button type="button" className="btn secondary" onClick={() => void exportQuery.refetch()}>Retry summary</button>}
+          </div>
+        </div>
+        {exportQuery.isError && <p className="field-error">Summary and PDF data could not be loaded: {exportQuery.error.message}</p>}
         <div className="table-wrap" aria-busy={listQuery.isFetching}>
           <table className="table">
             <thead>
@@ -412,10 +477,20 @@ export default function EntriesPage() {
 
         {!listQuery.isError && (
           <div className="milk-entry-pagination">
+            <label className="page-size-control">Rows per page
+              <select aria-label="Rows per page" value={pageSize} onChange={(event) => {
+                const next = new URLSearchParams(searchParams.toString());
+                next.set('pageSize', event.target.value);
+                next.set('page', '1');
+                replaceParams(next);
+              }}>
+                <option value={10}>10</option><option value={20}>20</option><option value={50}>50</option><option value={100}>100</option>
+              </select>
+            </label>
             <span>
               {listQuery.isPending
                 ? 'Loading entries…'
-                : `Showing ${total ? (page - 1) * MILK_ENTRY_PAGE_SIZE + 1 : 0}–${Math.min(page * MILK_ENTRY_PAGE_SIZE, total)} of ${total}`}
+                : `Showing ${total ? (page - 1) * pageSize + 1 : 0}–${Math.min(page * pageSize, total)} of ${total}`}
             </span>
             {pageCount > 1 && (
               <nav aria-label="Milk entry pages">

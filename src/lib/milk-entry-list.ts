@@ -118,3 +118,20 @@ export function compactMilkEntryPages(current: number, last: number): (number | 
   }
   return result;
 }
+
+
+/** Fetch every matching row in bounded chunks for accurate summaries and exports. */
+export async function getMilkEntryListAll(
+  client: SupabaseClient,
+  filters: MilkEntryFilters,
+): Promise<MilkEntryListRow[]> {
+  const chunkSize = 500;
+  const first = await getMilkEntryList(client, filters, { page: 1, pageSize: chunkSize });
+  const rows = [...first.rows];
+  const pageCount = Math.ceil(first.total / chunkSize);
+  for (let page = 2; page <= pageCount; page++) {
+    const result = await getMilkEntryList(client, filters, { page, pageSize: chunkSize });
+    rows.push(...result.rows);
+  }
+  return rows;
+}
