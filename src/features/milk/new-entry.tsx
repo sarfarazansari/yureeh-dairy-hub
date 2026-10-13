@@ -120,9 +120,9 @@ export default function NewEntryForm() {
     submittingRef.current = true;
     try {
       await createMutation.mutateAsync(parsed.data);
+      // Keep the selected business date and shift so consecutive deliveries
+      // can be entered for the same milking session without reselecting them.
       setCustomerId('');
-      setDate(localDateKey());
-      setShift('MORNING');
       setQuantity('');
       setFat('');
       setPricingTypeOverride(null);
