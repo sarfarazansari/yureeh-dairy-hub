@@ -1,13 +1,9 @@
 import { z } from 'zod';
 import { BUFFALO_PAYMENT_METHODS } from './types';
+import { dateKeySchema, todayDateKey } from '@/lib/date-input';
 
 const validDate = (label: string) =>
-  z.string().regex(/^\d{4}-\d{2}-\d{2}$/, `${label} is required.`)
-    .refine((value) => {
-      const date = new Date(`${value}T00:00:00Z`);
-      return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
-    }, `Enter a valid ${label.toLowerCase()}.`)
-    .refine((value) => value <= new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10), `${label} cannot be in the future.`);
+  dateKeySchema(label).refine((value) => value <= todayDateKey(), `${label} cannot be in the future.`);
 
 const requiredMoney = (label: string) =>
   z.string().trim().min(1, `${label} is required.`)
