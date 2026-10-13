@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { DatePicker } from '@/components/ui/date-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
 import { supabase } from '@/lib/supabase';
@@ -96,11 +97,11 @@ export default function FinancialReportsPage() {
         <div className="expense-form-grid">
           <div className="field">
             <label>From date</label>
-            <input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
+            <DatePicker clearable value={from} max={to || today} onChange={setFrom} ariaLabel="From date" />
           </div>
           <div className="field">
             <label>To date</label>
-            <input type="date" value={to} min={from} max={today} onChange={(e) => setTo(e.target.value)} />
+            <DatePicker clearable value={to} min={from} max={today} onChange={setTo} ariaLabel="To date" />
           </div>
         </div>
         <p className="kpi-foot">Period metrics use the selected dates. Current balances include all activity; historical balances are measured at the end date ({to}). Legacy undated payments are shown separately instead of being assigned invented dates.</p>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { DatePicker } from '@/components/ui/date-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
 import { supabase } from '@/lib/supabase';
@@ -102,8 +103,8 @@ export default function FeedInventoryPage() {
         <div className="card">
           <div className="row"><h2 className="section-title">Filter movement history</h2><button className="date-chip" type="button" onClick={clearFilters}>Clear filters</button></div>
           <div className="expense-form-grid">
-            <div className="field"><label>From date</label><input type="date" value={from} max={to || undefined} onChange={(event) => { setFrom(event.target.value); setPage(0); }} /></div>
-            <div className="field"><label>To date</label><input type="date" value={to} min={from || undefined} onChange={(event) => { setTo(event.target.value); setPage(0); }} /></div>
+            <div className="field"><label>From date</label><DatePicker clearable value={from} max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setFrom(value); setPage(0); }} ariaLabel="From date" /></div>
+            <div className="field"><label>To date</label><DatePicker clearable value={to} min={from || undefined} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setTo(value); setPage(0); }} ariaLabel="To date" /></div>
             <div className="field"><label>Feed item</label><select value={feedItemId} onChange={(event) => { setFeedItemId(event.target.value); setPage(0); }}><option value="">All feed items</option>{stock.map((row) => <option key={row.feed_item_id} value={row.feed_item_id}>{row.feed_item_name}</option>)}</select></div>
             <div className="field"><label>Movement type</label><select value={movementType} onChange={(event) => { setMovementType(event.target.value as '' | FeedInventoryMovementType); setPage(0); }}><option value="">All movement types</option>{FEED_INVENTORY_MOVEMENT_TYPES.map((type) => <option key={type} value={type}>{movementLabel(type)}</option>)}</select></div>
           </div>

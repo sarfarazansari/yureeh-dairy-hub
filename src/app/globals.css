@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import '../components/ui/date-picker.css';
 :root {
   --ink: #183b32;
   --muted: #77857e;
@@ -1587,7 +1588,20 @@ button {
     min-width: 100%;
   }
 }
+ .spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.45rem;
+  vertical-align: -0.12em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-rotate 0.7s linear infinite;
+}
+@keyframes spinner-rotate { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) {
+  .spinner { animation-duration: 1.5s; }
   .sidebar,
   .mobile-nav-backdrop {
     transition: none;

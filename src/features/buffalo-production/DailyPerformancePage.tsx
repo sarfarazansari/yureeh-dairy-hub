@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 
+import { DatePicker } from '@/components/ui/date-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { milkTxt } from '@/lib/farm-format';
@@ -89,17 +90,7 @@ export default function DailyPerformancePage() {
           </div>
           <label className="field production-date">
             <span>Business date</span>
-            <input
-              type="date"
-              className="date-chip"
-              value={date}
-              disabled={saveMutation.isPending}
-              onChange={(event) => {
-                setDate(event.target.value);
-                setValues({});
-                setFatValue(null);
-              }}
-            />
+            <DatePicker value={date} max={localDateKey()} disabled={saveMutation.isPending} onChange={(value) => { setDate(value); setValues({}); setFatValue(null); }} ariaLabel="Business date" />
           </label>
         </div>
 

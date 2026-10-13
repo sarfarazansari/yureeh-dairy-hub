@@ -1,10 +1,11 @@
 'use client';
 import { formatDate } from '@/lib/date-format';
 import Link from 'next/link';
+import { DatePicker } from '@/components/ui/date-picker';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { calculateExpenseTotal, expensePaymentStatus } from '@/lib/expenses';
-import { ExpenseShell, money, ensureExpenseCategories } from '../shared';
+import { ExpenseShell, money, ensureExpenseCategories, todayLocal } from '../shared';
 import type {
   ExpenseBuffaloOption,
   ExpenseCategory,
@@ -181,11 +182,11 @@ export default function ExpenseHistory() {
         <div className="expense-form-grid">
           <div className="field">
             <label>From date</label>
-            <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <DatePicker clearable value={from} max={to || todayLocal()} onChange={setFrom} ariaLabel="From date" />
           </div>
           <div className="field">
             <label>To date</label>
-            <input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+            <DatePicker clearable value={to} min={from} max={todayLocal()} onChange={setTo} ariaLabel="To date" />
           </div>
           <div className="field">
             <label>Search</label>
@@ -319,12 +320,7 @@ export default function ExpenseHistory() {
               <div className="expense-form-grid">
                 <div className="field">
                   <label>Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={editing.business_date}
-                    onChange={(e) => setEditing({ ...editing, business_date: e.target.value })}
-                  />
+                  <DatePicker value={editing.business_date} max={new Date().toLocaleDateString('en-CA')} onChange={(value) => setEditing({ ...editing, business_date: value })} ariaLabel="Expense date" />
                 </div>
                 <div className="field">
                   <label>Category</label>
@@ -420,11 +416,7 @@ export default function ExpenseHistory() {
                 </div>
                 <div className="field">
                   <label>Due date</label>
-                  <input
-                    type="date"
-                    value={editing.due_date ?? ''}
-                    onChange={(e) => setEditing({ ...editing, due_date: e.target.value })}
-                  />
+                  <DatePicker value={editing.due_date ?? ''} min={editing.business_date} clearable onChange={(value) => setEditing({ ...editing, due_date: value })} ariaLabel="Due date" />
                 </div>
                 <div className="field">
                   <label>Buffalo</label>

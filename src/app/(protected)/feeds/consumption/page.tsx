@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
+import { DatePicker } from '@/components/ui/date-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
 import { supabase } from '@/lib/supabase';
@@ -65,8 +66,8 @@ export default function FeedConsumptionPage() {
             <Link className="btn" href="/feeds/consumption/new">New consumption</Link>
           </div>
           <div className="expense-form-grid">
-            <div className="field"><label>From</label><input type="date" value={from} onChange={(e) => { setFrom(e.target.value); setPage(0); }} /></div>
-            <div className="field"><label>To</label><input type="date" value={to} onChange={(e) => { setTo(e.target.value); setPage(0); }} /></div>
+            <div className="field"><label>From</label><DatePicker clearable value={from} max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setFrom(value); setPage(0); }} ariaLabel="From date" /></div>
+            <div className="field"><label>To</label><DatePicker clearable value={to} min={from} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setTo(value); setPage(0); }} ariaLabel="To date" /></div>
             <div className="field"><label>Feed</label><select value={feedFilter} onChange={(e) => { setFeedFilter(e.target.value); setPage(0); }}><option value="">All feeds</option>{feedItems.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></div>
             <div className="field" style={{ alignSelf: 'end' }}><button type="button" className="date-chip" onClick={clearFilters}>Clear filters</button></div>
           </div>

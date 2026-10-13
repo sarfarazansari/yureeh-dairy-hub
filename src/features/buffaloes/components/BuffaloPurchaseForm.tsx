@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import { DatePicker } from '@/components/ui/date-picker';
 import { money } from '@/lib/farm-format';
 
 import { useUpdateBuffaloPurchase } from '../hooks/use-buffaloes';
@@ -75,11 +76,7 @@ export function BuffaloPurchaseForm({
 
       <div className="grid two">
         <Field label="Purchase Date">
-          <input
-            type="date"
-            value={purchaseDate}
-            onChange={(event) => setPurchaseDate(event.target.value)}
-          />
+          <DatePicker value={purchaseDate} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={setPurchaseDate} ariaLabel="Purchase date" />
         </Field>
 
         <Field label="Purchase Price · ₹">
@@ -109,12 +106,7 @@ export function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Udhaar Due Date">
-          <input
-            type="date"
-            value={dueDate}
-            disabled={!hasBalance}
-            onChange={(event) => setDueDate(event.target.value)}
-          />
+          <DatePicker value={dueDate} min={purchaseDate} disabled={!hasBalance} clearable onChange={setDueDate} ariaLabel="Udhaar due date" />
         </Field>
 
         <Field label="Udhaar Terms">

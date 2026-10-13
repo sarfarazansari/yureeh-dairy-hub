@@ -1,5 +1,7 @@
 'use client';
 import Link from 'next/link';
+import { DatePicker } from '@/components/ui/date-picker';
+import { LoaderCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -99,7 +101,16 @@ export default function NewExpense() {
   }
   async function save(e: React.FormEvent) {
     e.preventDefault();
+    if (busy) return;
     setMessage('');
+    if (!date || date > todayLocal()) {
+      setMessage('Business date must be today or an earlier date.');
+      return;
+    }
+    if (due && due < date) {
+      setMessage('Due date cannot be earlier than the business date.');
+      return;
+    }
     if (!supabase || !category) {
       setMessage('Choose an active expense category.');
       return;
@@ -159,13 +170,13 @@ export default function NewExpense() {
       <div className="row" style={{ marginBottom: 14 }}>
         <Link href="/expenses" className="date-chip">← Back to expenses</Link>
       </div>
-      <form className="layout" onSubmit={save}>
+      <form className="layout" onSubmit={save} aria-busy={busy}>
         <div className="card">
           <h2 className="section-title">Expense details</h2>
           <div className="expense-form-grid">
             <div className="field">
               <label>Business date</label>
-              <input required type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+              <DatePicker value={date} max={todayLocal()} onChange={setDate} ariaLabel="Business date" />
             </div>
             <div className="field">
               <label>Category</label>
@@ -301,7 +312,7 @@ export default function NewExpense() {
             </div>
             <div className="field">
               <label>Due date</label>
-              <input type="date" value={due} onChange={(e) => setDue(e.target.value)} />
+              <DatePicker value={due} min={date} onChange={setDue} clearable ariaLabel="Due date" />
             </div>
             <div className="field">
               <label>Buffalo (optional)</label>
@@ -332,8 +343,8 @@ export default function NewExpense() {
             </div>
           </div>
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-          <button className="btn" disabled={busy || !categories.length}>
-            {busy ? 'Saving…' : 'Save expense'}
+          <button type="submit" className="btn" disabled={busy || !categories.length} aria-live="polite">
+            {busy ? <><LoaderCircle size={16} className="animate-spin" aria-hidden="true" /> Saving…</> : 'Save expense'}
           </button>
         </div>
         <aside className="card">

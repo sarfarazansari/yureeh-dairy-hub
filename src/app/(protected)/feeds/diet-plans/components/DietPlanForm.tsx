@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { DatePicker } from '@/components/ui/date-picker';
 import type { DietBuffaloOption, DietPlanFormValues } from '@/lib/diet-plan-types';
 import { dietPlanSchema } from '../schema';
 
@@ -91,12 +92,12 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
         </div>
         <div className="field">
           <label htmlFor="diet-plan-start">Start date</label>
-          <input id="diet-plan-start" type="date" value={values.startDate} onChange={(e) => { setField('startDate', e.target.value); setField('buffaloIds', []); }} />
+          <DatePicker id="diet-plan-start" value={values.startDate} onChange={(value) => { setField('startDate', value); setField('buffaloIds', []); }} ariaLabel="Diet plan start date" />
           {errors.startDate && <span className="auth-message">{errors.startDate}</span>}
         </div>
         <div className="field">
           <label htmlFor="diet-plan-end">End date (optional)</label>
-          <input id="diet-plan-end" type="date" min={values.startDate} value={values.endDate ?? ''} onChange={(e) => setField('endDate', e.target.value)} />
+          <DatePicker id="diet-plan-end" min={values.startDate} value={values.endDate ?? ''} clearable onChange={(value) => setField('endDate', value)} ariaLabel="Diet plan end date" />
           {errors.endDate && <span className="auth-message">{errors.endDate}</span>}
         </div>
         <div className="field" style={{ gridColumn: '1 / -1' }}>

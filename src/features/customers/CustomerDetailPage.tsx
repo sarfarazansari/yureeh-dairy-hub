@@ -4,6 +4,7 @@ import { localDateKey } from '@/lib/milk-entry-list';
 import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
 import { useState } from 'react';
+import { DatePicker } from '@/components/ui/date-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
 
@@ -173,7 +174,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
             <div className="grid two">
               <div className="field">
                 <label htmlFor="customer-payment-date">Payment date</label>
-                <input id="customer-payment-date" type="date" value={paymentDate} disabled={paymentMutation.isPending} onChange={(event) => setPaymentDate(event.target.value)} />
+                <DatePicker id="customer-payment-date" value={paymentDate} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} disabled={paymentMutation.isPending} onChange={setPaymentDate} ariaLabel="Payment date" />
               </div>
               <div className="field">
                 <label htmlFor="customer-payment-amount">Amount · ₹</label>
