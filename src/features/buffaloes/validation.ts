@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { dateKeySchema } from '@/lib/date-input';
+import { dateKeySchema, optionalDateKeySchema } from '@/lib/date-input';
 
 import { buffaloPaymentTypes, type BuffaloPaymentType } from './types';
 export { getBuffaloPaymentType as buffaloPaymentType } from './utils';
@@ -18,7 +18,7 @@ export const buffaloPurchaseSchema = z.object({
   purchase_price: requiredNumber('Purchase price').refine((value) => value > 0, 'Purchase price must be greater than ₹0.'),
   advance_paid: requiredNumber('Advance paid').refine((value) => value >= 0, 'Advance paid must be zero or greater.'),
   payment_type: z.enum(buffaloPaymentTypes),
-  payment_due_date: z.string().optional(),
+  payment_due_date: optionalDateKeySchema('Udhaar due date'),
   payment_terms: z.string().optional(),
   buffalo_name: z.string().optional(),
   vendor_name: z.string().optional(),
