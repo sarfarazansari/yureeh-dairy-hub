@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { PricingType } from './analytics';
+import { dateKeySchema, todayDateKey } from './date-input';
 
 const positiveNumber = (label: string) =>
   z
@@ -12,15 +13,7 @@ const positiveNumber = (label: string) =>
 
 export const milkEntrySchema = z
   .object({
-    business_date: z
-      .string()
-      .min(1, 'Business date is required.')
-      .refine((value) => {
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-        const parsed = new Date(`${value}T00:00:00Z`);
-        return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
-      }, 'Enter a valid business date.')
-      .refine((value) => value <= new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10), 'Business date cannot be in the future.'),
+    business_date: dateKeySchema('Business date').refine((value) => value <= todayDateKey(), 'Business date cannot be in the future.'),
     shift: z.enum(['MORNING', 'EVENING']),
     customer_id: z.string().trim().min(1, 'Choose a customer.'),
     milk_quantity: positiveNumber('Milk quantity'),
