@@ -139,7 +139,7 @@ export default function EntriesPage() {
     const customerName = customerId
       ? (customersQuery.data ?? []).find((customer) => customer.id === customerId)?.name ?? 'Selected customer'
       : 'All customers';
-    const popup = window.open('', '_blank', 'noopener,noreferrer,width=1000,height=800');
+    const popup = window.open('', '_blank', 'width=1000,height=800');
     if (!popup) {
       setMessage('Allow pop-ups to generate the PDF, then try again.');
       return;
