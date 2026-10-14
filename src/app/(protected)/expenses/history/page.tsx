@@ -154,6 +154,9 @@ export default function ExpenseHistory() {
       if (editing.rate !== '' && editing.rate != null && Number(editing.rate) <= 0) {
         throw new Error('Rate must be greater than zero.');
       }
+      if (editing.quantity !== '' && editing.quantity != null && (!editing.unit || !String(editing.unit).trim())) {
+        throw new Error('Choose a unit for quantity-based expenses.');
+      }
       const payment_status = expensePaymentStatus(amount, paid);
       const { error } = await supabase
         .from('expenses')
