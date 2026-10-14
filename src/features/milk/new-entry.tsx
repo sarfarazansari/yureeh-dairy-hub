@@ -1,5 +1,9 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+
 import { useMemo, useRef, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
 
@@ -144,7 +148,7 @@ export default function NewEntryForm() {
           <h2 className="section-title">Entry details</h2>
           <div className="grid three">
             <div className="field">
-              <label htmlFor="entry-date">Business date</label>
+              <Label htmlFor="entry-date">Business date</Label>
               <DatePicker
                 id="entry-date"
                 value={date}
@@ -161,7 +165,7 @@ export default function NewEntryForm() {
               {errors.business_date && <small className="field-error">{errors.business_date}</small>}
             </div>
             <div className="field">
-              <label htmlFor="entry-shift">Shift</label>
+              <Label htmlFor="entry-shift">Shift</Label>
               <select
                 id="entry-shift"
                 value={shift}
@@ -173,7 +177,7 @@ export default function NewEntryForm() {
               </select>
             </div>
             <div className="field">
-              <label htmlFor="entry-customer">Customer</label>
+              <Label htmlFor="entry-customer">Customer</Label>
               <select
                 id="entry-customer"
                 value={customerId}
@@ -245,8 +249,8 @@ export default function NewEntryForm() {
 
           <div className="grid four">
             <div className="field">
-              <label htmlFor="entry-quantity">Milk quantity (L)</label>
-              <input
+              <Label htmlFor="entry-quantity">Milk quantity (L)</Label>
+              <Input
                 id="entry-quantity"
                 type="number"
                 min="0.001"
@@ -265,8 +269,8 @@ export default function NewEntryForm() {
             </div>
             {pricingType === 'FAT_BASED' && (
               <div className="field">
-                <label htmlFor="entry-fat">Fat (%)</label>
-                <input
+                <Label htmlFor="entry-fat">Fat (%)</Label>
+                <Input
                   id="entry-fat"
                   type="number"
                   min="0"
@@ -286,8 +290,8 @@ export default function NewEntryForm() {
               </div>
             )}
             <div className="field">
-              <label htmlFor="entry-rate-per-litre">Rate / L</label>
-              <input
+              <Label htmlFor="entry-rate-per-litre">Rate / L</Label>
+              <Input
                 id="entry-rate-per-litre"
                 type="number"
                 value={ratePerLitre}
@@ -297,8 +301,8 @@ export default function NewEntryForm() {
               />
             </div>
             <div className="field">
-              <label htmlFor="entry-rate">Applied rate</label>
-              <input
+              <Label htmlFor="entry-rate">Applied rate</Label>
+              <Input
                 id="entry-rate"
                 type="number"
                 min="0.01"
@@ -317,8 +321,8 @@ export default function NewEntryForm() {
           </div>
 
           <div className="field">
-            <label htmlFor="entry-notes">Notes (optional)</label>
-            <input
+            <Label htmlFor="entry-notes">Notes (optional)</Label>
+            <Input
               id="entry-notes"
               value={notes}
               disabled={createMutation.isPending}
@@ -336,7 +340,7 @@ export default function NewEntryForm() {
         <div className="card">
           <div className="eyebrow">PRICE SNAPSHOT</div>
           <div className="field">
-            <label htmlFor="entry-pricing-type">Pricing type</label>
+            <Label htmlFor="entry-pricing-type">Pricing type</Label>
             <select
               id="entry-pricing-type"
               value={pricingType}
@@ -348,10 +352,10 @@ export default function NewEntryForm() {
             </select>
           </div>
           <div className="field">
-            <label htmlFor="entry-rate-snapshot">
+            <Label htmlFor="entry-rate-snapshot">
               Effective customer rate · {pricingQuery.data ? `₹${pricingQuery.data.rate}` : customer?.default_rate ? `₹${customer.default_rate}` : '—'}
-            </label>
-            <input
+            </Label>
+            <Input
               id="entry-rate-snapshot"
               value={rate}
               onChange={(event) => {
