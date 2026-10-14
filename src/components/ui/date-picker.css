@@ -1,7 +1,5 @@
-
-/* Reusable shadcn-style date picker and calendar popover. */
+/* The single and range pickers share the shadcn Calendar and Popover primitives. */
 .shadcn-date-picker {
-  position: relative;
   display: flex;
   width: 100%;
   min-width: 0;
@@ -26,9 +24,6 @@
 }
 .shadcn-date-trigger:hover { border-color: #aab8ad; }
 .shadcn-date-trigger:focus-visible,
-.shadcn-calendar-nav:focus-visible,
-.shadcn-calendar-day:focus-visible,
-.shadcn-calendar-today:focus-visible,
 .shadcn-date-clear:focus-visible {
   outline: 2px solid #1c6b4e;
   outline-offset: 2px;
@@ -39,8 +34,6 @@
 .shadcn-date-placeholder { color: #77857e; }
 .shadcn-date-clear {
   display: inline-grid;
-  position: absolute;
-  right: 7px;
   place-items: center;
   width: 25px;
   height: 25px;
@@ -52,94 +45,8 @@
 }
 .shadcn-date-picker:has(.shadcn-date-clear) .shadcn-date-trigger { padding-right: 36px; }
 .shadcn-date-clear:hover { background: #f1f4f1; color: #26382f; }
-.shadcn-calendar-popover {
-  position: absolute;
-  z-index: 80;
-  top: calc(100% + 7px);
-  left: 0;
-  width: 288px;
-  max-width: min( calc(100vw - 32px), 288px);
-  padding: 12px;
-  border: 1px solid #e1e6e1;
-  border-radius: 12px;
-  background: #fff;
-  box-shadow: 0 12px 32px rgb(24 59 50 / 15%), 0 2px 5px rgb(24 59 50 / 5%);
-  color: #1c3028;
-}
-.shadcn-calendar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.shadcn-calendar-header strong { font-size: 14px; font-weight: 600; }
-.shadcn-calendar-nav {
-  display: inline-grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  background: #fff;
-  color: #44564b;
-  cursor: pointer;
-}
-.shadcn-calendar-nav:hover:not(:disabled) { background: #f3f6f3; border-color: #e1e6e1; }
-.shadcn-calendar-nav:disabled { opacity: .3; cursor: not-allowed; }
-.shadcn-calendar-grid {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 3px;
-  text-align: center;
-}
-.shadcn-calendar-weekday {
-  display: grid;
-  place-items: center;
-  height: 28px;
-  color: #77857e;
-  font-size: 11px;
-  font-weight: 600;
-}
-.shadcn-calendar-empty { height: 32px; }
-.shadcn-calendar-day {
-  display: grid;
-  place-items: center;
-  min-width: 0;
-  height: 32px;
-  border: 1px solid transparent;
-  border-radius: 7px;
-  background: #fff;
-  color: #26382f;
-  font-size: 12px;
-  cursor: pointer;
-}
-.shadcn-calendar-day:hover:not(:disabled):not(.selected) { background: #f0f5f0; }
-.shadcn-calendar-day.today { border-color: #a9c6b3; font-weight: 700; }
-.shadcn-calendar-day.selected { background: #1c6b4e; color: #fff; font-weight: 600; }
-.shadcn-calendar-day:disabled { color: #b8c0ba; cursor: not-allowed; text-decoration: line-through; }
-.shadcn-calendar-footer {
-  display: flex;
-  justify-content: flex-end;
-  border-top: 1px solid #edf0ed;
-  margin-top: 10px;
-  padding-top: 8px;
-}
-.shadcn-calendar-today {
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  padding: 6px 9px;
-  color: #1c6b4e;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.shadcn-calendar-today:hover:not(:disabled) { background: #edf5ef; }
-.shadcn-calendar-today:disabled { opacity: .4; cursor: not-allowed; }
 
-
-/* Range calendar: keep a compact footprint and clear disabled-day contrast. */
+/* Range picker keeps its compact clear action and shares the same trigger. */
 .shadcn-date-range-picker {
   width: 100%;
   min-width: 0;
@@ -194,66 +101,8 @@
   color: #1c4e3b;
   border-radius: 0;
 }
-.shadcn-range-calendar .shadcn-calendar-footer {
+.shadcn-range-calendar .shadcn-range-calendar-footer {
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-}
-.shadcn-range-hint {
-  color: #77857e;
-  font-size: 11px;
-  line-height: 1.35;
-}
-
-
-/* Explicit DayPicker colors override library defaults that washed out labels. */
-.yureeh-calendar {
-  color: #1c3028;
-  background: #fff;
-}
-.yureeh-calendar .rdp-month_caption,
-.yureeh-calendar .rdp-caption_label {
-  color: #183b32;
-  opacity: 1;
-  font-weight: 700;
-}
-.yureeh-calendar .rdp-weekday {
-  color: #5f7066;
-  opacity: 1;
-  font-weight: 600;
-}
-.yureeh-calendar .rdp-day_button {
-  color: #26382f;
-  opacity: 1;
-}
-.yureeh-calendar .rdp-outside .rdp-day_button {
-  color: #89968e;
-  opacity: 1;
-}
-.yureeh-calendar .rdp-disabled .rdp-day_button,
-.yureeh-calendar .rdp-day_button:disabled {
-  color: #7b8980;
-  opacity: 1;
-  text-decoration: none;
-}
-.yureeh-calendar .rdp-range_middle {
-  background: #dcefe4;
-  color: #183b32;
-}
-.yureeh-calendar .rdp-range_middle .rdp-day_button {
-  background: #dcefe4;
-  color: #183b32;
-  opacity: 1;
-}
-.yureeh-calendar .rdp-selected .rdp-day_button,
-.yureeh-calendar .rdp-range_start .rdp-day_button,
-.yureeh-calendar .rdp-range_end .rdp-day_button {
-  background: #1c6b4e;
-  color: #fff;
-  opacity: 1;
-  font-weight: 700;
-}
-.yureeh-calendar .rdp-nav button {
-  color: #26382f;
-  opacity: 1;
 }
