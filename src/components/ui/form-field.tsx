@@ -12,11 +12,14 @@ type FormFieldProps = {
   children: React.ReactNode;
 };
 
-/** Consistent label, help text and validation wiring for shared form controls. */
+/**
+ * Shared label/help/error wrapper for a single form control.
+ * Control props remain owned by the caller so compound controls can attach IDs
+ * and ARIA attributes to their actual focusable trigger instead of a root node.
+ */
 function FormField({ id, label, description, error, required, className, children }: FormFieldProps) {
   const descriptionId = description ? `${id}-description` : undefined;
   const errorId = error ? `${id}-error` : undefined;
-  const describedBy = [descriptionId, errorId].filter(Boolean).join(' ') || undefined;
 
   return (
     <div className={cn('field min-w-0', className)}>
@@ -24,15 +27,17 @@ function FormField({ id, label, description, error, required, className, childre
         {label}
         {required && <span aria-hidden="true" className="ml-1 text-red-600">*</span>}
       </Label>
-      {React.isValidElement(children)
-        ? React.cloneElement(children as React.ReactElement<{ id?: string; 'aria-describedby'?: string; 'aria-invalid'?: boolean }>, {
-            id,
-            'aria-describedby': describedBy,
-            'aria-invalid': error ? true : undefined,
-          })
-        : children}
-      {description && <p id={descriptionId} className="text-xs leading-5 text-[var(--muted)]">{description}</p>}
-      {error && <p id={errorId} className="field-error text-xs" role="alert">{error}</p>}
+      {children}
+      {description && (
+        <p id={descriptionId} className="text-xs leading-5 text-[var(--muted)]">
+          {description}
+        </p>
+      )}
+      {error && (
+        <p id={errorId} className="field-error text-xs" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
