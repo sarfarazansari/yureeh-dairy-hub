@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Dialog } from '@/app/dialog';
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { FeedPurchaseListRow } from '@/lib/feed-purchase-types';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -116,64 +116,30 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
         </div>
       )}
 
-      <Dialog
+      <AlertDialog
         open={Boolean(deleteTarget)}
-        onOpenChange={(open) => {
-          if (!open && !deletingId) setDeleteTarget(null);
-        }}
-        labelledBy="feed-purchase-delete-title"
-        className="delete-dialog"
+        onOpenChange={(open) => { if (!open && !deletingId) setDeleteTarget(null); }}
       >
-        <div className="dialog-header">
-          <div>
-            <p className="eyebrow">FEED PURCHASE</p>
-            <h2 id="feed-purchase-delete-title" className="dialog-title">Delete purchase?</h2>
-            <p className="dialog-description">
-              This will remove the purchase from the active archive and reverse its stock-in movement.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="dialog-close"
-            onClick={() => setDeleteTarget(null)}
-            disabled={Boolean(deletingId)}
-            aria-label="Close delete dialog"
-          >
-            ×
-          </button>
-        </div>
-
-        {deleteTarget && (
-          <div className="delete-summary">
-            <span>Feed item</span>
-            <b>{deleteTarget.feed_item_name}</b>
-            <span>
-              {Number(deleteTarget.purchase_quantity).toLocaleString('en-IN')} {deleteTarget.purchase_unit}
-              {' · '}
-              {money(deleteTarget.total_amount)}
-            </span>
-          </div>
-        )}
-
-        <div className="dialog-footer">
-          <button
-            type="button"
-            className="btn secondary"
-            onClick={() => setDeleteTarget(null)}
-            disabled={Boolean(deletingId)}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="btn destructive"
-            onClick={() => void confirmDelete()}
-            disabled={Boolean(deletingId)}
-          >
-            {deletingId ? 'Deleting…' : 'Delete purchase'}
-          </button>
-        </div>
-      </Dialog>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete feed purchase?</AlertDialogTitle>
+            <AlertDialogDescription>This will remove the purchase from the active archive and reverse its stock-in movement.</AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteTarget && (
+            <div className="delete-summary">
+              <span>Feed item</span>
+              <b>{deleteTarget.feed_item_name}</b>
+              <span>{Number(deleteTarget.purchase_quantity).toLocaleString('en-IN')} {deleteTarget.purchase_unit} · {money(deleteTarget.total_amount)}</span>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={Boolean(deletingId)} onClick={() => setDeleteTarget(null)}>Cancel</AlertDialogCancel>
+            <button type="button" className="btn destructive" onClick={() => void confirmDelete()} disabled={Boolean(deletingId)}>
+              {deletingId ? 'Deleting…' : 'Delete feed purchase'}
+            </button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
