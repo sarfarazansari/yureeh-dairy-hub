@@ -1,6 +1,7 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -114,18 +115,7 @@ export default function ExpenseCategories() {
       </div>
       <div className="field">
         <Label htmlFor="expense-category-unit">Default unit</Label>
-        <Input
-          id="expense-category-unit"
-          list="category-unit-list"
-          value={unit}
-          onChange={(e) => setUnit(e.target.value)}
-          placeholder="e.g. KG, BAG, scoop"
-        />
-        <datalist id="category-unit-list">
-          {UNITS.map((u) => (
-            <option key={u} value={u} />
-          ))}
-        </datalist>
+        <Select value={unit || "none"} onValueChange={(value) => setUnit(value === "none" ? "" : value)}><SelectTrigger id="expense-category-unit"><SelectValue placeholder="No default unit" /></SelectTrigger><SelectContent><SelectItem value="none">No default unit</SelectItem>{UNITS.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
       </div>
       <Label className="field">
         <span>Quantity based</span>
@@ -141,13 +131,13 @@ export default function ExpenseCategories() {
       </div>
       <div className="dialog-footer">
         {id && (
-          <button type="button" className="btn secondary" onClick={clear} disabled={busy}>
+          <Button type="button" variant="secondary" onClick={clear} disabled={busy}>
             Cancel
-          </button>
+          </Button>
         )}
-        <button className="btn" disabled={busy}>
+        <Button type="submit" disabled={busy || !name.trim()}>
           {busy ? 'Saving…' : id ? 'Save category' : 'Add category'}
-        </button>
+        </Button>
       </div>
     </form>
   );
