@@ -1,5 +1,9 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import Link from 'next/link';
 import { useState } from 'react';
 
@@ -158,7 +162,7 @@ function BuffaloPurchaseForm({
 
       <div className="buffalo-primary-fields">
         <Field label="Buffalo Code" error={errors.buffalo_code}>
-          <input
+          <Input
             value={form.buffalo_code}
             onChange={(event) => onChange('buffalo_code', event.target.value)}
             onBlur={() => onChange('buffalo_code', form.buffalo_code.trim().toUpperCase())}
@@ -167,7 +171,7 @@ function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Breed" error={errors.breed}>
-          <input
+          <Input
             value={form.breed}
             onChange={(event) => onChange('breed', event.target.value)}
             placeholder="Murrah"
@@ -179,7 +183,7 @@ function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Purchase Price · ₹" error={errors.purchase_price}>
-          <input
+          <Input
             type="number"
             min="0.01"
             step="0.01"
@@ -190,7 +194,7 @@ function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Advance Paid · ₹" error={errors.advance_paid}>
-          <input
+          <Input
             type="number"
             min="0"
             step="0.01"
@@ -203,7 +207,7 @@ function BuffaloPurchaseForm({
 
       <div className="buffalo-secondary-fields">
         <Field label="Buffalo Name (optional)">
-          <input
+          <Input
             value={form.buffalo_name}
             onChange={(event) => onChange('buffalo_name', event.target.value)}
             placeholder="Ganga"
@@ -211,7 +215,7 @@ function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Vendor Name (optional)">
-          <input
+          <Input
             value={form.vendor_name}
             onChange={(event) => onChange('vendor_name', event.target.value)}
             placeholder="Seller name"
@@ -219,7 +223,7 @@ function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Vendor / Purchase Location (optional)">
-          <input
+          <Input
             value={form.vendor_location}
             onChange={(event) => onChange('vendor_location', event.target.value)}
             placeholder="Village or city"
@@ -229,11 +233,7 @@ function BuffaloPurchaseForm({
 
       <div className="buffalo-payment-fields">
         <Field label="Payment Type">
-          <select value={paymentType} disabled>
-            <option value="PAID_IN_FULL">Paid in Full</option>
-            <option value="PARTIAL_CREDIT">Partial Credit</option>
-            <option value="FULL_CREDIT">Full Credit</option>
-          </select>
+          <Select value={paymentType} disabled><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="PAID_IN_FULL">Paid in Full</SelectItem><SelectItem value="PARTIAL_CREDIT">Partial Credit</SelectItem><SelectItem value="FULL_CREDIT">Full Credit</SelectItem></SelectContent></Select>
           <small className="field-hint">Based on purchase price and advance</small>
         </Field>
 
@@ -247,7 +247,7 @@ function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Udhaar Terms" error={errors.payment_terms}>
-          <input
+          <Input
             value={form.payment_terms}
             disabled={!hasBalance}
             onChange={(event) => onChange('payment_terms', event.target.value)}
@@ -274,7 +274,7 @@ type FieldProps = {
 function Field({ label, error, children }: FieldProps) {
   return (
     <div className="field">
-      <label>{label}</label>
+      <Label>{label}</Label>
       {children}
       {error && <small className="field-error">{error}</small>}
     </div>
