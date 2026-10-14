@@ -3,6 +3,8 @@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -18,7 +20,15 @@ export default function ExpenseVendors() {
     [city, setCity] = useState(''),
     [address, setAddress] = useState(''),
     [busy, setBusy] = useState(false),
-    [message, setMessage] = useState('');
+    [message, setMessage] = useState(''),
+    [editingVendor, setEditingVendor] = useState<ExpenseVendor | null>(null),
+    [statusTarget, setStatusTarget] = useState<ExpenseVendor | null>(null),
+    [statusBusy, setStatusBusy] = useState(false),
+    [editBusy, setEditBusy] = useState(false),
+    [editName, setEditName] = useState(''),
+    [editMobile, setEditMobile] = useState(''),
+    [editCity, setEditCity] = useState(''),
+    [editAddress, setEditAddress] = useState('');
   async function load() {
     if (!supabase) return;
     const [v, e] = await Promise.all([
@@ -71,13 +81,43 @@ export default function ExpenseVendors() {
     }
     setBusy(false);
   }
+  function beginEdit(v: ExpenseVendor) {
+    setEditingVendor(v);
+    setEditName(v.name);
+    setEditMobile(v.mobile ?? '');
+    setEditCity(v.city ?? '');
+    setEditAddress(v.address ?? '');
+  }
+  async function saveEdit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!supabase || !editingVendor || editBusy) return;
+    if (!editName.trim()) { setMessage('Vendor name is required.'); return; }
+    setEditBusy(true);
+    try {
+      const { error } = await supabase.from('expense_vendors').update({
+        name: editName.trim(), mobile: editMobile.trim() || null,
+        city: editCity.trim() || null, address: editAddress.trim() || null,
+      }).eq('id', editingVendor.id);
+      if (error) throw error;
+      setEditingVendor(null);
+      setMessage('Vendor updated. Existing expense snapshots remain unchanged.');
+      await load();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not update vendor.');
+    } finally { setEditBusy(false); }
+  }
   async function toggle(v: ExpenseVendor) {
-    const { error } = await supabase!
-      .from('expense_vendors')
-      .update({ is_active: !v.is_active })
-      .eq('id', v.id);
-    if (error) setMessage(error.message);
-    else await load();
+    if (!supabase || statusBusy) return;
+    setStatusBusy(true);
+    try {
+      const { error } = await supabase.from('expense_vendors').update({ is_active: !v.is_active }).eq('id', v.id);
+      if (error) throw error;
+      setStatusTarget(null);
+      setMessage(v.is_active ? 'Vendor deactivated.' : 'Vendor activated.');
+      await load();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not update vendor status.');
+    } finally { setStatusBusy(false); }
   }
   return (
     <ExpenseShell title="Expense vendors" subtitle="Suppliers, transporters and service providers">
@@ -98,7 +138,7 @@ export default function ExpenseVendors() {
           </div>
           <div className="field">
             <Label htmlFor="vendor-address">Address</Label>
-            <Textarea id="vendor-address" value={address} onChange={(e) => setAddress(e.target.value)} rows={3} maxLength={500} />
+            <Textarea id="vendor-address" maxLength={500} value={address} onChange={(e) => setAddress(e.target.value)} rows={3} maxLength={500} />
           </div>
           <Button type="submit" disabled={busy || !name.trim()}>
             {busy ? 'Saving…' : 'Add vendor'}
@@ -149,6 +189,27 @@ export default function ExpenseVendors() {
           )}
         </div>
       </div>
+      <Dialog open={!!editingVendor} onOpenChange={(open) => { if (!open && !editBusy) setEditingVendor(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit vendor</DialogTitle>
+            <DialogDescription>Vendor master changes affect future selections only. Existing expense snapshots are preserved.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={saveEdit} className="grid gap-4">
+            <div className="field"><Label htmlFor="edit-vendor-name">Name</Label><Input id="edit-vendor-name" required maxLength={160} value={editName} onChange={(e) => setEditName(e.target.value)} /></div>
+            <div className="field"><Label htmlFor="edit-vendor-mobile">Mobile</Label><Input id="edit-vendor-mobile" inputMode="tel" maxLength={30} value={editMobile} onChange={(e) => setEditMobile(e.target.value)} /></div>
+            <div className="field"><Label htmlFor="edit-vendor-city">City</Label><Input id="edit-vendor-city" maxLength={120} value={editCity} onChange={(e) => setEditCity(e.target.value)} /></div>
+            <div className="field"><Label htmlFor="edit-vendor-address">Address</Label><Textarea id="edit-vendor-address" rows={3} maxLength={500} value={editAddress} onChange={(e) => setEditAddress(e.target.value)} /></div>
+            <DialogFooter><Button type="button" variant="secondary" disabled={editBusy} onClick={() => setEditingVendor(null)}>Cancel</Button><Button type="submit" disabled={editBusy || !editName.trim()}>{editBusy ? 'Saving…' : 'Save vendor'}</Button></DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+      <AlertDialog open={!!statusTarget} onOpenChange={(open) => { if (!open && !statusBusy) setStatusTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader><AlertDialogTitle>Deactivate vendor?</AlertDialogTitle><AlertDialogDescription>{statusTarget?.name} will be excluded from new expense and feed-purchase selections. Historical transactions and balances remain.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogCancel disabled={statusBusy}>Cancel</AlertDialogCancel><AlertDialogAction disabled={statusBusy} onClick={(event) => { event.preventDefault(); if (statusTarget) void toggle(statusTarget); }}>{statusBusy ? 'Updating…' : 'Deactivate vendor'}</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ExpenseShell>
   );
 }
