@@ -111,7 +111,7 @@ export default function SalesAnalyticsPage() {
   const splits = summary?.pricing ?? [];
   return (
     <AppShell title="Sales analytics" subtitle="Farm-level milk, fat and revenue">
-      <div className="row">
+      <div className="flex flex-wrap items-center justify-start gap-3">
         <Select value={range} onValueChange={(value) => { setRange(value); if (value !== 'custom') { const preset = getAnalyticsDateRange(value as AnalyticsDatePreset); setFrom(preset.from); setTo(preset.to); } }}><SelectTrigger className="date-chip w-auto min-w-[9rem] shrink-0"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="today">Today</SelectItem><SelectItem value="yesterday">Yesterday</SelectItem><SelectItem value="7days">Last 7 days</SelectItem><SelectItem value="week">This week</SelectItem><SelectItem value="month">This month</SelectItem><SelectItem value="previous">Previous month</SelectItem><SelectItem value="custom">Custom range</SelectItem></SelectContent></Select>
         {range === 'custom' && <DateRangePicker from={from} to={to} max={today} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); }} className="max-w-[22rem]" />}
         <Select value={customerId || 'all'} onValueChange={(value) => setCustomerId(value === 'all' ? '' : value)}><SelectTrigger className="date-chip w-auto min-w-[10rem] max-w-[13rem] shrink-0"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All customers</SelectItem>{customers.map((c) => <SelectItem value={c.id} key={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
