@@ -1,5 +1,7 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -118,33 +120,13 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
 
         <div className="field">
           <Label>Feed item</Label>
-          <select
-            value={values.feedItemId}
-            onChange={(e) => update('feedItemId', e.target.value)}
-          >
-            <option value="">Select feed item</option>
-            {feedItems.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
+          <Select value={values.feedItemId || undefined} onValueChange={(value) => update('feedItemId', value)}><SelectTrigger><SelectValue placeholder="Select feed item" /></SelectTrigger><SelectContent>{feedItems.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>
           {errors.feedItemId && <span className="auth-message">{errors.feedItemId}</span>}
         </div>
 
         <div className="field">
           <Label>Vendor</Label>
-          <select
-            value={values.vendorId}
-            onChange={(e) => update('vendorId', e.target.value)}
-          >
-            <option value="">Select vendor</option>
-            {vendors.map((vendor) => (
-              <option key={vendor.id} value={vendor.id}>
-                {vendor.name}
-              </option>
-            ))}
-          </select>
+          <Select value={values.vendorId || undefined} onValueChange={(value) => update('vendorId', value)}><SelectTrigger><SelectValue placeholder="Select vendor" /></SelectTrigger><SelectContent>{vendors.map((vendor) => <SelectItem key={vendor.id} value={vendor.id}>{vendor.name}</SelectItem>)}</SelectContent></Select>
         </div>
 
         <div className="field">
@@ -182,19 +164,7 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
 
         <div className="field">
           <Label>Payment status</Label>
-          <select
-            value={values.paymentStatus}
-            onChange={(e) =>
-              update(
-                'paymentStatus',
-                e.target.value as FeedPurchaseFormValues['paymentStatus'],
-              )
-            }
-          >
-            <option value="PAID">Paid</option>
-            <option value="PARTIAL">Partial</option>
-            <option value="CREDIT">Credit</option>
-          </select>
+          <Select value={values.paymentStatus} onValueChange={(value) => update('paymentStatus', value as FeedPurchaseFormValues['paymentStatus'])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="PAID">Paid</SelectItem><SelectItem value="PARTIAL">Partial</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select>
         </div>
 
         <div className="field">
@@ -213,16 +183,7 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
         {values.paymentStatus !== 'CREDIT' && (
           <div className="field">
             <Label>Payment method</Label>
-            <select
-              value={values.paymentMethod}
-              onChange={(e) => update('paymentMethod', e.target.value)}
-            >
-              <option value="CASH">Cash</option>
-              <option value="UPI">UPI</option>
-              <option value="BANK_TRANSFER">Bank transfer</option>
-              <option value="CARD">Card</option>
-              <option value="OTHER">Other</option>
-            </select>
+            <Select value={values.paymentMethod} onValueChange={(value) => update('paymentMethod', value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="CASH">Cash</SelectItem><SelectItem value="UPI">UPI</SelectItem><SelectItem value="BANK_TRANSFER">Bank transfer</SelectItem><SelectItem value="CARD">Card</SelectItem><SelectItem value="OTHER">Other</SelectItem></SelectContent></Select>
           </div>
         )}
 
