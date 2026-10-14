@@ -65,15 +65,15 @@ export function DateRangePicker({ from, to, onChange, max, className = '', ariaL
   return (
     <div className={cn('shadcn-date-picker shadcn-date-range-picker min-w-0', className)}>
       <Popover open={open} onOpenChange={setOpen}>
-        <div className="flex min-w-0 items-center gap-1">
+        <div className="relative flex min-w-0 items-center">
           <PopoverTrigger asChild>
-            <button type="button" aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open} className="shadcn-date-trigger min-w-0 w-full">
+            <button type="button" aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open} className={cn("shadcn-date-trigger min-w-0 w-full", (from || to) && "pr-10")}>
               <CalendarDays size={16} aria-hidden="true" />
               <span className={cn('min-w-0 flex-1 truncate text-left', selectedFrom ? 'shadcn-date-value' : 'shadcn-date-placeholder')}>{label}</span>
             </button>
           </PopoverTrigger>
           {(from || to) && (
-            <button type="button" className="shadcn-date-clear shrink-0" aria-label="Clear date range" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>
+            <button type="button" className="shadcn-date-clear absolute right-2 top-1/2 -translate-y-1/2" aria-label="Clear date range" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>
               <X size={14} aria-hidden="true" />
             </button>
           )}
