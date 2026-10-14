@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 import Link from 'next/link';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { money } from '@/lib/farm-format';
@@ -42,8 +42,7 @@ export default function BuffaloSalesPage() {
           </div>
           <div className="expense-form-grid">
             <div className="field"><Label>Search buyer</Label><Input value={search} placeholder="Buyer name or mobile" onChange={(e) => setSearch(e.target.value)} /></div>
-            <div className="field"><Label>From date</Label><DatePicker clearable value={from} max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setFrom(value); setPage(0); }} ariaLabel="From date" /></div>
-            <div className="field"><Label>To date</Label><DatePicker clearable value={to} min={from || undefined} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setTo(value); setPage(0); }} ariaLabel="To date" /></div>
+            <div className="field"><Label>Date range</Label><DateRangePicker from={from} to={to} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); setPage(0); }} /></div>
           </div>
         </div>
         <div className="card">
