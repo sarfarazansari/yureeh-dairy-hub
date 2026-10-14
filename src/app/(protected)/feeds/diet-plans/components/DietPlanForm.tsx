@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
+import { FormField } from '@/components/ui/form-field';
 import type { DietBuffaloOption, DietPlanFormValues } from '@/lib/diet-plan-types';
 import { dietPlanSchema } from '../schema';
 
@@ -95,16 +96,28 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
           <Label htmlFor="diet-plan-status">Status</Label>
           <Select value={values.status} onValueChange={(value) => setField('status', value as DietPlanFormValues['status'])}><SelectTrigger id="diet-plan-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ACTIVE">Active</SelectItem><SelectItem value="PAUSED">Paused</SelectItem><SelectItem value="STOPPED">Stopped</SelectItem></SelectContent></Select>
         </div>
-        <div className="field">
-          <Label htmlFor="diet-plan-start">Start date</Label>
-          <DatePicker id="diet-plan-start" value={values.startDate} onChange={(value) => { setField('startDate', value); setField('buffaloIds', []); }} ariaLabel="Diet plan start date" />
-          {errors.startDate && <span className="auth-message">{errors.startDate}</span>}
-        </div>
-        <div className="field">
-          <Label htmlFor="diet-plan-end">End date (optional)</Label>
-          <DatePicker id="diet-plan-end" min={values.startDate} value={values.endDate ?? ''} clearable onChange={(value) => setField('endDate', value)} ariaLabel="Diet plan end date" />
-          {errors.endDate && <span className="auth-message">{errors.endDate}</span>}
-        </div>
+        <FormField id="diet-plan-start" label="Start date" error={errors.startDate}>
+          {(controlProps) => (
+            <DatePicker
+              {...controlProps}
+              value={values.startDate}
+              onChange={(value) => { setField('startDate', value); setField('buffaloIds', []); }}
+              ariaLabel="Diet plan start date"
+            />
+          )}
+        </FormField>
+        <FormField id="diet-plan-end" label="End date (optional)" error={errors.endDate}>
+          {(controlProps) => (
+            <DatePicker
+              {...controlProps}
+              min={values.startDate}
+              value={values.endDate ?? ''}
+              clearable
+              onChange={(value) => setField('endDate', value)}
+              ariaLabel="Diet plan end date"
+            />
+          )}
+        </FormField>
         <div className="field" style={{ gridColumn: '1 / -1' }}>
           <Label htmlFor="diet-plan-notes">Notes</Label>
           <Textarea id="diet-plan-notes" rows={2} maxLength={1000} value={values.notes ?? ''} onChange={(e) => setField('notes', e.target.value)} />

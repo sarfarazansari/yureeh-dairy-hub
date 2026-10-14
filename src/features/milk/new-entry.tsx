@@ -9,6 +9,7 @@ import { useMemo, useRef, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
 
 import { DatePicker } from '@/components/ui/date-picker';
+import { FormField } from '@/components/ui/form-field';
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { milkTxt } from '@/lib/farm-format';
@@ -148,23 +149,23 @@ export default function NewEntryForm() {
         <div className="card">
           <h2 className="section-title">Entry details</h2>
           <div className="grid three">
-            <div className="field">
-              <Label htmlFor="entry-date">Business date</Label>
-              <DatePicker
-                id="entry-date"
-                value={date}
-                max={localDateKey()}
-                disabled={createMutation.isPending}
-                onChange={(value) => {
-                  setDate(value);
-                  setPricingTypeOverride(null);
-                  setRateOverride(null);
-                  setFat('');
-                }}
-                ariaLabel="Business date"
-              />
-              {errors.business_date && <small className="field-error">{errors.business_date}</small>}
-            </div>
+            <FormField id="entry-date" label="Business date" error={errors.business_date}>
+              {(controlProps) => (
+                <DatePicker
+                  {...controlProps}
+                  value={date}
+                  max={localDateKey()}
+                  disabled={createMutation.isPending}
+                  onChange={(value) => {
+                    setDate(value);
+                    setPricingTypeOverride(null);
+                    setRateOverride(null);
+                    setFat('');
+                  }}
+                  ariaLabel="Business date"
+                />
+              )}
+            </FormField>
             <div className="field">
               <Label htmlFor="entry-shift">Shift</Label>
               <Select value={shift} onValueChange={(value) => setShift(value as 'MORNING' | 'EVENING')} disabled={createMutation.isPending}>

@@ -260,7 +260,7 @@ export default function ExpenseHistory() {
               <div className="expense-form-grid">
                 <div className="field">
                   <Label>Date</Label>
-                  <DatePicker value={editing.business_date} max={new Date().toLocaleDateString('en-CA')} onChange={(value) => setEditing({ ...editing, business_date: value })} ariaLabel="Expense date" />
+                  <DatePicker value={editing.business_date} max={todayLocal()} onChange={(value) => setEditing({ ...editing, business_date: value })} ariaLabel="Expense date" />
                 </div>
                 <div className="field">
                   <Label>Category</Label>
