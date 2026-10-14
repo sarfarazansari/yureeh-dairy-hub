@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Dialog } from '@/app/dialog';
 import type { FeedConsumptionListRow } from '@/lib/feed-consumption-types';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type Props = {
   rows: FeedConsumptionListRow[];
@@ -41,35 +43,35 @@ export function FeedConsumptionTable({ rows, count, page, pageSize, onPageChange
     <div className="card">
       <div className="row">
         <h2 className="section-title">Consumption history</h2>
-        <span className="tag">{count} records</span>
+        <Badge variant="secondary">{count} records</Badge>
       </div>
 
       <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>DATE</th><th>FEED</th><th>QUANTITY</th><th>COST / UNIT</th><th>TOTAL COST</th><th>ACTION</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="[&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
+          <TableHeader>
+            <TableRow>
+              <TableHead>DATE</TableHead><TableHead>FEED</TableHead><TableHead>QUANTITY</TableHead><TableHead>COST / UNIT</TableHead><TableHead>TOTAL COST</TableHead><TableHead>ACTION</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.map((row) => (
               <tr key={row.id}>
-                <td>{new Date(row.occurred_at).toLocaleDateString('en-IN')}</td>
-                <td><b>{row.feed_item_name}</b></td>
-                <td>{Number(row.quantity).toLocaleString('en-IN')} {row.base_unit}</td>
-                <td>{money(row.unit_cost)} / {row.base_unit}</td>
-                <td>{money(Number(row.quantity) * Number(row.unit_cost ?? 0))}</td>
-                <td>
+                <TableCell>{new Date(row.occurred_at).toLocaleDateString('en-IN')}</TableCell>
+                <TableCell><b>{row.feed_item_name}</b></TableCell>
+                <TableCell>{Number(row.quantity).toLocaleString('en-IN')} {row.base_unit}</TableCell>
+                <TableCell>{money(row.unit_cost)} / {row.base_unit}</TableCell>
+                <TableCell>{money(Number(row.quantity) * Number(row.unit_cost ?? 0))}</TableCell>
+                <TableCell>
                   {row.can_edit_delete ? (
                     <Link className="date-chip" href={`/feeds/consumption/edit/${row.id}`}>Edit</Link>
                   ) : (
-                    <span className="tag">🔒 Locked</span>
+                    <Badge variant="muted">Locked</Badge>
                   )}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {!rows.length && <div className="empty">No feed consumption recorded yet.</div>}
