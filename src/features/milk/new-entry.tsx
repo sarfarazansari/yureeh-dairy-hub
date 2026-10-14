@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 
 import { useMemo, useRef, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
@@ -168,8 +169,8 @@ export default function NewEntryForm() {
             </FormField>
             <div className="field">
               <Label htmlFor="entry-shift">Shift</Label>
-              <Select value={shift} onValueChange={(value) => setShift(value as 'MORNING' | 'EVENING')} disabled={createMutation.isPending}>
-                <SelectTrigger id="entry-shift"><SelectValue placeholder="Select shift" /></SelectTrigger>
+              <Select value={shift} onValueChange={(value) => setShift(value as 'MORNING' | 'EVENING')} disabled={createMutation.isPending}><SelectTrigger id="entry-shift">
+                <SelectValue placeholder="Select shift" /></SelectTrigger>
                 <SelectContent><SelectItem value="MORNING">Morning</SelectItem><SelectItem value="EVENING">Evening</SelectItem></SelectContent>
               </Select>
             </div>
@@ -321,9 +322,9 @@ export default function NewEntryForm() {
           </div>
 
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-          <button type="submit" disabled={createMutation.isPending || duplicateQuery.isPending || deliveryContextQuery.isPending || deliveryContextQuery.isError || !deliveryContextQuery.data?.herdEntryExists || !!duplicateQuery.data} className="btn" aria-live="polite">
+          <Button type="submit" disabled={createMutation.isPending || duplicateQuery.isPending || deliveryContextQuery.isPending || deliveryContextQuery.isError || !deliveryContextQuery.data?.herdEntryExists || !!duplicateQuery.data} aria-live="polite">
             {createMutation.isPending ? <><LoaderCircle size={16} className="animate-spin" aria-hidden="true" /> Saving…</> : 'Save entry'}
-          </button>
+          </Button>
         </div>
 
         <div className="card">
