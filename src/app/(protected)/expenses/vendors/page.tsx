@@ -173,9 +173,12 @@ export default function ExpenseVendors() {
                     <td>{money(v.total)}</td>
                     <td>{money(v.pending)}</td>
                     <td>
-                      <Button type="button" variant="outline" size="sm" onClick={() => v.is_active ? setStatusTarget(v) : void toggle(v)}>
-                        {v.is_active ? 'Deactivate' : 'Activate'}
-                      </Button>
+                      <div className="flex flex-wrap gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => beginEdit(v)}>Edit</Button>
+                        <Button type="button" variant="outline" size="sm" onClick={() => v.is_active ? setStatusTarget(v) : void toggle(v)}>
+                          {v.is_active ? 'Deactivate' : 'Activate'}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
