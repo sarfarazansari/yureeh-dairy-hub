@@ -1,5 +1,7 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -149,10 +151,10 @@ export default function CustomersPage() {
           </div>
           <div className="field">
             <Label>Pricing model</Label>
-            <select value={type} onChange={(e) => setType(e.target.value as PricingType)}>
-              <option value="FIXED_PER_LITRE">Fixed per litre</option>
-              <option value="FAT_BASED">Fat based</option>
-            </select>
+            <Select value={type} onValueChange={(value) => setType(value as PricingType)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="FIXED_PER_LITRE">Fixed per litre</SelectItem><SelectItem value="FAT_BASED">Fat based</SelectItem></SelectContent>
+            </Select>
           </div>
           <div className="field">
             <Label>Default rate · ₹</Label>
@@ -342,14 +344,10 @@ export default function CustomersPage() {
           </div>
           <div className="field">
             <Label htmlFor="customer-pricing-type">Pricing model</Label>
-            <select
-              id="customer-pricing-type"
-              value={pricingType}
-              onChange={(event) => setPricingType(event.target.value as PricingType)}
-            >
-              <option value="FIXED_PER_LITRE">Fixed per litre</option>
-              <option value="FAT_BASED">Fat based</option>
-            </select>
+            <Select value={pricingType} onValueChange={(value) => setPricingType(value as PricingType)}>
+              <SelectTrigger id="customer-pricing-type"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="FIXED_PER_LITRE">Fixed per litre</SelectItem><SelectItem value="FAT_BASED">Fat based</SelectItem></SelectContent>
+            </Select>
           </div>
           <div className="dialog-footer">
             <button
