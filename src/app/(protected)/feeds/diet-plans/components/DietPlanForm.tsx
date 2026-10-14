@@ -1,5 +1,7 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -90,9 +92,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
         </div>
         <div className="field">
           <Label htmlFor="diet-plan-status">Status</Label>
-          <select id="diet-plan-status" value={values.status} onChange={(e) => setField('status', e.target.value as DietPlanFormValues['status'])}>
-            <option value="ACTIVE">Active</option><option value="PAUSED">Paused</option><option value="STOPPED">Stopped</option>
-          </select>
+          <Select value={values.status} onValueChange={(value) => setField('status', value as DietPlanFormValues['status'])}><SelectTrigger id="diet-plan-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ACTIVE">Active</SelectItem><SelectItem value="PAUSED">Paused</SelectItem><SelectItem value="STOPPED">Stopped</SelectItem></SelectContent></Select>
         </div>
         <div className="field">
           <Label htmlFor="diet-plan-start">Start date</Label>
@@ -139,10 +139,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
               <div className="expense-form-grid">
                 <div className="field">
                   <Label>Feed item</Label>
-                  <select value={item.feedItemId} onChange={(e) => updateItem(index, 'feedItemId', e.target.value)}>
-                    <option value="">Select feed</option>
-                    {feeds.map((candidate) => <option key={candidate.id} value={candidate.id} disabled={selectedFeedIds.has(candidate.id) && candidate.id !== item.feedItemId}>{candidate.name}</option>)}
-                  </select>
+                  <Select value={item.feedItemId || undefined} onValueChange={(value) => updateItem(index, 'feedItemId', value)}><SelectTrigger><SelectValue placeholder="Select feed" /></SelectTrigger><SelectContent>{feeds.map((candidate) => <SelectItem key={candidate.id} value={candidate.id} disabled={selectedFeedIds.has(candidate.id) && candidate.id !== item.feedItemId}>{candidate.name}</SelectItem>)}</SelectContent></Select>
                   {feed && <span className="sub">Unit: {feed.base_unit}</span>}
                 </div>
                 <div className="field">
