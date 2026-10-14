@@ -17,7 +17,7 @@ type Props = {
 export function Toast({ message, type = 'success', onDismiss }: Props) {
   const dismissRef = useRef(onDismiss);
   const previousMessage = useRef('');
-  const previousType = useRef<Props['type']>();
+  const previousType = useRef<Props['type']>(undefined);
 
   useEffect(() => { dismissRef.current = onDismiss; }, [onDismiss]);
 
@@ -47,7 +47,9 @@ export function Toast({ message, type = 'success', onDismiss }: Props) {
     if (type === 'error') sonnerToast.error(message, options);
     else sonnerToast.success(message, options);
 
-    return () => sonnerToast.dismiss(id);
+    return () => {
+      sonnerToast.dismiss(id);
+    };
   }, [message, type]);
 
   return null;
