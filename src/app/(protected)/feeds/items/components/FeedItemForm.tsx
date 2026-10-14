@@ -1,5 +1,7 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -56,7 +58,7 @@ export function FeedItemForm({ onSave, busy, message }: Props) {
       <form onSubmit={submit}>
         <div className="expense-form-grid">
           <div className="field"><Label>Name</Label><Input required value={values.name} onChange={(e) => update('name', e.target.value)} placeholder="e.g. Poha Churi" /></div>
-          <div className="field"><Label>Category</Label><select value={values.category} onChange={(e) => update('category', e.target.value as FeedCategory)}>{FEED_CATEGORIES.map((item) => <option key={item} value={item}>{label(item)}</option>)}</select></div>
+          <div className="field"><Label>Category</Label><Select value={values.category} onValueChange={(value) => update('category', value as FeedCategory)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{FEED_CATEGORIES.map((item) => <SelectItem key={item} value={item}>{label(item)}</SelectItem>)}</SelectContent></Select></div>
           <div className="field"><Label>Base unit</Label><Input list="feed-unit-list" value={values.baseUnit} onChange={(e) => update('baseUnit', e.target.value)} placeholder="KG" /></div>
           <div className="field"><Label>Purchase unit</Label><Input list="feed-unit-list" value={values.purchaseUnit} onChange={(e) => update('purchaseUnit', e.target.value)} placeholder="BAG" /></div>
           <div className="field"><Label>Base quantity per purchase unit</Label><Input required type="number" min="0.001" step="0.001" inputMode="decimal" value={values.conversion} onChange={(e) => update('conversion', e.target.value)} /><span className="kpi-foot">Example: 1 BAG = 50 KG → enter 50.</span></div>
