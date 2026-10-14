@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
 import { useEffect, useState } from 'react';
@@ -221,9 +220,9 @@ export default function BuffaloAnalyticsPage() {
             active buffaloes
           </p>
           <p className="sub">No record is distinct from explicitly recorded zero production.</p>
-          <Button asChild><Link href="/daily-performance">
+          <Link className="btn" href="/daily-performance">
             Enter daily performance
-          </Link></Button>
+          </Link>
         </div>
       </div>
       <div style={{ height: 14 }} />
