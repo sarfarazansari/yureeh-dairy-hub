@@ -122,7 +122,7 @@ export function DateRangePicker({ from, to, onChange, max, className = '', ariaL
               const selected = !!start && !!end && key >= start && key <= end;
               const endpoint = key === start || key === end || key === anchor;
               const today = key === toDateKey(new Date());
-              return <button key={key} type="button" role="gridcell" className={`shadcn-calendar-day ${selected || endpoint ? 'selected' : ''} ${today ? 'today' : ''}`} aria-label={new Intl.DateTimeFormat('en-IN', { dateStyle: 'full' }).format(day)} aria-pressed={selected || endpoint} disabled={disabled} onClick={() => chooseDate(day)}>{day.getDate()}</button>;
+              return <button key={key} type="button" role="gridcell" className={`shadcn-calendar-day ${endpoint ? 'selected' : selected ? 'range-middle' : ''} ${today ? 'today' : ''}`} aria-label={new Intl.DateTimeFormat('en-IN', { dateStyle: 'full' }).format(day)} aria-pressed={selected || endpoint} disabled={disabled} onClick={() => chooseDate(day)}>{day.getDate()}</button>;
             })}
           </div>
           <div className="shadcn-calendar-footer">
