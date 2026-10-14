@@ -1,5 +1,7 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -73,16 +75,7 @@ export function BuffaloPurchasePaymentForm({ buffalo }: { buffalo: BuffaloDetail
         </Field>
 
         <Field label="Method">
-          <select
-            value={method}
-            onChange={(event) =>
-              setMethod(event.target.value as (typeof PAYMENT_METHODS)[number])
-            }
-          >
-            {PAYMENT_METHODS.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
+          <Select value={method} onValueChange={(value) => setMethod(value as (typeof PAYMENT_METHODS)[number])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{PAYMENT_METHODS.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
         </Field>
 
         <Field label="Reference">
