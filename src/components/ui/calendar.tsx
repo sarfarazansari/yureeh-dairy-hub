@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { DayPicker } from "react-day-picker";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
@@ -31,10 +32,6 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         disabled: "text-[var(--muted)] opacity-30",
         hidden: "invisible",
         ...classNames,
-      }}
-      components={{
-        Chevron: ({ orientation, ...chevronProps }) =>
-          orientation === "left" ? <ChevronLeft className="size-4" {...chevronProps} /> : <ChevronRight className="size-4" {...chevronProps} />,
       }}
       {...props}
     />
