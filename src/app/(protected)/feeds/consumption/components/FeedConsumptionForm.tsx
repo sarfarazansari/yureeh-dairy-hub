@@ -1,5 +1,7 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { useMemo, useRef, useState } from 'react';
@@ -91,42 +93,37 @@ export function FeedConsumptionForm({
 
       <div className="expense-form-grid">
         <div className="field">
-          <label>Consumption date</label>
+          <Label>Consumption date</Label>
           <DatePicker value={values.businessDate} max={todayLocal()} onChange={(value) => update('businessDate', value)} ariaLabel="Consumption date" />
           {errors.businessDate && <span className="auth-message">{errors.businessDate}</span>}
         </div>
 
         <div className="field">
-          <label>Feed item</label>
+          <Label>Feed item</Label>
           {lockFeedItem ? (
-            <input value={selectedFeed?.name ?? '—'} readOnly />
+            <Input value={selectedFeed?.name ?? '—'} readOnly />
           ) : (
-            <select value={values.feedItemId} onChange={(e) => update('feedItemId', e.target.value)}>
-              <option value="">Select feed item</option>
-              {feedItems.map((item) => (
-                <option key={item.id} value={item.id}>{item.name}</option>
-              ))}
-            </select>
+            <Select value={values.feedItemId || undefined} onValueChange={(value) => update('feedItemId', value)}><SelectTrigger><SelectValue placeholder="Select feed item" /></SelectTrigger><SelectContent>{feedItems.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>
           )}
           {errors.feedItemId && <span className="auth-message">{errors.feedItemId}</span>}
         </div>
 
         <div className="field">
-          <label>Unit</label>
-          <input value={selectedFeed?.base_unit ?? '—'} readOnly />
+          <Label>Unit</Label>
+          <Input value={selectedFeed?.base_unit ?? '—'} readOnly />
         </div>
 
         <div className="field">
-          <label>Available stock</label>
-          <input
+          <Label>Available stock</Label>
+          <Input
             value={selectedFeed ? `${available.toLocaleString('en-IN')} ${selectedFeed.base_unit}` : '—'}
             readOnly
           />
         </div>
 
         <div className="field">
-          <label>Quantity</label>
-          <input
+          <Label>Quantity</Label>
+          <Input
             type="number"
             min="0.001"
             step="0.001"
@@ -138,16 +135,16 @@ export function FeedConsumptionForm({
         </div>
 
         <div className="field">
-          <label>Remaining stock</label>
-          <input
+          <Label>Remaining stock</Label>
+          <Input
             value={selectedFeed ? `${remaining.toLocaleString('en-IN', { maximumFractionDigits: 3 })} ${selectedFeed.base_unit}` : '—'}
             readOnly
           />
         </div>
 
         <div className="field wide-field">
-          <label>Notes</label>
-          <input value={values.notes ?? ''} onChange={(e) => update('notes', e.target.value)} placeholder="Optional" />
+          <Label>Notes</Label>
+          <Input value={values.notes ?? ''} onChange={(e) => update('notes', e.target.value)} placeholder="Optional" />
         </div>
       </div>
 
