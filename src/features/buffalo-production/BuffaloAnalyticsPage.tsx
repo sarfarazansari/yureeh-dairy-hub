@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
 import { useEffect, useState } from 'react';
@@ -125,7 +125,7 @@ export default function BuffaloAnalyticsPage() {
   return (
     <AppShell title="Buffalo analytics" subtitle="Shift-wise production trends and herd comparison">
       <div className="row">
-        <Select value={range} onValueChange={(value) => { setRange(value); if (value !== 'custom') setPreset(value, setFrom, setTo); }}><SelectTrigger className="date-chip"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="today">Today</SelectItem><SelectItem value="yesterday">Yesterday</SelectItem><SelectItem value="7days">Last 7 days</SelectItem><SelectItem value="week">This week</SelectItem><SelectItem value="month">This month</SelectItem><SelectItem value="previous">Previous month</SelectItem><SelectItem value="custom">Custom range</SelectItem></SelectContent></Select>
+        <Select value={range} onValueChange={(value) => { setRange(value); if (value !== 'custom') setPreset(value, setFrom, setTo); }}><SelectTrigger className="date-chip w-auto min-w-[9rem] shrink-0"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="today">Today</SelectItem><SelectItem value="yesterday">Yesterday</SelectItem><SelectItem value="7days">Last 7 days</SelectItem><SelectItem value="week">This week</SelectItem><SelectItem value="month">This month</SelectItem><SelectItem value="previous">Previous month</SelectItem><SelectItem value="custom">Custom range</SelectItem></SelectContent></Select>
         <div className="row">
           <DatePicker
             clearable
