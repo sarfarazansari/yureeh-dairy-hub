@@ -204,3 +204,56 @@
   font-size: 11px;
   line-height: 1.35;
 }
+
+
+/* Explicit DayPicker colors override library defaults that washed out labels. */
+.yureeh-calendar {
+  color: #1c3028;
+  background: #fff;
+}
+.yureeh-calendar .rdp-month_caption,
+.yureeh-calendar .rdp-caption_label {
+  color: #183b32;
+  opacity: 1;
+  font-weight: 700;
+}
+.yureeh-calendar .rdp-weekday {
+  color: #5f7066;
+  opacity: 1;
+  font-weight: 600;
+}
+.yureeh-calendar .rdp-day_button {
+  color: #26382f;
+  opacity: 1;
+}
+.yureeh-calendar .rdp-outside .rdp-day_button {
+  color: #89968e;
+  opacity: 1;
+}
+.yureeh-calendar .rdp-disabled .rdp-day_button,
+.yureeh-calendar .rdp-day_button:disabled {
+  color: #7b8980;
+  opacity: 1;
+  text-decoration: none;
+}
+.yureeh-calendar .rdp-range_middle {
+  background: #dcefe4;
+  color: #183b32;
+}
+.yureeh-calendar .rdp-range_middle .rdp-day_button {
+  background: #dcefe4;
+  color: #183b32;
+  opacity: 1;
+}
+.yureeh-calendar .rdp-selected .rdp-day_button,
+.yureeh-calendar .rdp-range_start .rdp-day_button,
+.yureeh-calendar .rdp-range_end .rdp-day_button {
+  background: #1c6b4e;
+  color: #fff;
+  opacity: 1;
+  font-weight: 700;
+}
+.yureeh-calendar .rdp-nav button {
+  color: #26382f;
+  opacity: 1;
+}
