@@ -15,8 +15,11 @@ type Props = {
  * can keep their current message state and dismiss callback.
  */
 export function Toast({ message, type = 'success', onDismiss }: Props) {
+  const dismissRef = useRef(onDismiss);
   const previousMessage = useRef('');
   const previousType = useRef<Props['type']>();
+
+  useEffect(() => { dismissRef.current = onDismiss; }, [onDismiss]);
 
   useEffect(() => {
     if (!message) {
@@ -32,7 +35,7 @@ export function Toast({ message, type = 'success', onDismiss }: Props) {
     const id = `yureeh-${Date.now()}-${Math.random().toString(36).slice(2)}`;
     const dismiss = () => {
       sonnerToast.dismiss(id);
-      onDismiss();
+      dismissRef.current();
     };
 
     const options = {
@@ -45,7 +48,7 @@ export function Toast({ message, type = 'success', onDismiss }: Props) {
     else sonnerToast.success(message, options);
 
     return () => sonnerToast.dismiss(id);
-  }, [message, type, onDismiss]);
+  }, [message, type]);
 
   return null;
 }
