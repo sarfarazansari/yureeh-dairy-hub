@@ -22,9 +22,7 @@ export default function ExpenseHistory() {
   const [rows, setRows] = useState<ExpenseRow[]>([]),
     [ledgerExpenseIds, setLedgerExpenseIds] = useState<Set<string>>(new Set()),
     [feedPurchaseExpenseIds, setFeedPurchaseExpenseIds] = useState<Set<string>>(new Set()),
-    [categories, setCategories] = useState<
-      Pick<ExpenseCategory, 'id' | 'name' | 'category_group'>[]
-    >([]),
+    [categories, setCategories] = useState<Pick<ExpenseCategory, 'id' | 'name' | 'category_group'>[]>([]),
     [loadError, setLoadError] = useState(false),
     [vendors, setVendors] = useState<Pick<ExpenseVendor, 'id' | 'name'>[]>([]),
     [buffaloes, setBuffaloes] = useState<ExpenseBuffaloOption[]>([]),
