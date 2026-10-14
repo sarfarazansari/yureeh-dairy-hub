@@ -225,7 +225,6 @@ export default function ExpenseHistory() {
             <Label>Sort by</Label>
             <Select value={sort} onValueChange={setSort}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="date">Date</SelectItem><SelectItem value="amount">Amount</SelectItem><SelectItem value="category">Category</SelectItem><SelectItem value="pending">Pending amount</SelectItem></SelectContent></Select>
           </div>
-        </div>
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
         <Dialog
           open={!!editing}
