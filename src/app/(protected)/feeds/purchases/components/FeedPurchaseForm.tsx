@@ -1,5 +1,9 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { todayLocal } from '../../../expenses/shared';
@@ -107,13 +111,13 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
 
       <div className="expense-form-grid">
         <div className="field">
-          <label>Purchase date</label>
+          <Label>Purchase date</Label>
           <DatePicker value={values.businessDate} max={todayLocal()} onChange={(value) => update('businessDate', value)} ariaLabel="Purchase date" />
           {errors.businessDate && <span className="auth-message">{errors.businessDate}</span>}
         </div>
 
         <div className="field">
-          <label>Feed item</label>
+          <Label>Feed item</Label>
           <select
             value={values.feedItemId}
             onChange={(e) => update('feedItemId', e.target.value)}
@@ -129,7 +133,7 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
         </div>
 
         <div className="field">
-          <label>Vendor</label>
+          <Label>Vendor</Label>
           <select
             value={values.vendorId}
             onChange={(e) => update('vendorId', e.target.value)}
@@ -144,13 +148,13 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
         </div>
 
         <div className="field">
-          <label>Purchase unit</label>
-          <input value={feed?.purchase_unit ?? '—'} readOnly />
+          <Label>Purchase unit</Label>
+          <Input value={feed?.purchase_unit ?? '—'} readOnly />
         </div>
 
         <div className="field">
-          <label>Quantity</label>
-          <input
+          <Label>Quantity</Label>
+          <Input
             type="number"
             min="0.001"
             step="0.001"
@@ -164,8 +168,8 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
         </div>
 
         <div className="field">
-          <label>Rate per purchase unit (₹)</label>
-          <input
+          <Label>Rate per purchase unit (₹)</Label>
+          <Input
             type="number"
             min="0.01"
             step="0.01"
@@ -177,7 +181,7 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
         </div>
 
         <div className="field">
-          <label>Payment status</label>
+          <Label>Payment status</Label>
           <select
             value={values.paymentStatus}
             onChange={(e) =>
@@ -194,8 +198,8 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
         </div>
 
         <div className="field">
-          <label>Paid amount (₹)</label>
-          <input
+          <Label>Paid amount (₹)</Label>
+          <Input
             type="number"
             min="0"
             step="0.01"
@@ -208,7 +212,7 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
 
         {values.paymentStatus !== 'CREDIT' && (
           <div className="field">
-            <label>Payment method</label>
+            <Label>Payment method</Label>
             <select
               value={values.paymentMethod}
               onChange={(e) => update('paymentMethod', e.target.value)}
@@ -224,14 +228,14 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
 
         {values.paymentStatus !== 'PAID' && (
           <div className="field">
-            <label>Due date</label>
+            <Label>Due date</Label>
             <DatePicker value={values.dueDate || ""} min={values.businessDate} clearable onChange={(value) => update('dueDate', value)} ariaLabel="Due date" />
           </div>
         )}
 
         <div className="field wide-field">
-          <label>Notes</label>
-          <input
+          <Label>Notes</Label>
+          <Input
             value={values.notes}
             onChange={(e) => update('notes', e.target.value)}
             placeholder="Optional"
