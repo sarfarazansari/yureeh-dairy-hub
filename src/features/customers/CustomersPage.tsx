@@ -1,5 +1,14 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
@@ -132,11 +141,11 @@ export default function CustomersPage() {
   return (
     <AppShell title="Customers" subtitle="Manage customer pricing and sales history">
       <div className="management-stack">
-        <form className="card" onSubmit={create}>
-          <h2 className="section-title">Add customer</h2>
+        <form className="card customer-create-card" onSubmit={create}>
+          <h2 className="section-title customer-create-heading">Add customer</h2>
           <div className="field">
-            <label>Name</label>
-            <input
+            <Label>Name</Label>
+            <Input
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -144,15 +153,15 @@ export default function CustomersPage() {
             />
           </div>
           <div className="field">
-            <label>Pricing model</label>
-            <select value={type} onChange={(e) => setType(e.target.value as PricingType)}>
-              <option value="FIXED_PER_LITRE">Fixed per litre</option>
-              <option value="FAT_BASED">Fat based</option>
-            </select>
+            <Label>Pricing model</Label>
+            <Select value={type} onValueChange={(value) => setType(value as PricingType)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="FIXED_PER_LITRE">Fixed per litre</SelectItem><SelectItem value="FAT_BASED">Fat based</SelectItem></SelectContent>
+            </Select>
           </div>
           <div className="field">
-            <label>Default rate · ₹</label>
-            <input
+            <Label>Default rate · ₹</Label>
+            <Input
               required
               min="0.01"
               step="0.01"
@@ -161,7 +170,7 @@ export default function CustomersPage() {
               onChange={(e) => setRate(e.target.value)}
             />
           </div>
-          <button className="btn" disabled={busy}>
+          <button className="btn customer-create-submit" disabled={busy}>
             {busy ? 'Saving…' : 'Add customer'}
           </button>
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
@@ -169,71 +178,39 @@ export default function CustomersPage() {
         <div className="card">
           <div className="row">
             <h2 className="section-title">Customer directory</h2>
-            <span className="tag">{rows.filter((c) => c.is_active).length} active</span>
+            <Badge variant="secondary">{rows.filter((c) => c.is_active).length} active</Badge>
           </div>
           {directoryQuery.isPending ? (
-            <div className="empty">Loading customers…</div>
+            <div className="space-y-3 py-2">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-10 w-full" />)}</div>
           ) : directoryQuery.isError ? (
             <div className="empty">{directoryQuery.error.message}</div>
           ) : rows.length ? (
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>CUSTOMER</th>
-                    <th>PRICING</th>
-                    <th>DEFAULT RATE</th>
-                    <th>TOTAL MILK</th>
-                    <th>REVENUE</th>
-                    <th>STATUS</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((c) => {
-                    const own = entries.filter((e) => e.customer_id === c.id);
-                    return (
-                      <tr key={c.id}>
-                        <td>
-                          <Link href={`/customers/${c.id}`}>
-                            <b>{c.name}</b>
-                          </Link>
-                          <div className="kpi-foot">{c.phone || '—'}</div>
-                        </td>
-                        <td>{c.pricing_type === 'FIXED_PER_LITRE' ? 'Fixed / L' : 'Fat based'}</td>
-                        <td>₹{c.default_rate}</td>
-                        <td>{milkTxt(own.reduce((s, e) => s + Number(e.milk_quantity), 0))}</td>
-                        <td>{money(own.reduce((s, e) => s + Number(e.calculated_amount), 0))}</td>
-                        <td>
-                          <span className={`tag ${c.is_active ? '' : 'gold'}`}>
-                            {c.is_active ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            type="button"
-                            className="date-chip"
-                            onClick={() => openEdit(c)}
-                          >
-                            Edit
-                          </button>{' '}
-                          <button
-                            type="button"
-                            className="date-chip"
-                            onClick={() => openPricing(c)}
-                          >
-                            Rate
-                          </button>{' '}
-                          <button className="date-chip" onClick={() => toggle(c)}>
-                            {c.is_active ? 'Pause' : 'Activate'}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <Table>
+              <TableHeader><TableRow><TableHead>Customer</TableHead><TableHead>Pricing</TableHead><TableHead>Default rate</TableHead><TableHead>Total milk</TableHead><TableHead>Revenue</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {rows.map((c) => {
+                  const own = entries.filter((e) => e.customer_id === c.id);
+                  return <TableRow key={c.id}>
+                    <TableCell><Link href={`/customers/${c.id}`} className="font-semibold text-[var(--ink)]">{c.name}</Link><div className="kpi-foot">{c.phone || '—'}</div></TableCell>
+                    <TableCell>{c.pricing_type === 'FIXED_PER_LITRE' ? 'Fixed / L' : 'Fat based'}</TableCell>
+                    <TableCell>₹{c.default_rate}</TableCell>
+                    <TableCell>{milkTxt(own.reduce((s, e) => s + Number(e.milk_quantity), 0))}</TableCell>
+                    <TableCell>{money(own.reduce((s, e) => s + Number(e.calculated_amount), 0))}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={c.is_active ? 'secondary' : 'muted'}
+                        className={c.is_active
+                          ? 'rounded-full bg-[#edf5ef] px-3 py-1 text-[#246b4f]'
+                          : 'rounded-full bg-[#f0f2f1] px-3 py-1 text-[#68756e]'}
+                      >
+                        {c.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell><div className="flex justify-end gap-2"><button type="button" className="date-chip" onClick={() => openEdit(c)}>Edit</button><button type="button" className="date-chip" onClick={() => openPricing(c)}>Rate</button><button type="button" className="date-chip" onClick={() => void toggle(c)}>{c.is_active ? 'Pause' : 'Activate'}</button></div></TableCell>
+                  </TableRow>;
+                })}
+              </TableBody>
+            </Table>
           ) : (
             <div className="empty">
               No customers yet. Add the first customer to start recording sales.
@@ -266,20 +243,20 @@ export default function CustomersPage() {
             </button>
           </div>
           <div className="field">
-            <label htmlFor="customer-edit-name">Name</label>
-            <input id="customer-edit-name" required value={editName} onChange={(event) => setEditName(event.target.value)} />
+            <Label htmlFor="customer-edit-name">Name</Label>
+            <Input id="customer-edit-name" required value={editName} onChange={(event) => setEditName(event.target.value)} />
           </div>
           <div className="field">
-            <label htmlFor="customer-edit-phone">Phone</label>
-            <input id="customer-edit-phone" value={editPhone} onChange={(event) => setEditPhone(event.target.value)} />
+            <Label htmlFor="customer-edit-phone">Phone</Label>
+            <Input id="customer-edit-phone" value={editPhone} onChange={(event) => setEditPhone(event.target.value)} />
           </div>
           <div className="field">
-            <label htmlFor="customer-edit-address">Address</label>
-            <input id="customer-edit-address" value={editAddress} onChange={(event) => setEditAddress(event.target.value)} />
+            <Label htmlFor="customer-edit-address">Address</Label>
+            <Input id="customer-edit-address" value={editAddress} onChange={(event) => setEditAddress(event.target.value)} />
           </div>
           <div className="field">
-            <label htmlFor="customer-edit-notes">Notes</label>
-            <textarea
+            <Label htmlFor="customer-edit-notes">Notes</Label>
+            <Textarea
               id="customer-edit-notes"
               value={editNotes}
               onChange={(event) => setEditNotes(event.target.value)}
@@ -325,8 +302,8 @@ export default function CustomersPage() {
             </button>
           </div>
           <div className="field">
-            <label htmlFor="customer-pricing-rate">Default rate · ₹</label>
-            <input
+            <Label htmlFor="customer-pricing-rate">Default rate · ₹</Label>
+            <Input
               id="customer-pricing-rate"
               type="number"
               min="0.01"
@@ -337,15 +314,11 @@ export default function CustomersPage() {
             />
           </div>
           <div className="field">
-            <label htmlFor="customer-pricing-type">Pricing model</label>
-            <select
-              id="customer-pricing-type"
-              value={pricingType}
-              onChange={(event) => setPricingType(event.target.value as PricingType)}
-            >
-              <option value="FIXED_PER_LITRE">Fixed per litre</option>
-              <option value="FAT_BASED">Fat based</option>
-            </select>
+            <Label htmlFor="customer-pricing-type">Pricing model</Label>
+            <Select value={pricingType} onValueChange={(value) => setPricingType(value as PricingType)}>
+              <SelectTrigger id="customer-pricing-type"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="FIXED_PER_LITRE">Fixed per litre</SelectItem><SelectItem value="FAT_BASED">Fat based</SelectItem></SelectContent>
+            </Select>
           </div>
           <div className="dialog-footer">
             <button

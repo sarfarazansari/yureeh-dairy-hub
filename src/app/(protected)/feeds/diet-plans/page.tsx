@@ -1,5 +1,9 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
@@ -49,8 +53,8 @@ export default function DietPlansPage() {
             <div className="row" style={{ gap: 8 }}><Link className="date-chip" href="/feeds/diet-plans/schedule">Feeding schedule</Link><Link className="btn" href="/feeds/diet-plans/new">New diet plan</Link></div>
           </div>
           <div className="expense-form-grid">
-            <div className="field"><label>Search plan</label><input value={search} placeholder="Plan name" onChange={(e) => setSearch(e.target.value)} /></div>
-            <div className="field"><label>Status</label><select value={status} onChange={(e) => { setStatus(e.target.value); setPage(0); }}><option value="">All statuses</option><option value="ACTIVE">Active</option><option value="PAUSED">Paused</option><option value="STOPPED">Stopped</option></select></div>
+            <div className="field"><Label>Search plan</Label><Input value={search} placeholder="Plan name" onChange={(e) => setSearch(e.target.value)} /></div>
+            <div className="field"><Label>Status</Label><Select value={status || 'all'} onValueChange={(value) => { setStatus(value === 'all' ? '' : value); setPage(0); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="ACTIVE">Active</SelectItem><SelectItem value="PAUSED">Paused</SelectItem><SelectItem value="STOPPED">Stopped</SelectItem></SelectContent></Select></div>
           </div>
         </div>
         <div className="card">

@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 @import '../components/ui/date-picker.css';
 :root {
   --ink: #183b32;
@@ -1744,4 +1745,92 @@ button {
 }
 .table tbody tr:hover {
   background-color: #eef5f0;
+}
+
+/* shadcn/ui tokens — mapped to Yureeh's existing farm-green visual identity. */
+@import "tw-animate-css";
+
+:root {
+  --background: #f7f9f6;
+  --foreground: #1c3028;
+  --card: #ffffff;
+  --card-foreground: #183b32;
+  --popover: #ffffff;
+  --popover-foreground: #183b32;
+  --primary: #1c6b4e;
+  --primary-foreground: #ffffff;
+  --secondary: #edf5ef;
+  --secondary-foreground: #1c6b4e;
+  --muted: #f0f3ef;
+  --muted-foreground: #77857e;
+  --accent: #edf5ef;
+  --accent-foreground: #1c6b4e;
+  --destructive: #b33f36;
+  --destructive-foreground: #ffffff;
+  --border: #e8ece8;
+  --input: #e8ece8;
+  --ring: #1c6b4e;
+  --radius: 0.625rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+
+/* Compact master forms without forcing every control to span the full page. */
+.customer-create-card {
+  width: 100%;
+  max-width: 760px;
+}
+.customer-create-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 14px 18px;
+}
+.customer-create-heading,
+.customer-create-submit,
+.customer-create-card > [role="status"] {
+  grid-column: 1 / -1;
+}
+.customer-create-card .field {
+  min-width: 0;
+  margin: 0;
+}
+.customer-create-submit {
+  justify-self: start;
+  min-width: 150px;
+}
+@media (max-width: 640px) {
+  .customer-create-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .customer-create-heading,
+  .customer-create-submit,
+  .customer-create-card > [role="status"] {
+    grid-column: auto;
+  }
 }

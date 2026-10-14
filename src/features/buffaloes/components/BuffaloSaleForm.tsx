@@ -1,5 +1,9 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { Input } from '@/components/ui/input';
+
 import { useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { money } from '@/lib/farm-format';
@@ -54,18 +58,18 @@ export function BuffaloSaleForm({ buffalo }: { buffalo: BuffaloDetail }) {
       <p className="sub">Recording a sale will mark this buffalo SOLD and prevent future production entries.</p>
       <div className="grid two">
         <DispositionField label="Sale date"><DatePicker value={saleDate} max={getDispositionToday()} onChange={setSaleDate} ariaLabel="Sale date" /></DispositionField>
-        <DispositionField label="Buyer name"><input required value={buyerName} onChange={(e) => setBuyerName(e.target.value)} /></DispositionField>
-        <DispositionField label="Buyer mobile"><input value={buyerMobile} onChange={(e) => setBuyerMobile(e.target.value)} /></DispositionField>
-        <DispositionField label="Buyer location"><input value={buyerLocation} onChange={(e) => setBuyerLocation(e.target.value)} /></DispositionField>
-        <DispositionField label="Sale price (₹)"><input required type="number" min="0.01" step="0.01" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} /></DispositionField>
-        <DispositionField label="Received now (₹)"><input required type="number" min="0" step="0.01" value={initialPayment} onChange={(e) => setInitialPayment(e.target.value)} /></DispositionField>
+        <DispositionField label="Buyer name"><Input required value={buyerName} onChange={(e) => setBuyerName(e.target.value)} /></DispositionField>
+        <DispositionField label="Buyer mobile"><Input value={buyerMobile} onChange={(e) => setBuyerMobile(e.target.value)} /></DispositionField>
+        <DispositionField label="Buyer location"><Input value={buyerLocation} onChange={(e) => setBuyerLocation(e.target.value)} /></DispositionField>
+        <DispositionField label="Sale price (₹)"><Input required type="number" min="0.01" step="0.01" value={salePrice} onChange={(e) => setSalePrice(e.target.value)} /></DispositionField>
+        <DispositionField label="Received now (₹)"><Input required type="number" min="0" step="0.01" value={initialPayment} onChange={(e) => setInitialPayment(e.target.value)} /></DispositionField>
         <DispositionField label="Outstanding"><div className="calculated-balance">{money(pending)}</div></DispositionField>
         {paid > 0 && <DispositionField label="Payment date"><DatePicker value={paymentDate} max={getDispositionToday()} onChange={setPaymentDate} ariaLabel="Payment date" /></DispositionField>}
-        {paid > 0 && <DispositionField label="Payment method"><select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as BuffaloPaymentMethod)}>{DISPOSITION_PAYMENT_METHODS.map((method) => <option key={method} value={method}>{method.replace('_', ' ')}</option>)}</select></DispositionField>}
+        {paid > 0 && <DispositionField label="Payment method"><Select value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as BuffaloPaymentMethod)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DISPOSITION_PAYMENT_METHODS.map((method) => <SelectItem key={method} value={method}>{method.replace('_', ' ')}</SelectItem>)}</SelectContent></Select></DispositionField>}
         {pending > 0 && <DispositionField label="Due date"><DatePicker value={dueDate} min={saleDate} onChange={setDueDate} ariaLabel="Due date" /></DispositionField>}
-        {pending > 0 && <DispositionField label="Payment terms"><input value={terms} onChange={(e) => setTerms(e.target.value)} /></DispositionField>}
-        <DispositionField label="Transaction reference"><input value={reference} onChange={(e) => setReference(e.target.value)} /></DispositionField>
-        <DispositionField label="Notes"><input value={notes} onChange={(e) => setNotes(e.target.value)} /></DispositionField>
+        {pending > 0 && <DispositionField label="Payment terms"><Input value={terms} onChange={(e) => setTerms(e.target.value)} /></DispositionField>}
+        <DispositionField label="Transaction reference"><Input value={reference} onChange={(e) => setReference(e.target.value)} /></DispositionField>
+        <DispositionField label="Notes"><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></DispositionField>
       </div>
       {(message || mutation.isError) && <p className="auth-message">{message || mutation.error?.message}</p>}
       <button className="btn" disabled={mutation.isPending}>{mutation.isPending ? 'Recording…' : 'Record sale'}</button>

@@ -1,4 +1,6 @@
 'use client';
+
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatDate } from '@/lib/date-format';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
@@ -316,15 +318,7 @@ export default function ExpenseDashboard() {
         <div className="card">
           <div className="row">
             <h2 className="section-title">Feed price trend</h2>
-            <select
-              className="date-chip"
-              value={currentFeed}
-              onChange={(e) => setFeedCategory(e.target.value)}
-            >
-              {feedItems.map((f) => (
-                <option key={f.name}>{f.name}</option>
-              ))}
-            </select>
+            <Select value={currentFeed} onValueChange={setFeedCategory}><SelectTrigger className="date-chip"><SelectValue /></SelectTrigger><SelectContent>{feedItems.map((f) => <SelectItem key={f.name} value={f.name}>{f.name}</SelectItem>)}</SelectContent></Select>
           </div>
           <div className="chart">
             {feedPrices.length ? (

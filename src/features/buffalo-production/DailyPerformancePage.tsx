@@ -1,5 +1,8 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
 import { useMemo, useState } from 'react';
 
 import { DatePicker } from '@/components/ui/date-picker';
@@ -88,10 +91,10 @@ export default function DailyPerformancePage() {
               production also updates the farm milk pool.
             </p>
           </div>
-          <label className="field production-date">
+          <Label className="field production-date">
             <span>Business date</span>
             <DatePicker value={date} max={localDateKey()} disabled={saveMutation.isPending} onChange={(value) => { setDate(value); setValues({}); setFatValue(null); }} ariaLabel="Business date" />
-          </label>
+          </Label>
         </div>
 
         <div className="date-range-segment" role="group" aria-label="Production shift">
@@ -114,9 +117,9 @@ export default function DailyPerformancePage() {
         </div>
 
         <div className="row" style={{ marginTop: 12, marginBottom: 12, alignItems: 'end' }}>
-          <label className="field" style={{ maxWidth: 320, flex: 1 }}>
+          <Label className="field" style={{ maxWidth: 320, flex: 1 }}>
             <span>Mixed milk fat (%) · {shift === 'MORNING' ? 'Morning' : 'Evening'}</span>
-            <input
+            <Input
               aria-label="Mixed milk fat percentage"
               className="date-chip"
               type="number"
@@ -132,7 +135,7 @@ export default function DailyPerformancePage() {
                 setMessage('');
               }}
             />
-          </label>
+          </Label>
           <span className="kpi-foot">Enter the fat measured from the combined milk, once per shift — not per buffalo.</span>
         </div>
 
@@ -162,7 +165,7 @@ export default function DailyPerformancePage() {
                       </div>
                     </td>
                     <td>
-                      <input
+                      <Input
                         aria-label={`${animal.name || animal.buffalo_code} milk quantity in litres`}
                         className="date-chip production-input"
                         type="number"

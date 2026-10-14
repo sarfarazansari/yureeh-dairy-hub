@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import { Label } from '@/components/ui/label';
 import type { BuffaloPaymentMethod } from '../types';
 
 export const DISPOSITION_PAYMENT_METHODS: BuffaloPaymentMethod[] = ['CASH', 'UPI', 'BANK_TRANSFER', 'OTHER'];
@@ -11,5 +12,5 @@ export function getDispositionToday() {
 }
 
 export function DispositionField({ label, children }: { label: string; children: ReactNode }) {
-  return <div className="field"><label>{label}</label>{children}</div>;
+  return <div className="field"><Label>{label}</Label>{children}</div>;
 }

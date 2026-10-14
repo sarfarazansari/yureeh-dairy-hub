@@ -1,4 +1,9 @@
 'use client';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 import { DatePicker } from '@/components/ui/date-picker';
 import { LoaderCircle } from 'lucide-react';
@@ -175,57 +180,39 @@ export default function NewExpense() {
           <h2 className="section-title">Expense details</h2>
           <div className="expense-form-grid">
             <div className="field">
-              <label>Business date</label>
+              <Label>Business date</Label>
               <DatePicker value={date} max={todayLocal()} onChange={setDate} ariaLabel="Business date" />
             </div>
             <div className="field">
-              <label>Category</label>
-              <select required value={categoryId} onChange={(e) => selectCategory(e.target.value)}>
-                <option value="">Select category</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} · {c.category_group.replaceAll('_', ' ')}
-                  </option>
-                ))}
-              </select>
+              <Label>Category</Label>
+              <Select value={categoryId || undefined} onValueChange={selectCategory} required><SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} · {c.category_group.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
             </div>
             <div className="field">
-              <label>Vendor (optional)</label>
-              <select value={vendorId} onChange={(e) => setVendorId(e.target.value)}>
-                <option value="">No vendor</option>
-                {vendors.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.name}
-                  </option>
-                ))}
-              </select>
+              <Label>Vendor (optional)</Label>
+              <Select value={vendorId || undefined} onValueChange={(value) => setVendorId(value === 'none' ? '' : value)}><SelectTrigger><SelectValue placeholder="No vendor" /></SelectTrigger><SelectContent><SelectItem value="none">No vendor</SelectItem>{vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
               <Link href="/expenses/vendors" className="kpi-foot">
                 Manage vendors →
               </Link>
             </div>
             <div className="field wide-field">
-              <label>Description</label>
-              <input
+              <Label>Description</Label>
+              <Input
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="What was purchased or paid for?"
               />
             </div>
             <div className="field wide-field">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={useQuantity}
-                  onChange={(e) => setUseQuantity(e.target.checked)}
-                />{' '}
+              <Label>
+                <Checkbox checked={useQuantity} onCheckedChange={(checked) => setUseQuantity(checked === true)} />{' '}
                 &nbsp;Calculate from quantity × rate
-              </label>
+              </Label>
             </div>
             {useQuantity ? (
               <>
                 <div className="field">
-                  <label>Quantity</label>
-                  <input
+                  <Label>Quantity</Label>
+                  <Input
                     required
                     type="number"
                     min="0"
@@ -236,8 +223,8 @@ export default function NewExpense() {
                   />
                 </div>
                 <div className="field">
-                  <label>Unit</label>
-                  <input
+                  <Label>Unit</Label>
+                  <Input
                     list="expense-unit-list"
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
@@ -250,8 +237,8 @@ export default function NewExpense() {
                   </datalist>
                 </div>
                 <div className="field">
-                  <label>Rate · ₹ per unit</label>
-                  <input
+                  <Label>Rate · ₹ per unit</Label>
+                  <Input
                     required
                     type="number"
                     min="0"
@@ -264,8 +251,8 @@ export default function NewExpense() {
               </>
             ) : (
               <div className="field">
-                <label>Total amount · ₹</label>
-                <input
+                <Label>Total amount · ₹</Label>
+                <Input
                   required
                   type="number"
                   min="0.01"
@@ -277,16 +264,12 @@ export default function NewExpense() {
               </div>
             )}
             <div className="field">
-              <label>Payment status</label>
-              <select value={status} onChange={(e) => selectStatus(e.target.value)}>
-                <option value="PAID">Paid</option>
-                <option value="PARTIAL">Partial</option>
-                <option value="CREDIT">Credit</option>
-              </select>
+              <Label>Payment status</Label>
+              <Select value={status} onValueChange={selectStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="PAID">Paid</SelectItem><SelectItem value="PARTIAL">Partial</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select>
             </div>
             <div className="field">
-              <label>Paid amount · ₹</label>
-              <input
+              <Label>Paid amount · ₹</Label>
+              <Input
                 type="number"
                 min="0"
                 max={amount}
@@ -296,46 +279,28 @@ export default function NewExpense() {
               />
             </div>
             <div className="field">
-              <label>Payment method</label>
-              <select
-                value={status === 'CREDIT' ? 'CREDIT' : method}
-                disabled={status === 'CREDIT'}
-                onChange={(e) => setMethod(e.target.value)}
-              >
-                <option value="CASH">Cash</option>
-                <option value="UPI">UPI</option>
-                <option value="BANK_TRANSFER">Bank transfer</option>
-                <option value="CARD">Card</option>
-                <option value="OTHER">Other</option>
-                <option value="CREDIT">Credit</option>
-              </select>
+              <Label>Payment method</Label>
+              <Select value={status === 'CREDIT' ? 'CREDIT' : method} disabled={status === 'CREDIT'} onValueChange={setMethod}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="CASH">Cash</SelectItem><SelectItem value="UPI">UPI</SelectItem><SelectItem value="BANK_TRANSFER">Bank transfer</SelectItem><SelectItem value="CARD">Card</SelectItem><SelectItem value="OTHER">Other</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select>
             </div>
             <div className="field">
-              <label>Due date</label>
+              <Label>Due date</Label>
               <DatePicker value={due} min={date} onChange={setDue} clearable ariaLabel="Due date" />
             </div>
             <div className="field">
-              <label>Buffalo (optional)</label>
-              <select value={buffaloId} onChange={(e) => setBuffaloId(e.target.value)}>
-                <option value="">Farm-wide expense</option>
-                {buffaloes.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name || b.buffalo_code}
-                  </option>
-                ))}
-              </select>
+              <Label>Buffalo (optional)</Label>
+              <Select value={buffaloId || undefined} onValueChange={(value) => setBuffaloId(value === 'none' ? '' : value)}><SelectTrigger><SelectValue placeholder="Farm-wide expense" /></SelectTrigger><SelectContent><SelectItem value="none">Farm-wide expense</SelectItem>{buffaloes.map((b) => <SelectItem key={b.id} value={b.id}>{b.name || b.buffalo_code}</SelectItem>)}</SelectContent></Select>
             </div>
             <div className="field">
-              <label>Receipt / reference</label>
-              <input
+              <Label>Receipt / reference</Label>
+              <Input
                 value={receipt}
                 onChange={(e) => setReceipt(e.target.value)}
                 placeholder="Invoice or transaction reference"
               />
             </div>
             <div className="field wide-field">
-              <label>Notes</label>
-              <input
+              <Label>Notes</Label>
+              <Input
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Optional notes"

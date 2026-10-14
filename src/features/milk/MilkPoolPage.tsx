@@ -1,8 +1,13 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { useMemo, useState } from 'react';
 
 import { DatePicker } from '@/components/ui/date-picker';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { localDateKey, getMilkEntryPresetRange } from '@/lib/milk-entry-list';
@@ -122,16 +127,19 @@ export default function MilkPoolPage() {
               Household use, wastage, other use and adjustments are recorded separately.
             </p>
           </div>
-          <div className="grid two">
-            <label className="field">
-              <span>From</span>
-              <DatePicker clearable value={from} max={to || localDateKey()} onChange={setFrom} ariaLabel="From date" />
-            </label>
-            <label className="field">
-              <span>To</span>
-              <DatePicker clearable value={to} min={from} max={localDateKey()} onChange={setTo} ariaLabel="To date" />
-            </label>
-          </div>
+          <Label className="field milk-pool-date-range">
+            <span>Date range</span>
+            <DateRangePicker
+              from={from}
+              to={to}
+              max={localDateKey()}
+              onChange={({ from: nextFrom, to: nextTo }) => {
+                setFrom(nextFrom);
+                setTo(nextTo);
+              }}
+              ariaLabel="Milk pool date range"
+            />
+          </Label>
         </div>
 
         <div className="grid three">
@@ -214,44 +222,27 @@ export default function MilkPoolPage() {
           their source transactions.
         </p>
         <form className="grid three" onSubmit={recordMovement}>
-          <label className="field">
+          <Label className="field">
             <span>Business date</span>
             <DatePicker value={businessDate} max={localDateKey()} onChange={setBusinessDate} ariaLabel="Business date" />
-          </label>
-          <label className="field">
+          </Label>
+          <Label className="field">
             <span>Shift (optional)</span>
-            <select value={shift} onChange={(event) => setShift(event.target.value as 'MORNING' | 'EVENING' | '')}>
-              <option value="">Not specified</option>
-              {MILK_POOL_SHIFT_OPTIONS.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-            </select>
-          </label>
-          <label className="field">
+            <Select value={shift || 'none'} onValueChange={(value) => setShift(value === 'none' ? '' : value as 'MORNING' | 'EVENING')}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not specified</SelectItem>{MILK_POOL_SHIFT_OPTIONS.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select>
+          </Label>
+          <Label className="field">
             <span>Movement</span>
-            <select
-              value={movementType}
-              onChange={(event) => {
-                const value = event.target.value as MilkPoolManualMovementType;
-                setMovementType(value);
-                if (value !== 'ADJUSTMENT') setDirection('OUT');
-              }}
-            >
-              {MILK_POOL_MOVEMENT_TYPES.map((value) => (
-                <option key={value} value={value}>{MILK_POOL_MOVEMENT_LABELS[value]}</option>
-              ))}
-            </select>
-          </label>
+            <Select value={movementType} onValueChange={(rawValue) => { const value = rawValue as MilkPoolManualMovementType; setMovementType(value); if (value !== 'ADJUSTMENT') setDirection('OUT'); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{MILK_POOL_MOVEMENT_TYPES.map((value) => <SelectItem key={value} value={value}>{MILK_POOL_MOVEMENT_LABELS[value]}</SelectItem>)}</SelectContent></Select>
+          </Label>
           {movementType === 'ADJUSTMENT' && (
-            <label className="field">
+            <Label className="field">
               <span>Direction</span>
-              <select value={direction} onChange={(event) => setDirection(event.target.value as MilkPoolMovementDirection)}>
-                <option value="OUT">Decrease pool</option>
-                <option value="IN">Increase pool</option>
-              </select>
-            </label>
+              <Select value={direction} onValueChange={(value) => setDirection(value as MilkPoolMovementDirection)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="OUT">Decrease pool</SelectItem><SelectItem value="IN">Increase pool</SelectItem></SelectContent></Select>
+            </Label>
           )}
-          <label className="field">
+          <Label className="field">
             <span>Quantity (L)</span>
-            <input
+            <Input
               type="number"
               min="0.001"
               step="0.001"
@@ -260,11 +251,11 @@ export default function MilkPoolPage() {
               onChange={(event) => setQuantity(event.target.value)}
               placeholder="e.g. 2.5"
             />
-          </label>
-          <label className="field">
+          </Label>
+          <Label className="field">
             <span>Notes</span>
-            <input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Why was milk consumed/adjusted?" />
-          </label>
+            <Input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Why was milk consumed/adjusted?" />
+          </Label>
           <div>
             <button className="btn" disabled={recordMutation.isPending}>
               {recordMutation.isPending ? 'Saving…' : 'Record movement'}

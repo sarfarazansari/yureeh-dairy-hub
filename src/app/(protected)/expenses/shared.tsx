@@ -2,6 +2,9 @@
 import Link from 'next/link';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AppShell } from '@/components/layout/AppShell';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 export const money = (n: number) =>
   `₹${n.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 export function ExpenseShell({
@@ -100,40 +103,28 @@ export function ExpenseDateFilters({
     }
   }
   return (
-    <div className="expense-filters">
-      <select
-        className="date-chip"
-        value={range}
-        onChange={(e) =>
-          e.target.value === 'custom' ? setRange('custom') : preset(e.target.value)
-        }
-      >
-        <option value="today">Today</option>
-        <option value="week">This week</option>
-        <option value="month">This month</option>
-        <option value="previous">Previous month</option>
-        <option value="3months">Last 3 months</option>
-        <option value="year">This year</option>
-        <option value="custom">Custom range</option>
-      </select>
-      <input
-        type="date"
-        className="date-chip"
-        value={from}
-        onChange={(e) => {
-          setRange('custom');
-          setFrom(e.target.value);
-        }}
-      />
-      <input
-        type="date"
-        className="date-chip"
-        value={to}
-        onChange={(e) => {
-          setRange('custom');
-          setTo(e.target.value);
-        }}
-      />
+    <div className="expense-filters items-start">
+      <div className="w-56 max-w-full">
+        <Label className="mb-1.5 block">Period</Label>
+        <Select value={range} onValueChange={(value) => value === 'custom' ? setRange('custom') : preset(value)}>
+          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="today">Today</SelectItem>
+            <SelectItem value="week">This week</SelectItem>
+            <SelectItem value="month">This month</SelectItem>
+            <SelectItem value="previous">Previous month</SelectItem>
+            <SelectItem value="3months">Last 3 months</SelectItem>
+            <SelectItem value="year">This year</SelectItem>
+            <SelectItem value="custom">Custom range</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      {range === 'custom' && (
+        <div className="w-full max-w-md">
+          <Label className="mb-1.5 block">Date range</Label>
+          <DateRangePicker from={from} to={to} max={todayLocal()} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); }} />
+        </div>
+      )}
     </div>
   );
 }

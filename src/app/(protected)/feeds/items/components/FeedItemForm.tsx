@@ -1,5 +1,10 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
 import { useState } from 'react';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { FEED_CATEGORIES, FEED_UNITS, type FeedCategory } from '@/lib/feed-types';
@@ -51,13 +56,13 @@ export function FeedItemForm({ onSave, busy, message }: Props) {
       <p className="dialog-description">Create a physical feed master for inventory tracking.</p>
       <form onSubmit={submit}>
         <div className="expense-form-grid">
-          <div className="field"><label>Name</label><input required value={values.name} onChange={(e) => update('name', e.target.value)} placeholder="e.g. Poha Churi" /></div>
-          <div className="field"><label>Category</label><select value={values.category} onChange={(e) => update('category', e.target.value as FeedCategory)}>{FEED_CATEGORIES.map((item) => <option key={item} value={item}>{label(item)}</option>)}</select></div>
-          <div className="field"><label>Base unit</label><input list="feed-unit-list" value={values.baseUnit} onChange={(e) => update('baseUnit', e.target.value)} placeholder="KG" /></div>
-          <div className="field"><label>Purchase unit</label><input list="feed-unit-list" value={values.purchaseUnit} onChange={(e) => update('purchaseUnit', e.target.value)} placeholder="BAG" /></div>
-          <div className="field"><label>Base quantity per purchase unit</label><input required type="number" min="0.001" step="0.001" inputMode="decimal" value={values.conversion} onChange={(e) => update('conversion', e.target.value)} /><span className="kpi-foot">Example: 1 BAG = 50 KG → enter 50.</span></div>
-          <div className="field"><label>Low-stock threshold ({values.baseUnit || 'base unit'})</label><input type="number" min="0" step="0.001" inputMode="decimal" value={values.lowStockThreshold} onChange={(e) => update('lowStockThreshold', e.target.value)} /><span className="kpi-foot">Set 0 to disable low-stock alerts.</span></div>
-          <div className="field wide-field"><label>Notes</label><input value={values.notes} onChange={(e) => update('notes', e.target.value)} placeholder="Optional" /></div>
+          <div className="field"><Label>Name</Label><Input required value={values.name} onChange={(e) => update('name', e.target.value)} placeholder="e.g. Poha Churi" /></div>
+          <div className="field"><Label>Category</Label><Select value={values.category} onValueChange={(value) => update('category', value as FeedCategory)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{FEED_CATEGORIES.map((item) => <SelectItem key={item} value={item}>{label(item)}</SelectItem>)}</SelectContent></Select></div>
+          <div className="field"><Label>Base unit</Label><Input list="feed-unit-list" value={values.baseUnit} onChange={(e) => update('baseUnit', e.target.value)} placeholder="KG" /></div>
+          <div className="field"><Label>Purchase unit</Label><Input list="feed-unit-list" value={values.purchaseUnit} onChange={(e) => update('purchaseUnit', e.target.value)} placeholder="BAG" /></div>
+          <div className="field"><Label>Base quantity per purchase unit</Label><Input required type="number" min="0.001" step="0.001" inputMode="decimal" value={values.conversion} onChange={(e) => update('conversion', e.target.value)} /><span className="kpi-foot">Example: 1 BAG = 50 KG → enter 50.</span></div>
+          <div className="field"><Label>Low-stock threshold ({values.baseUnit || 'base unit'})</Label><Input type="number" min="0" step="0.001" inputMode="decimal" value={values.lowStockThreshold} onChange={(e) => update('lowStockThreshold', e.target.value)} /><span className="kpi-foot">Set 0 to disable low-stock alerts.</span></div>
+          <div className="field wide-field"><Label>Notes</Label><Input value={values.notes} onChange={(e) => update('notes', e.target.value)} placeholder="Optional" /></div>
         </div>
         <datalist id="feed-unit-list">{FEED_UNITS.map((unit) => <option key={unit} value={unit} />)}</datalist>
         {message && <TimedNotice message={message} onDismiss={() => undefined} />}

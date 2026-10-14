@@ -1,5 +1,10 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
 import { useMemo, useRef, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
 
@@ -144,7 +149,7 @@ export default function NewEntryForm() {
           <h2 className="section-title">Entry details</h2>
           <div className="grid three">
             <div className="field">
-              <label htmlFor="entry-date">Business date</label>
+              <Label htmlFor="entry-date">Business date</Label>
               <DatePicker
                 id="entry-date"
                 value={date}
@@ -161,31 +166,18 @@ export default function NewEntryForm() {
               {errors.business_date && <small className="field-error">{errors.business_date}</small>}
             </div>
             <div className="field">
-              <label htmlFor="entry-shift">Shift</label>
-              <select
-                id="entry-shift"
-                value={shift}
-                disabled={createMutation.isPending}
-                onChange={(event) => setShift(event.target.value as 'MORNING' | 'EVENING')}
-              >
-                <option value="MORNING">Morning</option>
-                <option value="EVENING">Evening</option>
-              </select>
+              <Label htmlFor="entry-shift">Shift</Label>
+              <Select value={shift} onValueChange={(value) => setShift(value as 'MORNING' | 'EVENING')} disabled={createMutation.isPending}>
+                <SelectTrigger id="entry-shift"><SelectValue placeholder="Select shift" /></SelectTrigger>
+                <SelectContent><SelectItem value="MORNING">Morning</SelectItem><SelectItem value="EVENING">Evening</SelectItem></SelectContent>
+              </Select>
             </div>
             <div className="field">
-              <label htmlFor="entry-customer">Customer</label>
-              <select
-                id="entry-customer"
-                value={customerId}
-                disabled={customersQuery.isPending || createMutation.isPending}
-                onChange={(event) => chooseCustomer(event.target.value)}
-                aria-invalid={!!errors.customer_id}
-              >
-                <option value="">Select customer</option>
-                {customers.map((item) => (
-                  <option key={item.id} value={item.id}>{item.name}</option>
-                ))}
-              </select>
+              <Label htmlFor="entry-customer">Customer</Label>
+              <Select value={customerId || undefined} onValueChange={chooseCustomer} disabled={customersQuery.isPending || createMutation.isPending}>
+                <SelectTrigger id="entry-customer" aria-invalid={!!errors.customer_id}><SelectValue placeholder="Select customer" /></SelectTrigger>
+                <SelectContent>{customers.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent>
+              </Select>
               {errors.customer_id && <small className="field-error">{errors.customer_id}</small>}
     {customersQuery.isError && (
                 <small className="field-error">{customersQuery.error.message}</small>
@@ -245,8 +237,8 @@ export default function NewEntryForm() {
 
           <div className="grid four">
             <div className="field">
-              <label htmlFor="entry-quantity">Milk quantity (L)</label>
-              <input
+              <Label htmlFor="entry-quantity">Milk quantity (L)</Label>
+              <Input
                 id="entry-quantity"
                 type="number"
                 min="0.001"
@@ -265,8 +257,8 @@ export default function NewEntryForm() {
             </div>
             {pricingType === 'FAT_BASED' && (
               <div className="field">
-                <label htmlFor="entry-fat">Fat (%)</label>
-                <input
+                <Label htmlFor="entry-fat">Fat (%)</Label>
+                <Input
                   id="entry-fat"
                   type="number"
                   min="0"
@@ -286,8 +278,8 @@ export default function NewEntryForm() {
               </div>
             )}
             <div className="field">
-              <label htmlFor="entry-rate-per-litre">Rate / L</label>
-              <input
+              <Label htmlFor="entry-rate-per-litre">Rate / L</Label>
+              <Input
                 id="entry-rate-per-litre"
                 type="number"
                 value={ratePerLitre}
@@ -297,8 +289,8 @@ export default function NewEntryForm() {
               />
             </div>
             <div className="field">
-              <label htmlFor="entry-rate">Applied rate</label>
-              <input
+              <Label htmlFor="entry-rate">Applied rate</Label>
+              <Input
                 id="entry-rate"
                 type="number"
                 min="0.01"
@@ -317,8 +309,8 @@ export default function NewEntryForm() {
           </div>
 
           <div className="field">
-            <label htmlFor="entry-notes">Notes (optional)</label>
-            <input
+            <Label htmlFor="entry-notes">Notes (optional)</Label>
+            <Input
               id="entry-notes"
               value={notes}
               disabled={createMutation.isPending}
@@ -336,22 +328,17 @@ export default function NewEntryForm() {
         <div className="card">
           <div className="eyebrow">PRICE SNAPSHOT</div>
           <div className="field">
-            <label htmlFor="entry-pricing-type">Pricing type</label>
-            <select
-              id="entry-pricing-type"
-              value={pricingType}
-              disabled={createMutation.isPending}
-              onChange={(event) => changePricingType(event.target.value as PricingType)}
-            >
-              <option value="FIXED_PER_LITRE">Fixed per litre</option>
-              <option value="FAT_BASED">Fat based</option>
-            </select>
+            <Label htmlFor="entry-pricing-type">Pricing type</Label>
+            <Select value={pricingType} onValueChange={(value) => changePricingType(value as PricingType)} disabled={createMutation.isPending}>
+              <SelectTrigger id="entry-pricing-type"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="FIXED_PER_LITRE">Fixed per litre</SelectItem><SelectItem value="FAT_BASED">Fat based</SelectItem></SelectContent>
+            </Select>
           </div>
           <div className="field">
-            <label htmlFor="entry-rate-snapshot">
+            <Label htmlFor="entry-rate-snapshot">
               Effective customer rate · {pricingQuery.data ? `₹${pricingQuery.data.rate}` : customer?.default_rate ? `₹${customer.default_rate}` : '—'}
-            </label>
-            <input
+            </Label>
+            <Input
               id="entry-rate-snapshot"
               value={rate}
               onChange={(event) => {

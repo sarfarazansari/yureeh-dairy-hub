@@ -1,4 +1,7 @@
 'use client';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -80,20 +83,20 @@ export default function ExpenseVendors() {
         <form className="card" onSubmit={save}>
           <h2 className="section-title">Add vendor</h2>
           <div className="field">
-            <label>Name</label>
-            <input required value={name} onChange={(e) => setName(e.target.value)} />
+            <Label>Name</Label>
+            <Input required value={name} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="field">
-            <label>Mobile</label>
-            <input value={mobile} onChange={(e) => setMobile(e.target.value)} />
+            <Label>Mobile</Label>
+            <Input value={mobile} onChange={(e) => setMobile(e.target.value)} />
           </div>
           <div className="field">
-            <label>City</label>
-            <input value={city} onChange={(e) => setCity(e.target.value)} />
+            <Label>City</Label>
+            <Input value={city} onChange={(e) => setCity(e.target.value)} />
           </div>
           <div className="field">
-            <label>Address</label>
-            <input value={address} onChange={(e) => setAddress(e.target.value)} />
+            <Label>Address</Label>
+            <Input value={address} onChange={(e) => setAddress(e.target.value)} />
           </div>
           <button className="btn" disabled={busy}>
             {busy ? 'Saving…' : 'Add vendor'}

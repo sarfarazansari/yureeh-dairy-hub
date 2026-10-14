@@ -1,5 +1,8 @@
 'use client';
 
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import Link from 'next/link';
 import { useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
@@ -20,15 +23,8 @@ export default function NewBuffaloSalePage() {
         <Link className="date-chip" href="/buffalo-sales">← Back to buffalo sales</Link>
         <div className="card">
           <div className="field">
-            <label>Buffalo</label>
-            <select value={buffaloId} onChange={(event) => setBuffaloId(event.target.value)}>
-              <option value="">Select an active or dry buffalo</option>
-              {eligibleBuffaloes.map((buffalo) => (
-                <option key={buffalo.id} value={buffalo.id}>
-                  {buffalo.buffalo_code}{buffalo.name ? ` — ${buffalo.name}` : ''} · {buffalo.current_status}
-                </option>
-              ))}
-            </select>
+            <Label>Buffalo</Label>
+            <Select value={buffaloId || undefined} onValueChange={setBuffaloId}><SelectTrigger><SelectValue placeholder="Select an active or dry buffalo" /></SelectTrigger><SelectContent>{eligibleBuffaloes.map((buffalo) => <SelectItem key={buffalo.id} value={buffalo.id}>{buffalo.buffalo_code}{buffalo.name ? ` — ${buffalo.name}` : ''} · {buffalo.current_status}</SelectItem>)}</SelectContent></Select>
           </div>
           {directory.isPending && <div className="empty">Loading eligible buffaloes…</div>}
           {directory.isError && <p className="auth-message">{directory.error.message}</p>}

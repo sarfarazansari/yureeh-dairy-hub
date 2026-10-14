@@ -1,4 +1,8 @@
 'use client';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatDate, formatDateTime } from '@/lib/date-format';
 import Link from 'next/link';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -146,12 +150,12 @@ export default function ExpenseDetail({ params }: { params: Promise<{ id: string
               {Number(row.pending_amount) > 0 ? (
                 <form className="expense-form-grid" onSubmit={recordPayment}>
                   <div className="field">
-                    <label>Payment date</label>
+                    <Label>Payment date</Label>
                     <DatePicker value={paymentDate} max={todayLocal()} onChange={setPaymentDate} ariaLabel="Payment date" />
                   </div>
                   <div className="field">
-                    <label>Amount · pending {money(Number(row.pending_amount))}</label>
-                    <input
+                    <Label>Amount · pending {money(Number(row.pending_amount))}</Label>
+                    <Input
                       type="number"
                       min="0.01"
                       max={Number(row.pending_amount)}
@@ -162,20 +166,16 @@ export default function ExpenseDetail({ params }: { params: Promise<{ id: string
                     />
                   </div>
                   <div className="field">
-                    <label>Payment method</label>
-                    <select value={method} onChange={(e) => setMethod(e.target.value as (typeof PAYMENT_METHODS)[number])}>
-                      {PAYMENT_METHODS.map((value) => (
-                        <option key={value} value={value}>{value.replaceAll('_', ' ')}</option>
-                      ))}
-                    </select>
+                    <Label>Payment method</Label>
+                    <Select value={method} onValueChange={(value) => setMethod(value as (typeof PAYMENT_METHODS)[number])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{PAYMENT_METHODS.map((value) => <SelectItem key={value} value={value}>{value.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
                   </div>
                   <div className="field">
-                    <label>Transaction reference (optional)</label>
-                    <input value={reference} onChange={(e) => setReference(e.target.value)} />
+                    <Label>Transaction reference (optional)</Label>
+                    <Input value={reference} onChange={(e) => setReference(e.target.value)} />
                   </div>
                   <div className="field wide-field">
-                    <label>Notes (optional)</label>
-                    <input value={notes} onChange={(e) => setNotes(e.target.value)} />
+                    <Label>Notes (optional)</Label>
+                    <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
                   </div>
                   <button className="btn" disabled={saving}>
                     {saving ? 'Recording…' : 'Record payment'}
