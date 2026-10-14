@@ -1,8 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { CalendarDays, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import { CalendarDays, X } from 'lucide-react';
+import type { DateRange } from 'react-day-picker';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { normalizeDateKey } from '@/lib/date-key';
+import { cn } from '@/lib/utils';
 
 type DateRangePickerProps = {
   from: string;
@@ -13,124 +18,82 @@ type DateRangePickerProps = {
   ariaLabel?: string;
 };
 
-const WEEKDAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-
 function parseDateKey(value: string) {
   const normalized = normalizeDateKey(value);
-  if (!normalized) return null;
+  if (!normalized) return undefined;
   const [year, month, day] = normalized.split('-').map(Number);
   return new Date(year, month - 1, day);
 }
+
 function toDateKey(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
-function monthLabel(date: Date) {
-  return new Intl.DateTimeFormat('en-IN', { month: 'long', year: 'numeric' }).format(date);
-}
+
 function dateLabel(value: string) {
   const date = parseDateKey(value);
-  return date ? new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(date) : '';
+  return date ? format(date, 'd MMM yyyy') : '';
 }
 
 export function DateRangePicker({ from, to, onChange, max, className = '', ariaLabel = 'Choose date range' }: DateRangePickerProps) {
-  const rootRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
-  const [anchor, setAnchor] = useState('');
-  const [visibleMonth, setVisibleMonth] = useState(() => {
-    const selected = parseDateKey(from);
-    const current = selected ?? new Date();
-    return new Date(current.getFullYear(), current.getMonth(), 1);
-  });
+  const [draft, setDraft] = useState<DateRange | undefined>();
+  const selectedFrom = parseDateKey(from);
+  const selectedTo = parseDateKey(to);
+  const maxDate = parseDateKey(max ?? '');
 
   useEffect(() => {
     if (!open) return;
-    const selected = parseDateKey(from);
-    const current = selected ?? new Date();
-    setVisibleMonth(new Date(current.getFullYear(), current.getMonth(), 1));
-    setAnchor('');
-  }, [open, from]);
+    setDraft(selectedFrom ? { from: selectedFrom, to: selectedTo } : undefined);
+  }, [open, from, to]);
 
-  useEffect(() => {
-    if (!open) return;
-    function onPointerDown(event: PointerEvent) {
-      if (event.target instanceof Node && !rootRef.current?.contains(event.target)) setOpen(false);
+  function selectRange(nextRange: DateRange | undefined) {
+    setDraft(nextRange);
+    if (nextRange?.from && nextRange.to) {
+      const start = nextRange.from <= nextRange.to ? nextRange.from : nextRange.to;
+      const end = nextRange.from <= nextRange.to ? nextRange.to : nextRange.from;
+      onChange({ from: toDateKey(start), to: toDateKey(end) });
+      setOpen(false);
     }
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') setOpen(false);
-    }
-    document.addEventListener('pointerdown', onPointerDown);
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('pointerdown', onPointerDown);
-      document.removeEventListener('keydown', onKeyDown);
-    };
-  }, [open]);
-
-  const days = useMemo(() => {
-    const year = visibleMonth.getFullYear();
-    const month = visibleMonth.getMonth();
-    const firstWeekday = new Date(year, month, 1).getDay();
-    const count = new Date(year, month + 1, 0).getDate();
-    return [
-      ...Array.from({ length: firstWeekday }, () => null as Date | null),
-      ...Array.from({ length: count }, (_, index) => new Date(year, month, index + 1)),
-    ];
-  }, [visibleMonth]);
-
-  const previousMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
-  const nextMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
-  const previousDisabled = !!from && !!max && from > max && toDateKey(new Date(previousMonth.getFullYear(), previousMonth.getMonth() + 1, 0)) < from;
-  const nextDisabled = !!max && toDateKey(nextMonth) > max;
-  const label = from && to ? `${dateLabel(from)} – ${dateLabel(to)}` : from ? `${dateLabel(from)} – Choose end date` : 'Choose date range';
-
-  function chooseDate(date: Date) {
-    const key = toDateKey(date);
-    if (max && key > max) return;
-    if (!anchor) {
-      setAnchor(key);
-      return;
-    }
-    const start = key < anchor ? key : anchor;
-    const end = key < anchor ? anchor : key;
-    onChange({ from: start, to: end });
-    setAnchor('');
-    setOpen(false);
   }
 
+  const label = selectedFrom && selectedTo
+    ? `${dateLabel(from)} – ${dateLabel(to)}`
+    : selectedFrom
+      ? `${dateLabel(from)} – Choose end date`
+      : 'Choose date range';
+
   return (
-    <div className={`shadcn-date-picker shadcn-date-range-picker ${className}`} ref={rootRef}>
-      <button type="button" aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open} className="shadcn-date-trigger" onClick={() => setOpen((current) => !current)}>
-        <CalendarDays size={16} aria-hidden="true" />
-        <span className={from ? 'shadcn-date-value' : 'shadcn-date-placeholder'}>{label}</span>
-        {(from || to) && <span className="shadcn-range-clear" onClick={(event) => { event.stopPropagation(); onChange({ from: '', to: '' }); setAnchor(''); setOpen(false); }} role="button" aria-label="Clear date range" tabIndex={0}><X size={14} /></span>}
-      </button>
-      {open && (
-        <div className="shadcn-calendar-popover shadcn-range-calendar" role="dialog" aria-label="Choose date range">
-          <div className="shadcn-calendar-header">
-            <button type="button" className="shadcn-calendar-nav" aria-label="Previous month" disabled={previousDisabled} onClick={() => setVisibleMonth(previousMonth)}><ChevronLeft size={16} /></button>
-            <strong aria-live="polite">{monthLabel(visibleMonth)}</strong>
-            <button type="button" className="shadcn-calendar-nav" aria-label="Next month" disabled={nextDisabled} onClick={() => setVisibleMonth(nextMonth)}><ChevronRight size={16} /></button>
-          </div>
-          <div className="shadcn-calendar-grid" role="grid" aria-label={monthLabel(visibleMonth)}>
-            {WEEKDAYS.map((day) => <span key={day} className="shadcn-calendar-weekday" role="columnheader">{day}</span>)}
-            {days.map((day, index) => {
-              if (!day) return <span key={`empty-${index}`} className="shadcn-calendar-empty" aria-hidden="true" />;
-              const key = toDateKey(day);
-              const disabled = !!max && key > max;
-              const start = anchor || from;
-              const end = anchor ? '' : to;
-              const selected = !!start && !!end && key >= start && key <= end;
-              const endpoint = key === start || key === end || key === anchor;
-              const today = key === toDateKey(new Date());
-              return <button key={key} type="button" role="gridcell" className={`shadcn-calendar-day ${endpoint ? 'selected' : selected ? 'range-middle' : ''} ${today ? 'today' : ''}`} aria-label={new Intl.DateTimeFormat('en-IN', { dateStyle: 'full' }).format(day)} aria-pressed={selected || endpoint} disabled={disabled} onClick={() => chooseDate(day)}>{day.getDate()}</button>;
-            })}
-          </div>
-          <div className="shadcn-calendar-footer">
-            <span className="shadcn-range-hint">{anchor ? `Start: ${dateLabel(anchor)}. Select end date.` : 'Select start and end dates'}</span>
-            <button type="button" className="shadcn-calendar-today" onClick={() => { onChange({ from: '', to: '' }); setAnchor(''); setOpen(false); }}>Clear</button>
-          </div>
+    <div className={cn('shadcn-date-picker shadcn-date-range-picker min-w-0', className)}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <div className="flex min-w-0 items-center gap-1">
+          <PopoverTrigger asChild>
+            <button type="button" aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open} className="shadcn-date-trigger min-w-0 w-full">
+              <CalendarDays size={16} aria-hidden="true" />
+              <span className={cn('min-w-0 flex-1 truncate text-left', selectedFrom ? 'shadcn-date-value' : 'shadcn-date-placeholder')}>{label}</span>
+            </button>
+          </PopoverTrigger>
+          {(from || to) && (
+            <button type="button" className="shadcn-date-clear shrink-0" aria-label="Clear date range" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>
+              <X size={14} aria-hidden="true" />
+            </button>
+          )}
         </div>
-      )}
+        <PopoverContent align="start" sideOffset={6} className="w-auto max-w-[calc(100vw-2rem)] p-2">
+          <Calendar
+            mode="range"
+            selected={draft}
+            onSelect={selectRange}
+            defaultMonth={draft?.from ?? selectedFrom}
+            disabled={maxDate ? { after: maxDate } : undefined}
+            numberOfMonths={1}
+            autoFocus
+          />
+          <div className="flex items-center justify-between gap-3 border-t border-[var(--line)] pt-2">
+            <span className="text-xs text-[var(--muted)]">{draft?.from && !draft.to ? `Start: ${format(draft.from, 'd MMM yyyy')}. Choose end date.` : 'Select start and end dates'}</span>
+            <button type="button" className="shadcn-calendar-today" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>Clear</button>
+          </div>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 }
