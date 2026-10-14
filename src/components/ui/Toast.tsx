@@ -1,6 +1,7 @@
 'use client';
 
-import { X } from 'lucide-react';
+import { useEffect, useRef } from 'react';
+import { toast as sonnerToast } from 'sonner';
 
 type Props = {
   message: string;
@@ -8,15 +9,43 @@ type Props = {
   onDismiss: () => void;
 };
 
+/**
+ * Backwards-compatible adapter while feature pages are migrated.
+ * Notifications are rendered by the global Sonner toaster; existing callers
+ * can keep their current message state and dismiss callback.
+ */
 export function Toast({ message, type = 'success', onDismiss }: Props) {
-  if (!message) return null;
+  const previousMessage = useRef('');
+  const previousType = useRef<Props['type']>();
 
-  return (
-    <div className={`app-toast app-toast-${type}`} role={type === 'error' ? 'alert' : 'status'}>
-      <span>{message}</span>
-      <button type="button" aria-label="Dismiss notification" onClick={onDismiss}>
-        <X size={16} />
-      </button>
-    </div>
-  );
+  useEffect(() => {
+    if (!message) {
+      previousMessage.current = '';
+      previousType.current = undefined;
+      return;
+    }
+
+    if (previousMessage.current === message && previousType.current === type) return;
+
+    previousMessage.current = message;
+    previousType.current = type;
+    const id = `yureeh-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const dismiss = () => {
+      sonnerToast.dismiss(id);
+      onDismiss();
+    };
+
+    const options = {
+      id,
+      duration: type === 'error' ? 7000 : 4000,
+      action: { label: 'Dismiss', onClick: dismiss },
+    };
+
+    if (type === 'error') sonnerToast.error(message, options);
+    else sonnerToast.success(message, options);
+
+    return () => sonnerToast.dismiss(id);
+  }, [message, type, onDismiss]);
+
+  return null;
 }
