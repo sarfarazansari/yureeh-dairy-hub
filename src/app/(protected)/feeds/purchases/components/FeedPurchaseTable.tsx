@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { Dialog } from '@/app/dialog';
 import type { FeedPurchaseListRow } from '@/lib/feed-purchase-types';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type Props = {
   rows: FeedPurchaseListRow[];
@@ -42,40 +44,40 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
     <div className="card">
       <div className="row">
         <h2 className="section-title">Purchase history</h2>
-        <span className="tag">{count} records</span>
+        <Badge variant="secondary">{count} records</Badge>
       </div>
 
       <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>DATE</th>
-              <th>FEED</th>
-              <th>VENDOR</th>
-              <th>PURCHASE</th>
-              <th>INVENTORY</th>
-              <th>RATE</th>
-              <th>TOTAL</th>
-              <th>PAYMENT</th>
-              <th>ACTION</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="[&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
+          <TableHeader>
+            <TableRow>
+              <TableHead>DATE</TableHead>
+              <TableHead>FEED</TableHead>
+              <TableHead>VENDOR</TableHead>
+              <TableHead>PURCHASE</TableHead>
+              <TableHead>INVENTORY</TableHead>
+              <TableHead>RATE</TableHead>
+              <TableHead>TOTAL</TableHead>
+              <TableHead>PAYMENT</TableHead>
+              <TableHead>ACTION</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.map((row) => (
               <tr key={row.id}>
-                <td>{row.business_date}</td>
-                <td><b>{row.feed_item_name}</b></td>
-                <td>{row.vendor_name ?? '—'}</td>
-                <td>{Number(row.purchase_quantity).toLocaleString('en-IN')} {row.purchase_unit}</td>
-                <td>{Number(row.base_quantity).toLocaleString('en-IN')} {row.base_unit}</td>
-                <td>{money(row.rate_per_purchase_unit)} / {row.purchase_unit}</td>
-                <td>{money(row.total_amount)}</td>
-                <td>
+                <TableCell>{row.business_date}</TableCell>
+                <TableCell><b>{row.feed_item_name}</b></TableCell>
+                <TableCell>{row.vendor_name ?? '—'}</TableCell>
+                <TableCell>{Number(row.purchase_quantity).toLocaleString('en-IN')} {row.purchase_unit}</TableCell>
+                <TableCell>{Number(row.base_quantity).toLocaleString('en-IN')} {row.base_unit}</TableCell>
+                <TableCell>{money(row.rate_per_purchase_unit)} / {row.purchase_unit}</TableCell>
+                <TableCell>{money(row.total_amount)}</TableCell>
+                <TableCell>
                   <span className={'tag ' + (row.payment_status === 'PAID' ? '' : 'gold')}>
                     {row.payment_status}
                   </span>
-                </td>
-                <td>
+                </TableCell>
+                <TableCell>
                   {row.can_edit_delete ? (
                     <div className="row" style={{ gap: 8 }}>
                       <Link className="date-chip" href={`/feeds/purchases/edit/${row.id}`}>
@@ -91,13 +93,13 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
                       </button>
                     </div>
                   ) : (
-                    <span className="tag">🔒 Locked</span>
+                    <Badge variant="muted">Locked</Badge>
                   )}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {!rows.length && <div className="empty">No feed purchases recorded yet.</div>}
