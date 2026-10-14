@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatDate } from '@/lib/date-format';
 import Link from 'next/link';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -185,15 +185,7 @@ export default function ExpenseHistory() {
   return (
     <ExpenseShell title="Expense history" subtitle="Filter, review and edit farm expenses">
       <div className="card">
-        <div className="expense-form-grid">
-          <div className="field">
-            <Label>From date</Label>
-            <DatePicker clearable value={from} max={to || todayLocal()} onChange={setFrom} ariaLabel="From date" />
-          </div>
-          <div className="field">
-            <Label>To date</Label>
-            <DatePicker clearable value={to} min={from} max={todayLocal()} onChange={setTo} ariaLabel="To date" />
-          </div>
+        <div className="mb-4 max-w-md"><Label className="mb-2 block">Date range</Label><DateRangePicker from={from} to={to} max={todayLocal()} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); }} /></div>
           <div className="field">
             <Label>Search</Label>
             <Input
