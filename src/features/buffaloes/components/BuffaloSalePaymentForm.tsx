@@ -1,7 +1,8 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 import { useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -48,7 +49,7 @@ export function BuffaloSalePaymentForm({ saleId, pending }: { saleId: string; pe
         <div className="grid two">
           <DispositionField label="Payment date"><DatePicker value={date} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={setDate} ariaLabel="Payment date" /></DispositionField>
           <DispositionField label="Amount (₹)"><Input required type="number" min="0.01" max={pending} step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} /></DispositionField>
-          <DispositionField label="Payment method"><select value={method} onChange={(e) => setMethod(e.target.value as BuffaloPaymentMethod)}>{DISPOSITION_PAYMENT_METHODS.map((item) => <option key={item} value={item}>{item.replace('_', ' ')}</option>)}</select></DispositionField>
+          <DispositionField label="Payment method"><Select value={method} onValueChange={(value) => setMethod(value as BuffaloPaymentMethod)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DISPOSITION_PAYMENT_METHODS.map((item) => <SelectItem key={item} value={item}>{item.replace('_', ' ')}</SelectItem>)}</SelectContent></Select></DispositionField>
           <DispositionField label="Reference"><Input value={reference} onChange={(e) => setReference(e.target.value)} /></DispositionField>
           <DispositionField label="Notes"><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></DispositionField>
         </div>
