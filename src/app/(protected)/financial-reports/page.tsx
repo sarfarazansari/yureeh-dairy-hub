@@ -96,10 +96,11 @@ export default function FinancialReportsPage() {
       subtitle="Separate sales, collections, expenses and outstanding balances"
     >
       <div className="card">
-        <div className="max-w-md"><Label className="mb-2 block">Date range</Label><DateRangePicker from={from} to={to} max={today} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); }} /></div>
+        <div className="max-w-md"><Label className="mb-2 block">Date range</Label><DateRangePicker from={from} to={to} max={today} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); }} />
+          {from && to && from > to && <p role="alert" className="auth-message">Start date must be on or before end date.</p>}</div>
         <p className="kpi-foot">Period metrics use the selected dates. Current balances include all activity; historical balances are measured at the end date ({to}). Legacy undated payments are shown separately instead of being assigned invented dates.</p>
       </div>
-      {error && <p className="auth-message">{error}</p>}
+      {error && <p role="alert" className="auth-message">{error}</p>}
       <div className="grid kpis" style={{ marginTop: 15 }}>
         <KPI label="MILK SALES REVENUE" value={loading ? '…' : money(value('milk_sales_revenue'))} foot="Based on milk entry business dates" />
         <KPI label="MILK SOLD" value={loading ? '…' : `${value('milk_quantity_sold').toLocaleString('en-IN', { maximumFractionDigits: 3 })} L`} foot="Selected period" />
