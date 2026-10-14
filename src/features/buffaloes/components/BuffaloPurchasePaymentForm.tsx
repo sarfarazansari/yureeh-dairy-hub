@@ -1,5 +1,8 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
 import { useState } from 'react';
 
 import { DatePicker } from '@/components/ui/date-picker';
@@ -60,7 +63,7 @@ export function BuffaloPurchasePaymentForm({ buffalo }: { buffalo: BuffaloDetail
         </Field>
 
         <Field label="Amount · ₹">
-          <input
+          <Input
             type="number"
             min="0.01"
             step="0.01"
@@ -83,7 +86,7 @@ export function BuffaloPurchasePaymentForm({ buffalo }: { buffalo: BuffaloDetail
         </Field>
 
         <Field label="Reference">
-          <input
+          <Input
             value={reference}
             onChange={(event) => setReference(event.target.value)}
             placeholder="Optional transaction reference"
@@ -92,7 +95,7 @@ export function BuffaloPurchasePaymentForm({ buffalo }: { buffalo: BuffaloDetail
       </div>
 
       <Field label="Notes">
-        <input
+        <Input
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Optional"
@@ -116,7 +119,7 @@ export function BuffaloPurchasePaymentForm({ buffalo }: { buffalo: BuffaloDetail
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="field">
-      <label>{label}</label>
+      <Label>{label}</Label>
       {children}
     </div>
   );
