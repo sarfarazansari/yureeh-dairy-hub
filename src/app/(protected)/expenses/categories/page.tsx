@@ -29,7 +29,7 @@ export default function ExpenseCategories() {
     const { data, error } = await supabase
       .from('expense_categories')
       .select('*')
-      .eq('owner_id', user?.id)
+      .or(`owner_id.is.null,owner_id.eq.${user?.id}`)
       .order('category_group')
       .order('name');
     if (error) setMessage(error.message);
@@ -62,6 +62,21 @@ export default function ExpenseCategories() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    const normalizedName = name.trim().toLocaleLowerCase();
+    if (!normalizedName) {
+      setMessage('Category name is required.');
+      setBusy(false);
+      return;
+    }
+    const duplicate = rows.find(
+      (category) =>
+        category.id !== id && category.name.trim().toLocaleLowerCase() === normalizedName,
+    );
+    if (duplicate) {
+      setMessage(`A category named "${duplicate.name}" already exists. Use the existing category instead.`);
+      setBusy(false);
+      return;
+    }
     const values = {
       name: name.trim(),
       category_group: group,
@@ -69,8 +84,14 @@ export default function ExpenseCategories() {
       is_quantity_based: quantity,
       description: description || null,
     };
+    const editing = rows.find((category) => category.id === id);
+    if (id && (!editing || !editing.owner_id)) {
+      setMessage('System default categories cannot be edited.');
+      setBusy(false);
+      return;
+    }
     const result = id
-      ? await supabase.from('expense_categories').update(values).eq('id', id)
+      ? await supabase.from('expense_categories').update(values).eq('id', id).eq('owner_id', user?.id)
       : await supabase.from('expense_categories').insert({ ...values, owner_id: user?.id });
     if (result.error) setMessage(result.error.message);
     else {
@@ -81,10 +102,15 @@ export default function ExpenseCategories() {
     setBusy(false);
   }
   async function toggle(c: ExpenseCategory) {
+    if (!c.owner_id) {
+      setMessage('System default categories cannot be changed.');
+      return;
+    }
     const { error } = await supabase!
       .from('expense_categories')
       .update({ is_active: !c.is_active })
-      .eq('id', c.id);
+      .eq('id', c.id)
+      .eq('owner_id', c.owner_id);
     if (error) setMessage(error.message);
     else await load();
   }
@@ -196,12 +222,18 @@ export default function ExpenseCategories() {
                       </span>
                     </td>
                     <td>
-                      <button type="button" className="date-chip" onClick={() => edit(c)}>
-                        Edit
-                      </button>{' '}
-                      <button type="button" className="date-chip" onClick={() => toggle(c)}>
-                        {c.is_active ? 'Deactivate' : 'Activate'}
-                      </button>
+                      {c.owner_id ? (
+                        <>
+                          <button type="button" className="date-chip" onClick={() => edit(c)}>
+                            Edit
+                          </button>{' '}
+                          <button type="button" className="date-chip" onClick={() => toggle(c)}>
+                            {c.is_active ? 'Deactivate' : 'Activate'}
+                          </button>
+                        </>
+                      ) : (
+                        <span className="tag">System default</span>
+                      )}
                     </td>
                   </tr>
                 ))}
