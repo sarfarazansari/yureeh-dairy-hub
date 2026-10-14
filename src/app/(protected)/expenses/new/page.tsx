@@ -11,11 +11,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { LoaderCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import {
-  calculateExpenseTotal,
-  calculatePending,
-  expensePaymentStatus,
-} from '@/lib/expenses';
+import { calculateExpenseTotal, calculatePending, expensePaymentStatus, UNITS } from '@/lib/expenses';
 import { ExpenseShell, money, ensureExpenseCategories, todayLocal } from '../shared';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseBuffaloOption, ExpenseCategory, ExpenseVendor } from '@/lib/expense-types';
@@ -228,8 +224,14 @@ export default function NewExpense() {
                 </div>
                 <div className="field">
                   <Label htmlFor="expense-unit">Unit</Label>
-                  <Input id="expense-unit" value={unit} readOnly aria-describedby="expense-unit-help" />
-                  <p id="expense-unit-help" className="kpi-foot">Unit comes from the selected category’s default. Edit the category to change it.</p>
+                  <Select value={unit || 'none'} onValueChange={(value) => setUnit(value === 'none' ? '' : value)}>
+                    <SelectTrigger id="expense-unit"><SelectValue placeholder="Select unit" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No unit</SelectItem>
+                      {UNITS.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p id="expense-unit-help" className="kpi-foot">Choose from the supported units. Edit the category to change its default.</p>
                 </div>
                 <div className="field">
                   <Label htmlFor="expense-rate">Rate · ₹ per unit</Label>
