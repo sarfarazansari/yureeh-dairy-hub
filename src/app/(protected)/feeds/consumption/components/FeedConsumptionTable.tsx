@@ -55,7 +55,7 @@ export function FeedConsumptionTable({ rows, count, page, pageSize, onPageChange
           </TableHeader>
           <TableBody>
             {rows.map((row) => (
-              <tr key={row.id}>
+              <TableRow key={row.id}>
                 <TableCell>{new Date(row.occurred_at).toLocaleDateString('en-IN')}</TableCell>
                 <TableCell><b>{row.feed_item_name}</b></TableCell>
                 <TableCell>{Number(row.quantity).toLocaleString('en-IN')} {row.base_unit}</TableCell>
