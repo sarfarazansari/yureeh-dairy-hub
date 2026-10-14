@@ -11,7 +11,6 @@ import { supabase } from '@/lib/supabase';
 import { EXPENSE_GROUPS, UNITS, type ExpenseGroup } from '@/lib/expenses';
 import { ExpenseShell, ensureExpenseCategories } from '../shared';
 import { TimedNotice } from '@/components/ui/TimedNotice';
-import { Dialog } from '@/app/dialog';
 import type { ExpenseCategory } from '@/lib/expense-types';
 export default function ExpenseCategories() {
   const [rows, setRows] = useState<ExpenseCategory[]>([]),
@@ -192,12 +191,10 @@ export default function ExpenseCategories() {
                       </span>
                     </td>
                     <td>
-                      <button type="button" className="date-chip" onClick={() => edit(c)}>
-                        Edit
-                      </button>{' '}
-                      <button type="button" className="date-chip" onClick={() => toggle(c)}>
+                      <Button type="button" variant="outline" size="sm" onClick={() => edit(c)}>Edit</Button>{' '}
+                      <Button type="button" variant="outline" size="sm" onClick={() => c.is_active ? setStatusTarget(c) : void toggle(c)}>
                         {c.is_active ? 'Deactivate' : 'Activate'}
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 ))}
