@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -145,29 +144,25 @@ export default function CustomersPage() {
         <form className="card customer-create-card" onSubmit={create}>
           <h2 className="section-title customer-create-heading">Add customer</h2>
           <div className="field">
-            <Label htmlFor="customer-create-name">Name</Label>
+            <Label>Name</Label>
             <Input
-              id="customer-create-name"
               required
-              disabled={busy}
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Customer or party name"
             />
           </div>
           <div className="field">
-            <Label htmlFor="customer-create-pricing">Pricing model</Label>
-            <Select value={type} disabled={busy} onValueChange={(value) => setType(value as PricingType)}>
-              <SelectTrigger id="customer-create-pricing"><SelectValue /></SelectTrigger>
+            <Label>Pricing model</Label>
+            <Select value={type} onValueChange={(value) => setType(value as PricingType)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent><SelectItem value="FIXED_PER_LITRE">Fixed per litre</SelectItem><SelectItem value="FAT_BASED">Fat based</SelectItem></SelectContent>
             </Select>
           </div>
           <div className="field">
-            <Label htmlFor="customer-create-rate">Default rate · ₹</Label>
+            <Label>Default rate · ₹</Label>
             <Input
-              id="customer-create-rate"
               required
-              disabled={busy}
               min="0.01"
               step="0.01"
               type="number"
@@ -175,9 +170,9 @@ export default function CustomersPage() {
               onChange={(e) => setRate(e.target.value)}
             />
           </div>
-          <Button type="submit" className="customer-create-submit" disabled={busy}>
+          <button className="btn customer-create-submit" disabled={busy}>
             {busy ? 'Saving…' : 'Add customer'}
-          </Button>
+          </button>
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
         </form>
         <div className="card">
@@ -211,7 +206,7 @@ export default function CustomersPage() {
                         {c.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
-                    <TableCell><div className="flex justify-end gap-2"><Button variant="outline" size="sm" type="button" onClick={() => openEdit(c)}>Edit</Button><Button variant="outline" size="sm" type="button" onClick={() => openPricing(c)}>Rate</Button><Button variant="outline" size="sm" type="button" disabled={statusMutation.isPending} onClick={() => void toggle(c)}>{statusMutation.isPending ? 'Updating…' : c.is_active ? 'Pause' : 'Activate'}</Button></div></TableCell>
+                    <TableCell><div className="flex justify-end gap-2"><button type="button" className="date-chip" onClick={() => openEdit(c)}>Edit</button><button type="button" className="date-chip" onClick={() => openPricing(c)}>Rate</button><button type="button" className="date-chip" onClick={() => void toggle(c)}>{c.is_active ? 'Pause' : 'Activate'}</button></div></TableCell>
                   </TableRow>;
                 })}
               </TableBody>
@@ -237,16 +232,15 @@ export default function CustomersPage() {
               <h2 className="dialog-title" id="customer-edit-title">Edit customer</h2>
               <p className="dialog-description">{editCustomer?.name}</p>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
+              className="dialog-close"
               type="button"
               aria-label="Close customer edit dialog"
               disabled={editBusy}
               onClick={() => setEditCustomer(null)}
             >
               ×
-            </Button>
+            </button>
           </div>
           <div className="field">
             <Label htmlFor="customer-edit-name">Name</Label>
@@ -271,8 +265,12 @@ export default function CustomersPage() {
             />
           </div>
           <div className="dialog-footer">
-            <Button variant="secondary" type="button" disabled={editBusy} onClick={() => setEditCustomer(null)}>Cancel</Button>
-            <Button type="submit" disabled={editBusy}>{editBusy ? 'Saving…' : 'Save customer'}</Button>
+            <button type="button" className="btn secondary" disabled={editBusy} onClick={() => setEditCustomer(null)}>
+              Cancel
+            </button>
+            <button className="btn" disabled={editBusy}>
+              {editBusy ? 'Saving…' : 'Save customer'}
+            </button>
           </div>
         </form>
       </Dialog>
@@ -293,16 +291,15 @@ export default function CustomersPage() {
               </h2>
               <p className="dialog-description">{pricingCustomer?.name}</p>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
+            <button
+              className="dialog-close"
               type="button"
               aria-label="Close pricing dialog"
               disabled={pricingBusy}
               onClick={() => setPricingCustomer(null)}
             >
               ×
-            </Button>
+            </button>
           </div>
           <div className="field">
             <Label htmlFor="customer-pricing-rate">Default rate · ₹</Label>
@@ -324,8 +321,17 @@ export default function CustomersPage() {
             </Select>
           </div>
           <div className="dialog-footer">
-            <Button variant="secondary" type="button" disabled={pricingBusy} onClick={() => setPricingCustomer(null)}>Cancel</Button>
-            <Button type="submit" disabled={pricingBusy}>{pricingBusy ? 'Saving…' : 'Save pricing'}</Button>
+            <button
+              type="button"
+              className="btn secondary"
+              disabled={pricingBusy}
+              onClick={() => setPricingCustomer(null)}
+            >
+              Cancel
+            </button>
+            <button className="btn" disabled={pricingBusy}>
+              {pricingBusy ? 'Saving…' : 'Save pricing'}
+            </button>
           </div>
         </form>
       </Dialog>
