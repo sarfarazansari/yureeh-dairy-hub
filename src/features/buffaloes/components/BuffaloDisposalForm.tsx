@@ -1,5 +1,7 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 
 import { useState } from 'react';
@@ -34,7 +36,7 @@ export function BuffaloDisposalForm({ buffalo }: { buffalo: BuffaloDetail }) {
       <h2 className="section-title">Record non-sale disposal</h2>
       <p className="sub">Use this for death, transfer out, or another permanent removal. A disposal cannot be undone through status editing.</p>
       <div className="grid two">
-        <DispositionField label="Disposal type"><select value={type} onChange={(e) => setType(e.target.value as typeof type)}><option value="DEATH">Death</option><option value="TRANSFER_OUT">Transfer out</option><option value="OTHER">Other</option></select></DispositionField>
+        <DispositionField label="Disposal type"><Select value={type} onValueChange={(value) => setType(value as typeof type)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="DEATH">Death</SelectItem><SelectItem value="TRANSFER_OUT">Transfer out</SelectItem><SelectItem value="OTHER">Other</SelectItem></SelectContent></Select></DispositionField>
         <DispositionField label="Effective date"><DatePicker value={date} max={getDispositionToday()} onChange={setDate} ariaLabel="Effective date" /></DispositionField>
         <DispositionField label="Reason"><Input required value={reason} onChange={(e) => setReason(e.target.value)} /></DispositionField>
         <DispositionField label="Notes"><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></DispositionField>
