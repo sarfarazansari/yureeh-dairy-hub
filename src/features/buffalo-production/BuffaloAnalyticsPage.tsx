@@ -1,5 +1,7 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -123,22 +125,7 @@ export default function BuffaloAnalyticsPage() {
   return (
     <AppShell title="Buffalo analytics" subtitle="Shift-wise production trends and herd comparison">
       <div className="row">
-        <select
-          className="date-chip"
-          value={range}
-          onChange={(event) => {
-            setRange(event.target.value);
-            if (event.target.value !== 'custom') setPreset(event.target.value, setFrom, setTo);
-          }}
-        >
-          <option value="today">Today</option>
-          <option value="yesterday">Yesterday</option>
-          <option value="7days">Last 7 days</option>
-          <option value="week">This week</option>
-          <option value="month">This month</option>
-          <option value="previous">Previous month</option>
-          <option value="custom">Custom range</option>
-        </select>
+        <Select value={range} onValueChange={(value) => { setRange(value); if (value !== 'custom') setPreset(value, setFrom, setTo); }}><SelectTrigger className="date-chip"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="today">Today</SelectItem><SelectItem value="yesterday">Yesterday</SelectItem><SelectItem value="7days">Last 7 days</SelectItem><SelectItem value="week">This week</SelectItem><SelectItem value="month">This month</SelectItem><SelectItem value="previous">Previous month</SelectItem><SelectItem value="custom">Custom range</SelectItem></SelectContent></Select>
         <div className="row">
           <DatePicker
             clearable
@@ -262,17 +249,7 @@ export default function BuffaloAnalyticsPage() {
       <div className="card">
         <div className="row">
           <h2 className="section-title">Buffalo comparison</h2>
-          <select
-            aria-label="Sort buffalo comparison"
-            className="date-chip"
-            value={sort}
-            onChange={(event) => setSort(event.target.value as typeof sort)}
-          >
-            <option value="total">Total milk</option>
-            <option value="average">Average per recorded day</option>
-            <option value="morning">Morning average</option>
-            <option value="evening">Evening average</option>
-          </select>
+          <Select value={sort} onValueChange={(value) => setSort(value as typeof sort)}><SelectTrigger aria-label="Sort buffalo comparison" className="date-chip"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="total">Total milk</SelectItem><SelectItem value="average">Average per recorded day</SelectItem><SelectItem value="morning">Morning average</SelectItem><SelectItem value="evening">Evening average</SelectItem></SelectContent></Select>
         </div>
         <div className="table-wrap">
           <table className="table">
