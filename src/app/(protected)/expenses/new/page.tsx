@@ -189,7 +189,7 @@ export default function NewExpense() {
             </div>
             <div className="field">
               <Label>Vendor (optional)</Label>
-              <Select value={vendorId || undefined} onValueChange={setVendorId}><SelectTrigger><SelectValue placeholder="No vendor" /></SelectTrigger><SelectContent><SelectItem value="none">No vendor</SelectItem>{vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
+              <Select value={vendorId || undefined} onValueChange={(value) => setVendorId(value === 'none' ? '' : value)}><SelectTrigger><SelectValue placeholder="No vendor" /></SelectTrigger><SelectContent><SelectItem value="none">No vendor</SelectItem>{vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
               <Link href="/expenses/vendors" className="kpi-foot">
                 Manage vendors →
               </Link>
@@ -288,7 +288,7 @@ export default function NewExpense() {
             </div>
             <div className="field">
               <Label>Buffalo (optional)</Label>
-              <Select value={buffaloId || undefined} onValueChange={setBuffaloId}><SelectTrigger><SelectValue placeholder="Farm-wide expense" /></SelectTrigger><SelectContent><SelectItem value="none">Farm-wide expense</SelectItem>{buffaloes.map((b) => <SelectItem key={b.id} value={b.id}>{b.name || b.buffalo_code}</SelectItem>)}</SelectContent></Select>
+              <Select value={buffaloId || undefined} onValueChange={(value) => setBuffaloId(value === 'none' ? '' : value)}><SelectTrigger><SelectValue placeholder="Farm-wide expense" /></SelectTrigger><SelectContent><SelectItem value="none">Farm-wide expense</SelectItem>{buffaloes.map((b) => <SelectItem key={b.id} value={b.id}>{b.name || b.buffalo_code}</SelectItem>)}</SelectContent></Select>
             </div>
             <div className="field">
               <Label>Receipt / reference</Label>
