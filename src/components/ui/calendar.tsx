@@ -10,7 +10,7 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("yureeh-calendar p-3", className)}
       classNames={{
         months: "flex flex-col sm:flex-row gap-4",
         month: "space-y-4",
@@ -31,7 +31,7 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         range_middle: "bg-[#e4f1e8] text-[#1c4e3b] [&>button]:rounded-none [&>button]:bg-[#e4f1e8] [&>button]:text-[#1c4e3b] [&>button]:opacity-100",
         today: "[&>button]:border [&>button]:border-[var(--green)]",
         outside: "text-[#9aa69f] opacity-70",
-        disabled: "text-[#a1aca5] opacity-60",
+        disabled: "[&>button]:text-[#7b8980] [&>button]:opacity-100",
         hidden: "invisible",
         ...classNames,
       }}
