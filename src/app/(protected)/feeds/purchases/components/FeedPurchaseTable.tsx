@@ -64,7 +64,7 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
           </TableHeader>
           <TableBody>
             {rows.map((row) => (
-              <tr key={row.id}>
+              <TableRow key={row.id}>
                 <TableCell>{row.business_date}</TableCell>
                 <TableCell><b>{row.feed_item_name}</b></TableCell>
                 <TableCell>{row.vendor_name ?? '—'}</TableCell>
