@@ -5,6 +5,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
@@ -138,8 +141,8 @@ export default function CustomersPage() {
   return (
     <AppShell title="Customers" subtitle="Manage customer pricing and sales history">
       <div className="management-stack">
-        <form className="card" onSubmit={create}>
-          <h2 className="section-title">Add customer</h2>
+        <form className="card customer-create-card" onSubmit={create}>
+          <h2 className="section-title customer-create-heading">Add customer</h2>
           <div className="field">
             <Label>Name</Label>
             <Input
@@ -167,7 +170,7 @@ export default function CustomersPage() {
               onChange={(e) => setRate(e.target.value)}
             />
           </div>
-          <button className="btn" disabled={busy}>
+          <button className="btn customer-create-submit" disabled={busy}>
             {busy ? 'Saving…' : 'Add customer'}
           </button>
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
@@ -175,71 +178,30 @@ export default function CustomersPage() {
         <div className="card">
           <div className="row">
             <h2 className="section-title">Customer directory</h2>
-            <span className="tag">{rows.filter((c) => c.is_active).length} active</span>
+            <Badge variant="secondary">{rows.filter((c) => c.is_active).length} active</Badge>
           </div>
           {directoryQuery.isPending ? (
-            <div className="empty">Loading customers…</div>
+            <div className="space-y-3 py-2">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-10 w-full" />)}</div>
           ) : directoryQuery.isError ? (
             <div className="empty">{directoryQuery.error.message}</div>
           ) : rows.length ? (
-            <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>CUSTOMER</th>
-                    <th>PRICING</th>
-                    <th>DEFAULT RATE</th>
-                    <th>TOTAL MILK</th>
-                    <th>REVENUE</th>
-                    <th>STATUS</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((c) => {
-                    const own = entries.filter((e) => e.customer_id === c.id);
-                    return (
-                      <tr key={c.id}>
-                        <td>
-                          <Link href={`/customers/${c.id}`}>
-                            <b>{c.name}</b>
-                          </Link>
-                          <div className="kpi-foot">{c.phone || '—'}</div>
-                        </td>
-                        <td>{c.pricing_type === 'FIXED_PER_LITRE' ? 'Fixed / L' : 'Fat based'}</td>
-                        <td>₹{c.default_rate}</td>
-                        <td>{milkTxt(own.reduce((s, e) => s + Number(e.milk_quantity), 0))}</td>
-                        <td>{money(own.reduce((s, e) => s + Number(e.calculated_amount), 0))}</td>
-                        <td>
-                          <span className={`tag ${c.is_active ? '' : 'gold'}`}>
-                            {c.is_active ? 'Active' : 'Inactive'}
-                          </span>
-                        </td>
-                        <td>
-                          <button
-                            type="button"
-                            className="date-chip"
-                            onClick={() => openEdit(c)}
-                          >
-                            Edit
-                          </button>{' '}
-                          <button
-                            type="button"
-                            className="date-chip"
-                            onClick={() => openPricing(c)}
-                          >
-                            Rate
-                          </button>{' '}
-                          <button className="date-chip" onClick={() => toggle(c)}>
-                            {c.is_active ? 'Pause' : 'Activate'}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <Table>
+              <TableHeader><TableRow><TableHead>Customer</TableHead><TableHead>Pricing</TableHead><TableHead>Default rate</TableHead><TableHead>Total milk</TableHead><TableHead>Revenue</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {rows.map((c) => {
+                  const own = entries.filter((e) => e.customer_id === c.id);
+                  return <TableRow key={c.id}>
+                    <TableCell><Link href={`/customers/${c.id}`} className="font-semibold text-[var(--ink)]">{c.name}</Link><div className="kpi-foot">{c.phone || '—'}</div></TableCell>
+                    <TableCell>{c.pricing_type === 'FIXED_PER_LITRE' ? 'Fixed / L' : 'Fat based'}</TableCell>
+                    <TableCell>₹{c.default_rate}</TableCell>
+                    <TableCell>{milkTxt(own.reduce((s, e) => s + Number(e.milk_quantity), 0))}</TableCell>
+                    <TableCell>{money(own.reduce((s, e) => s + Number(e.calculated_amount), 0))}</TableCell>
+                    <TableCell><Badge variant={c.is_active ? 'secondary' : 'muted'}>{c.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
+                    <TableCell><div className="flex justify-end gap-2"><button type="button" className="date-chip" onClick={() => openEdit(c)}>Edit</button><button type="button" className="date-chip" onClick={() => openPricing(c)}>Rate</button><button type="button" className="date-chip" onClick={() => void toggle(c)}>{c.is_active ? 'Pause' : 'Activate'}</button></div></TableCell>
+                  </TableRow>;
+                })}
+              </TableBody>
+            </Table>
           ) : (
             <div className="empty">
               No customers yet. Add the first customer to start recording sales.
