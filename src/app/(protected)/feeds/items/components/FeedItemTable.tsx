@@ -3,6 +3,8 @@
 import type { FeedItem } from '@/lib/feed-types';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -34,7 +36,7 @@ export function FeedItemTable({ rows, activeCount, search, onSearchChange, onEdi
         <Badge variant="secondary">{activeCount} active</Badge>
       </div>
       <div className="max-w-sm space-y-1.5">
-        <label htmlFor="feed-item-search" className="text-sm font-medium text-[var(--muted)]">Search feed items</label>
+        <Label htmlFor="feed-item-search">Search feed items</Label>
         <Input id="feed-item-search" value={search} onChange={(event) => onSearchChange(event.target.value)} placeholder="Search by name or category" />
       </div>
       <Table>
@@ -46,7 +48,7 @@ export function FeedItemTable({ rows, activeCount, search, onSearchChange, onEdi
               <TableCell>{label(row.category)}</TableCell><TableCell>{row.base_unit}</TableCell><TableCell>{row.purchase_unit}</TableCell>
               <TableCell>1 {row.purchase_unit} = {row.purchase_unit_quantity} {row.base_unit}</TableCell><TableCell>{Number(row.low_stock_threshold).toLocaleString('en-IN')} {row.base_unit}</TableCell>
               <TableCell><Badge variant={row.is_active ? 'secondary' : 'muted'}>{row.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
-              <TableCell><div className="flex justify-end gap-2"><button type="button" className="date-chip" onClick={() => onEdit(row)}>Edit</button><button type="button" className="date-chip" onClick={() => void onToggle(row)}>{row.is_active ? 'Deactivate' : 'Activate'}</button></div></TableCell>
+              <TableCell><div className="flex justify-end gap-2"><Button variant="outline" size="sm" type="button" onClick={() => onEdit(row)}>Edit</Button><Button variant="outline" size="sm" type="button" onClick={() => void onToggle(row)}>{row.is_active ? 'Deactivate' : 'Activate'}</Button></div></TableCell>
             </TableRow>
           ))}
         </TableBody>
@@ -55,9 +57,9 @@ export function FeedItemTable({ rows, activeCount, search, onSearchChange, onEdi
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-3">
         <p className="text-sm text-[var(--muted)]">Showing {start}–{end} of {totalRows} feed items</p>
         <div className="flex items-center gap-2">
-          <button type="button" className="date-chip disabled:cursor-not-allowed disabled:opacity-50" disabled={loading || page <= 1} onClick={() => onPageChange(page - 1)}>Previous</button>
+          <Button variant="outline" size="sm" type="button" disabled={loading || page <= 1} onClick={() => onPageChange(page - 1)}>Previous</Button>
           <span className="min-w-20 text-center text-sm text-[var(--muted)]">Page {page} of {pageCount}</span>
-          <button type="button" className="date-chip disabled:cursor-not-allowed disabled:opacity-50" disabled={loading || page >= pageCount} onClick={() => onPageChange(page + 1)}>Next</button>
+          <Button variant="outline" size="sm" type="button" disabled={loading || page >= pageCount} onClick={() => onPageChange(page + 1)}>Next</Button>
         </div>
       </div>
       <p className="kpi-foot">Feed items are physical inventory masters. Expenses remain a separate accounting record.</p>
