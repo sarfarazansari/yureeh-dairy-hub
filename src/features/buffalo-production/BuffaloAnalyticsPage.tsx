@@ -126,29 +126,7 @@ export default function BuffaloAnalyticsPage() {
     <AppShell title="Buffalo analytics" subtitle="Shift-wise production trends and herd comparison">
       <div className="row">
         <Select value={range} onValueChange={(value) => { setRange(value); if (value !== 'custom') setPreset(value, setFrom, setTo); }}><SelectTrigger className="date-chip w-auto min-w-[9rem] shrink-0"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="today">Today</SelectItem><SelectItem value="yesterday">Yesterday</SelectItem><SelectItem value="7days">Last 7 days</SelectItem><SelectItem value="week">This week</SelectItem><SelectItem value="month">This month</SelectItem><SelectItem value="previous">Previous month</SelectItem><SelectItem value="custom">Custom range</SelectItem></SelectContent></Select>
-        <div className="row">
-          <DatePicker
-            clearable
-            ariaLabel="From date"
-            value={from}
-            max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)}
-            onChange={(value) => {
-              setRange('custom');
-              setFrom(value);
-            }}
-          />
-          <DatePicker
-            clearable
-            ariaLabel="To date"
-            value={to}
-            min={from}
-            max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)}
-            onChange={(value) => {
-              setRange('custom');
-              setTo(value);
-            }}
-          />
-        </div>
+        {range === 'custom' && <DateRangePicker from={from} to={to} max={today} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); }} className="max-w-[22rem]" />}
       </div>
       {error && (
         <p className="auth-message" role="alert">
