@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { CalendarDays, X } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -39,7 +39,6 @@ export function DateRangePicker({ from, to, onChange, max, className, ariaLabel 
         <button type="button" aria-label={ariaLabel} aria-expanded={open} className={cn('flex h-10 min-w-0 w-full items-center gap-2 rounded-lg border border-[var(--line)] bg-white px-3 text-left text-sm text-[#23392e] hover:bg-[#f7f9f6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--green)]', className)}>
           <CalendarDays className="size-4 shrink-0 text-[var(--muted)]" aria-hidden="true" />
           <span className="min-w-0 flex-1 truncate">{label}</span>
-          {(from || to) && <span role="presentation" className="text-[var(--muted)]"><X className="size-4" /></span>}
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto max-w-[calc(100vw-2rem)] p-3">
