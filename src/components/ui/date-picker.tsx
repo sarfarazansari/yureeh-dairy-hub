@@ -58,11 +58,9 @@ export function DatePicker({
 
   // If callers supply contradictory bounds, do not silently broaden the valid range.
   const invalidBounds = Boolean(minDate && maxDate && minDate > maxDate);
-  const effectiveMin = invalidBounds ? minDate : minDate;
-  const effectiveMax = invalidBounds ? maxDate : maxDate;
   const rangeDisabled = invalidBounds
     ? () => true
-    : (date: Date) => !isWithinBounds(date, effectiveMin, effectiveMax);
+    : (date: Date) => !isWithinBounds(date, minDate, maxDate);
 
   return (
     <div className={cn('shadcn-date-picker min-w-0', className)}>
