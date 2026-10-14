@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
+import { Button } from '@/components/ui/button';
 import { Toast } from '@/components/ui/Toast';
 import { supabase } from '@/lib/supabase';
 import type { FeedItem } from '@/lib/feed-types';
@@ -62,7 +63,7 @@ export default function NewFeedPurchasePage() {
     <AppShell title="New feed purchase" subtitle="Record feed stock-in and supplier purchase">
       <div className="management-stack">
         <div className="row">
-          <Link className="date-chip" href="/feeds/purchases">← Back to purchases</Link>
+          <Button asChild variant="outline"><Link href="/feeds/purchases">← Back to purchases</Link></Button>
         </div>
         <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
         <FeedPurchaseForm feedItems={feedItems} vendors={vendors} onSave={save} busy={busy} />
