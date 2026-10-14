@@ -19,6 +19,7 @@ export type DatePickerProps = {
   clearable?: boolean;
   className?: string;
   'aria-describedby'?: string;
+  'aria-invalid'?: boolean;
 };
 
 function parseDateKey(value: string): Date | undefined {
@@ -50,6 +51,7 @@ export function DatePicker({
   clearable = false,
   className,
   'aria-describedby': ariaDescribedBy,
+  'aria-invalid': ariaInvalid,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const selectedDate = parseDateKey(value);
@@ -80,8 +82,10 @@ export function DatePicker({
               aria-label={ariaLabel}
               aria-haspopup="dialog"
               aria-describedby={ariaDescribedBy}
+              aria-invalid={ariaInvalid}
               className={cn(
                 'shadcn-date-trigger flex min-w-0 items-center gap-2 rounded-lg border border-[var(--line)] bg-white px-3 py-2 text-left text-sm text-[#26382f] transition-colors hover:border-[#aab8ad] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--green)] disabled:cursor-not-allowed disabled:opacity-50',
+                ariaInvalid && 'border-red-500',
                 clearable && value && 'pr-10',
               )}
             >
