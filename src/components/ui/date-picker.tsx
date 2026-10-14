@@ -1,6 +1,5 @@
 'use client';
 
-import { format } from 'date-fns';
 import { CalendarDays, X } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -84,7 +83,7 @@ export function DatePicker({
             >
               <CalendarDays size={16} aria-hidden="true" className="shrink-0 text-[#66756b]" />
               <span className={cn('min-w-0 flex-1 truncate', selectedDate ? 'shadcn-date-value' : 'shadcn-date-placeholder')}>
-                {selectedDate ? format(selectedDate, 'd MMM yyyy') : placeholder}
+                {selectedDate ? new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(selectedDate) : placeholder}
               </span>
             </button>
           </PopoverTrigger>
