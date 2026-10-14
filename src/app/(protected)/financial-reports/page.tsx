@@ -3,7 +3,7 @@
 import { Label } from '@/components/ui/label';
 
 import { useEffect, useState } from 'react';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
 import { supabase } from '@/lib/supabase';
@@ -96,16 +96,7 @@ export default function FinancialReportsPage() {
       subtitle="Separate sales, collections, expenses and outstanding balances"
     >
       <div className="card">
-        <div className="expense-form-grid">
-          <div className="field">
-            <Label>From date</Label>
-            <DatePicker clearable value={from} max={to || today} onChange={setFrom} ariaLabel="From date" />
-          </div>
-          <div className="field">
-            <Label>To date</Label>
-            <DatePicker clearable value={to} min={from} max={today} onChange={setTo} ariaLabel="To date" />
-          </div>
-        </div>
+        <div className="max-w-md"><Label className="mb-2 block">Date range</Label><DateRangePicker from={from} to={to} max={today} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); }} /></div>
         <p className="kpi-foot">Period metrics use the selected dates. Current balances include all activity; historical balances are measured at the end date ({to}). Legacy undated payments are shown separately instead of being assigned invented dates.</p>
       </div>
       {error && <p className="auth-message">{error}</p>}
