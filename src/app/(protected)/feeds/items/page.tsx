@@ -1,11 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
 import { AppShell } from '@/components/layout/AppShell';
 import { supabase } from '@/lib/supabase';
-import type { FeedCategory, FeedItem } from '@/lib/feed-types';
+import type { FeedItem } from '@/lib/feed-types';
 import { FeedItemEditDialog } from './components/FeedItemEditDialog';
 import { FeedItemForm, type FeedItemFormValues } from './components/FeedItemForm';
 import { FeedItemTable } from './components/FeedItemTable';
