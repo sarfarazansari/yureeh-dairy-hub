@@ -65,6 +65,7 @@ export function DatePicker({
   const rangeDisabled = invalidBounds
     ? () => true
     : (date: Date) => !isWithinBounds(date, minDate, maxDate);
+  const isTodayAllowed = !invalidBounds && isWithinBounds(today, minDate, maxDate);
   const defaultMonth = selectedDate
     ?? (minDate && minDate > today ? minDate : undefined)
     ?? (maxDate && maxDate < today ? maxDate : undefined)
@@ -129,9 +130,9 @@ export function DatePicker({
             <button
               type="button"
               className="rounded-md px-2 py-1.5 text-xs font-semibold text-[var(--green)] hover:bg-[#edf5ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--green)] disabled:cursor-not-allowed disabled:opacity-50"
-              disabled={!isWithinBounds(today, minDate, maxDate) || invalidBounds}
+              disabled={!isTodayAllowed}
               onClick={() => {
-                if (invalidBounds || !isWithinBounds(today, minDate, maxDate)) return;
+                if (!isTodayAllowed) return;
                 onChange(toDateKey(today));
                 setOpen(false);
               }}
