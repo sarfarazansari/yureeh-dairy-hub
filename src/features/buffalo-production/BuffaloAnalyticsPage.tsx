@@ -6,7 +6,6 @@ import { milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
@@ -162,7 +161,7 @@ export default function BuffaloAnalyticsPage() {
       <div className="card">
         <h2 className="section-title">Mixed milk fat history</h2>
         <p className="kpi-foot">Fat is recorded once for the combined milk for each date and shift.</p>
-        <div className="table-wrap">
+        <div className="w-full min-w-0">
           <Table>
             <TableHeader><TableRow><TableHead>BUSINESS DATE</TableHead><TableHead>SHIFT</TableHead><TableHead>MIXED MILK FAT</TableHead></TableRow></TableHeader>
             <TableBody>
@@ -232,7 +231,7 @@ export default function BuffaloAnalyticsPage() {
           <h2 className="section-title">Buffalo comparison</h2>
           <Select value={sort} onValueChange={(value) => setSort(value as typeof sort)}><SelectTrigger aria-label="Sort buffalo comparison" className="date-chip"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="total">Total milk</SelectItem><SelectItem value="average">Average per recorded day</SelectItem><SelectItem value="morning">Morning average</SelectItem><SelectItem value="evening">Evening average</SelectItem></SelectContent></Select>
         </div>
-        <div className="table-wrap">
+        <div className="w-full min-w-0">
           <Table>
             <TableHeader>
               <TableRow>
