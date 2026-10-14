@@ -196,7 +196,16 @@ export default function CustomersPage() {
                     <TableCell>₹{c.default_rate}</TableCell>
                     <TableCell>{milkTxt(own.reduce((s, e) => s + Number(e.milk_quantity), 0))}</TableCell>
                     <TableCell>{money(own.reduce((s, e) => s + Number(e.calculated_amount), 0))}</TableCell>
-                    <TableCell><Badge variant={c.is_active ? 'secondary' : 'muted'}>{c.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={c.is_active ? 'secondary' : 'muted'}
+                        className={c.is_active
+                          ? 'rounded-full bg-[#edf5ef] px-3 py-1 text-[#246b4f]'
+                          : 'rounded-full bg-[#f0f2f1] px-3 py-1 text-[#68756e]'}
+                      >
+                        {c.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
                     <TableCell><div className="flex justify-end gap-2"><button type="button" className="date-chip" onClick={() => openEdit(c)}>Edit</button><button type="button" className="date-chip" onClick={() => openPricing(c)}>Rate</button><button type="button" className="date-chip" onClick={() => void toggle(c)}>{c.is_active ? 'Pause' : 'Activate'}</button></div></TableCell>
                   </TableRow>;
                 })}
