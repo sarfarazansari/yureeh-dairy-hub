@@ -125,9 +125,22 @@ export default function ExpenseHistory() {
   );
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!editing) return;
+    if (!editing || !supabase || busy) return;
+    setMessage('');
     setBusy(true);
     try {
+      if (ledgerExpenseIds.has(editing.id) || feedPurchaseExpenseIds.has(editing.id)) {
+        throw new Error('This expense is locked. Use its payment ledger or Feed Purchases workflow.');
+      }
+      if (!editing.business_date || editing.business_date > todayLocal()) {
+        throw new Error('Business date must be today or earlier.');
+      }
+      if (editing.due_date && editing.due_date < editing.business_date) {
+        throw new Error('Due date cannot be earlier than the business date.');
+      }
+      if (!editing.category_id || !categories.some((item) => item.id === editing.category_id)) {
+        throw new Error('Choose a valid expense category.');
+      }
       const amount =
         editing.quantity !== '' &&
         editing.quantity != null &&
@@ -136,9 +149,18 @@ export default function ExpenseHistory() {
           ? calculateExpenseTotal(editing.quantity, editing.rate)
           : Number(editing.total_amount);
       const paid = Number(editing.paid_amount);
-      if (!amount || amount <= 0) throw new Error('Total must be greater than zero.');
+      if (!Number.isFinite(amount) || amount <= 0) throw new Error('Total must be greater than zero.');
+      if (!Number.isFinite(paid) || paid < 0 || paid > amount) {
+        throw new Error('Paid amount must be between zero and the total amount.');
+      }
+      if (editing.quantity !== '' && editing.quantity != null && Number(editing.quantity) <= 0) {
+        throw new Error('Quantity must be greater than zero.');
+      }
+      if (editing.rate !== '' && editing.rate != null && Number(editing.rate) <= 0) {
+        throw new Error('Rate must be greater than zero.');
+      }
       const payment_status = expensePaymentStatus(amount, paid);
-      const { error } = await supabase!
+      const { error } = await supabase
         .from('expenses')
         .update({
           business_date: editing.business_date,
@@ -169,9 +191,12 @@ export default function ExpenseHistory() {
     }
   }
   async function confirmDelete() {
-    if (!pendingDelete || !supabase) return;
+    if (!pendingDelete || !supabase || deleteBusy) return;
     setDeleteBusy(true);
     try {
+      if (ledgerExpenseIds.has(pendingDelete.id) || feedPurchaseExpenseIds.has(pendingDelete.id)) {
+        throw new Error('This expense is locked and cannot be deleted from expense history.');
+      }
       const { error } = await supabase
         .from('expenses')
         .update({ deleted_at: new Date().toISOString() })
