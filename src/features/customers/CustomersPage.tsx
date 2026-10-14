@@ -1,5 +1,9 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+
 import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
@@ -135,8 +139,8 @@ export default function CustomersPage() {
         <form className="card" onSubmit={create}>
           <h2 className="section-title">Add customer</h2>
           <div className="field">
-            <label>Name</label>
-            <input
+            <Label>Name</Label>
+            <Input
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -144,15 +148,15 @@ export default function CustomersPage() {
             />
           </div>
           <div className="field">
-            <label>Pricing model</label>
+            <Label>Pricing model</Label>
             <select value={type} onChange={(e) => setType(e.target.value as PricingType)}>
               <option value="FIXED_PER_LITRE">Fixed per litre</option>
               <option value="FAT_BASED">Fat based</option>
             </select>
           </div>
           <div className="field">
-            <label>Default rate · ₹</label>
-            <input
+            <Label>Default rate · ₹</Label>
+            <Input
               required
               min="0.01"
               step="0.01"
@@ -266,20 +270,20 @@ export default function CustomersPage() {
             </button>
           </div>
           <div className="field">
-            <label htmlFor="customer-edit-name">Name</label>
-            <input id="customer-edit-name" required value={editName} onChange={(event) => setEditName(event.target.value)} />
+            <Label htmlFor="customer-edit-name">Name</Label>
+            <Input id="customer-edit-name" required value={editName} onChange={(event) => setEditName(event.target.value)} />
           </div>
           <div className="field">
-            <label htmlFor="customer-edit-phone">Phone</label>
-            <input id="customer-edit-phone" value={editPhone} onChange={(event) => setEditPhone(event.target.value)} />
+            <Label htmlFor="customer-edit-phone">Phone</Label>
+            <Input id="customer-edit-phone" value={editPhone} onChange={(event) => setEditPhone(event.target.value)} />
           </div>
           <div className="field">
-            <label htmlFor="customer-edit-address">Address</label>
-            <input id="customer-edit-address" value={editAddress} onChange={(event) => setEditAddress(event.target.value)} />
+            <Label htmlFor="customer-edit-address">Address</Label>
+            <Input id="customer-edit-address" value={editAddress} onChange={(event) => setEditAddress(event.target.value)} />
           </div>
           <div className="field">
-            <label htmlFor="customer-edit-notes">Notes</label>
-            <textarea
+            <Label htmlFor="customer-edit-notes">Notes</Label>
+            <Textarea
               id="customer-edit-notes"
               value={editNotes}
               onChange={(event) => setEditNotes(event.target.value)}
@@ -325,8 +329,8 @@ export default function CustomersPage() {
             </button>
           </div>
           <div className="field">
-            <label htmlFor="customer-pricing-rate">Default rate · ₹</label>
-            <input
+            <Label htmlFor="customer-pricing-rate">Default rate · ₹</Label>
+            <Input
               id="customer-pricing-rate"
               type="number"
               min="0.01"
@@ -337,7 +341,7 @@ export default function CustomersPage() {
             />
           </div>
           <div className="field">
-            <label htmlFor="customer-pricing-type">Pricing model</label>
+            <Label htmlFor="customer-pricing-type">Pricing model</Label>
             <select
               id="customer-pricing-type"
               value={pricingType}
