@@ -1798,3 +1798,39 @@ button {
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 }
+
+
+/* Compact master forms without forcing every control to span the full page. */
+.customer-create-card {
+  width: 100%;
+  max-width: 760px;
+}
+.customer-create-card {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 14px 18px;
+}
+.customer-create-heading,
+.customer-create-submit,
+.customer-create-card > [role="status"] {
+  grid-column: 1 / -1;
+}
+.customer-create-card .field {
+  min-width: 0;
+  margin: 0;
+}
+.customer-create-submit {
+  justify-self: start;
+  min-width: 150px;
+}
+@media (max-width: 640px) {
+  .customer-create-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .customer-create-heading,
+  .customer-create-submit,
+  .customer-create-card > [role="status"] {
+    grid-column: auto;
+  }
+}
