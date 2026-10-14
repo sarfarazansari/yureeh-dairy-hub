@@ -2,6 +2,8 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { useMemo, useRef, useState } from 'react';
@@ -93,28 +95,28 @@ export function FeedConsumptionForm({
 
       <div className="expense-form-grid">
         <div className="field">
-          <Label>Consumption date</Label>
-          <DatePicker value={values.businessDate} max={todayLocal()} onChange={(value) => update('businessDate', value)} ariaLabel="Consumption date" />
+          <Label htmlFor="consumption-date">Consumption date</Label>
+          <DatePicker id="consumption-date" value={values.businessDate} max={todayLocal()} disabled={busy} onChange={(value) => update('businessDate', value)} ariaLabel="Consumption date" />
           {errors.businessDate && <span className="auth-message">{errors.businessDate}</span>}
         </div>
 
         <div className="field">
-          <Label>Feed item</Label>
+          <Label htmlFor="consumption-feed">Feed item</Label>
           {lockFeedItem ? (
             <Input value={selectedFeed?.name ?? '—'} readOnly />
           ) : (
-            <Select value={values.feedItemId || undefined} onValueChange={(value) => update('feedItemId', value)}><SelectTrigger><SelectValue placeholder="Select feed item" /></SelectTrigger><SelectContent>{feedItems.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>
+            <Select value={values.feedItemId || undefined} onValueChange={(value) => update('feedItemId', value)} disabled={busy || lockFeedItem}><SelectTrigger id="consumption-feed" aria-invalid={!!errors.feedItemId}><SelectValue placeholder="Select feed item" /></SelectTrigger><SelectContent>{feedItems.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>
           )}
           {errors.feedItemId && <span className="auth-message">{errors.feedItemId}</span>}
         </div>
 
         <div className="field">
-          <Label>Unit</Label>
-          <Input value={selectedFeed?.base_unit ?? '—'} readOnly />
+          <Label htmlFor="consumption-unit">Unit</Label>
+          <Input id="consumption-unit" value={selectedFeed?.base_unit ?? '—'} readOnly />
         </div>
 
         <div className="field">
-          <Label>Available stock</Label>
+          <Label htmlFor="consumption-available">Available stock</Label>
           <Input
             value={selectedFeed ? `${available.toLocaleString('en-IN')} ${selectedFeed.base_unit}` : '—'}
             readOnly
@@ -122,20 +124,23 @@ export function FeedConsumptionForm({
         </div>
 
         <div className="field">
-          <Label>Quantity</Label>
+          <Label htmlFor="consumption-quantity">Quantity</Label>
           <Input
+            id="consumption-quantity"
             type="number"
             min="0.001"
             step="0.001"
             inputMode="decimal"
             value={values.quantity}
-            onChange={(e) => update('quantity', Number(e.target.value))}
+            disabled={busy}
+            aria-invalid={!!errors.quantity}
+            onChange={(e) => update('quantity', e.target.value === '' ? Number.NaN : Number(e.target.value))}
           />
           {errors.quantity && <span className="auth-message">{errors.quantity}</span>}
         </div>
 
         <div className="field">
-          <Label>Remaining stock</Label>
+          <Label htmlFor="consumption-remaining">Remaining stock</Label>
           <Input
             value={selectedFeed ? `${remaining.toLocaleString('en-IN', { maximumFractionDigits: 3 })} ${selectedFeed.base_unit}` : '—'}
             readOnly
@@ -143,8 +148,8 @@ export function FeedConsumptionForm({
         </div>
 
         <div className="field wide-field">
-          <Label>Notes</Label>
-          <Input value={values.notes ?? ''} onChange={(e) => update('notes', e.target.value)} placeholder="Optional" />
+          <Label htmlFor="consumption-notes">Notes</Label>
+          <Textarea id="consumption-notes" rows={2} value={values.notes ?? ''} disabled={busy} onChange={(e) => update('notes', e.target.value)} placeholder="Optional" />
         </div>
       </div>
 
@@ -162,9 +167,9 @@ export function FeedConsumptionForm({
         </div>
       )}
 
-      <button type="submit" className="btn" disabled={busy || submittingRef.current || !feedItems.length}>
+      <Button type="submit" disabled={busy || submittingRef.current || !feedItems.length}>
         {busy ? 'Saving…' : submitLabel}
-      </button>
+      </Button>
     </form>
   );
 }
