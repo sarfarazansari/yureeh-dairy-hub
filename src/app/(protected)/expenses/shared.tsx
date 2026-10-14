@@ -26,26 +26,9 @@ export function ExpenseShell({
     </AppShell>
   );
 }
-export async function ensureExpenseCategories(client: SupabaseClient) {
-  const {
-    data: { user },
-  } = await client.auth.getUser();
-  if (!user) return;
-  const { data: owned, error } = await client
-    .from('expense_categories')
-    .select('id')
-    .eq('owner_id', user.id)
-    .limit(1);
-  if (error || owned?.length) return;
-  const { data: defaults, error: defaultError } = await client
-    .from('expense_categories')
-    .select('name,category_group,default_unit,is_quantity_based,is_active,description')
-    .is('owner_id', null);
-  if (defaultError || !defaults?.length) return;
-  const { error: insertError } = await client
-    .from('expense_categories')
-    .insert(defaults.map((category) => ({ ...category, owner_id: user.id })));
-  if (insertError && insertError.code !== '23505') throw insertError;
+export async function ensureExpenseCategories(_client: SupabaseClient) {
+  // System defaults are shared rows. Cloning them per farm creates duplicate categories.
+  // Kept as a no-op to avoid changing existing call sites while loading categories.
 }
 export const todayLocal = () => {
   const d = new Date();
