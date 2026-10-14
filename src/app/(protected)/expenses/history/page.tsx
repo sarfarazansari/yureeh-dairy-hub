@@ -199,36 +199,36 @@ export default function ExpenseHistory() {
             />
           </div>
           <div className="field">
-            <Label>Category</Label>
-            <Select value={category || 'all'} onValueChange={(value) => setCategory(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All categories</SelectItem>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
+            <Label htmlFor="expense-filter-category">Category</Label>
+            <Select value={category || 'all'} onValueChange={(value) => setCategory(value === 'all' ? '' : value)}><SelectTrigger id="expense-filter-category"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All categories</SelectItem>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
           </div>
           <div className="field">
-            <Label>Category group</Label>
-            <Select value={group || 'all'} onValueChange={(value) => setGroup(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All groups</SelectItem>{['FEED','ANIMAL','FARM_OPERATIONS','TRANSPORT','UTILITIES','LABOUR','EQUIPMENT','ADMIN','OTHER'].map((g) => <SelectItem key={g} value={g}>{g.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
+            <Label htmlFor="expense-filter-group">Category group</Label>
+            <Select value={group || 'all'} onValueChange={(value) => setGroup(value === 'all' ? '' : value)}><SelectTrigger id="expense-filter-group"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All groups</SelectItem>{['FEED','ANIMAL','FARM_OPERATIONS','TRANSPORT','UTILITIES','LABOUR','EQUIPMENT','ADMIN','OTHER'].map((g) => <SelectItem key={g} value={g}>{g.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
           </div>
           <div className="field">
-            <Label>Vendor</Label>
-            <Select value={vendor || 'all'} onValueChange={(value) => setVendor(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All vendors</SelectItem>{vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
+            <Label htmlFor="expense-filter-vendor">Vendor</Label>
+            <Select value={vendor || 'all'} onValueChange={(value) => setVendor(value === 'all' ? '' : value)}><SelectTrigger id="expense-filter-vendor"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All vendors</SelectItem>{vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
           </div>
           <div className="field">
-            <Label>Payment status</Label>
-            <Select value={status || 'all'} onValueChange={(value) => setStatus(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{['PAID','PARTIAL','CREDIT'].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent></Select>
+            <Label htmlFor="expense-filter-status">Payment status</Label>
+            <Select value={status || 'all'} onValueChange={(value) => setStatus(value === 'all' ? '' : value)}><SelectTrigger id="expense-filter-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{['PAID','PARTIAL','CREDIT'].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent></Select>
           </div>
           <div className="field">
-            <Label>Payment method</Label>
-            <Select value={method || 'all'} onValueChange={(value) => setMethod(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All methods</SelectItem>{['CASH','UPI','BANK_TRANSFER','CARD','OTHER','CREDIT'].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent></Select>
+            <Label htmlFor="expense-filter-method">Payment method</Label>
+            <Select value={method || 'all'} onValueChange={(value) => setMethod(value === 'all' ? '' : value)}><SelectTrigger id="expense-filter-method"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All methods</SelectItem>{['CASH','UPI','BANK_TRANSFER','CARD','OTHER','CREDIT'].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent></Select>
           </div>
           <div className="field">
-            <Label>Buffalo</Label>
-            <Select value={buffalo || 'all'} onValueChange={(value) => setBuffalo(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All buffaloes</SelectItem>{buffaloes.map((b) => <SelectItem key={b.id} value={b.id}>{b.name || b.buffalo_code}</SelectItem>)}</SelectContent></Select>
+            <Label htmlFor="expense-filter-buffalo">Buffalo</Label>
+            <Select value={buffalo || 'all'} onValueChange={(value) => setBuffalo(value === 'all' ? '' : value)}><SelectTrigger id="expense-filter-buffalo"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All buffaloes</SelectItem>{buffaloes.map((b) => <SelectItem key={b.id} value={b.id}>{b.name || b.buffalo_code}</SelectItem>)}</SelectContent></Select>
           </div>
           <Label className="field">
             <span>Outstanding only</span>
             <Checkbox checked={outstandingOnly} onCheckedChange={(checked) => setOutstandingOnly(checked === true)} />
           </Label>
           <div className="field">
-            <Label>Sort by</Label>
-            <Select value={sort} onValueChange={setSort}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="date">Date</SelectItem><SelectItem value="amount">Amount</SelectItem><SelectItem value="category">Category</SelectItem><SelectItem value="pending">Pending amount</SelectItem></SelectContent></Select>
+            <Label htmlFor="expense-filter-sort">Sort by</Label>
+            <Select value={sort} onValueChange={setSort}><SelectTrigger id="expense-filter-sort"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="date">Date</SelectItem><SelectItem value="amount">Amount</SelectItem><SelectItem value="category">Category</SelectItem><SelectItem value="pending">Pending amount</SelectItem></SelectContent></Select>
           </div>
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
         <ShadcnDialog open={!!editing} onOpenChange={(open) => { if (!open && !busy) setEditing(null); }}>
@@ -417,7 +417,7 @@ export default function ExpenseHistory() {
                       onClick={() => setPendingDelete(r)}
                     >
                       Delete
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -428,7 +428,7 @@ export default function ExpenseHistory() {
         <p className="kpi-foot">
           Showing at most 1,000 most recent expenses. Feed-purchase expenses are managed in Feed Purchases; expenses with dated payment-ledger entries are locked to preserve reconciliation.
         </p>
-        <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open && !deleteBusy) setPendingDelete(null); }}> 
+        <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open && !deleteBusy) setPendingDelete(null); }}>
           <AlertDialogContent>
           {pendingDelete && (
             <>
@@ -452,7 +452,7 @@ export default function ExpenseHistory() {
               </div>
               <AlertDialogFooter>
                 <AlertDialogCancel disabled={deleteBusy} onClick={() => setPendingDelete(null)}>Cancel</AlertDialogCancel>
-                <AlertDialogAction asChild><AlertDialogAction asChild><Button type="button" variant="destructive" disabled={deleteBusy} onClick={(event) => { event.preventDefault(); void confirmDelete(); }}>{deleteBusy ? 'Deleting…' : 'Delete expense'}</Button></AlertDialogAction></AlertDialogAction>
+                <AlertDialogAction asChild><Button type="button" variant="destructive" disabled={deleteBusy} onClick={(event) => { event.preventDefault(); void confirmDelete(); }}>{deleteBusy ? 'Deleting…' : 'Delete expense'}</Button></AlertDialogAction>
               </AlertDialogFooter>
             </>
           )}
