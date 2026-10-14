@@ -82,7 +82,7 @@ export function BuffaloPurchaseForm({
 
       <div className="grid two">
         <Field label="Purchase Date">
-          <DatePicker value={purchaseDate} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={setPurchaseDate} ariaLabel="Purchase date" />
+          <DatePicker value={purchaseDate} max={localDateKey()} onChange={setPurchaseDate} ariaLabel="Purchase date" />
         </Field>
 
         <Field label="Purchase Price · ₹">
