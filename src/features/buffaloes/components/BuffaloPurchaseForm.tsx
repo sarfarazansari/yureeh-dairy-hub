@@ -1,5 +1,9 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+
 import { useState } from 'react';
 
 import { DatePicker } from '@/components/ui/date-picker';
@@ -80,7 +84,7 @@ export function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Purchase Price · ₹">
-          <input
+          <Input
             type="number"
             min="0.01"
             step="0.01"
@@ -99,7 +103,7 @@ export function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Transaction Reference">
-          <input
+          <Input
             value={reference}
             onChange={(event) => setReference(event.target.value)}
           />
@@ -110,7 +114,7 @@ export function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Udhaar Terms">
-          <input
+          <Input
             value={terms}
             disabled={!hasBalance}
             onChange={(event) => setTerms(event.target.value)}
@@ -120,7 +124,7 @@ export function BuffaloPurchaseForm({
       </div>
 
       <Field label="Purchase Notes">
-        <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />
+        <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />
       </Field>
 
       {paid > price && (
@@ -148,7 +152,7 @@ export function BuffaloPurchaseForm({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="field">
-      <label>{label}</label>
+      <Label>{label}</Label>
       {children}
     </div>
   );
