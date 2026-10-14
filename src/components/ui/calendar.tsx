@@ -28,10 +28,10 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         selected: "[&>button]:bg-[var(--green)] [&>button]:text-white [&>button]:hover:bg-[var(--green)]",
         range_start: "[&>button]:bg-[var(--green)] [&>button]:text-white [&>button]:rounded-l-md",
         range_end: "[&>button]:bg-[var(--green)] [&>button]:text-white [&>button]:rounded-r-md",
-        range_middle: "bg-[#e4f1e8] text-[#1c4e3b] [&>button]:rounded-none [&>button]:bg-[#e4f1e8] [&>button]:text-[#1c4e3b]",
+        range_middle: "bg-[#e4f1e8] text-[#1c4e3b] [&>button]:rounded-none [&>button]:bg-[#e4f1e8] [&>button]:text-[#1c4e3b] [&>button]:opacity-100",
         today: "[&>button]:border [&>button]:border-[var(--green)]",
-        outside: "text-[var(--muted)] opacity-50",
-        disabled: "text-[var(--muted)] opacity-30",
+        outside: "text-[#9aa69f] opacity-70",
+        disabled: "text-[#a1aca5] opacity-60",
         hidden: "invisible",
         ...classNames,
       }}
