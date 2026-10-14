@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useMemo, useState } from 'react';
 
 import { DatePicker } from '@/components/ui/date-picker';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { localDateKey, getMilkEntryPresetRange } from '@/lib/milk-entry-list';
@@ -126,16 +127,19 @@ export default function MilkPoolPage() {
               Household use, wastage, other use and adjustments are recorded separately.
             </p>
           </div>
-          <div className="grid two">
-            <Label className="field">
-              <span>From</span>
-              <DatePicker clearable value={from} max={to || localDateKey()} onChange={setFrom} ariaLabel="From date" />
-            </Label>
-            <Label className="field">
-              <span>To</span>
-              <DatePicker clearable value={to} min={from} max={localDateKey()} onChange={setTo} ariaLabel="To date" />
-            </Label>
-          </div>
+          <Label className="field milk-pool-date-range">
+            <span>Date range</span>
+            <DateRangePicker
+              from={from}
+              to={to}
+              max={localDateKey()}
+              onChange={({ from: nextFrom, to: nextTo }) => {
+                setFrom(nextFrom);
+                setTo(nextTo);
+              }}
+              ariaLabel="Milk pool date range"
+            />
+          </Label>
         </div>
 
         <div className="grid three">
