@@ -73,9 +73,9 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
                 <TableCell>{money(row.rate_per_purchase_unit)} / {row.purchase_unit}</TableCell>
                 <TableCell>{money(row.total_amount)}</TableCell>
                 <TableCell>
-                  <span className={'tag ' + (row.payment_status === 'PAID' ? '' : 'gold')}>
+                  <Badge variant={row.payment_status === 'PAID' ? 'secondary' : 'outline'}>
                     {row.payment_status}
-                  </span>
+                  </Badge>
                 </TableCell>
                 <TableCell>
                   {row.can_edit_delete ? (
