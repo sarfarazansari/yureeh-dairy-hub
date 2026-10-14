@@ -2,8 +2,6 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { FormField } from '@/components/ui/form-field';
 
 import { useMemo, useState } from 'react';
 
@@ -101,12 +99,10 @@ export default function DailyPerformancePage() {
 
         <div className="date-range-segment" role="group" aria-label="Production shift">
           {(['MORNING', 'EVENING'] as const).map((value) => (
-            <Button
-              variant={shift === value ? 'default' : 'outline'}
-              size="sm"
+            <button
               type="button"
               key={value}
-              className={shift === value ? 'active' : ''}
+              className={`date-chip ${shift === value ? 'active' : ''}`}
               aria-pressed={shift === value}
               disabled={saveMutation.isPending || sheetQuery.isFetching}
               onClick={() => {
@@ -116,15 +112,15 @@ export default function DailyPerformancePage() {
               }}
             >
               {value === 'MORNING' ? 'Morning' : 'Evening'}
-            </Button>
+            </button>
           ))}
         </div>
 
         <div className="row" style={{ marginTop: 12, marginBottom: 12, alignItems: 'end' }}>
-          <div className="field" style={{ maxWidth: 320, flex: 1 }}>
-            <Label htmlFor="pooled-milk-fat">Mixed milk fat (%) · {shift === 'MORNING' ? 'Morning' : 'Evening'}</Label>
+          <Label className="field" style={{ maxWidth: 320, flex: 1 }}>
+            <span>Mixed milk fat (%) · {shift === 'MORNING' ? 'Morning' : 'Evening'}</span>
             <Input
-              id="pooled-milk-fat"
+              aria-label="Mixed milk fat percentage"
               className="date-chip"
               type="number"
               min="0"
@@ -139,7 +135,7 @@ export default function DailyPerformancePage() {
                 setMessage('');
               }}
             />
-          </div>
+          </Label>
           <span className="kpi-foot">Enter the fat measured from the combined milk, once per shift — not per buffalo.</span>
         </div>
 
@@ -205,9 +201,9 @@ export default function DailyPerformancePage() {
           <div className="empty">No active buffaloes found. Add active buffaloes before recording production.</div>
         )}
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-        <Button type="button" disabled={saveMutation.isPending || sheetQuery.isPending || !rows.length} onClick={() => void save()}>
+        <button className="btn" disabled={saveMutation.isPending || sheetQuery.isPending || !rows.length} onClick={() => void save()}>
           {saveMutation.isPending ? 'Saving…' : 'Save production'}
-        </Button>
+        </button>
       </div>
     </AppShell>
   );
