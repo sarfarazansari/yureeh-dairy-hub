@@ -89,8 +89,8 @@ export default function ExpenseHistory() {
       setLoadError(true);
       return;
     }
-    setRows(e.data ?? []);
-    const expenseIds = (e.data ?? []).map((expense) => expense.id);
+    const nextRows = e.data ?? [];
+    const expenseIds = nextRows.map((expense) => expense.id);
     if (expenseIds.length) {
       const [paymentResult, purchaseResult] = await Promise.all([
         supabase.from('expense_payments').select('expense_id').in('expense_id', expenseIds),
@@ -99,6 +99,9 @@ export default function ExpenseHistory() {
       if (paymentResult.error || purchaseResult.error) {
         setMessage((paymentResult.error ?? purchaseResult.error)!.message);
         setLoadError(true);
+        setRows([]);
+        setLedgerExpenseIds(new Set());
+        setFeedPurchaseExpenseIds(new Set());
         return;
       }
       setLedgerExpenseIds(new Set((paymentResult.data ?? []).map((payment) => payment.expense_id)));
@@ -107,6 +110,7 @@ export default function ExpenseHistory() {
       setLedgerExpenseIds(new Set());
       setFeedPurchaseExpenseIds(new Set());
     }
+    setRows(nextRows);
     setCategories(c.data ?? []);
     setVendors(v.data ?? []);
     setBuffaloes(b.data ?? []);
