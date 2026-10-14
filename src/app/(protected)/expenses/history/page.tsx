@@ -207,6 +207,10 @@ export default function ExpenseHistory() {
   }
   async function confirmDelete() {
     if (!pendingDelete || !supabase || deleteBusy) return;
+    if (loadError) {
+      setMessage('Expense status could not be verified. Reload and try again.');
+      return;
+    }
     setDeleteBusy(true);
     try {
       if (ledgerExpenseIds.has(pendingDelete.id) || feedPurchaseExpenseIds.has(pendingDelete.id)) {
