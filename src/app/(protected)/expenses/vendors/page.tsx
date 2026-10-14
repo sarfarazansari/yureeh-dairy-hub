@@ -1,6 +1,8 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -83,24 +85,24 @@ export default function ExpenseVendors() {
         <form className="card" onSubmit={save}>
           <h2 className="section-title">Add vendor</h2>
           <div className="field">
-            <Label>Name</Label>
-            <Input required value={name} onChange={(e) => setName(e.target.value)} />
+            <Label htmlFor="vendor-name">Name</Label>
+            <Input id="vendor-name" required value={name} onChange={(e) => setName(e.target.value)} maxLength={160} />
           </div>
           <div className="field">
-            <Label>Mobile</Label>
-            <Input value={mobile} onChange={(e) => setMobile(e.target.value)} />
+            <Label htmlFor="vendor-mobile">Mobile</Label>
+            <Input id="vendor-mobile" inputMode="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} maxLength={30} />
           </div>
           <div className="field">
-            <Label>City</Label>
-            <Input value={city} onChange={(e) => setCity(e.target.value)} />
+            <Label htmlFor="vendor-city">City</Label>
+            <Input id="vendor-city" value={city} onChange={(e) => setCity(e.target.value)} maxLength={120} />
           </div>
           <div className="field">
-            <Label>Address</Label>
-            <Input value={address} onChange={(e) => setAddress(e.target.value)} />
+            <Label htmlFor="vendor-address">Address</Label>
+            <Textarea id="vendor-address" value={address} onChange={(e) => setAddress(e.target.value)} rows={3} maxLength={500} />
           </div>
-          <button className="btn" disabled={busy}>
+          <Button type="submit" disabled={busy || !name.trim()}>
             {busy ? 'Saving…' : 'Add vendor'}
-          </button>
+          </Button>
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
         </form>
         <div className="card">
