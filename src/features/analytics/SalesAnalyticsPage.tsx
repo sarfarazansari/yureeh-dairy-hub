@@ -1,5 +1,7 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -110,26 +112,7 @@ export default function SalesAnalyticsPage() {
   return (
     <AppShell title="Sales analytics" subtitle="Farm-level milk, fat and revenue">
       <div className="row">
-        <select
-          className="date-chip"
-          value={range}
-          onChange={(e) => {
-            setRange(e.target.value);
-            if (e.target.value !== 'custom') {
-              const preset = getAnalyticsDateRange(e.target.value as AnalyticsDatePreset);
-              setFrom(preset.from);
-              setTo(preset.to);
-            }
-          }}
-        >
-          <option value="today">Today</option>
-          <option value="yesterday">Yesterday</option>
-          <option value="7days">Last 7 days</option>
-          <option value="week">This week</option>
-          <option value="month">This month</option>
-          <option value="previous">Previous month</option>
-          <option value="custom">Custom range</option>
-        </select>
+        <Select value={range} onValueChange={(value) => { setRange(value); if (value !== 'custom') { const preset = getAnalyticsDateRange(value as AnalyticsDatePreset); setFrom(preset.from); setTo(preset.to); } }}><SelectTrigger className="date-chip"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="today">Today</SelectItem><SelectItem value="yesterday">Yesterday</SelectItem><SelectItem value="7days">Last 7 days</SelectItem><SelectItem value="week">This week</SelectItem><SelectItem value="month">This month</SelectItem><SelectItem value="previous">Previous month</SelectItem><SelectItem value="custom">Custom range</SelectItem></SelectContent></Select>
         <div className="row">
           <DatePicker
             clearable
@@ -152,18 +135,7 @@ export default function SalesAnalyticsPage() {
               setTo(value);
             }}
           />
-          <select
-            className="date-chip"
-            value={customerId}
-            onChange={(e) => setCustomerId(e.target.value)}
-          >
-            <option value="">All customers</option>
-            {customers.map((c) => (
-              <option value={c.id} key={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <Select value={customerId || 'all'} onValueChange={(value) => setCustomerId(value === 'all' ? '' : value)}><SelectTrigger className="date-chip"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All customers</SelectItem>{customers.map((c) => <SelectItem value={c.id} key={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
         </div>
       </div>
       {error && <p className="auth-message">{error}</p>}
