@@ -1,5 +1,7 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -52,17 +54,7 @@ export function BuffaloStatusForm({ buffalo }: { buffalo: BuffaloDetail }) {
 
       <div className="grid two">
         <Field label="Status">
-          <select
-            disabled={isTerminal}
-            value={status}
-            onChange={(event) =>
-              setStatus(event.target.value as (typeof STATUSES)[number])
-            }
-          >
-            {STATUSES.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
+          <Select disabled={isTerminal} value={status} onValueChange={(value) => setStatus(value as (typeof STATUSES)[number])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{STATUSES.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
         </Field>
 
         <Field label="Effective Date">
