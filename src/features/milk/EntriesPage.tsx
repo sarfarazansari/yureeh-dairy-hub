@@ -1,5 +1,10 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
@@ -351,9 +356,9 @@ export default function EntriesPage() {
             </div>
           </div>
           <div className="field">
-            <label htmlFor="entries-search">Search customer</label>
+            <Label htmlFor="entries-search">Search customer</Label>
             <div className="row">
-              <input
+              <Input
                 id="entries-search"
                 type="search"
                 value={customerSearch}
@@ -368,35 +373,16 @@ export default function EntriesPage() {
             </div>
           </div>
           <div className="field">
-            <label htmlFor="entries-customer">Customer</label>
-            <select
-              id="entries-customer"
-              value={customerId}
-              onChange={(event) => setFilter('customer', event.target.value)}
-            >
-              <option value="">All customers</option>
-              {(customersQuery.data ?? []).map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}{item.is_active ? '' : ' · inactive'}
-                </option>
-              ))}
-            </select>
+            <Label htmlFor="entries-customer">Customer</Label>
+            <Select value={customerId || 'all'} onValueChange={(value) => setFilter('customer', value === 'all' ? '' : value)}><SelectTrigger id="entries-customer"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All customers</SelectItem>{(customersQuery.data ?? []).map((item) => <SelectItem key={item.id} value={item.id}>{item.name}{item.is_active ? '' : ' · inactive'}</SelectItem>)}</SelectContent></Select>
           </div>
           <div className="field">
-            <label htmlFor="entries-shift">Shift</label>
-            <select id="entries-shift" value={shift} onChange={(event) => setFilter('shift', event.target.value)}>
-              <option value="">All shifts</option>
-              <option value="MORNING">Morning</option>
-              <option value="EVENING">Evening</option>
-            </select>
+            <Label htmlFor="entries-shift">Shift</Label>
+            <Select value={shift || 'all'} onValueChange={(value) => setFilter('shift', value === 'all' ? '' : value)}><SelectTrigger id="entries-shift"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All shifts</SelectItem><SelectItem value="MORNING">Morning</SelectItem><SelectItem value="EVENING">Evening</SelectItem></SelectContent></Select>
           </div>
           <div className="field">
-            <label htmlFor="entries-pricing">Pricing model</label>
-            <select id="entries-pricing" value={pricing} onChange={(event) => setFilter('pricing', event.target.value)}>
-              <option value="">All models</option>
-              <option value="FIXED_PER_LITRE">Fixed per litre</option>
-              <option value="FAT_BASED">Fat based</option>
-            </select>
+            <Label htmlFor="entries-pricing">Pricing model</Label>
+            <Select value={pricing || 'all'} onValueChange={(value) => setFilter('pricing', value === 'all' ? '' : value)}><SelectTrigger id="entries-pricing"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All models</SelectItem><SelectItem value="FIXED_PER_LITRE">Fixed per litre</SelectItem><SelectItem value="FAT_BASED">Fat based</SelectItem></SelectContent></Select>
           </div>
           {clearable && (
             <button type="button" className="filter-reset" onClick={clearFilters}>Clear filters</button>
@@ -406,11 +392,11 @@ export default function EntriesPage() {
         {range === 'custom' && (
           <div className="custom-date-range">
             <div className="field">
-              <label htmlFor="entries-from">From</label>
+              <Label htmlFor="entries-from">From</Label>
               <DatePicker clearable id="entries-from" value={from} max={to || today} onChange={(value) => setFilter('from', value)} ariaLabel="From date" />
             </div>
             <div className="field">
-              <label htmlFor="entries-to">To</label>
+              <Label htmlFor="entries-to">To</Label>
               <DatePicker clearable id="entries-to" value={to} min={from} max={today} onChange={(value) => setFilter('to', value)} ariaLabel="To date" />
             </div>
           </div>
@@ -477,16 +463,9 @@ export default function EntriesPage() {
 
         {!listQuery.isError && (
           <div className="milk-entry-pagination">
-            <label className="page-size-control">Rows per page
-              <select aria-label="Rows per page" value={pageSize} onChange={(event) => {
-                const next = new URLSearchParams(searchParams.toString());
-                next.set('pageSize', event.target.value);
-                next.set('page', '1');
-                replaceParams(next);
-              }}>
-                <option value={10}>10</option><option value={20}>20</option><option value={50}>50</option><option value={100}>100</option>
-              </select>
-            </label>
+            <Label className="page-size-control">Rows per page
+              <Select value={String(pageSize)} onValueChange={(value) => { const next = new URLSearchParams(searchParams.toString()); next.set('pageSize', value); next.set('page', '1'); replaceParams(next); }}><SelectTrigger aria-label="Rows per page"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="10">10</SelectItem><SelectItem value="20">20</SelectItem><SelectItem value="50">50</SelectItem><SelectItem value="100">100</SelectItem></SelectContent></Select>
+            </Label>
             <span>
               {listQuery.isPending
                 ? 'Loading entries…'
@@ -530,17 +509,17 @@ export default function EntriesPage() {
               <button className="dialog-close" type="button" onClick={() => setEditing(null)} disabled={updateMutation.isPending}>×</button>
             </div>
             <div className="grid three dialog-form-grid">
-              <div className="field"><label htmlFor="edit-entry-date">Business date</label><DatePicker id="edit-entry-date" value={editing.business_date} max={today} onChange={(value) => setEditing({ ...editing, business_date: value })} ariaLabel="Business date" />{editErrors.business_date && <small className="field-error">{editErrors.business_date}</small>}</div>
-              <div className="field"><label htmlFor="edit-entry-shift">Shift</label><select id="edit-entry-shift" value={editing.shift} onChange={(event) => setEditing({ ...editing, shift: event.target.value as MilkEntryShift })}><option value="MORNING">Morning</option><option value="EVENING">Evening</option></select></div>
-              <div className="field"><label htmlFor="edit-entry-customer">Customer</label><select id="edit-entry-customer" value={editing.customer_id} onChange={(event) => setEditing({ ...editing, customer_id: event.target.value })}><option value="">Select customer</option>{(customersQuery.data ?? []).map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>{editErrors.customer_id && <small className="field-error">{editErrors.customer_id}</small>}</div>
+              <div className="field"><Label htmlFor="edit-entry-date">Business date</Label><DatePicker id="edit-entry-date" value={editing.business_date} max={today} onChange={(value) => setEditing({ ...editing, business_date: value })} ariaLabel="Business date" />{editErrors.business_date && <small className="field-error">{editErrors.business_date}</small>}</div>
+              <div className="field"><Label htmlFor="edit-entry-shift">Shift</Label><Select value={editing.shift} onValueChange={(value) => setEditing({ ...editing, shift: value as MilkEntryShift })}><SelectTrigger id="edit-entry-shift"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="MORNING">Morning</SelectItem><SelectItem value="EVENING">Evening</SelectItem></SelectContent></Select></div>
+              <div className="field"><Label htmlFor="edit-entry-customer">Customer</Label><Select value={editing.customer_id || undefined} onValueChange={(value) => setEditing({ ...editing, customer_id: value })}><SelectTrigger id="edit-entry-customer"><SelectValue placeholder="Select customer" /></SelectTrigger><SelectContent>{(customersQuery.data ?? []).map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>{editErrors.customer_id && <small className="field-error">{editErrors.customer_id}</small>}</div>
             </div>
             <div className={`grid ${editing.pricing_type === 'FAT_BASED' ? 'three' : 'two'} dialog-form-grid`}>
-              <div className="field"><label htmlFor="edit-milk-quantity">Milk (L)</label><input id="edit-milk-quantity" type="number" min="0.001" step="0.001" value={editing.milk_quantity} onChange={(event) => setEditing({ ...editing, milk_quantity: event.target.value })} />{editErrors.milk_quantity && <small className="field-error">{editErrors.milk_quantity}</small>}</div>
-              {editing.pricing_type === 'FAT_BASED' && <div className="field"><label htmlFor="edit-milk-fat">Fat (%)</label><input id="edit-milk-fat" type="number" min="0" max="20" step="0.01" value={editing.fat} onChange={(event) => setEditing({ ...editing, fat: event.target.value })} />{editErrors.fat && <small className="field-error">{editErrors.fat}</small>}</div>}
-              <div className="field"><label htmlFor="edit-milk-rate">Applied rate · ₹</label><input id="edit-milk-rate" type="number" min="0.01" step="0.01" value={editing.applied_rate} onChange={(event) => setEditing({ ...editing, applied_rate: event.target.value })} />{editErrors.applied_rate && <small className="field-error">{editErrors.applied_rate}</small>}</div>
-              <div className="field"><label htmlFor="edit-pricing-type">Pricing type</label><select id="edit-pricing-type" value={editing.pricing_type} onChange={(event) => setEditing({ ...editing, pricing_type: event.target.value as PricingType, fat: '' })}><option value="FIXED_PER_LITRE">Fixed per litre</option><option value="FAT_BASED">Fat based</option></select></div>
+              <div className="field"><Label htmlFor="edit-milk-quantity">Milk (L)</Label><Input id="edit-milk-quantity" type="number" min="0.001" step="0.001" value={editing.milk_quantity} onChange={(event) => setEditing({ ...editing, milk_quantity: event.target.value })} />{editErrors.milk_quantity && <small className="field-error">{editErrors.milk_quantity}</small>}</div>
+              {editing.pricing_type === 'FAT_BASED' && <div className="field"><Label htmlFor="edit-milk-fat">Fat (%)</Label><Input id="edit-milk-fat" type="number" min="0" max="20" step="0.01" value={editing.fat} onChange={(event) => setEditing({ ...editing, fat: event.target.value })} />{editErrors.fat && <small className="field-error">{editErrors.fat}</small>}</div>}
+              <div className="field"><Label htmlFor="edit-milk-rate">Applied rate · ₹</Label><Input id="edit-milk-rate" type="number" min="0.01" step="0.01" value={editing.applied_rate} onChange={(event) => setEditing({ ...editing, applied_rate: event.target.value })} />{editErrors.applied_rate && <small className="field-error">{editErrors.applied_rate}</small>}</div>
+              <div className="field"><Label htmlFor="edit-pricing-type">Pricing type</Label><Select value={editing.pricing_type} onValueChange={(value) => setEditing({ ...editing, pricing_type: value as PricingType, fat: '' })}><SelectTrigger id="edit-pricing-type"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="FIXED_PER_LITRE">Fixed per litre</SelectItem><SelectItem value="FAT_BASED">Fat based</SelectItem></SelectContent></Select></div>
             </div>
-            <div className="field"><label htmlFor="edit-entry-notes">Notes (optional)</label><textarea id="edit-entry-notes" value={editing.notes} onChange={(event) => setEditing({ ...editing, notes: event.target.value })} rows={2} /></div>
+            <div className="field"><Label htmlFor="edit-entry-notes">Notes (optional)</Label><Textarea id="edit-entry-notes" value={editing.notes} onChange={(event) => setEditing({ ...editing, notes: event.target.value })} rows={2} /></div>
             {editDeliveryContextQuery.isError && <p className="field-error">{editDeliveryContextQuery.error.message}</p>}
             {!editDeliveryContextQuery.isError && !editDeliveryContextQuery.isPending && !editDeliveryContextQuery.data?.herdEntryExists && (
               <p className="auth-message" role="alert">Herd entry is required for {editing.business_date} · {editing.shift === 'MORNING' ? 'Morning' : 'Evening'} before this delivery can be saved.</p>
