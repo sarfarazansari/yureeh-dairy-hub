@@ -348,9 +348,11 @@ export default function EntriesPage() {
                 ['last-15-days', 'Last 15 Days'],
                 ['custom', 'Custom Range'],
               ] as const).map(([value, label]) => (
-                <button
+                <Button
                   key={value}
                   type="button"
+                  variant={range === value ? 'default' : 'outline'}
+                  size="sm"
                   className={range === value ? 'active' : ''}
                   aria-pressed={range === value}
                   onClick={() => selectPreset(value)}
