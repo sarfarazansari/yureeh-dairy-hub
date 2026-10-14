@@ -1,5 +1,7 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 
 import { useState } from 'react';
@@ -63,7 +65,7 @@ export function BuffaloSaleForm({ buffalo }: { buffalo: BuffaloDetail }) {
         <DispositionField label="Received now (₹)"><Input required type="number" min="0" step="0.01" value={initialPayment} onChange={(e) => setInitialPayment(e.target.value)} /></DispositionField>
         <DispositionField label="Outstanding"><div className="calculated-balance">{money(pending)}</div></DispositionField>
         {paid > 0 && <DispositionField label="Payment date"><DatePicker value={paymentDate} max={getDispositionToday()} onChange={setPaymentDate} ariaLabel="Payment date" /></DispositionField>}
-        {paid > 0 && <DispositionField label="Payment method"><select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as BuffaloPaymentMethod)}>{DISPOSITION_PAYMENT_METHODS.map((method) => <option key={method} value={method}>{method.replace('_', ' ')}</option>)}</select></DispositionField>}
+        {paid > 0 && <DispositionField label="Payment method"><Select value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as BuffaloPaymentMethod)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DISPOSITION_PAYMENT_METHODS.map((method) => <SelectItem key={method} value={method}>{method.replace('_', ' ')}</SelectItem>)}</SelectContent></Select></DispositionField>}
         {pending > 0 && <DispositionField label="Due date"><DatePicker value={dueDate} min={saleDate} onChange={setDueDate} ariaLabel="Due date" /></DispositionField>}
         {pending > 0 && <DispositionField label="Payment terms"><Input value={terms} onChange={(e) => setTerms(e.target.value)} /></DispositionField>}
         <DispositionField label="Transaction reference"><Input value={reference} onChange={(e) => setReference(e.target.value)} /></DispositionField>
