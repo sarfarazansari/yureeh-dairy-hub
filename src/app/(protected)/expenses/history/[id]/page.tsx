@@ -1,6 +1,8 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatDate, formatDateTime } from '@/lib/date-format';
@@ -150,12 +152,14 @@ export default function ExpenseDetail({ params }: { params: Promise<{ id: string
               {Number(row.pending_amount) > 0 ? (
                 <form className="expense-form-grid" onSubmit={recordPayment}>
                   <div className="field">
-                    <Label>Payment date</Label>
-                    <DatePicker value={paymentDate} max={todayLocal()} onChange={setPaymentDate} ariaLabel="Payment date" />
+                    <Label htmlFor="expense-payment-date">Payment date</Label>
+                    <DatePicker id="expense-payment-date" value={paymentDate} max={todayLocal()} onChange={setPaymentDate} ariaLabel="Payment date" />
+                    <p className="kpi-foot">Payment date must be today or earlier.</p>
                   </div>
                   <div className="field">
-                    <Label>Amount · pending {money(Number(row.pending_amount))}</Label>
+                    <Label htmlFor="expense-payment-amount">Amount · pending {money(Number(row.pending_amount))}</Label>
                     <Input
+                      id="expense-payment-amount"
                       type="number"
                       min="0.01"
                       max={Number(row.pending_amount)}
@@ -166,20 +170,20 @@ export default function ExpenseDetail({ params }: { params: Promise<{ id: string
                     />
                   </div>
                   <div className="field">
-                    <Label>Payment method</Label>
-                    <Select value={method} onValueChange={(value) => setMethod(value as (typeof PAYMENT_METHODS)[number])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{PAYMENT_METHODS.map((value) => <SelectItem key={value} value={value}>{value.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
+                    <Label htmlFor="expense-payment-method">Payment method</Label>
+                    <Select value={method} onValueChange={(value) => setMethod(value as (typeof PAYMENT_METHODS)[number])}><SelectTrigger id="expense-payment-method"><SelectValue /></SelectTrigger><SelectContent>{PAYMENT_METHODS.map((value) => <SelectItem key={value} value={value}>{value.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
                   </div>
                   <div className="field">
-                    <Label>Transaction reference (optional)</Label>
-                    <Input value={reference} onChange={(e) => setReference(e.target.value)} />
+                    <Label htmlFor="expense-payment-reference">Transaction reference (optional)</Label>
+                    <Input id="expense-payment-reference" value={reference} onChange={(e) => setReference(e.target.value)} />
                   </div>
                   <div className="field wide-field">
-                    <Label>Notes (optional)</Label>
-                    <Input value={notes} onChange={(e) => setNotes(e.target.value)} />
+                    <Label htmlFor="expense-payment-notes">Notes (optional)</Label>
+                    <Textarea id="expense-payment-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} />
                   </div>
-                  <button className="btn" disabled={saving}>
+                  <Button type="submit" disabled={saving}>
                     {saving ? 'Recording…' : 'Record payment'}
-                  </button>
+                  </Button>
                 </form>
               ) : (
                 <p className="kpi-foot">This expense is fully paid.</p>
