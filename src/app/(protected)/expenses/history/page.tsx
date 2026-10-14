@@ -452,7 +452,7 @@ export default function ExpenseHistory() {
               </div>
               <AlertDialogFooter>
                 <AlertDialogCancel disabled={deleteBusy} onClick={() => setPendingDelete(null)}>Cancel</AlertDialogCancel>
-                <AlertDialogAction asChild><Button type="button" variant="destructive" disabled={deleteBusy} onClick={(event) => { event.preventDefault(); void confirmDelete(); }}>{deleteBusy ? 'Deleting…' : 'Delete expense'}</Button></AlertDialogAction>
+                <AlertDialogAction asChild><AlertDialogAction asChild><Button type="button" variant="destructive" disabled={deleteBusy} onClick={(event) => { event.preventDefault(); void confirmDelete(); }}>{deleteBusy ? 'Deleting…' : 'Delete expense'}</Button></AlertDialogAction></AlertDialogAction>
               </AlertDialogFooter>
             </>
           )}
