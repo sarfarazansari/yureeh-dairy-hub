@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { useCallback, useEffect, useState } from 'react';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
 import { supabase } from '@/lib/supabase';
@@ -106,8 +106,7 @@ export default function FeedInventoryPage() {
         <div className="card">
           <div className="row"><h2 className="section-title">Filter movement history</h2><button className="date-chip" type="button" onClick={clearFilters}>Clear filters</button></div>
           <div className="expense-form-grid">
-            <div className="field"><Label>From date</Label><DatePicker clearable value={from} max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setFrom(value); setPage(0); }} ariaLabel="From date" /></div>
-            <div className="field"><Label>To date</Label><DatePicker clearable value={to} min={from || undefined} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setTo(value); setPage(0); }} ariaLabel="To date" /></div>
+            <div className="field"><Label>Date range</Label><DateRangePicker from={from} to={to} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); setPage(0); }} /></div>
             <div className="field"><Label>Feed item</Label><Select value={feedItemId || 'all'} onValueChange={(value) => { setFeedItemId(value === 'all' ? '' : value); setPage(0); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All feed items</SelectItem>{stock.map((row) => <SelectItem key={row.feed_item_id} value={row.feed_item_id}>{row.feed_item_name}</SelectItem>)}</SelectContent></Select></div>
             <div className="field"><Label>Movement type</Label><Select value={movementType || 'all'} onValueChange={(value) => { setMovementType(value === 'all' ? '' : value as FeedInventoryMovementType); setPage(0); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All movement types</SelectItem>{FEED_INVENTORY_MOVEMENT_TYPES.map((type) => <SelectItem key={type} value={type}>{movementLabel(type)}</SelectItem>)}</SelectContent></Select></div>
           </div>
