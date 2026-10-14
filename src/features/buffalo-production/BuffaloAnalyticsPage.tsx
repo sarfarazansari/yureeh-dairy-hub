@@ -5,6 +5,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
 import { useEffect, useState } from 'react';
@@ -160,18 +163,18 @@ export default function BuffaloAnalyticsPage() {
         <h2 className="section-title">Mixed milk fat history</h2>
         <p className="kpi-foot">Fat is recorded once for the combined milk for each date and shift.</p>
         <div className="table-wrap">
-          <table className="table">
-            <thead><tr><th>BUSINESS DATE</th><th>SHIFT</th><th>MIXED MILK FAT</th></tr></thead>
-            <tbody>
-              {fatRecords.map((record) => (
+          <Table>
+            <TableHeader><TableRow><TableHead>BUSINESS DATE</TableHead><TableHead>SHIFT</TableHead><TableHead>MIXED MILK FAT</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {busy ? Array.from({ length: 3 }, (_, index) => <TableRow key={index}><TableCell><Skeleton className="h-4 w-28" /></TableCell><TableCell><Skeleton className="h-4 w-20" /></TableCell><TableCell><Skeleton className="h-4 w-16" /></TableCell></TableRow>) : fatRecords.map((record) => (
                 <tr key={record.business_date + record.shift}>
-                  <td>{formatDate(record.business_date)}</td>
-                  <td>{record.shift === 'MORNING' ? 'Morning' : 'Evening'}</td>
-                  <td><b>{Number(record.fat_percentage).toFixed(2)}%</b></td>
-                </tr>
+                  <TableCell>{formatDate(record.business_date)}</TableCell>
+                  <TableCell>{record.shift === 'MORNING' ? 'Morning' : 'Evening'}</TableCell>
+                  <TableCell><b>{Number(record.fat_percentage).toFixed(2)}%</b></TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
         {!busy && !fatRecords.length && (
           <div className="empty">No mixed milk fat records in this date range. Change the date range or record fat from Daily performance.</div>
@@ -230,37 +233,37 @@ export default function BuffaloAnalyticsPage() {
           <Select value={sort} onValueChange={(value) => setSort(value as typeof sort)}><SelectTrigger aria-label="Sort buffalo comparison" className="date-chip"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="total">Total milk</SelectItem><SelectItem value="average">Average per recorded day</SelectItem><SelectItem value="morning">Morning average</SelectItem><SelectItem value="evening">Evening average</SelectItem></SelectContent></Select>
         </div>
         <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>BUFFALO</th>
-                <th>TOTAL MILK</th>
-                <th>AVG / RECORDED DAY</th>
-                <th>MORNING AVG</th>
-                <th>EVENING AVG</th>
-                <th>DAYS RECORDED</th>
-                <th>LAST ENTRY</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.map((animal) => (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>BUFFALO</TableHead>
+                <TableHead>TOTAL MILK</TableHead>
+                <TableHead>AVG / RECORDED DAY</TableHead>
+                <TableHead>MORNING AVG</TableHead>
+                <TableHead>EVENING AVG</TableHead>
+                <TableHead>DAYS RECORDED</TableHead>
+                <TableHead>LAST ENTRY</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {busy ? Array.from({ length: 4 }, (_, index) => <TableRow key={index}>{Array.from({ length: 7 }, (_, cell) => <TableCell key={cell}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : sorted.map((animal) => (
                 <tr key={animal.id}>
-                  <td>
+                  <TableCell>
                     <Link href={`/buffaloes/${encodeURIComponent(animal.buffalo_code)}`}>
                       <b>{animal.name || animal.buffalo_code}</b>
                     </Link>
                     <div className="kpi-foot">{animal.buffalo_code}</div>
-                  </td>
-                  <td>{animal.days ? milkTxt(animal.total) : '—'}</td>
-                  <td>{animal.average === null ? '—' : milkTxt(animal.average)}</td>
-                  <td>{animal.morning === null ? '—' : milkTxt(animal.morning)}</td>
-                  <td>{animal.evening === null ? '—' : milkTxt(animal.evening)}</td>
-                  <td>{animal.days}</td>
-                  <td>{animal.last ? formatDate(animal.last) : 'No record'}</td>
-                </tr>
+                  </TableCell>
+                  <TableCell>{animal.days ? milkTxt(animal.total) : '—'}</TableCell>
+                  <TableCell>{animal.average === null ? '—' : milkTxt(animal.average)}</TableCell>
+                  <TableCell>{animal.morning === null ? '—' : milkTxt(animal.morning)}</TableCell>
+                  <TableCell>{animal.evening === null ? '—' : milkTxt(animal.evening)}</TableCell>
+                  <TableCell>{animal.days}</TableCell>
+                  <TableCell>{animal.last ? formatDate(animal.last) : 'No record'}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
         {!busy && !herd.length && <div className="empty">No active buffaloes found.</div>}
         {!busy && herd.length && !records.length && (
