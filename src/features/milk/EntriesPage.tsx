@@ -356,7 +356,7 @@ export default function EntriesPage() {
                   onClick={() => selectPreset(value)}
                 >
                   {label}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
