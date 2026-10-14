@@ -1,5 +1,9 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+
 import { useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useRecordBuffaloDisposal } from '../hooks/use-buffaloes';
@@ -34,8 +38,8 @@ export function BuffaloDisposalForm({ buffalo }: { buffalo: BuffaloDetail }) {
       <div className="grid two">
         <DispositionField label="Disposal type"><select value={type} onChange={(e) => setType(e.target.value as typeof type)}><option value="DEATH">Death</option><option value="TRANSFER_OUT">Transfer out</option><option value="OTHER">Other</option></select></DispositionField>
         <DispositionField label="Effective date"><DatePicker value={date} max={getDispositionToday()} onChange={setDate} ariaLabel="Effective date" /></DispositionField>
-        <DispositionField label="Reason"><input required value={reason} onChange={(e) => setReason(e.target.value)} /></DispositionField>
-        <DispositionField label="Notes"><input value={notes} onChange={(e) => setNotes(e.target.value)} /></DispositionField>
+        <DispositionField label="Reason"><Input required value={reason} onChange={(e) => setReason(e.target.value)} /></DispositionField>
+        <DispositionField label="Notes"><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></DispositionField>
       </div>
       {(message || mutation.isError) && <p className="auth-message">{message || mutation.error?.message}</p>}
       <button className="btn" disabled={mutation.isPending}>{mutation.isPending ? 'Recording…' : 'Record disposal'}</button>
