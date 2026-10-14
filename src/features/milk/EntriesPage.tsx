@@ -389,8 +389,7 @@ export default function EntriesPage() {
           )}
         </div>
 
-        {range === 'custom' && <DateRangePicker from={from} to={to} max={today} onChange={({ from: nextFrom, to: nextTo }) => { const next = new URLSearchParams(searchParams.toString()); if (nextFrom) next.set('from', nextFrom); else next.delete('from'); if (nextTo) next.set('to', nextTo); else next.delete('to'); next.set('page', '1'); replaceParams(next); }} className="max-w-[22rem]" />}
-        )}
+        {range === 'custom' && <DateRangePicker from={from} to={to} max={today} onChange={({ from: nextFrom, to: nextTo }) => { const next = new URLSearchParams(searchParams.toString()); if (nextFrom) next.set('from', nextFrom); else next.delete('from'); if (nextTo) next.set('to', nextTo); else next.delete('to'); next.set('page', '1'); replaceParams(next); }} className="max-w-[22rem]"  />}
 
         {dateError && <p className="field-error">Choose a valid start and end date; the start must not be after the end.</p>}
         {customersQuery.isError && <p className="field-error">Customer options could not be loaded: {customersQuery.error.message}</p>}
