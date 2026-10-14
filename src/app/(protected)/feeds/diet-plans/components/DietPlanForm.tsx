@@ -116,7 +116,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
               value={values.endDate ?? ''}
               clearable
               disabled={busy}
-              onChange={(value) => setField('endDate', value)
+              onChange={(value) => setField('endDate', value)}
               ariaLabel="Diet plan end date"
             />
           )}
