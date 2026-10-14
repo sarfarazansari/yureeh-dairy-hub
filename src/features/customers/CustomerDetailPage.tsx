@@ -2,8 +2,6 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { localDateKey } from '@/lib/milk-entry-list';
@@ -202,9 +200,9 @@ export default function CustomerDetailPage({ id }: { id: string }) {
               <Input id="customer-payment-notes" value={paymentNotes} disabled={paymentMutation.isPending} onChange={(event) => setPaymentNotes(event.target.value)} placeholder="Optional payment note" />
             </div>
             {paymentMessage && <p className="success-message">{paymentMessage}</p>}
-            <Button type="submit" disabled={paymentMutation.isPending}>
+            <button className="btn" disabled={paymentMutation.isPending}>
               {paymentMutation.isPending ? 'Recording…' : outstanding > 0 ? 'Record payment' : 'Record advance'}
-            </Button>
+            </button>
           </form>
         </div>
       </div>
@@ -215,7 +213,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
         {paymentsQuery.isPending ? (
           <div className="empty">Loading payments…</div>
         ) : paymentsQuery.isError ? (
-          <div className="list-error" role="alert"><span>{paymentsQuery.error.message}</span><Button type="button" variant="outline" onClick={() => void paymentsQuery.refetch()}>Retry</Button></div>
+          <div className="empty">{paymentsQuery.error.message}</div>
         ) : payments.length ? (
           <div className="table-wrap">
             <table className="table">

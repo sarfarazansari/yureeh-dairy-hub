@@ -6,6 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { FormField } from '@/components/ui/form-field';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { useMemo, useState } from 'react';
@@ -373,7 +375,7 @@ export default function EntriesPage() {
                 placeholder="Customer name"
                 maxLength={100}
               />
-              <button type="button" className="date-chip" onClick={applySearch}>Search</button>
+              <Button type="button" variant="outline" onClick={applySearch}>Search</Button>
             </div>
           </div>
           <div className="field">
@@ -389,7 +391,7 @@ export default function EntriesPage() {
             <Select value={pricing || 'all'} onValueChange={(value) => setFilter('pricing', value === 'all' ? '' : value)}><SelectTrigger id="entries-pricing"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All models</SelectItem><SelectItem value="FIXED_PER_LITRE">Fixed per litre</SelectItem><SelectItem value="FAT_BASED">Fat based</SelectItem></SelectContent></Select>
           </div>
           {clearable && (
-            <button type="button" className="filter-reset" onClick={clearFilters}>Clear filters</button>
+            <Button type="button" variant="ghost" onClick={clearFilters}>Clear filters</Button>
           )}
         </div>
 
@@ -401,7 +403,7 @@ export default function EntriesPage() {
         {listQuery.isError && (
           <div className="list-error" role="alert">
             <span>Unable to load milk entries: {listQuery.error.message}</span>
-            <button type="button" className="btn secondary" onClick={() => void listQuery.refetch()}>Retry</button>
+            <Button type="button" variant="outline" onClick={() => void listQuery.refetch()}>Retry</Button>
           </div>
         )}
 
@@ -410,10 +412,10 @@ export default function EntriesPage() {
           <div className="milk-entry-summary-card"><span>Total sales amount</span><strong>{exportQuery.isPending ? 'Calculating…' : money(totalSalesAmount)}</strong></div>
           <div className="milk-entry-summary-card"><span>Matching entries</span><strong>{exportQuery.isPending ? '…' : allFilteredRows.length}</strong></div>
           <div className="milk-entry-summary-actions">
-            <button type="button" className="btn" onClick={downloadPdf} disabled={exportQuery.isPending || exportQuery.isError || !allFilteredRows.length}>
+            <Button type="button" onClick={downloadPdf} disabled={exportQuery.isPending || exportQuery.isError || !allFilteredRows.length}>
               {exportQuery.isPending ? 'Preparing…' : 'Export PDF'}
-            </button>
-            {exportQuery.isError && <button type="button" className="btn secondary" onClick={() => void exportQuery.refetch()}>Retry summary</button>}
+            </Button>
+            {exportQuery.isError && <Button type="button" variant="outline" onClick={() => void exportQuery.refetch()}>Retry summary</Button>}
           </div>
         </div>
         {exportQuery.isError && <p className="field-error">Summary and PDF data could not be loaded: {exportQuery.error.message}</p>}
@@ -441,8 +443,8 @@ export default function EntriesPage() {
                       <TableCell>{money(Number(row.applied_rate))}</TableCell>
                       <TableCell>{money(Number(row.calculated_amount))}</TableCell>
                       <TableCell>
-                        <button type="button" className="date-chip" onClick={() => openEdit(row)}>Edit</button>{' '}
-                        <button type="button" className="date-chip danger-text" onClick={() => setPendingDelete(row)}>Cancel</button>
+                        <Button variant="outline" size="sm" type="button" onClick={() => openEdit(row)}>Edit</Button>{' '}
+                        <Button variant="outline" size="sm" type="button" onClick={() => setPendingDelete(row)}>Cancel</Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -466,23 +468,25 @@ export default function EntriesPage() {
             </span>
             {pageCount > 1 && (
               <nav aria-label="Milk entry pages">
-                <button type="button" className="date-chip" disabled={page <= 1 || listQuery.isFetching} onClick={() => setFilter('page', String(page - 1))}>Previous</button>
+                <Button variant="outline" size="sm" type="button" disabled={page <= 1 || listQuery.isFetching} onClick={() => setFilter('page', String(page - 1))}>Previous</Button>
                 {compactMilkEntryPages(page, pageCount).map((value, index) =>
                   value === 'ellipsis' ? (
                     <span className="page-ellipsis" key={`ellipsis-${index}`}>…</span>
                   ) : (
-                    <button
+                    <Button
+                      variant={value === page ? 'default' : 'outline'}
+                      size="sm"
                       type="button"
                       key={value}
-                      className={`date-chip page-number ${value === page ? 'current' : ''}`}
+                      className={value === page ? 'current' : ''}
                       aria-current={value === page ? 'page' : undefined}
                       onClick={() => setFilter('page', String(value))}
                     >
                       {value}
-                    </button>
+                    </Button>
                   ),
                 )}
-                <button type="button" className="date-chip" disabled={page >= pageCount || listQuery.isFetching} onClick={() => setFilter('page', String(page + 1))}>Next</button>
+                <Button variant="outline" size="sm" type="button" disabled={page >= pageCount || listQuery.isFetching} onClick={() => setFilter('page', String(page + 1))}>Next</Button>
               </nav>
             )}
           </div>
@@ -499,7 +503,7 @@ export default function EntriesPage() {
                 <h2 className="dialog-title" id="edit-entry-title">Edit entry</h2>
                 <p className="dialog-description">{formatDate(editing.business_date)} · {editing.customers?.name ?? 'Customer'}</p>
               </div>
-              <button className="dialog-close" type="button" onClick={() => setEditing(null)} disabled={updateMutation.isPending}>×</button>
+              <Button variant="ghost" size="icon" type="button" onClick={() => setEditing(null)} disabled={updateMutation.isPending} aria-label="Close edit milk entry">×</Button>
             </div>
             <div className="grid three dialog-form-grid">
               <div className="field"><Label htmlFor="edit-entry-date">Business date</Label><DatePicker id="edit-entry-date" value={editing.business_date} max={today} onChange={(value) => setEditing({ ...editing, business_date: value })} ariaLabel="Business date" />{editErrors.business_date && <small className="field-error">{editErrors.business_date}</small>}</div>
@@ -528,7 +532,7 @@ export default function EntriesPage() {
             {editDuplicateQuery.data && <p className="field-error">Another milk entry already exists for this customer, date, and shift.</p>}
             {editErrors.form && <p className="field-error">{editErrors.form}</p>}
             <p className="kpi-foot edit-original">Original: {editing._original.milk_quantity} L · {editing._original.fat ?? 'no fat'} · {editing._original.pricing_type} · ₹{editing._original.applied_rate} · {money(editing._original.calculated_amount)}</p>
-            <div className="dialog-footer"><button type="button" className="btn secondary" onClick={() => setEditing(null)} disabled={updateMutation.isPending}>Cancel</button><button disabled={updateMutation.isPending} className="btn">{updateMutation.isPending ? 'Saving…' : 'Save changes'}</button></div>
+            <div className="dialog-footer"><Button type="button" variant="secondary" onClick={() => setEditing(null)} disabled={updateMutation.isPending}>Cancel</Button><Button type="submit" disabled={updateMutation.isPending}>{updateMutation.isPending ? 'Saving…' : 'Save changes'}</Button></div>
           </form>
         )}
       </Dialog>
@@ -538,10 +542,10 @@ export default function EntriesPage() {
           <>
             <div className="dialog-header">
               <div><h2 className="dialog-title" id="delete-entry-title">Cancel milk delivery?</h2><p className="dialog-description">The delivery will be cancelled, kept in audit history, and its active pool movement will be reversed.</p></div>
-              <button className="dialog-close" type="button" onClick={() => setPendingDelete(null)} disabled={deleteMutation.isPending}>×</button>
+              <Button variant="ghost" size="icon" type="button" onClick={() => setPendingDelete(null)} disabled={deleteMutation.isPending} aria-label="Close cancel delivery dialog">×</Button>
             </div>
             <div className="delete-summary"><b>{pendingDelete.customers?.name ?? 'Customer'}</b><span>{formatDate(pendingDelete.business_date)} · {pendingDelete.shift}</span><span>{milkTxt(Number(pendingDelete.milk_quantity))} · {money(Number(pendingDelete.calculated_amount))}</span></div>
-            <div className="dialog-footer"><button type="button" className="btn secondary" onClick={() => setPendingDelete(null)} disabled={deleteMutation.isPending}>Cancel</button><button type="button" className="btn destructive" onClick={() => void confirmDelete()} disabled={deleteMutation.isPending}>{deleteMutation.isPending ? 'Cancelling…' : 'Cancel delivery'}</button></div>
+            <div className="dialog-footer"><Button type="button" variant="secondary" onClick={() => setPendingDelete(null)} disabled={deleteMutation.isPending}>Keep entry</Button><Button type="button" variant="destructive" onClick={() => void confirmDelete()} disabled={deleteMutation.isPending}>{deleteMutation.isPending ? 'Cancelling…' : 'Cancel delivery'}</Button></div>
           </>
         )}
       </Dialog>
