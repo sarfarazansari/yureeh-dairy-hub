@@ -166,7 +166,7 @@ export default function BuffaloAnalyticsPage() {
             <TableHeader><TableRow><TableHead>BUSINESS DATE</TableHead><TableHead>SHIFT</TableHead><TableHead>MIXED MILK FAT</TableHead></TableRow></TableHeader>
             <TableBody>
               {busy ? Array.from({ length: 3 }, (_, index) => <TableRow key={index}><TableCell><Skeleton className="h-4 w-28" /></TableCell><TableCell><Skeleton className="h-4 w-20" /></TableCell><TableCell><Skeleton className="h-4 w-16" /></TableCell></TableRow>) : fatRecords.map((record) => (
-                <tr key={record.business_date + record.shift}>
+                <TableRow key={record.business_date + record.shift}>
                   <TableCell>{formatDate(record.business_date)}</TableCell>
                   <TableCell>{record.shift === 'MORNING' ? 'Morning' : 'Evening'}</TableCell>
                   <TableCell><b>{Number(record.fat_percentage).toFixed(2)}%</b></TableCell>
