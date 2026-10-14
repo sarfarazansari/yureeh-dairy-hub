@@ -4,7 +4,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
 
 import { useMemo, useRef, useState } from 'react';
 import { LoaderCircle } from 'lucide-react';
@@ -322,9 +321,9 @@ export default function NewEntryForm() {
           </div>
 
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-          <Button type="submit" disabled={createMutation.isPending || duplicateQuery.isPending || deliveryContextQuery.isPending || deliveryContextQuery.isError || !deliveryContextQuery.data?.herdEntryExists || !!duplicateQuery.data} aria-live="polite">
+          <button type="submit" disabled={createMutation.isPending || duplicateQuery.isPending || deliveryContextQuery.isPending || deliveryContextQuery.isError || !deliveryContextQuery.data?.herdEntryExists || !!duplicateQuery.data} className="btn" aria-live="polite">
             {createMutation.isPending ? <><LoaderCircle size={16} className="animate-spin" aria-hidden="true" /> Saving…</> : 'Save entry'}
-          </Button>
+          </button>
         </div>
 
         <div className="card">
