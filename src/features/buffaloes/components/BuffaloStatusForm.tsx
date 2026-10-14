@@ -1,5 +1,9 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+
 import { useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
 
@@ -68,7 +72,7 @@ export function BuffaloStatusForm({ buffalo }: { buffalo: BuffaloDetail }) {
       </div>
 
       <Field label="Reason / Notes">
-        <input
+        <Input
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Optional"
@@ -92,7 +96,7 @@ export function BuffaloStatusForm({ buffalo }: { buffalo: BuffaloDetail }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="field">
-      <label>{label}</label>
+      <Label>{label}</Label>
       {children}
     </div>
   );
