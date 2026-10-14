@@ -1,6 +1,10 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog as ShadcnDialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,7 +22,6 @@ import type {
   ExpenseRow,
   ExpenseVendor,
 } from '@/lib/expense-types';
-import { Dialog } from '@/app/dialog';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 export default function ExpenseHistory() {
   const [rows, setRows] = useState<ExpenseRow[]>([]),
@@ -187,8 +190,9 @@ export default function ExpenseHistory() {
       <div className="card">
         <div className="mb-4 max-w-md"><Label className="mb-2 block">Date range</Label><DateRangePicker from={from} to={to} max={todayLocal()} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); }} /></div>
           <div className="field">
-            <Label>Search</Label>
+            <Label htmlFor="expense-history-search">Search</Label>
             <Input
+              id="expense-history-search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Category, vendor, description"
@@ -227,52 +231,38 @@ export default function ExpenseHistory() {
             <Select value={sort} onValueChange={setSort}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="date">Date</SelectItem><SelectItem value="amount">Amount</SelectItem><SelectItem value="category">Category</SelectItem><SelectItem value="pending">Pending amount</SelectItem></SelectContent></Select>
           </div>
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-        <Dialog
-          open={!!editing}
-          onOpenChange={(open) => {
-            if (!open && !busy) setEditing(null);
-          }}
-          labelledBy="edit-expense-title"
-          className="expense-edit-dialog"
-        >
+        <ShadcnDialog open={!!editing} onOpenChange={(open) => { if (!open && !busy) setEditing(null); }}>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
           {editing && (
-            <form className="edit-box expense-edit-form" onSubmit={save}>
-              <div className="dialog-header">
+            <form className="expense-edit-form" onSubmit={save}>
+              <DialogHeader>
                 <div>
                   <p className="eyebrow">EXPENSE</p>
-                  <h2 className="dialog-title" id="edit-expense-title">
+                  <DialogTitle id="edit-expense-title">
                     Edit expense
-                  </h2>
-                  <p className="dialog-description">
+                  </DialogTitle>
+                  <DialogDescription>
                     {editing.category_name_snapshot} · {formatDate(editing.business_date)}
-                  </p>
+                  </DialogDescription>
                 </div>
-                <button
-                  className="dialog-close"
-                  type="button"
-                  aria-label="Close expense editor"
-                  disabled={busy}
-                  onClick={() => setEditing(null)}
-                >
-                  ×
-                </button>
-              </div>
+              </DialogHeader>
               <div className="expense-form-grid">
                 <div className="field">
-                  <Label>Date</Label>
-                  <DatePicker value={editing.business_date} max={todayLocal()} onChange={(value) => setEditing({ ...editing, business_date: value })} ariaLabel="Expense date" />
+                  <Label htmlFor="expense-edit-date">Date</Label>
+                  <DatePicker id="expense-edit-date" value={editing.business_date} max={todayLocal()} onChange={(value) => setEditing({ ...editing, business_date: value })} ariaLabel="Expense date" />
                 </div>
                 <div className="field">
-                  <Label>Category</Label>
-                  <Select value={editing.category_id} onValueChange={(value) => setEditing({ ...editing, category_id: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
+                  <Label htmlFor="expense-edit-category">Category</Label>
+                  <Select value={editing.category_id} onValueChange={(value) => setEditing({ ...editing, category_id: value })}><SelectTrigger id="expense-edit-category"><SelectValue /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
                 </div>
                 <div className="field">
-                  <Label>Vendor</Label>
-                  <Select value={editing.vendor_id || 'none'} onValueChange={(value) => setEditing({ ...editing, vendor_id: value === 'none' ? '' : value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">No vendor</SelectItem>{vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
+                  <Label htmlFor="expense-edit-vendor">Vendor</Label>
+                  <Select value={editing.vendor_id || 'none'} onValueChange={(value) => setEditing({ ...editing, vendor_id: value === 'none' ? '' : value })}><SelectTrigger id="expense-edit-vendor"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">No vendor</SelectItem>{vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
                 </div>
                 <div className="field">
-                  <Label>Quantity (blank for direct amount)</Label>
+                  <Label htmlFor="expense-edit-quantity">Quantity (blank for direct amount)</Label>
                   <Input
+                    id="expense-edit-quantity"
                     type="number"
                     min="0"
                     step="0.001"
@@ -281,15 +271,17 @@ export default function ExpenseHistory() {
                   />
                 </div>
                 <div className="field">
-                  <Label>Unit</Label>
+                  <Label htmlFor="expense-edit-unit">Unit</Label>
                   <Input
+                    id="expense-edit-unit"
                     value={editing.unit ?? ''}
                     onChange={(e) => setEditing({ ...editing, unit: e.target.value })}
                   />
                 </div>
                 <div className="field">
-                  <Label>Rate</Label>
+                  <Label htmlFor="expense-edit-rate">Rate</Label>
                   <Input
+                    id="expense-edit-rate"
                     type="number"
                     min="0"
                     step="0.0001"
@@ -298,8 +290,9 @@ export default function ExpenseHistory() {
                   />
                 </div>
                 <div className="field">
-                  <Label>Direct total (used if quantity/rate blank)</Label>
+                  <Label htmlFor="expense-edit-total">Direct total (used if quantity/rate blank)</Label>
                   <Input
+                    id="expense-edit-total"
                     type="number"
                     min="0.01"
                     step="0.01"
@@ -315,8 +308,9 @@ export default function ExpenseHistory() {
                   />
                 </div>
                 <div className="field">
-                  <Label>Paid amount</Label>
+                  <Label htmlFor="expense-edit-paid">Paid amount</Label>
                   <Input
+                    id="expense-edit-paid"
                     type="number"
                     min="0"
                     step="0.01"
@@ -325,48 +319,44 @@ export default function ExpenseHistory() {
                   />
                 </div>
                 <div className="field">
-                  <Label>Payment method</Label>
-                  <Select value={editing.payment_method ?? 'CASH'} onValueChange={(value) => setEditing({ ...editing, payment_method: value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{['CASH','UPI','BANK_TRANSFER','CARD','OTHER'].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent></Select>
+                  <Label htmlFor="expense-edit-method">Payment method</Label>
+                  <Select value={editing.payment_method ?? 'CASH'} onValueChange={(value) => setEditing({ ...editing, payment_method: value })}><SelectTrigger id="expense-edit-method"><SelectValue /></SelectTrigger><SelectContent>{['CASH','UPI','BANK_TRANSFER','CARD','OTHER'].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent></Select>
                 </div>
                 <div className="field">
-                  <Label>Due date</Label>
-                  <DatePicker value={editing.due_date ?? ''} min={editing.business_date} clearable onChange={(value) => setEditing({ ...editing, due_date: value })} ariaLabel="Due date" />
+                  <Label htmlFor="expense-edit-due">Due date</Label>
+                  <DatePicker id="expense-edit-due" value={editing.due_date ?? ''} min={editing.business_date} clearable onChange={(value) => setEditing({ ...editing, due_date: value })} ariaLabel="Due date" />
+                  <p className="kpi-foot">Due date cannot be before the business date.</p>
                 </div>
                 <div className="field">
-                  <Label>Buffalo</Label>
-                  <Select value={editing.buffalo_id || 'none'} onValueChange={(value) => setEditing({ ...editing, buffalo_id: value === 'none' ? '' : value })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Farm-wide</SelectItem>{buffaloes.map((b) => <SelectItem key={b.id} value={b.id}>{b.name || b.buffalo_code}</SelectItem>)}</SelectContent></Select>
+                  <Label htmlFor="expense-edit-buffalo">Buffalo</Label>
+                  <Select value={editing.buffalo_id || 'none'} onValueChange={(value) => setEditing({ ...editing, buffalo_id: value === 'none' ? '' : value })}><SelectTrigger id="expense-edit-buffalo"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Farm-wide</SelectItem>{buffaloes.map((b) => <SelectItem key={b.id} value={b.id}>{b.name || b.buffalo_code}</SelectItem>)}</SelectContent></Select>
                 </div>
                 <div className="field">
-                  <Label>Receipt / reference</Label>
+                  <Label htmlFor="expense-edit-receipt">Receipt / reference</Label>
                   <Input
+                    id="expense-edit-receipt"
                     value={editing.receipt_reference ?? ''}
                     onChange={(e) => setEditing({ ...editing, receipt_reference: e.target.value })}
                   />
                 </div>
                 <div className="field wide-field">
-                  <Label>Description / notes</Label>
-                  <Input
+                  <Label htmlFor="expense-edit-description">Description / notes</Label>
+                  <Textarea
+                    id="expense-edit-description"
+                    rows={3}
                     value={editing.description ?? ''}
                     onChange={(e) => setEditing({ ...editing, description: e.target.value })}
                   />
                 </div>
               </div>
-              <div className="dialog-footer">
-                <button
-                  type="button"
-                  className="btn secondary"
-                  disabled={busy}
-                  onClick={() => setEditing(null)}
-                >
-                  Cancel
-                </button>
-                <button disabled={busy} className="btn">
-                  {busy ? 'Saving…' : 'Save changes'}
-                </button>
-              </div>
+              <DialogFooter>
+                <Button type="button" variant="secondary" disabled={busy} onClick={() => setEditing(null)}>Cancel</Button>
+                <Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save changes'}</Button>
+              </DialogFooter>
             </form>
           )}
-        </Dialog>
+          </DialogContent>
+        </ShadcnDialog>
         <div className="table-wrap">
           <table className="table">
             <thead>
@@ -408,18 +398,20 @@ export default function ExpenseHistory() {
                     <Link className="date-chip" href={`/expenses/history/${r.id}`}>
                       View
                     </Link>{' '}
-                    <button
+                    <Button
                       type="button"
-                      className="date-chip"
+                      variant="outline"
+                      size="sm"
                       disabled={ledgerExpenseIds.has(r.id) || feedPurchaseExpenseIds.has(r.id)}
                       title={feedPurchaseExpenseIds.has(r.id) ? 'Managed by Feed Purchases. Use the Feed Purchases module.' : ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and is locked to preserve its ledger.' : undefined}
                       onClick={() => setEditing({ ...r })}
                     >
                       Edit
-                    </button>{' '}
-                    <button
+                    </Button>{' '}
+                    <Button
                       type="button"
-                      className="date-chip"
+                      variant="outline"
+                      size="sm"
                       disabled={ledgerExpenseIds.has(r.id) || feedPurchaseExpenseIds.has(r.id)}
                       title={feedPurchaseExpenseIds.has(r.id) ? 'Managed by Feed Purchases. Use the Feed Purchases module.' : ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and cannot be deleted.' : undefined}
                       onClick={() => setPendingDelete(r)}
@@ -436,35 +428,20 @@ export default function ExpenseHistory() {
         <p className="kpi-foot">
           Showing at most 1,000 most recent expenses. Feed-purchase expenses are managed in Feed Purchases; expenses with dated payment-ledger entries are locked to preserve reconciliation.
         </p>
-        <Dialog
-          open={!!pendingDelete}
-          onOpenChange={(open) => {
-            if (!open && !deleteBusy) setPendingDelete(null);
-          }}
-          labelledBy="delete-expense-title"
-          className="delete-dialog"
-        >
+        <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open && !deleteBusy) setPendingDelete(null); }}> 
+          <AlertDialogContent>
           {pendingDelete && (
             <>
-              <div className="dialog-header">
+              <AlertDialogHeader>
                 <div>
-                  <h2 className="dialog-title" id="delete-expense-title">
+                  <AlertDialogTitle id="delete-expense-title">
                     Delete expense?
-                  </h2>
-                  <p className="dialog-description">
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
                     This expense will be removed from active records and retained in audit history.
-                  </p>
+                  </AlertDialogDescription>
                 </div>
-                <button
-                  className="dialog-close"
-                  type="button"
-                  aria-label="Close delete dialog"
-                  disabled={deleteBusy}
-                  onClick={() => setPendingDelete(null)}
-                >
-                  ×
-                </button>
-              </div>
+              </AlertDialogHeader>
               <div className="delete-summary">
                 <b>{pendingDelete.category_name_snapshot}</b>
                 <span>{formatDate(pendingDelete.business_date)}</span>
@@ -473,27 +450,14 @@ export default function ExpenseHistory() {
                   {money(Number(pendingDelete.total_amount))}
                 </span>
               </div>
-              <div className="dialog-footer">
-                <button
-                  type="button"
-                  className="btn secondary"
-                  disabled={deleteBusy}
-                  onClick={() => setPendingDelete(null)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  className="btn destructive"
-                  disabled={deleteBusy}
-                  onClick={confirmDelete}
-                >
-                  {deleteBusy ? 'Deleting…' : 'Delete expense'}
-                </button>
-              </div>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={deleteBusy} onClick={() => setPendingDelete(null)}>Cancel</AlertDialogCancel>
+                <AlertDialogAction asChild><Button type="button" variant="destructive" disabled={deleteBusy} onClick={(event) => { event.preventDefault(); void confirmDelete(); }}>{deleteBusy ? 'Deleting…' : 'Delete expense'}</Button></AlertDialogAction>
+              </AlertDialogFooter>
             </>
           )}
-        </Dialog>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </ExpenseShell>
   );
