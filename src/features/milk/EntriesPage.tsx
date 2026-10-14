@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
-import { DatePicker } from '@/components/ui/date-picker';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { Dialog } from '@/app/dialog';
@@ -390,17 +390,7 @@ export default function EntriesPage() {
           )}
         </div>
 
-        {range === 'custom' && (
-          <div className="custom-date-range">
-            <div className="field">
-              <Label htmlFor="entries-from">From</Label>
-              <DatePicker clearable id="entries-from" value={from} max={to || today} onChange={(value) => setFilter('from', value)} ariaLabel="From date" />
-            </div>
-            <div className="field">
-              <Label htmlFor="entries-to">To</Label>
-              <DatePicker clearable id="entries-to" value={to} min={from} max={today} onChange={(value) => setFilter('to', value)} ariaLabel="To date" />
-            </div>
-          </div>
+        {range === 'custom' && <DateRangePicker from={from} to={to} max={today} onChange={({ from: nextFrom, to: nextTo }) => { const next = new URLSearchParams(searchParams.toString()); if (nextFrom) next.set('from', nextFrom); else next.delete('from'); if (nextTo) next.set('to', nextTo); else next.delete('to'); next.set('page', '1'); replaceParams(next); }} className="max-w-[22rem]" />}
         )}
 
         {dateError && <p className="field-error">Choose a valid start and end date; the start must not be after the end.</p>}
