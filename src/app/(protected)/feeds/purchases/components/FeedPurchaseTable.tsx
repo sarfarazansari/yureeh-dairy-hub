@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Dialog } from '@/app/dialog';
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { FeedPurchaseListRow } from '@/lib/feed-purchase-types';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type Props = {
   rows: FeedPurchaseListRow[];
@@ -42,40 +44,40 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
     <div className="card">
       <div className="row">
         <h2 className="section-title">Purchase history</h2>
-        <span className="tag">{count} records</span>
+        <Badge variant="secondary">{count} records</Badge>
       </div>
 
       <div className="table-wrap">
-        <table className="table">
-          <thead>
-            <tr>
-              <th>DATE</th>
-              <th>FEED</th>
-              <th>VENDOR</th>
-              <th>PURCHASE</th>
-              <th>INVENTORY</th>
-              <th>RATE</th>
-              <th>TOTAL</th>
-              <th>PAYMENT</th>
-              <th>ACTION</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="[&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
+          <TableHeader>
+            <TableRow>
+              <TableHead>DATE</TableHead>
+              <TableHead>FEED</TableHead>
+              <TableHead>VENDOR</TableHead>
+              <TableHead>PURCHASE</TableHead>
+              <TableHead>INVENTORY</TableHead>
+              <TableHead>RATE</TableHead>
+              <TableHead>TOTAL</TableHead>
+              <TableHead>PAYMENT</TableHead>
+              <TableHead>ACTION</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.map((row) => (
-              <tr key={row.id}>
-                <td>{row.business_date}</td>
-                <td><b>{row.feed_item_name}</b></td>
-                <td>{row.vendor_name ?? '—'}</td>
-                <td>{Number(row.purchase_quantity).toLocaleString('en-IN')} {row.purchase_unit}</td>
-                <td>{Number(row.base_quantity).toLocaleString('en-IN')} {row.base_unit}</td>
-                <td>{money(row.rate_per_purchase_unit)} / {row.purchase_unit}</td>
-                <td>{money(row.total_amount)}</td>
-                <td>
-                  <span className={'tag ' + (row.payment_status === 'PAID' ? '' : 'gold')}>
+              <TableRow key={row.id}>
+                <TableCell>{row.business_date}</TableCell>
+                <TableCell><b>{row.feed_item_name}</b></TableCell>
+                <TableCell>{row.vendor_name ?? '—'}</TableCell>
+                <TableCell>{Number(row.purchase_quantity).toLocaleString('en-IN')} {row.purchase_unit}</TableCell>
+                <TableCell>{Number(row.base_quantity).toLocaleString('en-IN')} {row.base_unit}</TableCell>
+                <TableCell>{money(row.rate_per_purchase_unit)} / {row.purchase_unit}</TableCell>
+                <TableCell>{money(row.total_amount)}</TableCell>
+                <TableCell>
+                  <Badge variant={row.payment_status === 'PAID' ? 'secondary' : 'outline'}>
                     {row.payment_status}
-                  </span>
-                </td>
-                <td>
+                  </Badge>
+                </TableCell>
+                <TableCell>
                   {row.can_edit_delete ? (
                     <div className="row" style={{ gap: 8 }}>
                       <Link className="date-chip" href={`/feeds/purchases/edit/${row.id}`}>
@@ -91,13 +93,13 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
                       </button>
                     </div>
                   ) : (
-                    <span className="tag">🔒 Locked</span>
+                    <Badge variant="muted">Locked</Badge>
                   )}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {!rows.length && <div className="empty">No feed purchases recorded yet.</div>}
@@ -114,64 +116,30 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
         </div>
       )}
 
-      <Dialog
+      <AlertDialog
         open={Boolean(deleteTarget)}
-        onOpenChange={(open) => {
-          if (!open && !deletingId) setDeleteTarget(null);
-        }}
-        labelledBy="feed-purchase-delete-title"
-        className="delete-dialog"
+        onOpenChange={(open) => { if (!open && !deletingId) setDeleteTarget(null); }}
       >
-        <div className="dialog-header">
-          <div>
-            <p className="eyebrow">FEED PURCHASE</p>
-            <h2 id="feed-purchase-delete-title" className="dialog-title">Delete purchase?</h2>
-            <p className="dialog-description">
-              This will remove the purchase from the active archive and reverse its stock-in movement.
-            </p>
-          </div>
-          <button
-            type="button"
-            className="dialog-close"
-            onClick={() => setDeleteTarget(null)}
-            disabled={Boolean(deletingId)}
-            aria-label="Close delete dialog"
-          >
-            ×
-          </button>
-        </div>
-
-        {deleteTarget && (
-          <div className="delete-summary">
-            <span>Feed item</span>
-            <b>{deleteTarget.feed_item_name}</b>
-            <span>
-              {Number(deleteTarget.purchase_quantity).toLocaleString('en-IN')} {deleteTarget.purchase_unit}
-              {' · '}
-              {money(deleteTarget.total_amount)}
-            </span>
-          </div>
-        )}
-
-        <div className="dialog-footer">
-          <button
-            type="button"
-            className="btn secondary"
-            onClick={() => setDeleteTarget(null)}
-            disabled={Boolean(deletingId)}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className="btn destructive"
-            onClick={() => void confirmDelete()}
-            disabled={Boolean(deletingId)}
-          >
-            {deletingId ? 'Deleting…' : 'Delete purchase'}
-          </button>
-        </div>
-      </Dialog>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete feed purchase?</AlertDialogTitle>
+            <AlertDialogDescription>This will remove the purchase from the active archive and reverse its stock-in movement.</AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteTarget && (
+            <div className="delete-summary">
+              <span>Feed item</span>
+              <b>{deleteTarget.feed_item_name}</b>
+              <span>{Number(deleteTarget.purchase_quantity).toLocaleString('en-IN')} {deleteTarget.purchase_unit} · {money(deleteTarget.total_amount)}</span>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={Boolean(deletingId)} onClick={() => setDeleteTarget(null)}>Cancel</AlertDialogCancel>
+            <button type="button" className="btn destructive" onClick={() => void confirmDelete()} disabled={Boolean(deletingId)}>
+              {deletingId ? 'Deleting…' : 'Delete feed purchase'}
+            </button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

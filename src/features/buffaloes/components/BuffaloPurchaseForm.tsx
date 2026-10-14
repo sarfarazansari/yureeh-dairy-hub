@@ -1,5 +1,11 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+
 import { useState } from 'react';
 
 import { DatePicker } from '@/components/ui/date-picker';
@@ -80,7 +86,7 @@ export function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Purchase Price · ₹">
-          <input
+          <Input
             type="number"
             min="0.01"
             step="0.01"
@@ -90,16 +96,11 @@ export function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Payment Method">
-          <select value={method} onChange={(event) => setMethod(event.target.value)}>
-            <option value="">Not specified</option>
-            {PAYMENT_METHODS.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
+          <Select value={method || 'none'} onValueChange={(value) => setMethod(value === 'none' ? '' : value)}><SelectTrigger><SelectValue placeholder="Not specified" /></SelectTrigger><SelectContent><SelectItem value="none">Not specified</SelectItem>{PAYMENT_METHODS.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
         </Field>
 
         <Field label="Transaction Reference">
-          <input
+          <Input
             value={reference}
             onChange={(event) => setReference(event.target.value)}
           />
@@ -110,7 +111,7 @@ export function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Udhaar Terms">
-          <input
+          <Input
             value={terms}
             disabled={!hasBalance}
             onChange={(event) => setTerms(event.target.value)}
@@ -120,7 +121,7 @@ export function BuffaloPurchaseForm({
       </div>
 
       <Field label="Purchase Notes">
-        <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />
+        <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />
       </Field>
 
       {paid > price && (
@@ -148,7 +149,7 @@ export function BuffaloPurchaseForm({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="field">
-      <label>{label}</label>
+      <Label>{label}</Label>
       {children}
     </div>
   );

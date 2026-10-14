@@ -1,8 +1,11 @@
 'use client';
 
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
-import { DatePicker } from '@/components/ui/date-picker';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
 import { supabase } from '@/lib/supabase';
@@ -66,9 +69,8 @@ export default function FeedConsumptionPage() {
             <Link className="btn" href="/feeds/consumption/new">New consumption</Link>
           </div>
           <div className="expense-form-grid">
-            <div className="field"><label>From</label><DatePicker clearable value={from} max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setFrom(value); setPage(0); }} ariaLabel="From date" /></div>
-            <div className="field"><label>To</label><DatePicker clearable value={to} min={from} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setTo(value); setPage(0); }} ariaLabel="To date" /></div>
-            <div className="field"><label>Feed</label><select value={feedFilter} onChange={(e) => { setFeedFilter(e.target.value); setPage(0); }}><option value="">All feeds</option>{feedItems.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></div>
+            <div className="field max-w-md"><Label className="mb-2 block">Date range</Label><DateRangePicker from={from} to={to} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); setPage(0); }} /></div>
+            <div className="field"><Label>Feed</Label><Select value={feedFilter || 'all'} onValueChange={(value) => { setFeedFilter(value === 'all' ? '' : value); setPage(0); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All feeds</SelectItem>{feedItems.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select></div>
             <div className="field" style={{ alignSelf: 'end' }}><button type="button" className="date-chip" onClick={clearFilters}>Clear filters</button></div>
           </div>
         </div>

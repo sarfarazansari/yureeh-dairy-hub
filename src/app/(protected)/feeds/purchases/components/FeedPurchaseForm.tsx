@@ -1,5 +1,10 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { todayLocal } from '../../../expenses/shared';
@@ -107,50 +112,30 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
 
       <div className="expense-form-grid">
         <div className="field">
-          <label>Purchase date</label>
+          <Label>Purchase date</Label>
           <DatePicker value={values.businessDate} max={todayLocal()} onChange={(value) => update('businessDate', value)} ariaLabel="Purchase date" />
           {errors.businessDate && <span className="auth-message">{errors.businessDate}</span>}
         </div>
 
         <div className="field">
-          <label>Feed item</label>
-          <select
-            value={values.feedItemId}
-            onChange={(e) => update('feedItemId', e.target.value)}
-          >
-            <option value="">Select feed item</option>
-            {feedItems.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
+          <Label>Feed item</Label>
+          <Select value={values.feedItemId || undefined} onValueChange={(value) => update('feedItemId', value)}><SelectTrigger><SelectValue placeholder="Select feed item" /></SelectTrigger><SelectContent>{feedItems.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>
           {errors.feedItemId && <span className="auth-message">{errors.feedItemId}</span>}
         </div>
 
         <div className="field">
-          <label>Vendor</label>
-          <select
-            value={values.vendorId}
-            onChange={(e) => update('vendorId', e.target.value)}
-          >
-            <option value="">Select vendor</option>
-            {vendors.map((vendor) => (
-              <option key={vendor.id} value={vendor.id}>
-                {vendor.name}
-              </option>
-            ))}
-          </select>
+          <Label>Vendor</Label>
+          <Select value={values.vendorId || undefined} onValueChange={(value) => update('vendorId', value === 'none' ? '' : value)}><SelectTrigger><SelectValue placeholder="No vendor" /></SelectTrigger><SelectContent><SelectItem value="none">No vendor</SelectItem>{vendors.map((vendor) => <SelectItem key={vendor.id} value={vendor.id}>{vendor.name}</SelectItem>)}</SelectContent></Select>
         </div>
 
         <div className="field">
-          <label>Purchase unit</label>
-          <input value={feed?.purchase_unit ?? '—'} readOnly />
+          <Label>Purchase unit</Label>
+          <Input value={feed?.purchase_unit ?? '—'} readOnly />
         </div>
 
         <div className="field">
-          <label>Quantity</label>
-          <input
+          <Label>Quantity</Label>
+          <Input
             type="number"
             min="0.001"
             step="0.001"
@@ -164,8 +149,8 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
         </div>
 
         <div className="field">
-          <label>Rate per purchase unit (₹)</label>
-          <input
+          <Label>Rate per purchase unit (₹)</Label>
+          <Input
             type="number"
             min="0.01"
             step="0.01"
@@ -177,25 +162,13 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
         </div>
 
         <div className="field">
-          <label>Payment status</label>
-          <select
-            value={values.paymentStatus}
-            onChange={(e) =>
-              update(
-                'paymentStatus',
-                e.target.value as FeedPurchaseFormValues['paymentStatus'],
-              )
-            }
-          >
-            <option value="PAID">Paid</option>
-            <option value="PARTIAL">Partial</option>
-            <option value="CREDIT">Credit</option>
-          </select>
+          <Label>Payment status</Label>
+          <Select value={values.paymentStatus} onValueChange={(value) => update('paymentStatus', value as FeedPurchaseFormValues['paymentStatus'])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="PAID">Paid</SelectItem><SelectItem value="PARTIAL">Partial</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select>
         </div>
 
         <div className="field">
-          <label>Paid amount (₹)</label>
-          <input
+          <Label>Paid amount (₹)</Label>
+          <Input
             type="number"
             min="0"
             step="0.01"
@@ -208,30 +181,21 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
 
         {values.paymentStatus !== 'CREDIT' && (
           <div className="field">
-            <label>Payment method</label>
-            <select
-              value={values.paymentMethod}
-              onChange={(e) => update('paymentMethod', e.target.value)}
-            >
-              <option value="CASH">Cash</option>
-              <option value="UPI">UPI</option>
-              <option value="BANK_TRANSFER">Bank transfer</option>
-              <option value="CARD">Card</option>
-              <option value="OTHER">Other</option>
-            </select>
+            <Label>Payment method</Label>
+            <Select value={values.paymentMethod} onValueChange={(value) => update('paymentMethod', value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="CASH">Cash</SelectItem><SelectItem value="UPI">UPI</SelectItem><SelectItem value="BANK_TRANSFER">Bank transfer</SelectItem><SelectItem value="CARD">Card</SelectItem><SelectItem value="OTHER">Other</SelectItem></SelectContent></Select>
           </div>
         )}
 
         {values.paymentStatus !== 'PAID' && (
           <div className="field">
-            <label>Due date</label>
+            <Label>Due date</Label>
             <DatePicker value={values.dueDate || ""} min={values.businessDate} clearable onChange={(value) => update('dueDate', value)} ariaLabel="Due date" />
           </div>
         )}
 
         <div className="field wide-field">
-          <label>Notes</label>
-          <input
+          <Label>Notes</Label>
+          <Input
             value={values.notes}
             onChange={(e) => update('notes', e.target.value)}
             placeholder="Optional"

@@ -1,5 +1,8 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
@@ -108,12 +111,12 @@ export default function DietPlanSchedulePage() {
           <form onSubmit={saveSchedule}>
             <div className="expense-form-grid">
               <div className="field">
-                <label htmlFor="diet-morning-time">Morning feeding time</label>
-                <input id="diet-morning-time" type="time" required value={morningTime} onChange={(event) => setMorningTime(event.target.value)} />
+                <Label htmlFor="diet-morning-time">Morning feeding time</Label>
+                <Input id="diet-morning-time" type="time" required value={morningTime} onChange={(event) => setMorningTime(event.target.value)} />
               </div>
               <div className="field">
-                <label htmlFor="diet-evening-time">Evening feeding time</label>
-                <input id="diet-evening-time" type="time" required value={eveningTime} onChange={(event) => setEveningTime(event.target.value)} />
+                <Label htmlFor="diet-evening-time">Evening feeding time</Label>
+                <Input id="diet-evening-time" type="time" required value={eveningTime} onChange={(event) => setEveningTime(event.target.value)} />
               </div>
             </div>
             <div className="row" style={{ marginTop: 16, justifyContent: 'flex-end' }}>

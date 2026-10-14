@@ -1,5 +1,8 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
 import { useState } from 'react';
 
 import { useUpdateBuffaloProfile } from '../hooks/use-buffaloes';
@@ -60,30 +63,30 @@ export function BuffaloProfileForm({
 
       <div className="grid two">
         <Field label="Buffalo Code">
-          <input value={code} onChange={(event) => setCode(event.target.value)} />
+          <Input value={code} onChange={(event) => setCode(event.target.value)} />
         </Field>
 
         <Field label="Name">
-          <input value={name} onChange={(event) => setName(event.target.value)} />
+          <Input value={name} onChange={(event) => setName(event.target.value)} />
         </Field>
 
         <Field label="Breed">
-          <input value={breed} onChange={(event) => setBreed(event.target.value)} />
+          <Input value={breed} onChange={(event) => setBreed(event.target.value)} />
         </Field>
 
         <Field label="Color">
-          <input value={color} onChange={(event) => setColor(event.target.value)} />
+          <Input value={color} onChange={(event) => setColor(event.target.value)} />
         </Field>
 
         <Field label="Identification Mark">
-          <input
+          <Input
             value={identificationMark}
             onChange={(event) => setIdentificationMark(event.target.value)}
           />
         </Field>
 
         <Field label="Age at Purchase · Months">
-          <input
+          <Input
             type="number"
             min="0"
             step="1"
@@ -94,7 +97,7 @@ export function BuffaloProfileForm({
       </div>
 
       <Field label="Notes">
-        <input value={notes} onChange={(event) => setNotes(event.target.value)} />
+        <Input value={notes} onChange={(event) => setNotes(event.target.value)} />
       </Field>
 
       {mutation.isError && <p className="auth-message">{mutation.error.message}</p>}
@@ -112,7 +115,7 @@ export function BuffaloProfileForm({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="field">
-      <label>{label}</label>
+      <Label>{label}</Label>
       {children}
     </div>
   );

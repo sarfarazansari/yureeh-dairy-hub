@@ -1,5 +1,10 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+
 import { useState } from 'react';
 
 import { DatePicker } from '@/components/ui/date-picker';
@@ -60,7 +65,7 @@ export function BuffaloPurchasePaymentForm({ buffalo }: { buffalo: BuffaloDetail
         </Field>
 
         <Field label="Amount · ₹">
-          <input
+          <Input
             type="number"
             min="0.01"
             step="0.01"
@@ -70,20 +75,11 @@ export function BuffaloPurchasePaymentForm({ buffalo }: { buffalo: BuffaloDetail
         </Field>
 
         <Field label="Method">
-          <select
-            value={method}
-            onChange={(event) =>
-              setMethod(event.target.value as (typeof PAYMENT_METHODS)[number])
-            }
-          >
-            {PAYMENT_METHODS.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
+          <Select value={method} onValueChange={(value) => setMethod(value as (typeof PAYMENT_METHODS)[number])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{PAYMENT_METHODS.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
         </Field>
 
         <Field label="Reference">
-          <input
+          <Input
             value={reference}
             onChange={(event) => setReference(event.target.value)}
             placeholder="Optional transaction reference"
@@ -92,7 +88,7 @@ export function BuffaloPurchasePaymentForm({ buffalo }: { buffalo: BuffaloDetail
       </div>
 
       <Field label="Notes">
-        <input
+        <Input
           value={notes}
           onChange={(event) => setNotes(event.target.value)}
           placeholder="Optional"
@@ -116,7 +112,7 @@ export function BuffaloPurchasePaymentForm({ buffalo }: { buffalo: BuffaloDetail
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="field">
-      <label>{label}</label>
+      <Label>{label}</Label>
       {children}
     </div>
   );

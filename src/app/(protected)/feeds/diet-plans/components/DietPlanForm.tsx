@@ -1,5 +1,12 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
 import type { DietBuffaloOption, DietPlanFormValues } from '@/lib/diet-plan-types';
@@ -80,29 +87,27 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
       <h2 className="section-title">Plan details</h2>
       <div className="expense-form-grid">
         <div className="field">
-          <label htmlFor="diet-plan-name">Plan name</label>
-          <input id="diet-plan-name" value={values.name} maxLength={120} onChange={(e) => setField('name', e.target.value)} />
+          <Label htmlFor="diet-plan-name">Plan name</Label>
+          <Input id="diet-plan-name" value={values.name} maxLength={120} onChange={(e) => setField('name', e.target.value)} />
           {errors.name && <span className="auth-message">{errors.name}</span>}
         </div>
         <div className="field">
-          <label htmlFor="diet-plan-status">Status</label>
-          <select id="diet-plan-status" value={values.status} onChange={(e) => setField('status', e.target.value as DietPlanFormValues['status'])}>
-            <option value="ACTIVE">Active</option><option value="PAUSED">Paused</option><option value="STOPPED">Stopped</option>
-          </select>
+          <Label htmlFor="diet-plan-status">Status</Label>
+          <Select value={values.status} onValueChange={(value) => setField('status', value as DietPlanFormValues['status'])}><SelectTrigger id="diet-plan-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ACTIVE">Active</SelectItem><SelectItem value="PAUSED">Paused</SelectItem><SelectItem value="STOPPED">Stopped</SelectItem></SelectContent></Select>
         </div>
         <div className="field">
-          <label htmlFor="diet-plan-start">Start date</label>
+          <Label htmlFor="diet-plan-start">Start date</Label>
           <DatePicker id="diet-plan-start" value={values.startDate} onChange={(value) => { setField('startDate', value); setField('buffaloIds', []); }} ariaLabel="Diet plan start date" />
           {errors.startDate && <span className="auth-message">{errors.startDate}</span>}
         </div>
         <div className="field">
-          <label htmlFor="diet-plan-end">End date (optional)</label>
+          <Label htmlFor="diet-plan-end">End date (optional)</Label>
           <DatePicker id="diet-plan-end" min={values.startDate} value={values.endDate ?? ''} clearable onChange={(value) => setField('endDate', value)} ariaLabel="Diet plan end date" />
           {errors.endDate && <span className="auth-message">{errors.endDate}</span>}
         </div>
         <div className="field" style={{ gridColumn: '1 / -1' }}>
-          <label htmlFor="diet-plan-notes">Notes</label>
-          <textarea id="diet-plan-notes" rows={2} maxLength={1000} value={values.notes ?? ''} onChange={(e) => setField('notes', e.target.value)} />
+          <Label htmlFor="diet-plan-notes">Notes</Label>
+          <Textarea id="diet-plan-notes" rows={2} maxLength={1000} value={values.notes ?? ''} onChange={(e) => setField('notes', e.target.value)} />
         </div>
       </div>
 
@@ -113,10 +118,10 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
       <p className="sub">Only buffaloes active on the plan start date are listed. Feed quantities below are totals for this entire group, not per buffalo.</p>
       <div className="management-stack" style={{ gap: 8, marginTop: 12 }}>
         {buffaloes.map((buffalo) => (
-          <label key={buffalo.id} className="row" style={{ justifyContent: 'flex-start', gap: 10, padding: '8px 0' }}>
-            <input type="checkbox" checked={values.buffaloIds.includes(buffalo.id)} onChange={(e) => setField('buffaloIds', e.target.checked ? [...values.buffaloIds, buffalo.id] : values.buffaloIds.filter((id) => id !== buffalo.id))} />
+          <Label key={buffalo.id} className="row" style={{ justifyContent: 'flex-start', gap: 10, padding: '8px 0' }}>
+            <Checkbox checked={values.buffaloIds.includes(buffalo.id)} onCheckedChange={(checked) => setField('buffaloIds', checked === true ? [...values.buffaloIds, buffalo.id] : values.buffaloIds.filter((id) => id !== buffalo.id))} />
             <span><b>{buffalo.buffalo_code}</b>{buffalo.name ? ` · ${buffalo.name}` : ''}</span>
-          </label>
+          </Label>
         ))}
         {!buffaloes.length && <div className="empty">No eligible buffaloes found for this start date.</div>}
       </div>
@@ -134,20 +139,17 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
             <div className="card" key={index} style={{ padding: 14 }}>
               <div className="expense-form-grid">
                 <div className="field">
-                  <label>Feed item</label>
-                  <select value={item.feedItemId} onChange={(e) => updateItem(index, 'feedItemId', e.target.value)}>
-                    <option value="">Select feed</option>
-                    {feeds.map((candidate) => <option key={candidate.id} value={candidate.id} disabled={selectedFeedIds.has(candidate.id) && candidate.id !== item.feedItemId}>{candidate.name}</option>)}
-                  </select>
+                  <Label>Feed item</Label>
+                  <Select value={item.feedItemId || undefined} onValueChange={(value) => updateItem(index, 'feedItemId', value)}><SelectTrigger><SelectValue placeholder="Select feed" /></SelectTrigger><SelectContent>{feeds.map((candidate) => <SelectItem key={candidate.id} value={candidate.id} disabled={selectedFeedIds.has(candidate.id) && candidate.id !== item.feedItemId}>{candidate.name}</SelectItem>)}</SelectContent></Select>
                   {feed && <span className="sub">Unit: {feed.base_unit}</span>}
                 </div>
                 <div className="field">
-                  <label>Morning total ({feed?.base_unit ?? 'unit'})</label>
-                  <input type="number" min="0" step="0.001" value={item.morningQuantity} onChange={(e) => updateItem(index, 'morningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
+                  <Label>Morning total ({feed?.base_unit ?? 'unit'})</Label>
+                  <Input type="number" min="0" step="0.001" value={item.morningQuantity} onChange={(e) => updateItem(index, 'morningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
                 </div>
                 <div className="field">
-                  <label>Evening total ({feed?.base_unit ?? 'unit'})</label>
-                  <input type="number" min="0" step="0.001" value={item.eveningQuantity} onChange={(e) => updateItem(index, 'eveningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
+                  <Label>Evening total ({feed?.base_unit ?? 'unit'})</Label>
+                  <Input type="number" min="0" step="0.001" value={item.eveningQuantity} onChange={(e) => updateItem(index, 'eveningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
                 </div>
                 <div className="field" style={{ alignSelf: 'end' }}>
                   <button type="button" className="date-chip" disabled={values.items.length === 1} onClick={() => setField('items', values.items.filter((_, itemIndex) => itemIndex !== index))}>Remove</button>

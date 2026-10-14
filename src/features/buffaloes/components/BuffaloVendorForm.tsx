@@ -1,5 +1,9 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+
 import { useState } from 'react';
 
 import { useUpdateBuffaloVendor } from '../hooks/use-buffaloes';
@@ -47,31 +51,31 @@ export function BuffaloVendorForm({
 
       <div className="grid two">
         <Field label="Vendor Name">
-          <input value={name} onChange={(event) => setName(event.target.value)} />
+          <Input value={name} onChange={(event) => setName(event.target.value)} />
         </Field>
 
         <Field label="Mobile">
-          <input value={mobile} onChange={(event) => setMobile(event.target.value)} />
+          <Input value={mobile} onChange={(event) => setMobile(event.target.value)} />
         </Field>
 
         <Field label="Village / City">
-          <input
+          <Input
             value={villageCity}
             onChange={(event) => setVillageCity(event.target.value)}
           />
         </Field>
 
         <Field label="State">
-          <input value={state} onChange={(event) => setState(event.target.value)} />
+          <Input value={state} onChange={(event) => setState(event.target.value)} />
         </Field>
       </div>
 
       <Field label="Address">
-        <textarea value={address} onChange={(event) => setAddress(event.target.value)} rows={2} />
+        <Textarea value={address} onChange={(event) => setAddress(event.target.value)} rows={2} />
       </Field>
 
       <Field label="Vendor Notes">
-        <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={2} />
+        <Textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={2} />
       </Field>
 
       {mutation.isError && <p className="auth-message">{mutation.error.message}</p>}
@@ -94,7 +98,7 @@ export function BuffaloVendorForm({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="field">
-      <label>{label}</label>
+      <Label>{label}</Label>
       {children}
     </div>
   );

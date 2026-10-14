@@ -1,5 +1,9 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { useMemo, useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -156,33 +160,26 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }
           saveMutation.mutate();
         }}
       >
-        <label className="field">
+        <Label className="field">
           <span>Linked buffalo expense</span>
-          <select value={expenseId} onChange={(event) => setExpenseId(event.target.value)} required>
-            <option value="">Choose an expense</option>
-            {availableExpenses.map((expense) => (
-              <option key={expense.id} value={expense.id}>
-                {expense.business_date} · {expense.description || 'Expense'} · {money(Number(expense.total_amount))}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
+          <Select value={expenseId || undefined} onValueChange={setExpenseId} required><SelectTrigger><SelectValue placeholder="Choose an expense" /></SelectTrigger><SelectContent>{availableExpenses.map((expense) => <SelectItem key={expense.id} value={expense.id}>{expense.business_date} · {expense.description || 'Expense'} · {money(Number(expense.total_amount))}</SelectItem>)}</SelectContent></Select>
+        </Label>
+        <Label className="field">
           <span>Cost date</span>
           <DatePicker value={costDate} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={setCostDate} ariaLabel="Cost date" />
-        </label>
-        <label className="field">
+        </Label>
+        <Label className="field">
           <span>Capitalized amount (₹)</span>
-          <input type="number" min="0.01" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} required />
-        </label>
-        <label className="field">
+          <Input type="number" min="0.01" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} required />
+        </Label>
+        <Label className="field">
           <span>Description</span>
-          <input value={description} onChange={(event) => setDescription(event.target.value)} maxLength={200} required />
-        </label>
-        <label className="field">
+          <Input value={description} onChange={(event) => setDescription(event.target.value)} maxLength={200} required />
+        </Label>
+        <Label className="field">
           <span>Notes (optional)</span>
-          <input value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={500} />
-        </label>
+          <Input value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={500} />
+        </Label>
         <div className="field">
           <span>&nbsp;</span>
           <button className="btn primary" type="submit" disabled={saveMutation.isPending || !availableExpenses.length}>
