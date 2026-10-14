@@ -246,7 +246,7 @@ export default function BuffaloAnalyticsPage() {
             </TableHeader>
             <TableBody>
               {busy ? Array.from({ length: 4 }, (_, index) => <TableRow key={index}>{Array.from({ length: 7 }, (_, cell) => <TableCell key={cell}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : sorted.map((animal) => (
-                <tr key={animal.id}>
+                <TableRow key={animal.id}>
                   <TableCell>
                     <Link href={`/buffaloes/${encodeURIComponent(animal.buffalo_code)}`}>
                       <b>{animal.name || animal.buffalo_code}</b>
