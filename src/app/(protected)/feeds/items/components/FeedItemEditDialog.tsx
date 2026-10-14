@@ -3,6 +3,9 @@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { Dialog } from '@/app/dialog';
 
 import { useEffect, useState } from 'react';
 import { TimedNotice } from '@/components/ui/TimedNotice';
@@ -46,25 +49,25 @@ export function FeedItemEditDialog({ item, open, onOpenChange, onSave, busy }: P
   }
 
   return (
-    <dialog open className="app-dialog" aria-labelledby="feed-edit-title">
+    <Dialog open={open && !!item} onOpenChange={onOpenChange} labelledBy="feed-edit-title" className="feed-item-edit-dialog">
       <form onSubmit={submit}>
         <div className="dialog-header">
           <div><p className="eyebrow">FEED MASTER</p><h2 id="feed-edit-title" className="dialog-title">Edit feed item</h2><p className="dialog-description">Update the feed definition used for inventory and consumption tracking.</p></div>
-          <button type="button" className="dialog-close" onClick={() => onOpenChange(false)} disabled={busy} aria-label="Close edit dialog">×</button>
+          <Button type="button" variant="ghost" size="icon" onClick={() => onOpenChange(false)} disabled={busy} aria-label="Close edit dialog">×</Button>
         </div>
         <div className="dialog-form-grid expense-form-grid">
-          <div className="field"><Label>Name</Label><Input required value={values.name} onChange={(e) => update('name', e.target.value)} /></div>
-          <div className="field"><Label>Category</Label><Select value={values.category} onValueChange={(value) => update('category', value as FeedCategory)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{FEED_CATEGORIES.map((entry) => <SelectItem key={entry} value={entry}>{label(entry)}</SelectItem>)}</SelectContent></Select></div>
-          <div className="field"><Label>Base unit</Label><Input list="feed-unit-list-edit" value={values.baseUnit} onChange={(e) => update('baseUnit', e.target.value)} /></div>
-          <div className="field"><Label>Purchase unit</Label><Input list="feed-unit-list-edit" value={values.purchaseUnit} onChange={(e) => update('purchaseUnit', e.target.value)} /></div>
-          <div className="field"><Label>Base quantity per purchase unit</Label><Input required type="number" min="0.001" step="0.001" inputMode="decimal" value={values.conversion} onChange={(e) => update('conversion', e.target.value)} /><span className="kpi-foot">Example: 1 BAG = 50 KG → enter 50.</span></div>
-          <div className="field"><Label>Low-stock threshold ({values.baseUnit || 'base unit'})</Label><Input type="number" min="0" step="0.001" inputMode="decimal" value={values.lowStockThreshold} onChange={(e) => update('lowStockThreshold', e.target.value)} /><span className="kpi-foot">Set 0 to disable low-stock alerts.</span></div>
-          <div className="field wide-field"><Label>Notes</Label><Input value={values.notes} onChange={(e) => update('notes', e.target.value)} /></div>
+          <div className="field"><Label htmlFor="feed-edit-name">Name</Label><Input id="feed-edit-name" required disabled={busy} value={values.name} onChange={(e) => update('name', e.target.value)} /></div>
+          <div className="field"><Label htmlFor="feed-edit-category">Category</Label><Select value={values.category} disabled={busy} onValueChange={(value) => update('category', value as FeedCategory)}><SelectTrigger id="feed-edit-category"><SelectValue /></SelectTrigger><SelectContent>{FEED_CATEGORIES.map((entry) => <SelectItem key={entry} value={entry}>{label(entry)}</SelectItem>)}</SelectContent></Select></div>
+          <div className="field"><Label htmlFor="feed-edit-base-unit">Base unit</Label><Input id="feed-edit-base-unit" list="feed-unit-list-edit" disabled={busy} value={values.baseUnit} onChange={(e) => update('baseUnit', e.target.value)} /></div>
+          <div className="field"><Label htmlFor="feed-edit-purchase-unit">Purchase unit</Label><Input id="feed-edit-purchase-unit" list="feed-unit-list-edit" disabled={busy} value={values.purchaseUnit} onChange={(e) => update('purchaseUnit', e.target.value)} /></div>
+          <div className="field"><Label htmlFor="feed-edit-conversion">Base quantity per purchase unit</Label><Input id="feed-edit-conversion" required type="number" min="0.001" step="0.001" inputMode="decimal" disabled={busy} value={values.conversion} onChange={(e) => update('conversion', e.target.value)} /><span className="kpi-foot">Example: 1 BAG = 50 KG → enter 50.</span></div>
+          <div className="field"><Label htmlFor="feed-edit-threshold">Low-stock threshold ({values.baseUnit || 'base unit'})</Label><Input id="feed-edit-threshold" type="number" min="0" step="0.001" inputMode="decimal" disabled={busy} value={values.lowStockThreshold} onChange={(e) => update('lowStockThreshold', e.target.value)} /><span className="kpi-foot">Set 0 to disable low-stock alerts.</span></div>
+          <div className="field wide-field"><Label htmlFor="feed-edit-notes">Notes</Label><Textarea id="feed-edit-notes" rows={2} disabled={busy} value={values.notes} onChange={(e) => update('notes', e.target.value)} /></div>
         </div>
         <datalist id="feed-unit-list-edit">{FEED_UNITS.map((unit) => <option key={unit} value={unit} />)}</datalist>
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-        <div className="dialog-footer"><button type="button" className="btn secondary" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</button><button type="submit" className="btn" disabled={busy}>{busy ? 'Saving…' : 'Save changes'}</button></div>
+        <div className="dialog-footer"><Button type="button" variant="secondary" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button><Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save changes'}</Button></div>
       </form>
-    </dialog>
+    </Dialog>
   );
 }
