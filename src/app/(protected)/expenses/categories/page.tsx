@@ -2,6 +2,7 @@
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -87,12 +88,22 @@ export default function ExpenseCategories() {
     setBusy(false);
   }
   async function toggle(c: ExpenseCategory) {
-    const { error } = await supabase!
-      .from('expense_categories')
-      .update({ is_active: !c.is_active })
-      .eq('id', c.id);
-    if (error) setMessage(error.message);
-    else await load();
+    if (!supabase || statusBusy) return;
+    setStatusBusy(true);
+    try {
+      const { error } = await supabase
+        .from('expense_categories')
+        .update({ is_active: !c.is_active })
+        .eq('id', c.id);
+      if (error) throw error;
+      setStatusTarget(null);
+      setMessage(c.is_active ? 'Category deactivated.' : 'Category activated.');
+      await load();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not update category status.');
+    } finally {
+      setStatusBusy(false);
+    }
   }
   const categoryForm = (
     <form className={id ? 'category-edit-form' : 'card'} onSubmit={save}>
@@ -208,6 +219,22 @@ export default function ExpenseCategories() {
       >
         {id && categoryForm}
       </Dialog>
+      <AlertDialog open={!!statusTarget} onOpenChange={(open) => { if (!open && !statusBusy) setStatusTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate expense category?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {statusTarget?.name} will no longer be available for new expenses. Existing expense snapshots and history will remain unchanged.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={statusBusy}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={(event) => { event.preventDefault(); if (statusTarget) void toggle(statusTarget); }} disabled={statusBusy}>
+              {statusBusy ? 'Updating…' : 'Deactivate category'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ExpenseShell>
   );
 }
