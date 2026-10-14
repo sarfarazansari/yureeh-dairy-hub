@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { FeedPurchaseListRow } from '@/lib/feed-purchase-types';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type Props = {
@@ -80,17 +81,16 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
                 <TableCell>
                   {row.can_edit_delete ? (
                     <div className="row" style={{ gap: 8 }}>
-                      <Link className="date-chip" href={`/feeds/purchases/edit/${row.id}`}>
-                        Edit
-                      </Link>
-                      <button
+                      <Button asChild variant="outline" size="sm"><Link href={`/feeds/purchases/edit/${row.id}`}>Edit</Link></Button>
+                      <Button
                         type="button"
-                        className="date-chip"
+                        variant="outline"
+                        size="sm"
                         disabled={deletingId === row.id}
                         onClick={() => setDeleteTarget(row)}
                       >
                         {deletingId === row.id ? 'Deleting…' : 'Delete'}
-                      </button>
+                      </Button>
                     </div>
                   ) : (
                     <Badge variant="muted">Locked</Badge>
@@ -106,13 +106,13 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
 
       {pages > 1 && (
         <div className="row" style={{ marginTop: 16 }}>
-          <button className="date-chip" disabled={!page} onClick={() => onPageChange(page - 1)}>
+          <Button variant="outline" disabled={!page} onClick={() => onPageChange(page - 1)}>
             Previous
-          </button>
+          </Button>
           <span className="sub">Page {page + 1} of {pages}</span>
-          <button className="date-chip" disabled={page >= pages - 1} onClick={() => onPageChange(page + 1)}>
+          <Button variant="outline" disabled={page >= pages - 1} onClick={() => onPageChange(page + 1)}>
             Next
-          </button>
+          </Button>
         </div>
       )}
 
@@ -134,9 +134,9 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
           )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={Boolean(deletingId)} onClick={() => setDeleteTarget(null)}>Cancel</AlertDialogCancel>
-            <button type="button" className="btn destructive" onClick={() => void confirmDelete()} disabled={Boolean(deletingId)}>
+            <AlertDialogAction asChild><Button type="button" variant="destructive" onClick={(event) => { event.preventDefault(); void confirmDelete(); }} disabled={Boolean(deletingId)}>
               {deletingId ? 'Deleting…' : 'Delete feed purchase'}
-            </button>
+            </Button></AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
