@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { Dialog } from '@/app/dialog';
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { FeedConsumptionListRow } from '@/lib/feed-consumption-types';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -84,33 +84,30 @@ export function FeedConsumptionTable({ rows, count, page, pageSize, onPageChange
         </div>
       )}
 
-      <Dialog
+      <AlertDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => { if (!open && !deletingId) setDeleteTarget(null); }}
-        labelledBy="feed-consumption-delete-title"
-        className="delete-dialog"
       >
-        <div className="dialog-header">
-          <div>
-            <p className="eyebrow">FEED CONSUMPTION</p>
-            <h2 id="feed-consumption-delete-title" className="dialog-title">Delete consumption?</h2>
-            <p className="dialog-description">This will reverse the consumption movement and restore the stock.</p>
-          </div>
-          <button type="button" className="dialog-close" onClick={() => setDeleteTarget(null)} disabled={Boolean(deletingId)} aria-label="Close delete dialog">×</button>
-        </div>
-        {deleteTarget && (
-          <div className="delete-summary">
-            <span>Feed item</span><b>{deleteTarget.feed_item_name}</b>
-            <span>{Number(deleteTarget.quantity).toLocaleString('en-IN')} {deleteTarget.base_unit} · {money(Number(deleteTarget.quantity) * Number(deleteTarget.unit_cost ?? 0))}</span>
-          </div>
-        )}
-        <div className="dialog-footer">
-          <button type="button" className="btn secondary" onClick={() => setDeleteTarget(null)} disabled={Boolean(deletingId)}>Cancel</button>
-          <button type="button" className="btn destructive" onClick={() => void confirmDelete()} disabled={Boolean(deletingId)}>
-            {deletingId ? 'Deleting…' : 'Delete consumption'}
-          </button>
-        </div>
-      </Dialog>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete feed consumption?</AlertDialogTitle>
+            <AlertDialogDescription>This will reverse the consumption movement and restore the stock.</AlertDialogDescription>
+          </AlertDialogHeader>
+          {deleteTarget && (
+            <div className="delete-summary">
+              <span>Feed item</span>
+              <b>{deleteTarget.feed_item_name}</b>
+              <span>{Number(deleteTarget.quantity).toLocaleString('en-IN')} {deleteTarget.base_unit} · {money(Number(deleteTarget.quantity) * Number(deleteTarget.unit_cost ?? 0))}</span>
+            </div>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={Boolean(deletingId)} onClick={() => setDeleteTarget(null)}>Cancel</AlertDialogCancel>
+            <button type="button" className="btn destructive" onClick={() => void confirmDelete()} disabled={Boolean(deletingId)}>
+              {deletingId ? 'Deleting…' : 'Delete feed consumption'}
+            </button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
