@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -89,18 +90,19 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
       <div className="expense-form-grid">
         <div className="field">
           <Label htmlFor="diet-plan-name">Plan name</Label>
-          <Input id="diet-plan-name" value={values.name} maxLength={120} onChange={(e) => setField('name', e.target.value)} />
+          <Input id="diet-plan-name" value={values.name} maxLength={120} disabled={busy} aria-invalid={!!errors.name} onChange={(e) => setField('name', e.target.value)} />
           {errors.name && <span className="auth-message">{errors.name}</span>}
         </div>
         <div className="field">
           <Label htmlFor="diet-plan-status">Status</Label>
-          <Select value={values.status} onValueChange={(value) => setField('status', value as DietPlanFormValues['status'])}><SelectTrigger id="diet-plan-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ACTIVE">Active</SelectItem><SelectItem value="PAUSED">Paused</SelectItem><SelectItem value="STOPPED">Stopped</SelectItem></SelectContent></Select>
+          <Select value={values.status} onValueChange={(value) => setField('status', value as DietPlanFormValues['status'])} disabled={busy}><SelectTrigger id="diet-plan-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ACTIVE">Active</SelectItem><SelectItem value="PAUSED">Paused</SelectItem><SelectItem value="STOPPED">Stopped</SelectItem></SelectContent></Select>
         </div>
         <FormField id="diet-plan-start" label="Start date" error={errors.startDate}>
           {(controlProps) => (
             <DatePicker
               {...controlProps}
               value={values.startDate}
+              disabled={busy}
               onChange={(value) => { setField('startDate', value); setField('buffaloIds', []); }}
               ariaLabel="Diet plan start date"
             />
@@ -113,14 +115,15 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
               min={values.startDate}
               value={values.endDate ?? ''}
               clearable
-              onChange={(value) => setField('endDate', value)}
+              disabled={busy}
+              onChange={(value) => setField('endDate', value)
               ariaLabel="Diet plan end date"
             />
           )}
         </FormField>
         <div className="field" style={{ gridColumn: '1 / -1' }}>
           <Label htmlFor="diet-plan-notes">Notes</Label>
-          <Textarea id="diet-plan-notes" rows={2} maxLength={1000} value={values.notes ?? ''} onChange={(e) => setField('notes', e.target.value)} />
+          <Textarea id="diet-plan-notes" rows={2} maxLength={1000} value={values.notes ?? ''} disabled={busy} onChange={(e) => setField('notes', e.target.value)} />
         </div>
       </div>
 
@@ -132,7 +135,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
       <div className="management-stack" style={{ gap: 8, marginTop: 12 }}>
         {buffaloes.map((buffalo) => (
           <Label key={buffalo.id} className="row" style={{ justifyContent: 'flex-start', gap: 10, padding: '8px 0' }}>
-            <Checkbox checked={values.buffaloIds.includes(buffalo.id)} onCheckedChange={(checked) => setField('buffaloIds', checked === true ? [...values.buffaloIds, buffalo.id] : values.buffaloIds.filter((id) => id !== buffalo.id))} />
+            <Checkbox disabled={busy} checked={values.buffaloIds.includes(buffalo.id)} onCheckedChange={(checked) => setField('buffaloIds', checked === true ? [...values.buffaloIds, buffalo.id] : values.buffaloIds.filter((id) => id !== buffalo.id))} />
             <span><b>{buffalo.buffalo_code}</b>{buffalo.name ? ` · ${buffalo.name}` : ''}</span>
           </Label>
         ))}
@@ -142,7 +145,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
 
       <div className="row" style={{ marginTop: 28 }}>
         <h2 className="section-title">Feed quantities per feeding</h2>
-        <button type="button" className="date-chip" onClick={() => setField('items', [...values.items, blankItem()])}>Add feed</button>
+        <Button type="button" variant="outline" disabled={busy} onClick={() => setField('items', [...values.items, blankItem()])}>Add feed</Button>
       </div>
       {errors.items && <span className="auth-message">{errors.items}</span>}
       <div className="management-stack" style={{ gap: 12 }}>
@@ -153,19 +156,19 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
               <div className="expense-form-grid">
                 <div className="field">
                   <Label>Feed item</Label>
-                  <Select value={item.feedItemId || undefined} onValueChange={(value) => updateItem(index, 'feedItemId', value)}><SelectTrigger><SelectValue placeholder="Select feed" /></SelectTrigger><SelectContent>{feeds.map((candidate) => <SelectItem key={candidate.id} value={candidate.id} disabled={selectedFeedIds.has(candidate.id) && candidate.id !== item.feedItemId}>{candidate.name}</SelectItem>)}</SelectContent></Select>
+                  <Select value={item.feedItemId || undefined} onValueChange={(value) => updateItem(index, 'feedItemId', value)} disabled={busy}><SelectTrigger><SelectValue placeholder="Select feed" /></SelectTrigger><SelectContent>{feeds.map((candidate) => <SelectItem key={candidate.id} value={candidate.id} disabled={selectedFeedIds.has(candidate.id) && candidate.id !== item.feedItemId}>{candidate.name}</SelectItem>)}</SelectContent></Select>
                   {feed && <span className="sub">Unit: {feed.base_unit}</span>}
                 </div>
                 <div className="field">
                   <Label>Morning total ({feed?.base_unit ?? 'unit'})</Label>
-                  <Input type="number" min="0" step="0.001" value={item.morningQuantity} onChange={(e) => updateItem(index, 'morningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
+                  <Input type="number" min="0" step="0.001" disabled={busy} value={item.morningQuantity} onChange={(e) => updateItem(index, 'morningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
                 </div>
                 <div className="field">
                   <Label>Evening total ({feed?.base_unit ?? 'unit'})</Label>
-                  <Input type="number" min="0" step="0.001" value={item.eveningQuantity} onChange={(e) => updateItem(index, 'eveningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
+                  <Input type="number" min="0" step="0.001" disabled={busy} value={item.eveningQuantity} onChange={(e) => updateItem(index, 'eveningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
                 </div>
                 <div className="field" style={{ alignSelf: 'end' }}>
-                  <button type="button" className="date-chip" disabled={values.items.length === 1} onClick={() => setField('items', values.items.filter((_, itemIndex) => itemIndex !== index))}>Remove</button>
+                  <Button type="button" variant="outline" size="sm" disabled={busy || values.items.length === 1} onClick={() => setField('items', values.items.filter((_, itemIndex) => itemIndex !== index))}>Remove</Button>
                 </div>
               </div>
             </div>
@@ -175,7 +178,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
       <p className="sub" style={{ marginTop: 12 }}>Scheduled slots: morning and evening (Asia/Kolkata). Exact clock times will be configured with the scheduler in the next phase.</p>
       {errors.form && <div className="auth-message" role="alert">{errors.form}</div>}
       <div className="row" style={{ marginTop: 20 }}>
-        <button type="submit" className="btn" disabled={busy}>{busy ? 'Saving…' : submitLabel}</button>
+        <Button type="submit" disabled={busy}>{busy ? 'Saving…' : submitLabel}</Button>
       </div>
     </form>
   );
