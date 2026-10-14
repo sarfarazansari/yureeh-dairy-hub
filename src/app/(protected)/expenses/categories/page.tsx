@@ -1,4 +1,9 @@
 'use client';
+
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { EXPENSE_GROUPS, UNITS, type ExpenseGroup } from '@/lib/expenses';
@@ -94,8 +99,8 @@ export default function ExpenseCategories() {
         {id ? 'Edit category' : 'Add category'}
       </h2>
       <div className="field">
-        <label htmlFor="expense-category-name">Name</label>
-        <input
+        <Label htmlFor="expense-category-name">Name</Label>
+        <Input
           id="expense-category-name"
           required
           value={name}
@@ -104,22 +109,12 @@ export default function ExpenseCategories() {
         />
       </div>
       <div className="field">
-        <label htmlFor="expense-category-group">Group</label>
-        <select
-          id="expense-category-group"
-          value={group}
-          onChange={(e) => setGroup(e.target.value as ExpenseGroup)}
-        >
-          {EXPENSE_GROUPS.map((g) => (
-            <option key={g} value={g}>
-              {g.replaceAll('_', ' ')}
-            </option>
-          ))}
-        </select>
+        <Label htmlFor="expense-category-group">Group</Label>
+        <Select value={group} onValueChange={(value) => setGroup(value as ExpenseGroup)}><SelectTrigger id="expense-category-group"><SelectValue /></SelectTrigger><SelectContent>{EXPENSE_GROUPS.map((g) => <SelectItem key={g} value={g}>{g.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
       </div>
       <div className="field">
-        <label htmlFor="expense-category-unit">Default unit</label>
-        <input
+        <Label htmlFor="expense-category-unit">Default unit</Label>
+        <Input
           id="expense-category-unit"
           list="category-unit-list"
           value={unit}
@@ -132,13 +127,13 @@ export default function ExpenseCategories() {
           ))}
         </datalist>
       </div>
-      <label className="field">
+      <Label className="field">
         <span>Quantity based</span>
-        <input type="checkbox" checked={quantity} onChange={(e) => setQuantity(e.target.checked)} />
-      </label>
+        <Checkbox checked={quantity} onCheckedChange={(checked) => setQuantity(checked === true)} />
+      </Label>
       <div className="field">
-        <label htmlFor="expense-category-description">Description</label>
-        <input
+        <Label htmlFor="expense-category-description">Description</Label>
+        <Input
           id="expense-category-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
