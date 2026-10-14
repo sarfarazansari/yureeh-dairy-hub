@@ -1,6 +1,9 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -414,36 +417,36 @@ export default function EntriesPage() {
         </div>
         {exportQuery.isError && <p className="field-error">Summary and PDF data could not be loaded: {exportQuery.error.message}</p>}
         <div className="table-wrap" aria-busy={listQuery.isFetching}>
-          <table className="table">
-            <thead>
-              <tr>
-                <th>DATE</th><th>SHIFT</th><th>CUSTOMER</th><th>MILK</th><th>FAT</th>
-                <th>PRICING</th><th>RATE</th><th>AMOUNT</th><th>ACTIONS</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="[&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
+            <TableHeader>
+              <TableRow>
+                <TableHead>DATE</TableHead><TableHead>SHIFT</TableHead><TableHead>CUSTOMER</TableHead><TableHead>MILK</TableHead><TableHead>FAT</TableHead>
+                <TableHead>PRICING</TableHead><TableHead>RATE</TableHead><TableHead>AMOUNT</TableHead><TableHead>ACTIONS</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {listQuery.isPending
                 ? Array.from({ length: 5 }, (_, index) => (
-                    <tr key={`skeleton-${index}`}><td colSpan={9}><span className="table-skeleton" /></td></tr>
+                    <TableRow key={`skeleton-${index}`}><TableCell colSpan={9}><Skeleton className="h-5 w-full" /></TableCell></TableRow>
                   ))
                 : rows.map((row) => (
-                    <tr key={row.id}>
-                      <td>{formatDate(row.business_date)}</td>
-                      <td>{row.shift === 'MORNING' ? 'Morning' : 'Evening'}</td>
-                      <td>{row.customers?.name ?? '—'}</td>
-                      <td>{milkTxt(Number(row.milk_quantity))}</td>
-                      <td>{row.fat === null ? '—' : `${row.fat}%`}</td>
-                      <td>{row.pricing_type === 'FIXED_PER_LITRE' ? 'Fixed/L' : 'Fat'}</td>
-                      <td>{money(Number(row.applied_rate))}</td>
-                      <td>{money(Number(row.calculated_amount))}</td>
-                      <td>
+                    <TableRow key={row.id}>
+                      <TableCell>{formatDate(row.business_date)}</TableCell>
+                      <TableCell><Badge variant="outline">{row.shift === 'MORNING' ? 'Morning' : 'Evening'}</Badge></TableCell>
+                      <TableCell>{row.customers?.name ?? '—'}</TableCell>
+                      <TableCell>{milkTxt(Number(row.milk_quantity))}</TableCell>
+                      <TableCell>{row.fat === null ? '—' : `${row.fat}%`}</TableCell>
+                      <TableCell><Badge variant="secondary">{row.pricing_type === 'FIXED_PER_LITRE' ? 'Fixed/L' : 'Fat'}</Badge></TableCell>
+                      <TableCell>{money(Number(row.applied_rate))}</TableCell>
+                      <TableCell>{money(Number(row.calculated_amount))}</TableCell>
+                      <TableCell>
                         <button type="button" className="date-chip" onClick={() => openEdit(row)}>Edit</button>{' '}
                         <button type="button" className="date-chip danger-text" onClick={() => setPendingDelete(row)}>Cancel</button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
 
         {!listQuery.isPending && !listQuery.isError && !rows.length && (
