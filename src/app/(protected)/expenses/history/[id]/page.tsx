@@ -71,7 +71,7 @@ export default function ExpenseDetail({ params }: { params: Promise<{ id: string
 
   async function recordPayment(e: React.FormEvent) {
     e.preventDefault();
-    if (!supabase || !row) return;
+    if (!supabase || !row || saving) return;
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) {
       setError('Enter a payment amount greater than ₹0.');
@@ -79,6 +79,10 @@ export default function ExpenseDetail({ params }: { params: Promise<{ id: string
     }
     if (value > Number(row.pending_amount)) {
       setError('Payment cannot exceed the pending expense balance.');
+      return;
+    }
+    if (!paymentDate || paymentDate > todayLocal()) {
+      setError('Payment date must be today or earlier.');
       return;
     }
     setSaving(true);
