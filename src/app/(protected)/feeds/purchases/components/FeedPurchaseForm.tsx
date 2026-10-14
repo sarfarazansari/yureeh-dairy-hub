@@ -125,7 +125,7 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
 
         <div className="field">
           <Label>Vendor</Label>
-          <Select value={values.vendorId || undefined} onValueChange={(value) => update('vendorId', value)}><SelectTrigger><SelectValue placeholder="Select vendor" /></SelectTrigger><SelectContent>{vendors.map((vendor) => <SelectItem key={vendor.id} value={vendor.id}>{vendor.name}</SelectItem>)}</SelectContent></Select>
+          <Select value={values.vendorId || undefined} onValueChange={(value) => update('vendorId', value === 'none' ? '' : value)}><SelectTrigger><SelectValue placeholder="No vendor" /></SelectTrigger><SelectContent><SelectItem value="none">No vendor</SelectItem>{vendors.map((vendor) => <SelectItem key={vendor.id} value={vendor.id}>{vendor.name}</SelectItem>)}</SelectContent></Select>
         </div>
 
         <div className="field">
