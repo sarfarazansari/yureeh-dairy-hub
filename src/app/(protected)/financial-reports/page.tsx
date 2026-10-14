@@ -1,5 +1,7 @@
 'use client';
 
+import { Label } from '@/components/ui/label';
+
 import { useEffect, useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { AppShell } from '@/components/layout/AppShell';
@@ -96,11 +98,11 @@ export default function FinancialReportsPage() {
       <div className="card">
         <div className="expense-form-grid">
           <div className="field">
-            <label>From date</label>
+            <Label>From date</Label>
             <DatePicker clearable value={from} max={to || today} onChange={setFrom} ariaLabel="From date" />
           </div>
           <div className="field">
-            <label>To date</label>
+            <Label>To date</Label>
             <DatePicker clearable value={to} min={from} max={today} onChange={setTo} ariaLabel="To date" />
           </div>
         </div>
