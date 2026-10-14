@@ -25,6 +25,7 @@ export default function ExpenseHistory() {
     [categories, setCategories] = useState<
       Pick<ExpenseCategory, 'id' | 'name' | 'category_group'>[]
     >([]),
+    [loadError, setLoadError] = useState(false),
     [vendors, setVendors] = useState<Pick<ExpenseVendor, 'id' | 'name'>[]>([]),
     [buffaloes, setBuffaloes] = useState<ExpenseBuffaloOption[]>([]),
     [from, setFrom] = useState(''),
@@ -48,11 +49,18 @@ export default function ExpenseHistory() {
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState('');
   async function load() {
-    if (!supabase) return;
+    if (!supabase) {
+      setMessage('Supabase is not configured.');
+      setLoadError(true);
+      return;
+    }
+    setLoadError(false);
     try {
       await ensureExpenseCategories(supabase);
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Could not load categories');
+      setLoadError(true);
+      return;
     }
     let q = supabase
       .from('expenses')
@@ -75,7 +83,12 @@ export default function ExpenseHistory() {
       supabase.from('expense_vendors').select('id,name').order('name'),
       supabase.from('buffaloes').select('id,name,buffalo_code').order('buffalo_code'),
     ]);
-    if (e.error) setMessage(e.error.message);
+    if (e.error || c.error || v.error || b.error) {
+      const error = e.error ?? c.error ?? v.error ?? b.error;
+      setMessage(error.message);
+      setLoadError(true);
+      return;
+    }
     setRows(e.data ?? []);
     const expenseIds = (e.data ?? []).map((expense) => expense.id);
     if (expenseIds.length) {
@@ -83,8 +96,11 @@ export default function ExpenseHistory() {
         supabase.from('expense_payments').select('expense_id').in('expense_id', expenseIds),
         supabase.from('feed_purchases').select('expense_id').eq('status', 'ACTIVE').in('expense_id', expenseIds),
       ]);
-      if (paymentResult.error) setMessage(paymentResult.error.message);
-      if (purchaseResult.error) setMessage(purchaseResult.error.message);
+      if (paymentResult.error || purchaseResult.error) {
+        setMessage((paymentResult.error ?? purchaseResult.error)!.message);
+        setLoadError(true);
+        return;
+      }
       setLedgerExpenseIds(new Set((paymentResult.data ?? []).map((payment) => payment.expense_id)));
       setFeedPurchaseExpenseIds(new Set((purchaseResult.data ?? []).map((purchase) => purchase.expense_id).filter((id): id is string => Boolean(id))));
     } else {
@@ -124,6 +140,7 @@ export default function ExpenseHistory() {
     setMessage('');
     setBusy(true);
     try {
+      if (loadError) throw new Error('Expense status could not be verified. Reload and try again.');
       if (ledgerExpenseIds.has(editing.id) || feedPurchaseExpenseIds.has(editing.id)) {
         throw new Error('This expense is locked. Use its payment ledger or Feed Purchases workflow.');
       }
