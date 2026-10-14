@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { CalendarDays, X } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -50,6 +51,7 @@ export function DatePicker({
   className,
   'aria-describedby': ariaDescribedBy,
 }: DatePickerProps) {
+  const [open, setOpen] = useState(false);
   const selectedDate = parseDateKey(value);
   const minDate = parseDateKey(min ?? '');
   const maxDate = parseDateKey(max ?? '');
@@ -61,10 +63,14 @@ export function DatePicker({
   const rangeDisabled = invalidBounds
     ? () => true
     : (date: Date) => !isWithinBounds(date, minDate, maxDate);
+  const defaultMonth = selectedDate
+    ?? (minDate && minDate > today ? minDate : undefined)
+    ?? (maxDate && maxDate < today ? maxDate : undefined)
+    ?? today;
 
   return (
     <div className={cn('shadcn-date-picker min-w-0', className)}>
-      <Popover>
+      <Popover open={open} onOpenChange={setOpen}>
         <div className="relative flex min-w-0 flex-1 items-center">
           <PopoverTrigger asChild>
             <button
@@ -108,8 +114,9 @@ export function DatePicker({
             onSelect={(date) => {
               if (!date || invalidBounds || !isWithinBounds(date, minDate, maxDate)) return;
               onChange(toDateKey(date));
+              setOpen(false);
             }}
-            defaultMonth={selectedDate ?? minDate ?? maxDate ?? today}
+            defaultMonth={defaultMonth}
             disabled={rangeDisabled}
             captionLayout="label"
             autoFocus
@@ -122,6 +129,7 @@ export function DatePicker({
               onClick={() => {
                 if (invalidBounds || !isWithinBounds(today, minDate, maxDate)) return;
                 onChange(toDateKey(today));
+                setOpen(false);
               }}
             >
               Today
