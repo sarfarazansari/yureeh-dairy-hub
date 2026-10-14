@@ -1,6 +1,11 @@
 -- Keep shared system categories canonical and remove farm-owned copies
 -- created by the legacy ensureExpenseCategories() initializer.
 -- Repoint every expense (including soft-deleted history) before deleting copies.
+-- The normal expense guard blocks edits to feed-purchase-linked expenses. This
+-- migration only changes their category FK to an equivalent shared row, so
+-- temporarily remove that guard inside this transaction and restore it below.
+drop trigger if exists expenses_guard_feed_purchase_link on public.expenses;
+
 with duplicate_categories as (
   select
     farm.id as farm_category_id,
@@ -66,3 +71,10 @@ create trigger expense_categories_prevent_duplicate_names
 before insert or update of name, owner_id
 on public.expense_categories
 for each row execute function public.prevent_duplicate_expense_category_names();
+
+-- Restore the protection that keeps feed-purchase expenses editable only through
+-- the Feed Purchases workflow. This migration's category remap is now complete.
+drop trigger if exists expenses_guard_feed_purchase_link on public.expenses;
+create trigger expenses_guard_feed_purchase_link
+before update or delete on public.expenses
+for each row execute function public.guard_feed_purchase_linked_expense();
