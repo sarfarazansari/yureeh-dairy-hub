@@ -1,5 +1,9 @@
 'use client';
 
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { localDateKey } from '@/lib/milk-entry-list';
 import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
@@ -173,32 +177,27 @@ export default function CustomerDetailPage({ id }: { id: string }) {
           <form onSubmit={recordPayment}>
             <div className="grid two">
               <div className="field">
-                <label htmlFor="customer-payment-date">Payment date</label>
+                <Label htmlFor="customer-payment-date">Payment date</Label>
                 <DatePicker id="customer-payment-date" value={paymentDate} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} disabled={paymentMutation.isPending} onChange={setPaymentDate} ariaLabel="Payment date" />
               </div>
               <div className="field">
-                <label htmlFor="customer-payment-amount">Amount · ₹</label>
-                <input id="customer-payment-amount" type="number" min="0.01" step="0.01" value={paymentAmount} disabled={paymentMutation.isPending} onChange={(event) => setPaymentAmount(event.target.value)} placeholder={outstanding ? outstanding.toFixed(2) : 'Advance payment'} />
+                <Label htmlFor="customer-payment-amount">Amount · ₹</Label>
+                <Input id="customer-payment-amount" type="number" min="0.01" step="0.01" value={paymentAmount} disabled={paymentMutation.isPending} onChange={(event) => setPaymentAmount(event.target.value)} placeholder={outstanding ? outstanding.toFixed(2) : 'Advance payment'} />
               </div>
             </div>
             <div className="grid two">
               <div className="field">
-                <label htmlFor="customer-payment-method">Payment method</label>
-                <select id="customer-payment-method" value={paymentMethod} disabled={paymentMutation.isPending} onChange={(event) => setPaymentMethod(event.target.value as CustomerPaymentMethod)}>
-                  <option value="CASH">Cash</option>
-                  <option value="UPI">UPI</option>
-                  <option value="BANK_TRANSFER">Bank transfer</option>
-                  <option value="OTHER">Other</option>
-                </select>
+                <Label htmlFor="customer-payment-method">Payment method</Label>
+                <Select value={paymentMethod} onValueChange={(value) => setPaymentMethod(value as CustomerPaymentMethod)} disabled={paymentMutation.isPending}><SelectTrigger id="customer-payment-method"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="CASH">Cash</SelectItem><SelectItem value="UPI">UPI</SelectItem><SelectItem value="BANK_TRANSFER">Bank transfer</SelectItem><SelectItem value="OTHER">Other</SelectItem></SelectContent></Select>
               </div>
               <div className="field">
-                <label htmlFor="customer-payment-reference">Reference</label>
-                <input id="customer-payment-reference" value={paymentReference} disabled={paymentMutation.isPending} onChange={(event) => setPaymentReference(event.target.value)} placeholder="UPI / bank reference (optional)" />
+                <Label htmlFor="customer-payment-reference">Reference</Label>
+                <Input id="customer-payment-reference" value={paymentReference} disabled={paymentMutation.isPending} onChange={(event) => setPaymentReference(event.target.value)} placeholder="UPI / bank reference (optional)" />
               </div>
             </div>
             <div className="field">
-              <label htmlFor="customer-payment-notes">Notes</label>
-              <input id="customer-payment-notes" value={paymentNotes} disabled={paymentMutation.isPending} onChange={(event) => setPaymentNotes(event.target.value)} placeholder="Optional payment note" />
+              <Label htmlFor="customer-payment-notes">Notes</Label>
+              <Input id="customer-payment-notes" value={paymentNotes} disabled={paymentMutation.isPending} onChange={(event) => setPaymentNotes(event.target.value)} placeholder="Optional payment note" />
             </div>
             {paymentMessage && <p className="success-message">{paymentMessage}</p>}
             <button className="btn" disabled={paymentMutation.isPending}>
