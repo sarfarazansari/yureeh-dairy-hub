@@ -50,8 +50,8 @@ export default function NewExpense() {
         supabase
           .from('expense_categories')
           .select('*')
-          .eq('owner_id', user?.id)
           .eq('is_active', true)
+          .or(`owner_id.is.null,owner_id.eq.${user?.id}`)
           .order('name'),
         supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
         supabase.from('buffaloes').select('id,buffalo_code,name').order('buffalo_code'),
