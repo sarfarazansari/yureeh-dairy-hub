@@ -53,10 +53,6 @@ export function DateRangePicker({ from, to, onChange, max, className, ariaLabel 
             if (nextFrom && nextTo) {
               onChange({ from: nextFrom, to: nextTo });
               setOpen(false);
-            } else if (nextFrom) {
-              onChange({ from: nextFrom, to: '' });
-            } else {
-              onChange({ from: '', to: '' });
             }
           }}
         />
