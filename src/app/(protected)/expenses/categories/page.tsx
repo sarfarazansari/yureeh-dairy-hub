@@ -3,6 +3,7 @@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -21,7 +22,9 @@ export default function ExpenseCategories() {
     [quantity, setQuantity] = useState(true),
     [description, setDescription] = useState(''),
     [message, setMessage] = useState(''),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [statusTarget, setStatusTarget] = useState<ExpenseCategory | null>(null),
+    [statusBusy, setStatusBusy] = useState(false);
   async function load() {
     if (!supabase) return;
     try {
@@ -127,10 +130,10 @@ export default function ExpenseCategories() {
         <Label htmlFor="expense-category-unit">Default unit</Label>
         <Select value={unit || "none"} onValueChange={(value) => setUnit(value === "none" ? "" : value)}><SelectTrigger id="expense-category-unit"><SelectValue placeholder="No default unit" /></SelectTrigger><SelectContent><SelectItem value="none">No default unit</SelectItem>{UNITS.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
       </div>
-      <Label className="field">
-        <span>Quantity based</span>
-        <Checkbox checked={quantity} onCheckedChange={(checked) => setQuantity(checked === true)} />
-      </Label>
+      <div className="field flex items-center gap-3">
+        <Checkbox id="expense-category-quantity" checked={quantity} onCheckedChange={(checked) => setQuantity(checked === true)} />
+        <Label htmlFor="expense-category-quantity">Quantity based</Label>
+      </div>
       <div className="field">
         <Label htmlFor="expense-category-description">Description</Label>
         <Input
@@ -207,14 +210,11 @@ export default function ExpenseCategories() {
           </p>
         </div>
       </div>
-      <Dialog
-        open={!!id}
-        onOpenChange={(open) => {
-          if (!open && !busy) clear();
-        }}
-        labelledBy="edit-category-title"
-      >
-        {id && categoryForm}
+      <Dialog open={!!id} onOpenChange={(open) => { if (!open && !busy) clear(); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle id="edit-category-title">Edit expense category</DialogTitle><DialogDescription>Changes to category defaults affect future expense entries. Existing expense snapshots remain intact.</DialogDescription></DialogHeader>
+          {id && categoryForm}
+        </DialogContent>
       </Dialog>
       <AlertDialog open={!!statusTarget} onOpenChange={(open) => { if (!open && !statusBusy) setStatusTarget(null); }}>
         <AlertDialogContent>
