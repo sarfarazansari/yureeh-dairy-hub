@@ -1,5 +1,7 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -166,30 +168,17 @@ export default function NewEntryForm() {
             </div>
             <div className="field">
               <Label htmlFor="entry-shift">Shift</Label>
-              <select
-                id="entry-shift"
-                value={shift}
-                disabled={createMutation.isPending}
-                onChange={(event) => setShift(event.target.value as 'MORNING' | 'EVENING')}
-              >
-                <option value="MORNING">Morning</option>
-                <option value="EVENING">Evening</option>
-              </select>
+              <Select value={shift} onValueChange={(value) => setShift(value as 'MORNING' | 'EVENING')} disabled={createMutation.isPending}>
+                <SelectTrigger id="entry-shift"><SelectValue placeholder="Select shift" /></SelectTrigger>
+                <SelectContent><SelectItem value="MORNING">Morning</SelectItem><SelectItem value="EVENING">Evening</SelectItem></SelectContent>
+              </Select>
             </div>
             <div className="field">
               <Label htmlFor="entry-customer">Customer</Label>
-              <select
-                id="entry-customer"
-                value={customerId}
-                disabled={customersQuery.isPending || createMutation.isPending}
-                onChange={(event) => chooseCustomer(event.target.value)}
-                aria-invalid={!!errors.customer_id}
-              >
-                <option value="">Select customer</option>
-                {customers.map((item) => (
-                  <option key={item.id} value={item.id}>{item.name}</option>
-                ))}
-              </select>
+              <Select value={customerId || undefined} onValueChange={chooseCustomer} disabled={customersQuery.isPending || createMutation.isPending}>
+                <SelectTrigger id="entry-customer" aria-invalid={!!errors.customer_id}><SelectValue placeholder="Select customer" /></SelectTrigger>
+                <SelectContent>{customers.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent>
+              </Select>
               {errors.customer_id && <small className="field-error">{errors.customer_id}</small>}
     {customersQuery.isError && (
                 <small className="field-error">{customersQuery.error.message}</small>
@@ -341,15 +330,10 @@ export default function NewEntryForm() {
           <div className="eyebrow">PRICE SNAPSHOT</div>
           <div className="field">
             <Label htmlFor="entry-pricing-type">Pricing type</Label>
-            <select
-              id="entry-pricing-type"
-              value={pricingType}
-              disabled={createMutation.isPending}
-              onChange={(event) => changePricingType(event.target.value as PricingType)}
-            >
-              <option value="FIXED_PER_LITRE">Fixed per litre</option>
-              <option value="FAT_BASED">Fat based</option>
-            </select>
+            <Select value={pricingType} onValueChange={(value) => changePricingType(value as PricingType)} disabled={createMutation.isPending}>
+              <SelectTrigger id="entry-pricing-type"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="FIXED_PER_LITRE">Fixed per litre</SelectItem><SelectItem value="FAT_BASED">Fat based</SelectItem></SelectContent>
+            </Select>
           </div>
           <div className="field">
             <Label htmlFor="entry-rate-snapshot">
