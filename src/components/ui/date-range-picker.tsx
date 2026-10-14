@@ -78,7 +78,7 @@ export function DateRangePicker({ from, to, onChange, max, className = '', ariaL
             </button>
           )}
         </div>
-        <PopoverContent align="start" sideOffset={6} className="w-auto max-w-[calc(100vw-2rem)] p-2">
+        <PopoverContent align="start" sideOffset={6} className="w-[340px] max-w-[calc(100vw-2rem)] p-2">
           <Calendar
             mode="range"
             selected={draft}
