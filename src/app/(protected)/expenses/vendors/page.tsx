@@ -173,9 +173,9 @@ export default function ExpenseVendors() {
                     <td>{money(v.total)}</td>
                     <td>{money(v.pending)}</td>
                     <td>
-                      <button className="date-chip" onClick={() => toggle(v)}>
-                        {v.is_active ? 'Active' : 'Inactive'}
-                      </button>
+                      <Button type="button" variant="outline" size="sm" onClick={() => v.is_active ? setStatusTarget(v) : void toggle(v)}>
+                        {v.is_active ? 'Deactivate' : 'Activate'}
+                      </Button>
                     </td>
                   </tr>
                 ))}
