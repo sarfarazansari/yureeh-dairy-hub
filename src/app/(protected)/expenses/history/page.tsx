@@ -16,12 +16,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { calculateExpenseTotal, expensePaymentStatus } from '@/lib/expenses';
 import { ExpenseShell, money, ensureExpenseCategories, todayLocal } from '../shared';
-import type {
-  ExpenseBuffaloOption,
-  ExpenseCategory,
-  ExpenseRow,
-  ExpenseVendor,
-} from '@/lib/expense-types';
+import type { ExpenseBuffaloOption, ExpenseCategory, ExpenseRow, ExpenseVendor } from '@/lib/expense-types';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 export default function ExpenseHistory() {
   const [rows, setRows] = useState<ExpenseRow[]>([]),
