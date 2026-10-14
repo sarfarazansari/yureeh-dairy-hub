@@ -137,3 +137,70 @@
 }
 .shadcn-calendar-today:hover:not(:disabled) { background: #edf5ef; }
 .shadcn-calendar-today:disabled { opacity: .4; cursor: not-allowed; }
+
+
+/* Range calendar: keep a compact footprint and clear disabled-day contrast. */
+.shadcn-date-range-picker {
+  width: 100%;
+  min-width: 0;
+}
+.shadcn-date-range-picker .shadcn-date-trigger {
+  min-width: 0;
+  width: 100%;
+  min-height: 42px;
+}
+.shadcn-date-range-picker .shadcn-date-trigger > span:not(.shadcn-range-clear) {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.shadcn-range-clear {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  color: #66756b;
+}
+.shadcn-range-clear:hover { background: #f1f4f1; }
+.shadcn-range-calendar {
+  width: 288px;
+  max-width: min(calc(100vw - 32px), 288px);
+  padding: 12px;
+}
+.shadcn-range-calendar .shadcn-calendar-day {
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  opacity: 1;
+  font-size: 12px;
+}
+.shadcn-range-calendar .shadcn-calendar-day:disabled {
+  color: #7e8a82;
+  background: #f4f6f4;
+  opacity: 1;
+  text-decoration: none;
+}
+.shadcn-range-calendar .shadcn-calendar-day.selected {
+  background: #1c6b4e;
+  color: #fff;
+  border-radius: 7px;
+}
+.shadcn-range-calendar .shadcn-calendar-day.range-middle {
+  background: #e4f1e8;
+  color: #1c4e3b;
+  border-radius: 0;
+}
+.shadcn-range-calendar .shadcn-calendar-footer {
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.shadcn-range-hint {
+  color: #77857e;
+  font-size: 11px;
+  line-height: 1.35;
+}
