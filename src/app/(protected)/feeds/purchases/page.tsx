@@ -1,5 +1,8 @@
 'use client';
 
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
@@ -97,35 +100,24 @@ export default function FeedPurchasesPage() {
 
           <div className="expense-form-grid">
             <div className="field">
-              <label>From</label>
+              <Label>From</Label>
               <DatePicker clearable value={from} max={to || new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setFrom(value); setPage(0); }} ariaLabel="From date" />
             </div>
             <div className="field">
-              <label>To</label>
+              <Label>To</Label>
               <DatePicker clearable value={to} min={from} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={(value) => { setTo(value); setPage(0); }} ariaLabel="To date" />
             </div>
             <div className="field">
-              <label>Feed</label>
-              <select value={feedFilter} onChange={(e) => { setFeedFilter(e.target.value); setPage(0); }}>
-                <option value="">All feeds</option>
-                {feedItems.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
-              </select>
+              <Label>Feed</Label>
+              <Select value={feedFilter || 'all'} onValueChange={(value) => { setFeedFilter(value === 'all' ? '' : value); setPage(0); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All feeds</SelectItem>{feedItems.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>
             </div>
             <div className="field">
-              <label>Vendor</label>
-              <select value={vendorFilter} onChange={(e) => { setVendorFilter(e.target.value); setPage(0); }}>
-                <option value="">All vendors</option>
-                {vendors.map((vendor) => <option key={vendor.id} value={vendor.id}>{vendor.name}</option>)}
-              </select>
+              <Label>Vendor</Label>
+              <Select value={vendorFilter || 'all'} onValueChange={(value) => { setVendorFilter(value === 'all' ? '' : value); setPage(0); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All vendors</SelectItem>{vendors.map((vendor) => <SelectItem key={vendor.id} value={vendor.id}>{vendor.name}</SelectItem>)}</SelectContent></Select>
             </div>
             <div className="field">
-              <label>Payment status</label>
-              <select value={paymentFilter} onChange={(e) => { setPaymentFilter(e.target.value); setPage(0); }}>
-                <option value="">All statuses</option>
-                <option value="PAID">Paid</option>
-                <option value="PARTIAL">Partial</option>
-                <option value="CREDIT">Credit</option>
-              </select>
+              <Label>Payment status</Label>
+              <Select value={paymentFilter || 'all'} onValueChange={(value) => { setPaymentFilter(value === 'all' ? '' : value); setPage(0); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="PAID">Paid</SelectItem><SelectItem value="PARTIAL">Partial</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select>
             </div>
             <div className="field" style={{ alignSelf: 'end' }}>
               <button type="button" className="date-chip" onClick={clearFilters}>Clear filters</button>
