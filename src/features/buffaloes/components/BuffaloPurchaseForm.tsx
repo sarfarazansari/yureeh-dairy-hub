@@ -1,5 +1,7 @@
 'use client';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -94,12 +96,7 @@ export function BuffaloPurchaseForm({
         </Field>
 
         <Field label="Payment Method">
-          <select value={method} onChange={(event) => setMethod(event.target.value)}>
-            <option value="">Not specified</option>
-            {PAYMENT_METHODS.map((value) => (
-              <option key={value}>{value}</option>
-            ))}
-          </select>
+          <Select value={method || 'none'} onValueChange={(value) => setMethod(value === 'none' ? '' : value)}><SelectTrigger><SelectValue placeholder="Not specified" /></SelectTrigger><SelectContent><SelectItem value="none">Not specified</SelectItem>{PAYMENT_METHODS.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
         </Field>
 
         <Field label="Transaction Reference">
