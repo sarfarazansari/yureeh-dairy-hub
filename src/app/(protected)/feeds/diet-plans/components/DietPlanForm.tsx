@@ -2,6 +2,7 @@
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -118,7 +119,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
       <div className="management-stack" style={{ gap: 8, marginTop: 12 }}>
         {buffaloes.map((buffalo) => (
           <Label key={buffalo.id} className="row" style={{ justifyContent: 'flex-start', gap: 10, padding: '8px 0' }}>
-            <Input type="checkbox" checked={values.buffaloIds.includes(buffalo.id)} onChange={(e) => setField('buffaloIds', e.target.checked ? [...values.buffaloIds, buffalo.id] : values.buffaloIds.filter((id) => id !== buffalo.id))} />
+            <Checkbox checked={values.buffaloIds.includes(buffalo.id)} onCheckedChange={(checked) => setField('buffaloIds', checked === true ? [...values.buffaloIds, buffalo.id] : values.buffaloIds.filter((id) => id !== buffalo.id))} />
             <span><b>{buffalo.buffalo_code}</b>{buffalo.name ? ` · ${buffalo.name}` : ''}</span>
           </Label>
         ))}
