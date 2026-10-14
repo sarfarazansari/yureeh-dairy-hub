@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import type { FeedConsumptionListRow } from '@/lib/feed-consumption-types';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 type Props = {
@@ -78,9 +79,9 @@ export function FeedConsumptionTable({ rows, count, page, pageSize, onPageChange
 
       {pages > 1 && (
         <div className="row" style={{ marginTop: 16 }}>
-          <button className="date-chip" disabled={!page} onClick={() => onPageChange(page - 1)}>Previous</button>
+          <Button variant="outline" size="sm" type="button" disabled={!page} onClick={() => onPageChange(page - 1)}>Previous</Button>
           <span className="sub">Page {page + 1} of {pages}</span>
-          <button className="date-chip" disabled={page >= pages - 1} onClick={() => onPageChange(page + 1)}>Next</button>
+          <Button variant="outline" size="sm" type="button" disabled={page >= pages - 1} onClick={() => onPageChange(page + 1)}>Next</Button>
         </div>
       )}
 
@@ -102,9 +103,9 @@ export function FeedConsumptionTable({ rows, count, page, pageSize, onPageChange
           )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={Boolean(deletingId)} onClick={() => setDeleteTarget(null)}>Cancel</AlertDialogCancel>
-            <button type="button" className="btn destructive" onClick={() => void confirmDelete()} disabled={Boolean(deletingId)}>
+            <Button type="button" variant="destructive" onClick={() => void confirmDelete()} disabled={Boolean(deletingId)}>
               {deletingId ? 'Deleting…' : 'Delete feed consumption'}
-            </button>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
