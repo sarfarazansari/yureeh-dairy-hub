@@ -11,6 +11,9 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ExpenseShell, money, todayLocal } from '../../shared';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+
 import type { ExpenseRow } from '@/lib/expense-types';
 
 type ExpensePayment = {
@@ -199,21 +202,9 @@ export default function ExpenseDetail({ params }: { params: Promise<{ id: string
             <section className="card">
               <h2 className="section-title">Payment history</h2>
               {payments.length ? (
-                <div className="table-wrap">
-                  <table className="table">
-                    <thead><tr><th>DATE</th><th>AMOUNT</th><th>METHOD</th><th>REFERENCE / NOTES</th></tr></thead>
-                    <tbody>
-                      {payments.map((payment) => (
-                        <tr key={payment.id}>
-                          <td>{formatDate(payment.payment_date)}</td>
-                          <td>{money(Number(payment.amount))}</td>
-                          <td>{payment.payment_method.replaceAll('_', ' ')}</td>
-                          <td>{[payment.transaction_reference, payment.notes].filter(Boolean).join(' · ') || '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[650px]"><TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>AMOUNT</TableHead><TableHead>METHOD</TableHead><TableHead>REFERENCE / NOTES</TableHead></TableRow></TableHeader><TableBody>
+                  {payments.map((payment) => <TableRow key={payment.id}><TableCell>{formatDate(payment.payment_date)}</TableCell><TableCell>{money(Number(payment.amount))}</TableCell><TableCell>{payment.payment_method.replaceAll('_', ' ')}</TableCell><TableCell>{[payment.transaction_reference, payment.notes].filter(Boolean).join(' · ') || '—'}</TableCell></TableRow>)}
+                </TableBody></Table></div>
               ) : (
                 <div className="empty">No dated payment entries yet.</div>
               )}
