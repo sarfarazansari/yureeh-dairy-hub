@@ -2,6 +2,9 @@
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -23,26 +26,35 @@ export default function ExpenseCategories() {
     [description, setDescription] = useState(''),
     [message, setMessage] = useState(''),
     [busy, setBusy] = useState(false),
+    [loading, setLoading] = useState(true),
+    [loadError, setLoadError] = useState(''),
     [statusTarget, setStatusTarget] = useState<ExpenseCategory | null>(null),
     [statusBusy, setStatusBusy] = useState(false);
   async function load() {
-    if (!supabase) return;
+    if (!supabase) {
+      setLoadError('Supabase is not configured.');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setLoadError('');
     try {
       await ensureExpenseCategories(supabase);
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Could not load default categories');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw userError ?? new Error('Sign in again to load expense categories.');
+      const { data, error } = await supabase
+        .from('expense_categories')
+        .select('*')
+        .eq('owner_id', user.id)
+        .order('category_group')
+        .order('name');
+      if (error) throw error;
+      setRows(data ?? []);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Could not load expense categories.');
+    } finally {
+      setLoading(false);
     }
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const { data, error } = await supabase
-      .from('expense_categories')
-      .select('*')
-      .eq('owner_id', user?.id)
-      .order('category_group')
-      .order('name');
-    if (error) setMessage(error.message);
-    setRows(data ?? []);
   }
   useEffect(() => {
     const task = window.setTimeout(() => void load(), 0);
@@ -167,43 +179,31 @@ export default function ExpenseCategories() {
             <h2 className="section-title">Categories</h2>
             <span className="tag">{rows.filter((c) => c.is_active).length} active</span>
           </div>
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>NAME</th>
-                  <th>GROUP</th>
-                  <th>UNIT</th>
-                  <th>MODE</th>
-                  <th>STATUS</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((c) => (
-                  <tr key={c.id}>
-                    <td>
-                      <b>{c.name}</b>
-                    </td>
-                    <td>{c.category_group.replaceAll('_', ' ')}</td>
-                    <td>{c.default_unit ?? '—'}</td>
-                    <td>{c.is_quantity_based ? 'Quantity × rate' : 'Direct amount'}</td>
-                    <td>
-                      <span className={`tag ${c.is_active ? '' : 'gold'}`}>
-                        {c.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td>
-                      <Button type="button" variant="outline" size="sm" onClick={() => edit(c)}>Edit</Button>{' '}
-                      <Button type="button" variant="outline" size="sm" onClick={() => c.is_active ? setStatusTarget(c) : void toggle(c)}>
-                        {c.is_active ? 'Deactivate' : 'Activate'}
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {loadError ? (
+            <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm">
+              <p>{loadError}</p>
+              <Button className="mt-3" type="button" size="sm" variant="outline" onClick={() => void load()}>Retry</Button>
+            </div>
+          ) : (
+            <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]" aria-busy={loading}>
+              <Table className="min-w-[700px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
+                <TableHeader><TableRow><TableHead>NAME</TableHead><TableHead>GROUP</TableHead><TableHead>UNIT</TableHead><TableHead>MODE</TableHead><TableHead>STATUS</TableHead><TableHead>ACTIONS</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {loading ? Array.from({ length: 4 }, (_, i) => <TableRow key={i}>{Array.from({ length: 6 }, (_, j) => <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : rows.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell><b>{c.name}</b></TableCell>
+                      <TableCell>{c.category_group.replaceAll('_', ' ')}</TableCell>
+                      <TableCell>{c.default_unit ?? '—'}</TableCell>
+                      <TableCell>{c.is_quantity_based ? 'Quantity × rate' : 'Direct amount'}</TableCell>
+                      <TableCell><Badge variant={c.is_active ? 'secondary' : 'muted'}>{c.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
+                      <TableCell><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" size="sm" onClick={() => edit(c)}>Edit</Button><Button type="button" variant="outline" size="sm" onClick={() => c.is_active ? setStatusTarget(c) : void toggle(c)}>{c.is_active ? 'Deactivate' : 'Activate'}</Button></div></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+          {!loading && !loadError && !rows.length && <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">No expense categories found.</div>}
           <p className="kpi-foot">
             Categories used by expenses are deactivated instead of deleted; saved expenses keep
             their original category snapshot.
