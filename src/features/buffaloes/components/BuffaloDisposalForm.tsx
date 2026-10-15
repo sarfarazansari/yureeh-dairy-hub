@@ -1,20 +1,22 @@
 'use client';
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-import { Input } from '@/components/ui/input';
-
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
+import { localDateKey } from '@/lib/milk-entry-list';
 import { useRecordBuffaloDisposal } from '../hooks/use-buffaloes';
 import type { BuffaloDetail } from '../types';
 import { buffaloDisposalSchema } from '../disposition.validation';
-import { DispositionField, getDispositionToday } from './DispositionField';
+import { DispositionField } from './DispositionField';
 
 export function BuffaloDisposalForm({ buffalo }: { buffalo: BuffaloDetail }) {
   const mutation = useRecordBuffaloDisposal();
   const [type, setType] = useState<'DEATH' | 'TRANSFER_OUT' | 'OTHER'>('DEATH');
-  const [date, setDate] = useState(getDispositionToday());
+  const [date, setDate] = useState(localDateKey());
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
   const [message, setMessage] = useState('');
@@ -32,17 +34,17 @@ export function BuffaloDisposalForm({ buffalo }: { buffalo: BuffaloDetail }) {
   }
 
   return (
-    <form className="card" onSubmit={submit}>
+    <form className="card space-y-4" onSubmit={submit} noValidate>
       <h2 className="section-title">Record non-sale disposal</h2>
-      <p className="sub">Use this for death, transfer out, or another permanent removal. A disposal cannot be undone through status editing.</p>
-      <div className="grid two">
+      <p className="sub">Use this for death, transfer out, or another permanent removal. Disposals cannot be undone through status editing.</p>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <DispositionField label="Disposal type"><Select value={type} onValueChange={(value) => setType(value as typeof type)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="DEATH">Death</SelectItem><SelectItem value="TRANSFER_OUT">Transfer out</SelectItem><SelectItem value="OTHER">Other</SelectItem></SelectContent></Select></DispositionField>
-        <DispositionField label="Effective date"><DatePicker value={date} max={getDispositionToday()} onChange={setDate} ariaLabel="Effective date" /></DispositionField>
+        <DispositionField label="Effective date"><DatePicker value={date} max={localDateKey()} onChange={setDate} ariaLabel="Effective date" /></DispositionField>
         <DispositionField label="Reason"><Input required value={reason} onChange={(e) => setReason(e.target.value)} /></DispositionField>
-        <DispositionField label="Notes"><Input value={notes} onChange={(e) => setNotes(e.target.value)} /></DispositionField>
+        <DispositionField label="Notes"><Textarea value={notes} rows={3} onChange={(e) => setNotes(e.target.value)} /></DispositionField>
       </div>
-      {(message || mutation.isError) && <p className="auth-message">{message || mutation.error?.message}</p>}
-      <button className="btn" disabled={mutation.isPending}>{mutation.isPending ? 'Recording…' : 'Record disposal'}</button>
+      {(message || mutation.isError) && <p role="alert" className="auth-message">{message || mutation.error?.message}</p>}
+      <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'Recording…' : 'Record disposal'}</Button>
     </form>
   );
 }
