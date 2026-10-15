@@ -1,6 +1,8 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,12 +11,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { LoaderCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import {
-  calculateExpenseTotal,
-  calculatePending,
-  expensePaymentStatus,
-  UNITS,
-} from '@/lib/expenses';
+import { calculateExpenseTotal, calculatePending, expensePaymentStatus, UNITS } from '@/lib/expenses';
 import { ExpenseShell, money, ensureExpenseCategories, todayLocal } from '../shared';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseBuffaloOption, ExpenseCategory, ExpenseVendor } from '@/lib/expense-types';
@@ -180,23 +177,25 @@ export default function NewExpense() {
           <h2 className="section-title">Expense details</h2>
           <div className="expense-form-grid">
             <div className="field">
-              <Label>Business date</Label>
-              <DatePicker value={date} max={todayLocal()} onChange={setDate} ariaLabel="Business date" />
+              <Label htmlFor="expense-business-date">Business date</Label>
+              <DatePicker id="expense-business-date" value={date} max={todayLocal()} onChange={setDate} ariaLabel="Business date" />
+              <p className="kpi-foot">Today or an earlier date.</p>
             </div>
             <div className="field">
-              <Label>Category</Label>
-              <Select value={categoryId || undefined} onValueChange={selectCategory} required><SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} · {c.category_group.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
+              <Label htmlFor="expense-category">Category</Label>
+              <Select value={categoryId || undefined} onValueChange={selectCategory} required><SelectTrigger id="expense-category"><SelectValue placeholder="Select category" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} · {c.category_group.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
             </div>
             <div className="field">
-              <Label>Vendor (optional)</Label>
-              <Select value={vendorId || undefined} onValueChange={(value) => setVendorId(value === 'none' ? '' : value)}><SelectTrigger><SelectValue placeholder="No vendor" /></SelectTrigger><SelectContent><SelectItem value="none">No vendor</SelectItem>{vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
+              <Label htmlFor="expense-vendor">Vendor (optional)</Label>
+              <Select value={vendorId || 'none'} onValueChange={(value) => setVendorId(value === 'none' ? '' : value)}><SelectTrigger id="expense-vendor"><SelectValue placeholder="No vendor" /></SelectTrigger><SelectContent><SelectItem value="none">No vendor</SelectItem>{vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
               <Link href="/expenses/vendors" className="kpi-foot">
                 Manage vendors →
               </Link>
             </div>
             <div className="field wide-field">
-              <Label>Description</Label>
+              <Label htmlFor="expense-description">Description</Label>
               <Input
+                id="expense-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="What was purchased or paid for?"
@@ -211,11 +210,12 @@ export default function NewExpense() {
             {useQuantity ? (
               <>
                 <div className="field">
-                  <Label>Quantity</Label>
+                  <Label htmlFor="expense-quantity">Quantity</Label>
                   <Input
+                    id="expense-quantity"
                     required
                     type="number"
-                    min="0"
+                    min="0.001"
                     step="0.001"
                     inputMode="decimal"
                     value={quantity}
@@ -223,25 +223,23 @@ export default function NewExpense() {
                   />
                 </div>
                 <div className="field">
-                  <Label>Unit</Label>
-                  <Input
-                    list="expense-unit-list"
-                    value={unit}
-                    onChange={(e) => setUnit(e.target.value)}
-                    placeholder={category?.default_unit || 'Choose or type a unit'}
-                  />
-                  <datalist id="expense-unit-list">
-                    {UNITS.map((x) => (
-                      <option key={x} value={x} />
-                    ))}
-                  </datalist>
+                  <Label htmlFor="expense-unit">Unit</Label>
+                  <Select value={unit || 'none'} onValueChange={(value) => setUnit(value === 'none' ? '' : value)}>
+                    <SelectTrigger id="expense-unit"><SelectValue placeholder="Select unit" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No unit</SelectItem>
+                      {UNITS.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <p id="expense-unit-help" className="kpi-foot">Choose from the supported units. Edit the category to change its default.</p>
                 </div>
                 <div className="field">
-                  <Label>Rate · ₹ per unit</Label>
+                  <Label htmlFor="expense-rate">Rate · ₹ per unit</Label>
                   <Input
+                    id="expense-rate"
                     required
                     type="number"
-                    min="0"
+                    min="0.0001"
                     step="0.0001"
                     inputMode="decimal"
                     value={rate}
@@ -251,8 +249,9 @@ export default function NewExpense() {
               </>
             ) : (
               <div className="field">
-                <Label>Total amount · ₹</Label>
+                <Label htmlFor="expense-total">Total amount · ₹</Label>
                 <Input
+                  id="expense-total"
                   required
                   type="number"
                   min="0.01"
@@ -264,12 +263,13 @@ export default function NewExpense() {
               </div>
             )}
             <div className="field">
-              <Label>Payment status</Label>
-              <Select value={status} onValueChange={selectStatus}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="PAID">Paid</SelectItem><SelectItem value="PARTIAL">Partial</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select>
+              <Label htmlFor="expense-payment-status">Payment status</Label>
+              <Select value={status} onValueChange={selectStatus}><SelectTrigger id="expense-payment-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="PAID">Paid</SelectItem><SelectItem value="PARTIAL">Partial</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select>
             </div>
             <div className="field">
-              <Label>Paid amount · ₹</Label>
+              <Label htmlFor="expense-paid">Paid amount · ₹</Label>
               <Input
+                id="expense-paid"
                 type="number"
                 min="0"
                 max={amount}
@@ -279,38 +279,36 @@ export default function NewExpense() {
               />
             </div>
             <div className="field">
-              <Label>Payment method</Label>
-              <Select value={status === 'CREDIT' ? 'CREDIT' : method} disabled={status === 'CREDIT'} onValueChange={setMethod}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="CASH">Cash</SelectItem><SelectItem value="UPI">UPI</SelectItem><SelectItem value="BANK_TRANSFER">Bank transfer</SelectItem><SelectItem value="CARD">Card</SelectItem><SelectItem value="OTHER">Other</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select>
+              <Label htmlFor="expense-payment-method">Payment method</Label>
+              <Select value={status === 'CREDIT' ? 'CREDIT' : method} disabled={status === 'CREDIT'} onValueChange={setMethod}><SelectTrigger id="expense-payment-method"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="CASH">Cash</SelectItem><SelectItem value="UPI">UPI</SelectItem><SelectItem value="BANK_TRANSFER">Bank transfer</SelectItem><SelectItem value="CARD">Card</SelectItem><SelectItem value="OTHER">Other</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select>
             </div>
             <div className="field">
-              <Label>Due date</Label>
-              <DatePicker value={due} min={date} onChange={setDue} clearable ariaLabel="Due date" />
+              <Label htmlFor="expense-due-date">Due date</Label>
+              <DatePicker id="expense-due-date" value={due} min={date} onChange={setDue} clearable ariaLabel="Due date" aria-invalid={!!due && due < date} />
+              <p className="kpi-foot">Optional; cannot be earlier than the business date.</p>
             </div>
             <div className="field">
-              <Label>Buffalo (optional)</Label>
-              <Select value={buffaloId || undefined} onValueChange={(value) => setBuffaloId(value === 'none' ? '' : value)}><SelectTrigger><SelectValue placeholder="Farm-wide expense" /></SelectTrigger><SelectContent><SelectItem value="none">Farm-wide expense</SelectItem>{buffaloes.map((b) => <SelectItem key={b.id} value={b.id}>{b.name || b.buffalo_code}</SelectItem>)}</SelectContent></Select>
+              <Label htmlFor="expense-buffalo">Buffalo (optional)</Label>
+              <Select value={buffaloId || 'none'} onValueChange={(value) => setBuffaloId(value === 'none' ? '' : value)}><SelectTrigger id="expense-buffalo"><SelectValue placeholder="Farm-wide expense" /></SelectTrigger><SelectContent><SelectItem value="none">Farm-wide expense</SelectItem>{buffaloes.map((b) => <SelectItem key={b.id} value={b.id}>{b.name || b.buffalo_code}</SelectItem>)}</SelectContent></Select>
             </div>
             <div className="field">
-              <Label>Receipt / reference</Label>
+              <Label htmlFor="expense-receipt">Receipt / reference</Label>
               <Input
+                id="expense-receipt"
                 value={receipt}
                 onChange={(e) => setReceipt(e.target.value)}
                 placeholder="Invoice or transaction reference"
               />
             </div>
             <div className="field wide-field">
-              <Label>Notes</Label>
-              <Input
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Optional notes"
-              />
+              <Label htmlFor="expense-notes">Notes</Label>
+              <Textarea id="expense-notes" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional notes" rows={3} />
             </div>
           </div>
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-          <button type="submit" className="btn" disabled={busy || !categories.length} aria-live="polite">
+          <Button type="submit" disabled={busy || !categories.length} aria-live="polite">
             {busy ? <><LoaderCircle size={16} className="animate-spin" aria-hidden="true" /> Saving…</> : 'Save expense'}
-          </button>
+          </Button>
         </div>
         <aside className="card">
           <div className="eyebrow">PAYMENT SUMMARY</div>
