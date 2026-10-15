@@ -24,6 +24,8 @@ import {
   todayLocal,
 } from './shared';
 import { KPI } from '@/components/ui/KPI';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { ExpenseRow } from '@/lib/expense-types';
 export default function ExpenseDashboard() {
   const today = todayLocal(),
@@ -287,32 +289,7 @@ export default function ExpenseDashboard() {
             <h2 className="section-title">Feed cost by item</h2>
             <span className="tag">FEED</span>
           </div>
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>ITEM</th>
-                  <th>QUANTITY</th>
-                  <th>EXPENSE</th>
-                  <th>AVG RATE</th>
-                  <th>PURCHASES</th>
-                </tr>
-              </thead>
-              <tbody>
-                {feedItems.map((c) => (
-                  <tr key={c.name}>
-                    <td>{c.name}</td>
-                    <td>
-                      {c.quantity ? `${c.quantity.toLocaleString('en-IN')} ${c.unit ?? ''}` : '—'}
-                    </td>
-                    <td>{money(c.amount)}</td>
-                    <td>{c.avgRate === null ? '—' : `${money(c.avgRate)}/${c.unit ?? 'unit'}`}</td>
-                    <td>{c.count}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[650px]"><TableHeader><TableRow><TableHead>ITEM</TableHead><TableHead>QUANTITY</TableHead><TableHead>EXPENSE</TableHead><TableHead>AVG RATE</TableHead><TableHead>PURCHASES</TableHead></TableRow></TableHeader><TableBody>{feedItems.map((c) => <TableRow key={c.name}><TableCell>{c.name}</TableCell><TableCell>{c.quantity ? `${c.quantity.toLocaleString('en-IN')} ${c.unit ?? ''}` : '—'}</TableCell><TableCell>{money(c.amount)}</TableCell><TableCell>{c.avgRate === null ? '—' : `${money(c.avgRate)}/${c.unit ?? 'unit'}`}</TableCell><TableCell>{c.count}</TableCell></TableRow>)}</TableBody></Table></div>
           {!feedItems.length && <div className="empty">No feed purchases in this range.</div>}
         </div>
         <div className="card">
@@ -359,42 +336,7 @@ export default function ExpenseDashboard() {
               View history →
             </Link>
           </div>
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>DUE</th>
-                  <th>VENDOR</th>
-                  <th>CATEGORY</th>
-                  <th>PENDING</th>
-                  <th>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {outstanding.slice(0, 6).map((r) => (
-                  <tr key={r.id}>
-                    <td>{formatDate(r.due_date)}</td>
-                    <td>{r.vendor_name_snapshot ?? '—'}</td>
-                    <td>{r.category_name_snapshot}</td>
-                    <td>{money(Number(r.pending_amount))}</td>
-                    <td>
-                      <span
-                        className={`tag ${r.due_date && r.due_date < today ? 'status-overdue' : r.due_date === today ? 'status-today' : ''}`}
-                      >
-                        {!r.due_date
-                          ? 'No due date'
-                          : r.due_date < today
-                            ? 'Overdue'
-                            : r.due_date === today
-                              ? 'Due today'
-                              : 'Upcoming'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[750px]"><TableHeader><TableRow><TableHead>DUE</TableHead><TableHead>VENDOR</TableHead><TableHead>CATEGORY</TableHead><TableHead>PENDING</TableHead><TableHead>STATUS</TableHead></TableRow></TableHeader><TableBody>{outstanding.slice(0, 6).map((r) => <TableRow key={r.id}><TableCell className="whitespace-nowrap">{formatDate(r.due_date)}</TableCell><TableCell>{r.vendor_name_snapshot ?? '—'}</TableCell><TableCell>{r.category_name_snapshot}</TableCell><TableCell>{money(Number(r.pending_amount))}</TableCell><TableCell><Badge variant="outline" className={r.due_date && r.due_date < today ? 'status-overdue' : r.due_date === today ? 'status-today' : ''}>{!r.due_date ? 'No due date' : r.due_date < today ? 'Overdue' : r.due_date === today ? 'Due today' : 'Upcoming'}</Badge></TableCell></TableRow>)}</TableBody></Table></div>
           {!outstanding.length && (
             <div className="empty">No outstanding balances in this range.</div>
           )}
@@ -407,32 +349,7 @@ export default function ExpenseDashboard() {
             Expense history →
           </Link>
         </div>
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>CATEGORY</th>
-                <th>GROUP</th>
-                <th>AMOUNT</th>
-                <th>QUANTITY</th>
-                <th>AVG RATE</th>
-                <th>COUNT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {categoryRows.map((c) => (
-                <tr key={c.name}>
-                  <td>{c.name}</td>
-                  <td>{c.group.replaceAll('_', ' ')}</td>
-                  <td>{money(c.amount)}</td>
-                  <td>{c.quantity ? `${c.quantity} ${c.unit ?? ''}` : '—'}</td>
-                  <td>{c.avgRate === null ? '—' : money(c.avgRate)}</td>
-                  <td>{c.count}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[850px]"><TableHeader><TableRow><TableHead>CATEGORY</TableHead><TableHead>GROUP</TableHead><TableHead>AMOUNT</TableHead><TableHead>QUANTITY</TableHead><TableHead>AVG RATE</TableHead><TableHead>COUNT</TableHead></TableRow></TableHeader><TableBody>{categoryRows.map((c) => <TableRow key={c.name}><TableCell>{c.name}</TableCell><TableCell>{c.group.replaceAll('_', ' ')}</TableCell><TableCell>{money(c.amount)}</TableCell><TableCell>{c.quantity ? `${c.quantity} ${c.unit ?? ''}` : '—'}</TableCell><TableCell>{c.avgRate === null ? '—' : money(c.avgRate)}</TableCell><TableCell>{c.count}</TableCell></TableRow>)}</TableBody></Table></div>
       </div>
     </ExpenseShell>
   );
