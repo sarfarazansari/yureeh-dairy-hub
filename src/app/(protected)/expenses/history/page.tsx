@@ -539,7 +539,6 @@ export default function ExpenseHistory() {
           )}
           </AlertDialogContent>
         </AlertDialog>
-      </div>
     </ExpenseShell>
   );
 }
