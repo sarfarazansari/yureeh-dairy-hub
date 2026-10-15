@@ -1,6 +1,8 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog as ShadcnDialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -439,72 +441,26 @@ export default function ExpenseHistory() {
           )}
           </DialogContent>
         </ShadcnDialog>
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>DATE</th>
-                <th>CATEGORY / GROUP</th>
-                <th>VENDOR</th>
-                <th>DESCRIPTION</th>
-                <th>QUANTITY</th>
-                <th>TOTAL</th>
-                <th>PAID</th>
-                <th>PENDING</th>
-                <th>STATUS</th>
-                <th>METHOD</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {pageRows.map((r) => (
-                <tr key={r.id}>
-                  <td>{formatDate(r.business_date)}</td>
-                  <td>
-                    {r.category_name_snapshot}
-                    <div className="kpi-foot">{r.category_group_snapshot.replaceAll('_', ' ')}</div>
-                  </td>
-                  <td>{r.vendor_name_snapshot ?? '—'}</td>
-                  <td>{r.description ?? '—'}</td>
-                  <td>{r.quantity == null ? '—' : `${r.quantity} ${r.unit ?? ''}`}</td>
-                  <td>{money(Number(r.total_amount))}</td>
-                  <td>{money(Number(r.paid_amount))}</td>
-                  <td>{money(Number(r.pending_amount))}</td>
-                  <td>
-                    <span className={`tag ${r.payment_status === 'PAID' ? '' : 'gold'}`}>
-                      {r.payment_status}
-                    </span>
-                  </td>
-                  <td>{r.payment_method ?? '—'}</td>
-                  <td className="expense-row-actions">
-                    <Link className="date-chip" href={`/expenses/history/${r.id}`}>
-                      View
-                    </Link>{' '}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={ledgerExpenseIds.has(r.id) || feedPurchaseExpenseIds.has(r.id)}
-                      title={feedPurchaseExpenseIds.has(r.id) ? 'Managed by Feed Purchases. Use the Feed Purchases module.' : ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and is locked to preserve its ledger.' : undefined}
-                      onClick={() => setEditing({ ...r })}
-                    >
-                      Edit
-                    </Button>{' '}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={ledgerExpenseIds.has(r.id) || feedPurchaseExpenseIds.has(r.id)}
-                      title={feedPurchaseExpenseIds.has(r.id) ? 'Managed by Feed Purchases. Use the Feed Purchases module.' : ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and cannot be deleted.' : undefined}
-                      onClick={() => setPendingDelete(r)}
-                    >
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
+          <Table className="min-w-[1200px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
+            <TableHeader><TableRow>
+              <TableHead>DATE</TableHead><TableHead>CATEGORY / GROUP</TableHead><TableHead>VENDOR</TableHead><TableHead>DESCRIPTION</TableHead><TableHead>QUANTITY</TableHead><TableHead>TOTAL</TableHead><TableHead>PAID</TableHead><TableHead>PENDING</TableHead><TableHead>STATUS</TableHead><TableHead>METHOD</TableHead><TableHead>ACTIONS</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>
+              {pageRows.map((r) => <TableRow key={r.id}>
+                <TableCell className="whitespace-nowrap">{formatDate(r.business_date)}</TableCell>
+                <TableCell>{r.category_name_snapshot}<div className="text-xs text-muted-foreground">{r.category_group_snapshot.replaceAll('_', ' ')}</div></TableCell>
+                <TableCell>{r.vendor_name_snapshot ?? '—'}</TableCell><TableCell>{r.description ?? '—'}</TableCell><TableCell>{r.quantity == null ? '—' : `${r.quantity} ${r.unit ?? ''}`}</TableCell>
+                <TableCell>{money(Number(r.total_amount))}</TableCell><TableCell>{money(Number(r.paid_amount))}</TableCell><TableCell>{money(Number(r.pending_amount))}</TableCell>
+                <TableCell><Badge variant={r.payment_status === 'PAID' ? 'secondary' : 'outline'}>{r.payment_status}</Badge></TableCell><TableCell>{r.payment_method ?? '—'}</TableCell>
+                <TableCell><div className="flex items-center gap-2">
+                  <Button variant="outline" size="sm" asChild><Link href={`/expenses/history/${r.id}`}>View</Link></Button>
+                  <Button type="button" variant="outline" size="sm" disabled={ledgerExpenseIds.has(r.id) || feedPurchaseExpenseIds.has(r.id)} title={feedPurchaseExpenseIds.has(r.id) ? 'Managed by Feed Purchases. Use the Feed Purchases module.' : ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and is locked to preserve its ledger.' : undefined} onClick={() => setEditing({ ...r })}>Edit</Button>
+                  <Button type="button" variant="outline" size="sm" disabled={ledgerExpenseIds.has(r.id) || feedPurchaseExpenseIds.has(r.id)} title={feedPurchaseExpenseIds.has(r.id) ? 'Managed by Feed Purchases. Use the Feed Purchases module.' : ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and cannot be deleted.' : undefined} onClick={() => setPendingDelete(r)}>Delete</Button>
+                </div></TableCell>
+              </TableRow>)}
+            </TableBody>
+          </Table>
         </div>
         {!visible.length && <div className="empty">No expenses match these filters.</div>}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4"><p className="text-sm text-muted-foreground">Showing {firstResult}–{lastResult} of {visible.length}</p><div className="flex flex-wrap items-center gap-2"><Label htmlFor="expense-page-size">Rows per page</Label><Select value={String(pageSize)} onValueChange={(value) => setPagination(1, Number(value))}><SelectTrigger id="expense-page-size" className="w-24"><SelectValue /></SelectTrigger><SelectContent>{[10, 20, 50, 100].map((size) => <SelectItem key={size} value={String(size)}>{size}</SelectItem>)}</SelectContent></Select><Button type="button" variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setPagination(safePage - 1)}>Previous</Button><span className="px-2 text-sm">Page {safePage} of {pageCount}</span><Button type="button" variant="outline" size="sm" disabled={safePage >= pageCount} onClick={() => setPagination(safePage + 1)}>Next</Button></div></div>
