@@ -41,6 +41,7 @@ export default function ExpenseHistory() {
     [buffalo, setBuffalo] = useState(''),
     [search, setSearch] = useState(''),
     [sort, setSort] = useState('date'),
+    [showMoreFilters, setShowMoreFilters] = useState(false),
     [editing, setEditing] = useState<ExpenseRow | null>(null),
     [pendingDelete, setPendingDelete] = useState<ExpenseRow | null>(null),
     [deleteBusy, setDeleteBusy] = useState(false),
@@ -233,49 +234,44 @@ export default function ExpenseHistory() {
   }
   return (
     <ExpenseShell title="Expense history" subtitle="Filter, review and edit farm expenses">
-      <div className="card">
-        <div className="mb-4 max-w-md"><Label className="mb-2 block">Date range</Label><DateRangePicker from={from} to={to} max={todayLocal()} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); }} /></div>
-          <div className="field">
-            <Label htmlFor="expense-history-search">Search</Label>
-            <Input
-              id="expense-history-search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Category, vendor, description"
-            />
+      <div className="card space-y-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(220px,auto)_minmax(0,1fr)] md:items-end">
+          <div className="field min-w-0">
+            <Label className="mb-2 block">Date range</Label>
+            <DateRangePicker from={from} to={to} max={todayLocal()} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); }} />
           </div>
-          <div className="field">
-            <Label htmlFor="expense-filter-category">Category</Label>
-            <Select value={category || 'all'} onValueChange={(value) => setCategory(value === 'all' ? '' : value)}><SelectTrigger id="expense-filter-category"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All categories</SelectItem>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select>
+          <div className="field min-w-0">
+            <Label htmlFor="expense-history-search">Search expenses</Label>
+            <Input id="expense-history-search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search category, vendor or description…" />
           </div>
-          <div className="field">
-            <Label htmlFor="expense-filter-group">Category group</Label>
-            <Select value={group || 'all'} onValueChange={(value) => setGroup(value === 'all' ? '' : value)}><SelectTrigger id="expense-filter-group"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All groups</SelectItem>{['FEED','ANIMAL','FARM_OPERATIONS','TRANSPORT','UTILITIES','LABOUR','EQUIPMENT','ADMIN','OTHER'].map((g) => <SelectItem key={g} value={g}>{g.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" onClick={() => setShowMoreFilters((current) => !current)} aria-expanded={showMoreFilters}>
+              {showMoreFilters ? 'Hide filters' : 'More filters'}
+              <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs">{[category, group, vendor, status, method, buffalo].filter(Boolean).length + (outstandingOnly ? 1 : 0)}</span>
+            </Button>
+            {outstandingOnly && <span className="rounded-full border px-3 py-1 text-sm">Outstanding only</span>}
+            {(from || to) && <span className="rounded-full border px-3 py-1 text-sm">Date range applied</span>}
           </div>
-          <div className="field">
-            <Label htmlFor="expense-filter-vendor">Vendor</Label>
-            <Select value={vendor || 'all'} onValueChange={(value) => setVendor(value === 'all' ? '' : value)}><SelectTrigger id="expense-filter-vendor"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All vendors</SelectItem>{vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">{visible.length} matching {visible.length === 1 ? 'expense' : 'expenses'}</span>
+            <Button type="button" variant="ghost" onClick={() => { setFrom(''); setTo(''); setSearch(''); setCategory(''); setGroup(''); setVendor(''); setStatus(''); setMethod(''); setBuffalo(''); setOutstandingOnly(false); setSort('date'); }}>Reset filters</Button>
           </div>
-          <div className="field">
-            <Label htmlFor="expense-filter-status">Payment status</Label>
-            <Select value={status || 'all'} onValueChange={(value) => setStatus(value === 'all' ? '' : value)}><SelectTrigger id="expense-filter-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{['PAID','PARTIAL','CREDIT'].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent></Select>
+        </div>
+        {showMoreFilters && (
+          <div className="grid grid-cols-1 gap-4 border-t pt-4 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="field min-w-0"><Label>Category</Label><Select value={category || 'all'} onValueChange={(value) => setCategory(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All categories</SelectItem>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
+            <div className="field min-w-0"><Label>Category group</Label><Select value={group || 'all'} onValueChange={(value) => setGroup(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All groups</SelectItem>{['FEED','ANIMAL','FARM_OPERATIONS','TRANSPORT','UTILITIES','LABOUR','EQUIPMENT','ADMIN','OTHER'].map((g) => <SelectItem key={g} value={g}>{g.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select></div>
+            <div className="field min-w-0"><Label>Vendor</Label><Select value={vendor || 'all'} onValueChange={(value) => setVendor(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All vendors</SelectItem>{vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select></div>
+            <div className="field min-w-0"><Label>Payment status</Label><Select value={status || 'all'} onValueChange={(value) => setStatus(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem>{['PAID','PARTIAL','CREDIT'].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent></Select></div>
+            <div className="field min-w-0"><Label>Payment method</Label><Select value={method || 'all'} onValueChange={(value) => setMethod(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All methods</SelectItem>{['CASH','UPI','BANK_TRANSFER','CARD','OTHER','CREDIT'].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent></Select></div>
+            <div className="field min-w-0"><Label>Buffalo</Label><Select value={buffalo || 'all'} onValueChange={(value) => setBuffalo(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All buffaloes</SelectItem>{buffaloes.map((b) => <SelectItem key={b.id} value={b.id}>{b.name || b.buffalo_code}</SelectItem>)}</SelectContent></Select></div>
+            <div className="field min-w-0"><Label>Sort by</Label><Select value={sort} onValueChange={setSort}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="date">Date</SelectItem><SelectItem value="amount">Amount</SelectItem><SelectItem value="category">Category</SelectItem><SelectItem value="pending">Pending amount</SelectItem></SelectContent></Select></div>
+            <label className="flex items-center gap-3 self-end rounded-md border p-3 text-sm"><Checkbox checked={outstandingOnly} onCheckedChange={(checked) => setOutstandingOnly(checked === true)} /><span>Outstanding only</span></label>
           </div>
-          <div className="field">
-            <Label htmlFor="expense-filter-method">Payment method</Label>
-            <Select value={method || 'all'} onValueChange={(value) => setMethod(value === 'all' ? '' : value)}><SelectTrigger id="expense-filter-method"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All methods</SelectItem>{['CASH','UPI','BANK_TRANSFER','CARD','OTHER','CREDIT'].map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}</SelectContent></Select>
-          </div>
-          <div className="field">
-            <Label htmlFor="expense-filter-buffalo">Buffalo</Label>
-            <Select value={buffalo || 'all'} onValueChange={(value) => setBuffalo(value === 'all' ? '' : value)}><SelectTrigger id="expense-filter-buffalo"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All buffaloes</SelectItem>{buffaloes.map((b) => <SelectItem key={b.id} value={b.id}>{b.name || b.buffalo_code}</SelectItem>)}</SelectContent></Select>
-          </div>
-          <Label className="field">
-            <span>Outstanding only</span>
-            <Checkbox checked={outstandingOnly} onCheckedChange={(checked) => setOutstandingOnly(checked === true)} />
-          </Label>
-          <div className="field">
-            <Label htmlFor="expense-filter-sort">Sort by</Label>
-            <Select value={sort} onValueChange={setSort}><SelectTrigger id="expense-filter-sort"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="date">Date</SelectItem><SelectItem value="amount">Amount</SelectItem><SelectItem value="category">Category</SelectItem><SelectItem value="pending">Pending amount</SelectItem></SelectContent></Select>
-          </div>
+        )}
+      </div>
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
         <ShadcnDialog open={!!editing} onOpenChange={(open) => { if (!open && !busy) setEditing(null); }}>
           <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
