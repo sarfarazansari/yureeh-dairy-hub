@@ -13,12 +13,20 @@ import Link from 'next/link';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { calculateExpenseTotal, expensePaymentStatus } from '@/lib/expenses';
 import { ExpenseShell, money, ensureExpenseCategories, todayLocal } from '../shared';
 import type { ExpenseBuffaloOption, ExpenseCategory, ExpenseRow, ExpenseVendor } from '@/lib/expense-types';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 export default function ExpenseHistory() {
+  const pathname = usePathname();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pageParam = Number(searchParams.get('page') ?? '1');
+  const page = Number.isSafeInteger(pageParam) && pageParam > 0 ? pageParam : 1;
+  const sizeParam = Number(searchParams.get('pageSize') ?? '20');
+  const pageSize = [10, 20, 50, 100].includes(sizeParam) ? sizeParam : 20;
   const [rows, setRows] = useState<ExpenseRow[]>([]),
     [ledgerExpenseIds, setLedgerExpenseIds] = useState<Set<string>>(new Set()),
     [feedPurchaseExpenseIds, setFeedPurchaseExpenseIds] = useState<Set<string>>(new Set()),
@@ -42,6 +50,7 @@ export default function ExpenseHistory() {
     [search, setSearch] = useState(''),
     [sort, setSort] = useState('date'),
     [showMoreFilters, setShowMoreFilters] = useState(false),
+    [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc'),
     [editing, setEditing] = useState<ExpenseRow | null>(null),
     [pendingDelete, setPendingDelete] = useState<ExpenseRow | null>(null),
     [deleteBusy, setDeleteBusy] = useState(false),
@@ -118,25 +127,38 @@ export default function ExpenseHistory() {
     const task = window.setTimeout(() => void load(), 0);
     return () => window.clearTimeout(task);
   }, [from, to, category, group, vendor, status, method, buffalo, outstandingOnly]);
-  const visible = useMemo(
-    () =>
-      rows
-        .filter((r) =>
-          `${r.category_name_snapshot} ${r.vendor_name_snapshot ?? ''} ${r.description ?? ''}`
-            .toLowerCase()
-            .includes(search.toLowerCase()),
-        )
-        .sort((a, b) =>
-          sort === 'amount'
-            ? Number(b.total_amount) - Number(a.total_amount)
-            : sort === 'pending'
-              ? Number(b.pending_amount) - Number(a.pending_amount)
-              : sort === 'category'
-                ? a.category_name_snapshot.localeCompare(b.category_name_snapshot)
-                : b.business_date.localeCompare(a.business_date),
-        ),
-    [rows, search, sort],
-  );
+  const visible = useMemo(() => rows.filter((r) => (`${r.category_name_snapshot} ${r.vendor_name_snapshot ?? ''} ${r.description ?? ''}`).toLowerCase().includes(search.toLowerCase().trim())).sort((left, right) => {
+    const direction = sortDirection === 'asc' ? 1 : -1;
+    if (sort === 'amount') return (Number(left.total_amount) - Number(right.total_amount)) * direction;
+    if (sort === 'pending') return (Number(left.pending_amount) - Number(right.pending_amount)) * direction;
+    if (sort === 'category') return left.category_name_snapshot.localeCompare(right.category_name_snapshot) * direction;
+    return left.business_date.localeCompare(right.business_date) * direction;
+  }), [rows, search, sort, sortDirection]);
+  const totalAmount = visible.reduce((sum, row) => sum + Number(row.total_amount || 0), 0);
+  const totalPaid = visible.reduce((sum, row) => sum + Number(row.paid_amount || 0), 0);
+  const totalOutstanding = visible.reduce((sum, row) => sum + Number(row.pending_amount || 0), 0);
+  const categoryBreakdown = useMemo(() => {
+    const grouped = new Map<string, { total: number; quantity: number; quantityRows: number; count: number; unit: string | null }>();
+    visible.forEach((row) => {
+      const name = row.category_name_snapshot || 'Uncategorized';
+      const current = grouped.get(name) ?? { total: 0, quantity: 0, quantityRows: 0, count: 0, unit: row.unit ?? null };
+      current.total += Number(row.total_amount || 0); current.count += 1;
+      if (row.quantity != null && Number.isFinite(Number(row.quantity))) { current.quantity += Number(row.quantity); current.quantityRows += 1; }
+      if (current.unit !== row.unit) current.unit = null;
+      grouped.set(name, current);
+    });
+    return [...grouped.entries()].map(([name, value]) => ({ name, ...value })).sort((left, right) => right.total - left.total);
+  }, [visible]);
+  const pageCount = Math.max(1, Math.ceil(visible.length / pageSize));
+  const safePage = Math.min(page, pageCount);
+  const pageRows = visible.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const firstResult = visible.length ? (safePage - 1) * pageSize + 1 : 0;
+  const lastResult = Math.min(safePage * pageSize, visible.length);
+  function setPagination(nextPage: number, nextSize = pageSize) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(nextPage)); params.set('pageSize', String(nextSize));
+    router.replace(pathname + '?' + params.toString(), { scroll: false });
+  }
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!editing || !supabase || busy) return;
