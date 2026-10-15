@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -97,24 +100,24 @@ function HerdOverview({ rows, isLoading, error }: { rows: BuffaloListItem[]; isL
   return (
     <div className="card">
       <div className="row"><h2 className="section-title">Herd overview</h2><span className="tag">{rows.length} total</span></div>
-      {error && <div className="empty">{error}</div>}
-      {isLoading && <div className="empty">Loading buffaloes…</div>}
-      {!isLoading && !error && rows.length > 0 && <div className="table-wrap"><table className="table">
-        <thead><tr><th>BUFFALO</th><th>BREED</th><th>PURCHASE</th><th>VENDOR</th><th>PRICE</th><th>BALANCE DUE</th><th>PAYMENT</th><th>STATUS</th><th>ACTION</th></tr></thead>
-        <tbody>{rows.map((buffalo) => <HerdRow key={buffalo.id} buffalo={buffalo} />)}</tbody>
-      </table></div>}
-      {!isLoading && !error && rows.length === 0 && <div className="empty">No buffaloes yet. Add your first animal.</div>}
+      {error && <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{error}</p></div>}
+      {isLoading && <div className="space-y-3 py-2">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-10 w-full" />)}</div>}
+      {!isLoading && !error && rows.length > 0 && <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[1000px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
+        <TableHeader><TableRow><TableHead>BUFFALO</TableHead><TableHead>BREED</TableHead><TableHead>PURCHASE</TableHead><TableHead>VENDOR</TableHead><TableHead>PRICE</TableHead><TableHead>BALANCE DUE</TableHead><TableHead>PAYMENT</TableHead><TableHead>STATUS</TableHead><TableHead>ACTION</TableHead></TableRow></TableHeader>
+        <TableBody>{rows.map((buffalo) => <HerdRow key={buffalo.id} buffalo={buffalo} />)}</TableBody>
+      </Table></div>}
+      {!isLoading && !error && rows.length === 0 && <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">No buffaloes yet. Add your first animal.</div>}
     </div>
   );
 }
 function HerdRow({ buffalo }: { buffalo: BuffaloListItem }) {
   const purchase = buffalo.buffalo_purchases?.[0];
-  return <tr>
-    <td><Link href={`/buffaloes/${buffalo.id}`}><b>{buffalo.name || buffalo.buffalo_code}</b></Link><div className="kpi-foot">{buffalo.buffalo_code}</div></td>
-    <td>{buffalo.breed || '—'}</td><td>{formatDate(purchase?.purchase_date || buffalo.purchase_date)}</td><td>{purchase?.vendors?.name || '—'}</td>
-    <td>{purchase ? money(Number(purchase.purchase_price)) : '—'}</td><td>{purchase ? money(Number(purchase.amount_pending)) : '—'}</td>
-    <td><span className={`tag ${purchase?.payment_status === 'PAID' ? '' : 'gold'}`}>{paymentLabel(purchase?.payment_status)}</span></td>
-    <td><span className="tag">{buffalo.current_status}</span></td>
-    <td><Link className="date-chip" href={`/buffaloes/${buffalo.id}`}>Edit</Link></td>
-  </tr>;
+  return <TableRow>
+    <TableCell><Link href={`/buffaloes/${buffalo.id}`} className="font-semibold text-[var(--ink)]">{buffalo.name || buffalo.buffalo_code}</Link><div className="text-xs text-muted-foreground">{buffalo.buffalo_code}</div></TableCell>
+    <TableCell>{buffalo.breed || '—'}</TableCell><TableCell className="whitespace-nowrap">{formatDate(purchase?.purchase_date || buffalo.purchase_date)}</TableCell><TableCell>{purchase?.vendors?.name || '—'}</TableCell>
+    <TableCell>{purchase ? money(Number(purchase.purchase_price)) : '—'}</TableCell><TableCell>{purchase ? money(Number(purchase.amount_pending)) : '—'}</TableCell>
+    <TableCell><Badge variant={purchase?.payment_status === 'PAID' ? 'secondary' : 'outline'}>{paymentLabel(purchase?.payment_status)}</Badge></TableCell>
+    <TableCell><Badge variant="muted">{buffalo.current_status}</Badge></TableCell>
+    <TableCell><Button variant="outline" size="sm" asChild><Link href={`/buffaloes/${buffalo.id}`}>Edit</Link></Button></TableCell>
+  </TableRow>;
 }
