@@ -92,7 +92,7 @@ export default function FeedInventoryPage() {
 
         {stockError ? (
           <div role="alert" className="card space-y-3"><p>{stockError}</p><Button type="button" variant="outline" onClick={() => void loadStock()}>Retry stock</Button></div>
-        ) : <FeedInventoryStockTable rows={stock} loading={loadingStock} />}
+        ) : <FeedInventoryStockTable rows={stock} loading={loadingStock} error={stockError || undefined} onRetry={() => void loadStock()} />}
 
         <div className="card space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="section-title mb-0">Filter movement history</h2><Button type="button" variant="ghost" onClick={clearFilters} disabled={!from && !to && !feedItemId && !movementType}>Reset filters</Button></div>
