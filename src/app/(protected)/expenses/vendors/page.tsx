@@ -44,19 +44,20 @@ export default function ExpenseVendors() {
     setLoading(true);
     setLoadError('');
     try {
-      const [v, e] = await Promise.all([
+      const [v, summaries] = await Promise.all([
         supabase.from('expense_vendors').select('*').order('name'),
-        supabase.from('expenses').select('vendor_id,total_amount,paid_amount,pending_amount').is('deleted_at', null),
+        supabase.rpc('get_expense_vendor_directory_summaries'),
       ]);
-      if (v.error || e.error) throw (v.error ?? e.error)!;
+      if (v.error || summaries.error) throw (v.error ?? summaries.error)!;
+      const byVendor = new Map((summaries.data ?? []).map((summary) => [summary.vendor_id, summary]));
       setRows((v.data ?? []).map((vendorRow) => {
-        const own = (e.data ?? []).filter((expense) => expense.vendor_id === vendorRow.id);
+        const summary = byVendor.get(vendorRow.id);
         return {
           ...vendorRow,
-          count: own.length,
-          total: own.reduce((sum, expense) => sum + Number(expense.total_amount), 0),
-          paid: own.reduce((sum, expense) => sum + Number(expense.paid_amount), 0),
-          pending: own.reduce((sum, expense) => sum + Number(expense.pending_amount), 0),
+          count: Number(summary?.expense_count ?? 0),
+          total: Number(summary?.total_amount ?? 0),
+          paid: Number(summary?.paid_amount ?? 0),
+          pending: Number(summary?.pending_amount ?? 0),
         };
       }));
     } catch (error) {
