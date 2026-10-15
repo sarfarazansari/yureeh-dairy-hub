@@ -689,38 +689,6 @@ a {
 .account-avatar {
   display: none;
 }
-.account-menu {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(100% + 7px);
-  background: white;
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  padding: 7px;
-  box-shadow: 0 10px 30px #183b321a;
-}
-.account-menu-title {
-  font-size: 11px;
-  color: #8a9790;
-  padding: 8px 10px;
-  border-bottom: 1px solid var(--line);
-}
-.account-menu button {
-  width: 100%;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  padding: 11px 10px;
-  font-size: 12px;
-  color: #3c5146;
-  border-radius: 7px;
-  cursor: pointer;
-}
-.account-menu button:hover {
-  background: #f3f6f3;
-  color: #a13f35;
-}
 @media (max-width: 700px) {
   .sidebar-account {
     left: auto;
@@ -750,11 +718,6 @@ a {
     border-radius: 50%;
     font-size: 12px;
     font-weight: 700;
-  }
-  .account-menu {
-    left: auto;
-    right: 0;
-    width: 172px;
   }
   .nav {
     padding-right: 54px;
@@ -884,26 +847,9 @@ a {
   font-size: 14px;
 }
 .app-dialog {
-  position: fixed;
-  inset: auto auto auto auto;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  margin: 0;
-  width: min(620px, calc(100vw - 32px));
-  max-width: none;
-  max-height: min(90dvh, 760px);
-  padding: 0;
-  border: 1px solid var(--line);
+  width: min(900px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
   border-radius: 16px;
-  background: #fff;
-  color: #1c3028;
-  box-shadow: 0 24px 80px #10251e35;
-  overflow: auto;
-}
-.app-dialog::backdrop {
-  background: #14251f80;
-  backdrop-filter: blur(3px);
 }
 .app-dialog form {
   padding: 22px;
@@ -1037,10 +983,6 @@ a {
   .entry-filters {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0 8px;
-  }
-  .app-dialog {
-    max-height: calc(100dvh - 24px);
-    border-radius: 14px;
   }
   .app-dialog form {
     padding: 17px;
@@ -1298,46 +1240,6 @@ button:disabled,
   .production-input {
     width: 150px;
   }
-}
-
-
-.app-toast {
-  position: fixed;
-  top: 24px;
-  right: 24px;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  min-width: 320px;
-  max-width: 520px;
-  padding: 13px 14px 13px 16px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--surface);
-  box-shadow: 0 12px 32px rgba(24, 44, 38, 0.14);
-  color: var(--text);
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.app-toast-success {
-  border-left: 4px solid #1f7a5a;
-}
-
-.app-toast-error {
-  border-left: 4px solid #c84b4b;
-}
-
-.app-toast button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
 }
 
 
