@@ -188,9 +188,9 @@ export default function CustomersPage() {
           {directoryQuery.isPending ? (
             <div className="space-y-3 py-2">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-10 w-full" />)}</div>
           ) : directoryQuery.isError ? (
-            <div className="empty">{directoryQuery.error.message}</div>
+            <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{directoryQuery.error.message}</p><Button type="button" variant="outline" className="mt-3" onClick={() => void directoryQuery.refetch()}>Retry</Button></div>
           ) : rows.length ? (
-            <Table>
+            <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[850px]">
               <TableHeader><TableRow><TableHead>Customer</TableHead><TableHead>Pricing</TableHead><TableHead>Default rate</TableHead><TableHead>Total milk</TableHead><TableHead>Revenue</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
               <TableBody>
                 {rows.map((c) => {
@@ -215,7 +215,7 @@ export default function CustomersPage() {
                   </TableRow>;
                 })}
               </TableBody>
-            </Table>
+            </Table></div>
           ) : (
             <div className="empty">
               No customers yet. Add the first customer to start recording sales.
