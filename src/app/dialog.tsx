@@ -1,7 +1,9 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
+import { Dialog as ShadcnDialog, DialogContent } from '@/components/ui/dialog';
 
+/** Compatibility wrapper that delegates modality and focus management to shadcn/Radix. */
 export function Dialog({
   open,
   onOpenChange,
@@ -15,29 +17,14 @@ export function Dialog({
   children: ReactNode;
   className?: string;
 }) {
-  const ref = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    const dialog = ref.current;
-    if (!dialog) return;
-    if (open && !dialog.open) dialog.showModal();
-    if (!open && dialog.open) dialog.close();
-  }, [open]);
-
   return (
-    <dialog
-      ref={ref}
-      className={`app-dialog ${className}`}
-      aria-labelledby={labelledBy}
-      onCancel={(event) => {
-        event.preventDefault();
-        onOpenChange(false);
-      }}
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onOpenChange(false);
-      }}
-    >
-      {children}
-    </dialog>
+    <ShadcnDialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        aria-labelledby={labelledBy}
+        className={`app-dialog max-h-[min(90dvh,48rem)] overflow-y-auto ${className}`}
+      >
+        {children}
+      </DialogContent>
+    </ShadcnDialog>
   );
 }
