@@ -17,14 +17,7 @@ export function ExpenseShell({
   children: React.ReactNode;
 }) {
   return (
-    <AppShell title={title} subtitle={subtitle}>
-      <nav className="expense-nav">
-        <Link href="/expenses">Overview</Link>
-        <Link href="/expenses/new">New expense</Link>
-        <Link href="/expenses/history">History</Link>
-        <Link href="/expenses/categories">Categories</Link>
-        <Link href="/expenses/vendors">Vendors</Link>
-      </nav>
+    <AppShell title={title} subtitle={subtitle} actions={<nav className="expense-nav flex flex-wrap justify-end gap-2"><Link href="/expenses">Overview</Link><Link href="/expenses/new" className="font-semibold">New expense</Link><Link href="/expenses/history">History</Link><Link href="/expenses/categories">Categories</Link><Link href="/expenses/vendors">Vendors</Link></nav>}>
       {children}
     </AppShell>
   );
