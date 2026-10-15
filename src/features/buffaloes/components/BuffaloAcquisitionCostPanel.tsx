@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Toast } from '@/components/ui/Toast';
@@ -25,7 +25,6 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
-  const [confirmCapitalization, setConfirmCapitalization] = useState(false);
   const [toastState, setToastState] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   const costsQuery = useQuery({
@@ -64,7 +63,6 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }
       const parsedAmount = Number(amount);
       if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) throw new Error('Enter an acquisition cost greater than zero.');
       if (costDate > localDate()) throw new Error('Cost date cannot be in the future.');
-      if (!confirmCapitalization) throw new Error('Confirm that this eligible expense should be capitalized as an acquisition cost.');
       const { error } = await supabase.rpc('record_buffalo_acquisition_cost', {
         p_buffalo_id: buffaloId, p_expense_id: expenseId, p_cost_date: costDate,
         p_description: description.trim(), p_amount: parsedAmount, p_notes: notes.trim() || null,
@@ -73,7 +71,7 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }
     },
     onSuccess: async () => {
       setToastState({ message: 'Acquisition cost capitalized.', type: 'success' });
-      setExpenseId(''); setDescription(''); setAmount(''); setNotes(''); setConfirmCapitalization(false);
+      setExpenseId(''); setDescription(''); setAmount(''); setNotes('');
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['buffalo-acquisition-costs', buffaloId] }),
         queryClient.invalidateQueries({ queryKey: ['buffalo-acquisition-cost-expenses', buffaloId] }),
@@ -85,9 +83,9 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }
   return (
     <section className="card space-y-4">
       <Toast message={toastState?.message ?? ''} type={toastState?.type} onDismiss={() => setToastState(null)} />
-      <div className="row">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div><h2 className="section-title">Capitalized acquisition costs</h2><p className="sub">Link an eligible expense such as transport to this buffalo. Capitalized costs are excluded from operating expense totals to avoid double-counting.</p></div>
-        <div><div className="kpi-label">CURRENT CARRYING VALUE</div><b>{carryingValue == null ? '—' : money(carryingValue)}</b><p className="sub">Purchase price + capitalized costs; no depreciation applied</p><div className="kpi-label">CAPITALIZED COSTS</div><b>{money(totalCapitalized)}</b></div>
+        <div className="shrink-0"><div className="kpi-label">CURRENT CARRYING VALUE</div><b>{carryingValue == null ? '—' : money(carryingValue)}</b><p className="sub">Purchase price + capitalized costs; no depreciation applied</p><div className="kpi-label">CAPITALIZED COSTS</div><b>{money(totalCapitalized)}</b></div>
       </div>
 
       {costsQuery.isPending ? <div className="empty">Loading acquisition costs…</div> :
@@ -97,15 +95,12 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }
         <div className="empty">No acquisition costs capitalized yet.</div>}
 
       {canAdd && <form className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" onSubmit={(event) => { event.preventDefault(); saveMutation.mutate(); }} noValidate>
-        <Field label="Linked buffalo expense"><select className="hidden" tabIndex={-1} aria-hidden="true" value={expenseId} onChange={(e) => setExpenseId(e.target.value)}><option value="" /></select>
-          <div className="field"><Select value={expenseId || undefined} onValueChange={setExpenseId}><SelectTrigger><SelectValue placeholder="Choose an expense" /></SelectTrigger><SelectContent>{availableExpenses.map((expense) => <SelectItem key={expense.id} value={expense.id}>{expense.business_date} · {expense.description || 'Expense'} · {money(Number(expense.total_amount))}</SelectItem>)}</SelectContent></Select></div>
-        </Field>
+        <Field label="Linked buffalo expense"><Select value={expenseId || undefined} onValueChange={setExpenseId}><SelectTrigger><SelectValue placeholder="Choose an expense" /></SelectTrigger><SelectContent>{availableExpenses.map((expense) => <SelectItem key={expense.id} value={expense.id}>{expense.business_date} · {expense.description || 'Expense'} · {money(Number(expense.total_amount))}</SelectItem>)}</SelectContent></Select></Field>
         <Field label="Cost date"><DatePicker value={costDate} max={localDate()} onChange={setCostDate} ariaLabel="Cost date" /></Field>
         <Field label="Capitalized amount (₹)"><Input type="number" inputMode="decimal" min="0.01" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} required /></Field>
         <Field label="Description"><Input value={description} onChange={(event) => setDescription(event.target.value)} maxLength={200} required /></Field>
         <Field label="Notes (optional)"><Textarea value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={500} rows={2} /></Field>
-        <div className="flex items-end"><label className="flex items-center gap-2 text-sm"><Checkbox checked={confirmCapitalization} onCheckedChange={(checked) => setConfirmCapitalization(checked === true)} />Confirm this expense qualifies as an acquisition cost</label></div>
-        <div className="sm:col-span-2 lg:col-span-3"><Button type="submit" disabled={saveMutation.isPending || !availableExpenses.length}>{saveMutation.isPending ? 'Saving…' : 'Add acquisition cost'}</Button></div>
+        <div className="lg:col-span-3"><Button type="submit" disabled={saveMutation.isPending || !availableExpenses.length}>{saveMutation.isPending ? 'Saving…' : 'Add acquisition cost'}</Button></div>
       </form>}
       {canAdd && !expensesQuery.isPending && !expensesQuery.isError && availableExpenses.length === 0 && <p className="sub">No unlinked active expenses are assigned to this buffalo. Create or update an expense and assign it to this buffalo first.</p>}
       {expensesQuery.isError && <p role="alert" className="auth-message">{expensesQuery.error.message}</p>}

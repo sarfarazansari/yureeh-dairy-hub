@@ -12,7 +12,6 @@ import { TimedNotice } from '@/components/ui/TimedNotice';
 import { formatDate } from '@/lib/date-format';
 import { money } from '@/lib/farm-format';
 import { buffaloPaymentType, buffaloPurchaseSchema } from './validation';
-import { getBuffaloPaymentType } from './utils';
 import { useBuffaloDirectory, useCreateBuffaloPurchase } from './hooks/use-buffaloes';
 import type { BuffaloListItem } from './types';
 
