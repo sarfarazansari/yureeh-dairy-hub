@@ -107,11 +107,18 @@ a {
   padding: 34px 42px;
   max-width: 1600px;
 }
-.topbar {
+ .topbar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 18px;
   margin-bottom: 25px;
+}
+.topbar-actions { min-width: 0; max-width: 65%; }
+@media (max-width: 900px) {
+  .topbar { flex-direction: column; }
+  .topbar-actions { max-width: 100%; width: 100%; }
+  .topbar-actions .expense-nav { justify-content: flex-start; }
 }
 .eyebrow {
   text-transform: uppercase;
