@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { supabase } from '@/lib/supabase';
 import type { FeedItem } from '@/lib/feed-types';
@@ -18,6 +18,7 @@ export default function FeedItemsPage() {
   const [search, setSearch] = useState('');
   const [editingItem, setEditingItem] = useState<FeedItem | null>(null);
   const [message, setMessage] = useState('');
+  const [loadError, setLoadError] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -25,9 +26,10 @@ export default function FeedItemsPage() {
     return () => window.clearTimeout(timer);
   }, [search]);
 
-  async function load() {
-    if (!supabase) return;
+  const load = useCallback(async () => {
+    if (!supabase) { setLoadError('Supabase is not configured.'); return; }
     setBusy(true);
+    setLoadError('');
     let query = supabase.from('feed_items').select('*', { count: 'exact' }).order('is_active', { ascending: false }).order('name');
     if (debouncedSearch) {
       const safeSearch = debouncedSearch.replace(/[,%()]/g, ' ').trim();
@@ -37,16 +39,18 @@ export default function FeedItemsPage() {
       query.range((page - 1) * pageSize, page * pageSize - 1),
       supabase.from('feed_items').select('id', { count: 'exact', head: true }).eq('is_active', true),
     ]);
-    if (error) setMessage(error.message);
-    else setMessage('');
-    if (activeResult.error) setMessage(activeResult.error.message);
+    if (error || activeResult.error) {
+      setLoadError((error ?? activeResult.error)?.message ?? 'Could not load feed items.');
+      setBusy(false);
+      return;
+    }
     setRows(data ?? []);
     setTotalRows(count ?? 0);
     setActiveCount(activeResult.count ?? 0);
     setBusy(false);
-  }
+  }, [page, debouncedSearch]);
 
-  useEffect(() => { void load(); }, [page, debouncedSearch]);
+  useEffect(() => { void load(); }, [load]);
 
   async function save(values: FeedItemFormValues, id?: string) {
     if (!supabase) return 'Supabase is not configured.';
@@ -98,7 +102,7 @@ export default function FeedItemsPage() {
     <AppShell title="Feed items" subtitle="Manage the farm's physical feed master">
       <div className="management-stack">
         <FeedItemForm onSave={save} busy={busy} message={message} />
-        <FeedItemTable rows={rows} activeCount={activeCount} search={search} onSearchChange={setSearch} onEdit={setEditingItem} onToggle={toggle} loading={busy} page={page} pageSize={pageSize} totalRows={totalRows} onPageChange={setPage} />
+        <FeedItemTable rows={rows} activeCount={activeCount} search={search} onSearchChange={setSearch} onEdit={setEditingItem} onToggle={toggle} loading={busy} error={loadError} onRetry={() => void load()} page={page} pageSize={pageSize} totalRows={totalRows} onPageChange={setPage} />
         <FeedItemEditDialog item={editingItem} open={Boolean(editingItem)} onOpenChange={(open) => !open && setEditingItem(null)} onSave={save} busy={busy} />
       </div>
     </AppShell>
