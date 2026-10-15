@@ -12,7 +12,7 @@ import { formatDate } from '@/lib/date-format';
 import Link from 'next/link';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { DatePicker } from '@/components/ui/date-picker';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { calculateExpenseTotal, expensePaymentStatus } from '@/lib/expenses';
@@ -49,7 +49,7 @@ export default function ExpenseHistory() {
     [buffalo, setBuffalo] = useState(''),
     [search, setSearch] = useState(''),
     [sort, setSort] = useState('date'),
-    [showMoreFilters, setShowMoreFilters] = useState(false),
+    [showMoreFilters, setShowMoreFilters] = useState(true),
     [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc'),
     [editing, setEditing] = useState<ExpenseRow | null>(null),
     [pendingDelete, setPendingDelete] = useState<ExpenseRow | null>(null),
@@ -159,6 +159,14 @@ export default function ExpenseHistory() {
     params.set('page', String(nextPage)); params.set('pageSize', String(nextSize));
     router.replace(pathname + '?' + params.toString(), { scroll: false });
   }
+  const filterSignature = [from, to, category, group, vendor, status, method, buffalo, outstandingOnly, search].join('|');
+  const previousFilterSignature = useRef(filterSignature);
+  useEffect(() => {
+    if (previousFilterSignature.current !== filterSignature) {
+      previousFilterSignature.current = filterSignature;
+      if (page !== 1) setPagination(1);
+    }
+  }, [filterSignature, page]);
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!editing || !supabase || busy) return;
