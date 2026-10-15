@@ -3,6 +3,9 @@
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -20,6 +23,9 @@ export default function ExpenseVendors() {
     [city, setCity] = useState(''),
     [address, setAddress] = useState(''),
     [busy, setBusy] = useState(false),
+    [loading, setLoading] = useState(true),
+    [loadError, setLoadError] = useState(''),
+    [search, setSearch] = useState(''),
     [message, setMessage] = useState(''),
     [editingVendor, setEditingVendor] = useState<ExpenseVendor | null>(null),
     [statusTarget, setStatusTarget] = useState<ExpenseVendor | null>(null),
@@ -30,27 +36,34 @@ export default function ExpenseVendors() {
     [editCity, setEditCity] = useState(''),
     [editAddress, setEditAddress] = useState('');
   async function load() {
-    if (!supabase) return;
-    const [v, e] = await Promise.all([
-      supabase.from('expense_vendors').select('*').order('name'),
-      supabase
-        .from('expenses')
-        .select('vendor_id,total_amount,paid_amount,pending_amount')
-        .is('deleted_at', null),
-    ]);
-    if (v.error || e.error) setMessage((v.error ?? e.error)!.message);
-    setRows(
-      (v.data ?? []).map((x) => {
-        const own = (e.data ?? []).filter((y) => y.vendor_id === x.id);
+    if (!supabase) {
+      setLoadError('Supabase is not configured.');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setLoadError('');
+    try {
+      const [v, e] = await Promise.all([
+        supabase.from('expense_vendors').select('*').order('name'),
+        supabase.from('expenses').select('vendor_id,total_amount,paid_amount,pending_amount').is('deleted_at', null),
+      ]);
+      if (v.error || e.error) throw (v.error ?? e.error)!;
+      setRows((v.data ?? []).map((vendorRow) => {
+        const own = (e.data ?? []).filter((expense) => expense.vendor_id === vendorRow.id);
         return {
-          ...x,
+          ...vendorRow,
           count: own.length,
-          total: own.reduce((s, y) => s + Number(y.total_amount), 0),
-          paid: own.reduce((s, y) => s + Number(y.paid_amount), 0),
-          pending: own.reduce((s, y) => s + Number(y.pending_amount), 0),
+          total: own.reduce((sum, expense) => sum + Number(expense.total_amount), 0),
+          paid: own.reduce((sum, expense) => sum + Number(expense.paid_amount), 0),
+          pending: own.reduce((sum, expense) => sum + Number(expense.pending_amount), 0),
         };
-      }),
-    );
+      }));
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Could not load vendor directory.');
+    } finally {
+      setLoading(false);
+    }
   }
   useEffect(() => {
     const task = window.setTimeout(() => void load(), 0);
@@ -149,51 +162,27 @@ export default function ExpenseVendors() {
           </div>
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
         </form>
-        <div className="card">
-          <h2 className="section-title">Vendor directory</h2>
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>VENDOR</th>
-                  <th>MOBILE</th>
-                  <th>EXPENSES</th>
-                  <th>TOTAL PURCHASED</th>
-                  <th>OUTSTANDING</th>
-                  <th>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((v) => (
-                  <tr key={v.id}>
-                    <td>
-                      <Link href={`/expenses/vendors/${v.id}`}>
-                        <b>{v.name}</b>
-                      </Link>
-                      <div className="kpi-foot">{v.city ?? ''}</div>
-                    </td>
-                    <td>{v.mobile ?? '—'}</td>
-                    <td>{v.count}</td>
-                    <td>{money(v.total)}</td>
-                    <td>{money(v.pending)}</td>
-                    <td>
-                      <div className="flex flex-wrap gap-2">
-                        <Button type="button" variant="outline" size="sm" onClick={() => beginEdit(v)}>Edit</Button>
-                        <Button type="button" variant="outline" size="sm" onClick={() => v.is_active ? setStatusTarget(v) : void toggle(v)}>
-                          {v.is_active ? 'Deactivate' : 'Activate'}
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        <div className="card space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="section-title mb-0">Vendor directory</h2><Badge variant="secondary">{rows.filter((vendorRow) => vendorRow.is_active).length} active</Badge></div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+            <div className="field min-w-0"><Label htmlFor="vendor-directory-search">Search vendors</Label><Input id="vendor-directory-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Name, mobile or city" /></div>
+            <Button type="button" variant="ghost" disabled={!search} onClick={() => setSearch('')}>Reset search</Button>
           </div>
-          {!rows.length && (
-            <div className="empty">
-              No vendors yet. Vendor is optional when recording an expense.
-            </div>
-          )}
+          {loadError ? <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{loadError}</p><Button className="mt-3" type="button" size="sm" variant="outline" onClick={() => void load()}>Retry</Button></div> : <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]" aria-busy={loading}>
+            <Table className="min-w-[800px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
+              <TableHeader><TableRow><TableHead>VENDOR</TableHead><TableHead>MOBILE</TableHead><TableHead>EXPENSES</TableHead><TableHead>TOTAL PURCHASED</TableHead><TableHead>OUTSTANDING</TableHead><TableHead>STATUS / ACTIONS</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {loading ? Array.from({ length: 4 }, (_, index) => <TableRow key={index}>{Array.from({ length: 6 }, (_, cell) => <TableCell key={cell}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : rows.filter((vendorRow) => `${vendorRow.name} ${vendorRow.mobile ?? ''} ${vendorRow.city ?? ''}`.toLowerCase().includes(search.trim().toLowerCase())).map((v) => (
+                  <TableRow key={v.id}>
+                    <TableCell><Link href={`/expenses/vendors/${v.id}`} className="font-semibold text-[var(--ink)]">{v.name}</Link><div className="text-xs text-muted-foreground">{v.city ?? ''}</div></TableCell>
+                    <TableCell>{v.mobile ?? '—'}</TableCell><TableCell>{v.count}</TableCell><TableCell>{money(v.total)}</TableCell><TableCell>{money(v.pending)}</TableCell>
+                    <TableCell><div className="flex flex-wrap items-center gap-2"><Badge variant={v.is_active ? 'secondary' : 'muted'}>{v.is_active ? 'Active' : 'Inactive'}</Badge><Button type="button" variant="outline" size="sm" onClick={() => beginEdit(v)}>Edit</Button><Button type="button" variant="outline" size="sm" onClick={() => v.is_active ? setStatusTarget(v) : void toggle(v)}>{v.is_active ? 'Deactivate' : 'Activate'}</Button></div></TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>}
+          {!loading && !loadError && !rows.filter((vendorRow) => `${vendorRow.name} ${vendorRow.mobile ?? ''} ${vendorRow.city ?? ''}`.toLowerCase().includes(search.trim().toLowerCase())).length && <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">{search.trim() ? 'No vendors match your search.' : 'No vendors yet. Vendor is optional when recording an expense.'}</div>}
         </div>
       </div>
       <Dialog open={!!editingVendor} onOpenChange={(open) => { if (!open && !editBusy) setEditingVendor(null); }}>
