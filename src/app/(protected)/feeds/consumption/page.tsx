@@ -66,7 +66,6 @@ export default function FeedConsumptionPage() {
     <AppShell title="Feed consumption" subtitle="Track feed usage and inventory cost">
       <div className="management-stack">
         <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
-        {loadError && <div role="alert" className="rounded-md border border-destructive/30 p-3 text-sm">{loadError}<Button className="ml-3" type="button" size="sm" variant="outline" onClick={() => void load()}>Retry</Button></div>}
 
         <div className="card">
           <div className="row">
