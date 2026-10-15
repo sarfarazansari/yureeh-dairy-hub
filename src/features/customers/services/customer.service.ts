@@ -13,6 +13,9 @@ export type CustomerSummary = CustomerOption & {
   phone: string | null;
   address: string | null;
   notes: string | null;
+  total_milk_quantity: number;
+  total_sales_amount: number;
+  entry_count: number;
 };
 
 export type CustomerPaymentMethod = 'CASH' | 'UPI' | 'BANK_TRANSFER' | 'OTHER';
@@ -24,11 +27,6 @@ export type CustomerPayment = {
   payment_method: CustomerPaymentMethod;
   transaction_reference: string | null;
   notes: string | null;
-};
-export type CustomerMilkSummary = {
-  customer_id: string;
-  milk_quantity: number;
-  calculated_amount: number;
 };
 export type CustomerPricing = {
   pricing_type: PricingType;
@@ -66,19 +64,26 @@ export async function getMilkEntryCustomers(client: SupabaseClient) {
 }
 
 export async function getCustomerDirectory(client: SupabaseClient) {
-  const [customers, entries] = await Promise.all([
+  const [customers, summaries] = await Promise.all([
     client.from('customers').select('*').order('name'),
-    client
-      .from('milk_entries')
-      .select('customer_id,milk_quantity,calculated_amount')
-      .is('deleted_at', null),
+    client.rpc('get_customer_directory_summaries'),
   ]);
-  if (customers.error || entries.error) {
+  if (customers.error || summaries.error) {
     throw new Error('Could not load the customer directory. Please try again.');
   }
+  const byCustomer = new Map(
+    (summaries.data ?? []).map((summary) => [summary.customer_id, summary]),
+  );
   return {
-    customers: (customers.data ?? []) as CustomerSummary[],
-    entries: (entries.data ?? []) as CustomerMilkSummary[],
+    customers: (customers.data ?? []).map((customer) => {
+      const summary = byCustomer.get(customer.id);
+      return {
+        ...customer,
+        total_milk_quantity: Number(summary?.total_milk_quantity ?? 0),
+        total_sales_amount: Number(summary?.total_sales_amount ?? 0),
+        entry_count: Number(summary?.entry_count ?? 0),
+      };
+    }) as CustomerSummary[],
   };
 }
 
