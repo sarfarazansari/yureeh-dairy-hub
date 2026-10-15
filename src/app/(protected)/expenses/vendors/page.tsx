@@ -122,8 +122,9 @@ export default function ExpenseVendors() {
   return (
     <ExpenseShell title="Expense vendors" subtitle="Suppliers, transporters and service providers">
       <div className="management-stack">
-        <form className="card" onSubmit={save}>
+        <form className="card space-y-4" onSubmit={save}>
           <h2 className="section-title">Add vendor</h2>
+          <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-3">
           <div className="field">
             <Label htmlFor="vendor-name">Name</Label>
             <Input id="vendor-name" required value={name} onChange={(e) => setName(e.target.value)} maxLength={160} />
@@ -136,13 +137,16 @@ export default function ExpenseVendors() {
             <Label htmlFor="vendor-city">City</Label>
             <Input id="vendor-city" value={city} onChange={(e) => setCity(e.target.value)} maxLength={120} />
           </div>
-          <div className="field">
-            <Label htmlFor="vendor-address">Address</Label>
-            <Textarea id="vendor-address" maxLength={500} value={address} onChange={(e) => setAddress(e.target.value)} rows={3} maxLength={500} />
+          <div className="field md:col-span-2 xl:col-span-3">
+            <Label htmlFor="vendor-address">Address <span className="text-muted-foreground">(optional)</span></Label>
+            <Textarea id="vendor-address" maxLength={500} value={address} onChange={(e) => setAddress(e.target.value)} rows={2} />
           </div>
-          <Button type="submit" disabled={busy || !name.trim()}>
-            {busy ? 'Saving…' : 'Add vendor'}
-          </Button>
+          </div>
+          <div className="flex justify-end">
+            <Button type="submit" disabled={busy || !name.trim()}>
+              {busy ? 'Saving…' : 'Add vendor'}
+            </Button>
+          </div>
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
         </form>
         <div className="card">
@@ -198,11 +202,11 @@ export default function ExpenseVendors() {
             <DialogTitle>Edit vendor</DialogTitle>
             <DialogDescription>Vendor master changes affect future selections only. Existing expense snapshots are preserved.</DialogDescription>
           </DialogHeader>
-          <form onSubmit={saveEdit} className="grid gap-4">
+          <form onSubmit={saveEdit} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div className="field"><Label htmlFor="edit-vendor-name">Name</Label><Input id="edit-vendor-name" required maxLength={160} value={editName} onChange={(e) => setEditName(e.target.value)} /></div>
             <div className="field"><Label htmlFor="edit-vendor-mobile">Mobile</Label><Input id="edit-vendor-mobile" inputMode="tel" maxLength={30} value={editMobile} onChange={(e) => setEditMobile(e.target.value)} /></div>
             <div className="field"><Label htmlFor="edit-vendor-city">City</Label><Input id="edit-vendor-city" maxLength={120} value={editCity} onChange={(e) => setEditCity(e.target.value)} /></div>
-            <div className="field"><Label htmlFor="edit-vendor-address">Address</Label><Textarea id="edit-vendor-address" rows={3} maxLength={500} value={editAddress} onChange={(e) => setEditAddress(e.target.value)} /></div>
+            <div className="field sm:col-span-2"><Label htmlFor="edit-vendor-address">Address</Label><Textarea id="edit-vendor-address" rows={2} maxLength={500} value={editAddress} onChange={(e) => setEditAddress(e.target.value)} /></div>
             <DialogFooter><Button type="button" variant="secondary" disabled={editBusy} onClick={() => setEditingVendor(null)}>Cancel</Button><Button type="submit" disabled={editBusy || !editName.trim()}>{editBusy ? 'Saving…' : 'Save vendor'}</Button></DialogFooter>
           </form>
         </DialogContent>
