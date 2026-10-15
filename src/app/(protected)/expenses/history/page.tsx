@@ -234,6 +234,12 @@ export default function ExpenseHistory() {
   }
   return (
     <ExpenseShell title="Expense history" subtitle="Filter, review and edit farm expenses">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
+        <div className="card"><p className="kpi-foot">Total expenses</p><p className="mt-1 text-2xl font-semibold">{money(totalAmount)}</p><p className="kpi-foot">Across {visible.length} matching records</p></div>
+        <div className="card"><p className="kpi-foot">Paid</p><p className="mt-1 text-2xl font-semibold">{money(totalPaid)}</p><p className="kpi-foot">Recorded against these expenses</p></div>
+        <div className="card"><p className="kpi-foot">Outstanding</p><p className="mt-1 text-2xl font-semibold">{money(totalOutstanding)}</p><p className="kpi-foot">Remaining to be paid</p></div>
+        <div className="card"><p className="kpi-foot">Transactions</p><p className="mt-1 text-2xl font-semibold">{visible.length.toLocaleString('en-IN')}</p><p className="kpi-foot">Matching current filters</p></div>
+      </div>
       <div className="card space-y-5">
         <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(220px,auto)_minmax(0,1fr)] md:items-end">
           <div className="field min-w-0">
@@ -417,7 +423,7 @@ export default function ExpenseHistory() {
               </tr>
             </thead>
             <tbody>
-              {visible.map((r) => (
+              {pageRows.map((r) => (
                 <tr key={r.id}>
                   <td>{formatDate(r.business_date)}</td>
                   <td>
