@@ -983,28 +983,6 @@ a {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 0 8px;
   }
-  .app-dialog form {
-    padding: 17px;
-  }
-  .app-dialog .expense-edit-form,
-  .app-dialog .category-edit-form {
-    padding: 17px;
-  }
-  .dialog-form-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .delete-dialog > .dialog-header,
-  .delete-dialog > .delete-summary,
-  .delete-dialog > .dialog-footer {
-    margin-left: 17px;
-    margin-right: 17px;
-  }
-  .delete-dialog > .dialog-header {
-    margin-top: 17px;
-  }
-  .delete-dialog > .dialog-footer {
-    margin-bottom: 17px;
-  }
 }
 
 button:not(:disabled),
