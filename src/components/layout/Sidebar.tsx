@@ -95,20 +95,24 @@ export function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const triggerButtonRef = useRef<HTMLButtonElement>(null);
+  const mobileOpenRef = useRef(false);
   const menuId = 'primary-navigation-drawer';
 
   const closeMobileMenu = () => {
+    mobileOpenRef.current = false;
     setMobileOpen(false);
     triggerButtonRef.current?.focus();
   };
 
   useEffect(() => {
+    mobileOpenRef.current = mobileOpen;
     if (!mobileOpen) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     closeButtonRef.current?.focus();
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        mobileOpenRef.current = false;
         setMobileOpen(false);
         triggerButtonRef.current?.focus();
       }
@@ -120,14 +124,21 @@ export function Sidebar() {
     };
   }, [mobileOpen]);
 
-  useEffect(() => { setMobileOpen(false); }, [pathname]);
+  useEffect(() => {
+    mobileOpenRef.current = false;
+    setMobileOpen(false);
+  }, [pathname]);
 
   return (
     <>
       <button type="button" ref={triggerButtonRef} className="mobile-menu-trigger"
         aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={mobileOpen} aria-controls={menuId}
-        onClick={() => setMobileOpen((open) => !open)}>
+        onClick={() => {
+          const nextOpen = !mobileOpenRef.current;
+          mobileOpenRef.current = nextOpen;
+          setMobileOpen(nextOpen);
+        }}>
         <span className="mobile-menu-icon" aria-hidden="true"><span /><span /><span /></span>
       </button>
       <div className={`mobile-nav-backdrop${mobileOpen ? ' is-open' : ''}`} aria-hidden="true" onClick={closeMobileMenu} />
