@@ -5,6 +5,8 @@ import { useMemo, useState } from 'react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/date-format';
 import { money, milkTxt } from '@/lib/farm-format';
@@ -117,9 +119,9 @@ function PurchaseSummary({ buffalo }: { buffalo: BuffaloDetail }) {
   </div>;
 }
 function ProductionTable({ production }: { production: Array<{ id: string; business_date: string; shift: string; milk_quantity: number | string }> }) {
-  return production.length ? <div className="table-wrap"><table className="table"><thead><tr><th>DATE</th><th>SHIFT</th><th>MILK</th></tr></thead><tbody>
-    {production.map((row) => <tr key={row.id}><td>{formatDate(row.business_date)}</td><td>{row.shift === 'MORNING' ? 'Morning' : 'Evening'}</td><td>{milkTxt(Number(row.milk_quantity))}</td></tr>)}
-  </tbody></table></div> : <div className="empty">No performance records for this buffalo.</div>;
+  return production.length ? <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[520px]"><TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>SHIFT</TableHead><TableHead>MILK</TableHead></TableRow></TableHeader><TableBody>
+    {production.map((row) => <TableRow key={row.id}><TableCell>{formatDate(row.business_date)}</TableCell><TableCell>{row.shift === 'MORNING' ? 'Morning' : 'Evening'}</TableCell><TableCell>{milkTxt(Number(row.milk_quantity))}</TableCell></TableRow>)}
+  </TableBody></Table></div> : <div className="empty">No performance records for this buffalo.</div>;
 }
 function paymentTypeLabel(status?: string) {
   if (status === 'PAID') return 'Paid in Full';
