@@ -441,7 +441,7 @@ export default function ExpenseHistory() {
           )}
           </DialogContent>
         </ShadcnDialog>
-        <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
+        {loadError ? <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{message || 'Could not load expense history.'}</p><Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => void load()}>Retry</Button></div> : <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
           <Table className="min-w-[1200px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
             <TableHeader><TableRow>
               <TableHead>DATE</TableHead><TableHead>CATEGORY / GROUP</TableHead><TableHead>VENDOR</TableHead><TableHead>DESCRIPTION</TableHead><TableHead>QUANTITY</TableHead><TableHead>TOTAL</TableHead><TableHead>PAID</TableHead><TableHead>PENDING</TableHead><TableHead>STATUS</TableHead><TableHead>METHOD</TableHead><TableHead>ACTIONS</TableHead>
@@ -461,8 +461,8 @@ export default function ExpenseHistory() {
               </TableRow>)}
             </TableBody>
           </Table>
-        </div>
-        {!visible.length && <div className="empty">No expenses match these filters.</div>}
+        </div>}
+        {!loadError && !visible.length && <div className="empty">No expenses match these filters.</div>}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4"><p className="text-sm text-muted-foreground">Showing {firstResult}–{lastResult} of {visible.length}</p><div className="flex flex-wrap items-center gap-2"><Label htmlFor="expense-page-size">Rows per page</Label><Select value={String(pageSize)} onValueChange={(value) => setPagination(1, Number(value))}><SelectTrigger id="expense-page-size" className="w-24"><SelectValue /></SelectTrigger><SelectContent>{[10, 20, 50, 100].map((size) => <SelectItem key={size} value={String(size)}>{size}</SelectItem>)}</SelectContent></Select><Button type="button" variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setPagination(safePage - 1)}>Previous</Button><span className="px-2 text-sm">Page {safePage} of {pageCount}</span><Button type="button" variant="outline" size="sm" disabled={safePage >= pageCount} onClick={() => setPagination(safePage + 1)}>Next</Button></div></div>
         <p className="kpi-foot">Feed-purchase expenses are managed in Feed Purchases; expenses with dated payment-ledger entries are locked to preserve reconciliation. Linked purchase expenses are counted once.</p>
         <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open && !deleteBusy) setPendingDelete(null); }}>
