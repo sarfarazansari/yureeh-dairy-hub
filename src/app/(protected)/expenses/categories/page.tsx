@@ -108,7 +108,7 @@ export default function ExpenseCategories() {
     }
   }
   const categoryForm = (
-    <form className={id ? 'category-edit-form' : 'card'} onSubmit={save}>
+    <form className={id ? 'category-edit-form grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 xl:grid-cols-3' : 'card space-y-4'} onSubmit={save}>
       <h2 className="section-title" id={id ? 'edit-category-title' : undefined}>
         {id ? 'Edit category' : 'Add category'}
       </h2>
@@ -130,19 +130,19 @@ export default function ExpenseCategories() {
         <Label htmlFor="expense-category-unit">Default unit</Label>
         <Select value={unit || "none"} onValueChange={(value) => setUnit(value === "none" ? "" : value)}><SelectTrigger id="expense-category-unit"><SelectValue placeholder="No default unit" /></SelectTrigger><SelectContent><SelectItem value="none">No default unit</SelectItem>{UNITS.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
       </div>
-      <div className="field flex items-center gap-3">
+      <div className="field flex min-h-10 items-center gap-3 rounded-md border p-3">
         <Checkbox id="expense-category-quantity" checked={quantity} onCheckedChange={(checked) => setQuantity(checked === true)} />
         <Label htmlFor="expense-category-quantity">Quantity based</Label>
       </div>
-      <div className="field">
-        <Label htmlFor="expense-category-description">Description</Label>
+      <div className="field sm:col-span-2 xl:col-span-3">
+        <Label htmlFor="expense-category-description">Description <span className="text-muted-foreground">(optional)</span></Label>
         <Input
           id="expense-category-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
-      <div className="dialog-footer">
+      <div className="dialog-footer sm:col-span-2 xl:col-span-3">
         {id && (
           <Button type="button" variant="secondary" onClick={clear} disabled={busy}>
             Cancel
