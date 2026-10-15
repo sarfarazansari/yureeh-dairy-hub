@@ -100,7 +100,7 @@ function HerdOverview({ rows, isLoading, error }: { rows: BuffaloListItem[]; isL
   return (
     <div className="card">
       <div className="row"><h2 className="section-title">Herd overview</h2><span className="tag">{rows.length} total</span></div>
-      {error && <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{error}</p></div>}
+      {error && <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{error}</p><Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => window.location.reload()}>Retry</Button></div>}
       {isLoading && <div className="space-y-3 py-2">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-10 w-full" />)}</div>}
       {!isLoading && !error && rows.length > 0 && <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[1000px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
         <TableHeader><TableRow><TableHead>BUFFALO</TableHead><TableHead>BREED</TableHead><TableHead>PURCHASE</TableHead><TableHead>VENDOR</TableHead><TableHead>PRICE</TableHead><TableHead>BALANCE DUE</TableHead><TableHead>PAYMENT</TableHead><TableHead>STATUS</TableHead><TableHead>ACTION</TableHead></TableRow></TableHeader>
