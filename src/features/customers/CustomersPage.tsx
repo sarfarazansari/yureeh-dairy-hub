@@ -45,7 +45,6 @@ export default function CustomersPage() {
   const editMutation = useUpdateCustomerMutation();
   const statusMutation = useSetCustomerActiveMutation();
   const rows = directoryQuery.data?.customers ?? [];
-  const entries = directoryQuery.data?.entries ?? [];
   const busy = createMutation.isPending;
   const pricingBusy = pricingMutation.isPending;
   const editBusy = editMutation.isPending;
@@ -193,14 +192,12 @@ export default function CustomersPage() {
             <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[850px]">
               <TableHeader><TableRow><TableHead>Customer</TableHead><TableHead>Pricing</TableHead><TableHead>Default rate</TableHead><TableHead>Total milk</TableHead><TableHead>Revenue</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
               <TableBody>
-                {rows.map((c) => {
-                  const own = entries.filter((e) => e.customer_id === c.id);
-                  return <TableRow key={c.id}>
+                {rows.map((c) => <TableRow key={c.id}>
                     <TableCell><Link href={`/customers/${c.id}`} className="font-semibold text-[var(--ink)]">{c.name}</Link><div className="kpi-foot">{c.phone || '—'}</div></TableCell>
                     <TableCell>{c.pricing_type === 'FIXED_PER_LITRE' ? 'Fixed / L' : 'Fat based'}</TableCell>
                     <TableCell>₹{c.default_rate}</TableCell>
-                    <TableCell>{milkTxt(own.reduce((s, e) => s + Number(e.milk_quantity), 0))}</TableCell>
-                    <TableCell>{money(own.reduce((s, e) => s + Number(e.calculated_amount), 0))}</TableCell>
+                    <TableCell>{milkTxt(c.total_milk_quantity)}</TableCell>
+                    <TableCell>{money(c.total_sales_amount)}</TableCell>
                     <TableCell>
                       <Badge
                         variant={c.is_active ? 'secondary' : 'muted'}
@@ -212,8 +209,7 @@ export default function CustomersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell><div className="flex justify-end gap-2"><Button variant="outline" size="sm" type="button" onClick={() => openEdit(c)}>Edit</Button><Button variant="outline" size="sm" type="button" onClick={() => openPricing(c)}>Rate</Button><Button variant="outline" size="sm" type="button" disabled={statusMutation.isPending} onClick={() => void toggle(c)}>{statusMutation.isPending ? 'Updating…' : c.is_active ? 'Pause' : 'Activate'}</Button></div></TableCell>
-                  </TableRow>;
-                })}
+                  </TableRow>)}
               </TableBody>
             </Table></div>
           ) : (
