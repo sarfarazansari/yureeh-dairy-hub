@@ -1,6 +1,7 @@
 'use client';
 
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import Link from 'next/link';
@@ -25,9 +26,12 @@ export default function FeedConsumptionPage() {
   const [to, setTo] = useState('');
   const [feedFilter, setFeedFilter] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   const load = useCallback(async () => {
-    if (!supabase) return;
+    if (!supabase) { setLoadError('Supabase is not configured.'); setLoading(false); return; }
+    setLoading(true); setLoadError('');
     try {
       const [feeds, consumption] = await Promise.all([
         fetchFeedItems(supabase, false),
@@ -37,8 +41,8 @@ export default function FeedConsumptionPage() {
       setRows(consumption.rows);
       setCount(consumption.count);
     } catch (error) {
-      setToast({ message: error instanceof Error ? error.message : 'Could not load feed consumption.', type: 'error' });
-    }
+      setLoadError(error instanceof Error ? error.message : 'Could not load feed consumption.');
+    } finally { setLoading(false); }
   }, [page, from, to, feedFilter]);
 
   useEffect(() => { void load(); }, [load]);
@@ -62,6 +66,7 @@ export default function FeedConsumptionPage() {
     <AppShell title="Feed consumption" subtitle="Track feed usage and inventory cost">
       <div className="management-stack">
         <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
+        {loadError && <div role="alert" className="rounded-md border border-destructive/30 p-3 text-sm">{loadError}<Button className="ml-3" type="button" size="sm" variant="outline" onClick={() => void load()}>Retry</Button></div>}
 
         <div className="card">
           <div className="row">
@@ -75,7 +80,7 @@ export default function FeedConsumptionPage() {
           </div>
         </div>
 
-        <FeedConsumptionTable rows={rows} count={count} page={page} pageSize={PAGE_SIZE} onPageChange={setPage} onDelete={handleDelete} />
+        <FeedConsumptionTable rows={rows} count={count} page={page} pageSize={PAGE_SIZE} onPageChange={setPage} onDelete={handleDelete} loading={loading} error={loadError} onRetry={() => void load()} />
       </div>
     </AppShell>
   );
