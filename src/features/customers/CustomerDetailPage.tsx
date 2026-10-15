@@ -13,6 +13,8 @@ import { useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 
 import {
   Area,
@@ -217,21 +219,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
         ) : paymentsQuery.isError ? (
           <div className="list-error" role="alert"><span>{paymentsQuery.error.message}</span><Button type="button" variant="outline" onClick={() => void paymentsQuery.refetch()}>Retry</Button></div>
         ) : payments.length ? (
-          <div className="table-wrap">
-            <table className="table">
-              <thead><tr><th>DATE</th><th>AMOUNT</th><th>METHOD</th><th>REFERENCE</th></tr></thead>
-              <tbody>
-                {payments.map((payment) => (
-                  <tr key={payment.id}>
-                    <td>{formatDate(payment.payment_date)}</td>
-                    <td>{money(payment.amount)}</td>
-                    <td>{paymentMethodLabel(payment.payment_method)}</td>
-                    <td>{payment.transaction_reference || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[600px]"><TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>AMOUNT</TableHead><TableHead>METHOD</TableHead><TableHead>REFERENCE</TableHead></TableRow></TableHeader><TableBody>{payments.map((payment) => <TableRow key={payment.id}><TableCell>{formatDate(payment.payment_date)}</TableCell><TableCell>{money(payment.amount)}</TableCell><TableCell>{paymentMethodLabel(payment.payment_method)}</TableCell><TableCell>{payment.transaction_reference || '—'}</TableCell></TableRow>)}</TableBody></Table></div>
         ) : (
           <div className="empty">No customer payments recorded yet.</div>
         )}
@@ -240,36 +228,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
       <div style={{ height: 14 }} />
       <div className="card">
         <h2 className="section-title">Recent entry history (latest 500)</h2>
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>DATE</th>
-                <th>SHIFT</th>
-                <th>MILK</th>
-                <th>FAT</th>
-                <th>RATE SNAPSHOT</th>
-                <th>AMOUNT</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id}>
-                  <td>{formatDate(r.business_date)}</td>
-                  <td>{r.shift}</td>
-                  <td>{milkTxt(Number(r.milk_quantity))}</td>
-                  <td>{r.fat == null ? '—' : `${r.fat}%`}</td>
-                  <td>
-                    {r.pricing_type === 'FIXED_PER_LITRE'
-                      ? '₹' + r.applied_rate + '/L'
-                      : '₹' + r.applied_rate + '/fat'}
-                  </td>
-                  <td>{money(Number(r.calculated_amount))}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[750px]"><TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>SHIFT</TableHead><TableHead>MILK</TableHead><TableHead>FAT</TableHead><TableHead>RATE SNAPSHOT</TableHead><TableHead>AMOUNT</TableHead></TableRow></TableHeader><TableBody>{rows.map((r) => <TableRow key={r.id}><TableCell>{formatDate(r.business_date)}</TableCell><TableCell>{r.shift}</TableCell><TableCell>{milkTxt(Number(r.milk_quantity))}</TableCell><TableCell>{r.fat == null ? '—' : `${r.fat}%`}</TableCell><TableCell>{r.pricing_type === 'FIXED_PER_LITRE' ? `₹${r.applied_rate}/L` : `₹${r.applied_rate}/fat`}</TableCell><TableCell>{money(Number(r.calculated_amount))}</TableCell></TableRow>)}</TableBody></Table></div>
         {!rows.length && <div className="empty">No entries for this customer yet.</div>}
       </div>
     </AppShell>
