@@ -48,14 +48,17 @@ function isActivePath(pathname: string, href: string) {
 
 function SidebarAccount({ mobileOpen }: { mobileOpen: boolean }) {
   const [signingOut, setSigningOut] = useState(false);
+  const signingOutRef = useRef(false);
 
   async function signOut() {
-    if (signingOut) return;
+    if (signingOutRef.current) return;
+    signingOutRef.current = true;
     setSigningOut(true);
     try {
       const { error } = await supabase!.auth.signOut();
       if (error) throw error;
     } catch (error) {
+      signingOutRef.current = false;
       setSigningOut(false);
       toast.error(error instanceof Error ? error.message : 'Unable to sign out. Please try again.');
     }
