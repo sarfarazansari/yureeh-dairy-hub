@@ -6,6 +6,9 @@ import { supabase } from '@/lib/supabase';
 import { ExpenseShell, money } from '../../shared';
 import { KPI } from '@/components/ui/KPI';
 import type { ExpenseRow, ExpenseVendor } from '@/lib/expense-types';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+
 export default function ExpenseVendorDetail({ params }: { params: Promise<{ id: string }> }) {
   const [vendor, setVendor] = useState<ExpenseVendor | null>(null),
     [rows, setRows] = useState<ExpenseRow[]>([]),
@@ -51,34 +54,9 @@ export default function ExpenseVendorDetail({ params }: { params: Promise<{ id: 
       </div>
       <div className="card">
         <h2 className="section-title">Expense history</h2>
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>DATE</th>
-                <th>CATEGORY</th>
-                <th>DESCRIPTION</th>
-                <th>TOTAL</th>
-                <th>PAID</th>
-                <th>PENDING</th>
-                <th>STATUS</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={r.id}>
-                  <td>{formatDate(r.business_date)}</td>
-                  <td>{r.category_name_snapshot}</td>
-                  <td>{r.description ?? '—'}</td>
-                  <td>{money(Number(r.total_amount))}</td>
-                  <td>{money(Number(r.paid_amount))}</td>
-                  <td>{money(Number(r.pending_amount))}</td>
-                  <td>{r.payment_status}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[850px]"><TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>CATEGORY</TableHead><TableHead>DESCRIPTION</TableHead><TableHead>TOTAL</TableHead><TableHead>PAID</TableHead><TableHead>PENDING</TableHead><TableHead>STATUS</TableHead></TableRow></TableHeader><TableBody>
+          {rows.map((r) => <TableRow key={r.id}><TableCell className="whitespace-nowrap">{formatDate(r.business_date)}</TableCell><TableCell>{r.category_name_snapshot}</TableCell><TableCell>{r.description ?? '—'}</TableCell><TableCell>{money(Number(r.total_amount))}</TableCell><TableCell>{money(Number(r.paid_amount))}</TableCell><TableCell>{money(Number(r.pending_amount))}</TableCell><TableCell><Badge variant={r.payment_status === 'PAID' ? 'secondary' : 'outline'}>{r.payment_status}</Badge></TableCell></TableRow>)}
+        </TableBody></Table></div>
         {!rows.length && <div className="empty">No expenses recorded for this vendor.</div>}
       </div>
     </ExpenseShell>
