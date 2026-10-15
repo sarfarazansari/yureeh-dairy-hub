@@ -30,6 +30,7 @@ export default function ExpenseHistory() {
   const sizeParam = Number(searchParams.get('pageSize') ?? '20');
   const pageSize = [10, 20, 50, 100].includes(sizeParam) ? sizeParam : 20;
   const [rows, setRows] = useState<ExpenseRow[]>([]),
+    [totalCount, setTotalCount] = useState(0),
     [ledgerExpenseIds, setLedgerExpenseIds] = useState<Set<string>>(new Set()),
     [feedPurchaseExpenseIds, setFeedPurchaseExpenseIds] = useState<Set<string>>(new Set()),
     [categories, setCategories] = useState<Pick<ExpenseCategory, 'id' | 'name' | 'category_group'>[]>([]),
@@ -72,12 +73,11 @@ export default function ExpenseHistory() {
       setLoadError(true);
       return;
     }
+    const offset = (page - 1) * pageSize;
     let q = supabase
       .from('expenses')
-      .select('*')
-      .is('deleted_at', null)
-      .order('business_date', { ascending: false })
-      .limit(1000);
+      .select('*', { count: 'exact' })
+      .is('deleted_at', null);
     if (from) q = q.gte('business_date', from);
     if (to) q = q.lte('business_date', to);
     if (category) q = q.eq('category_id', category);
@@ -87,6 +87,10 @@ export default function ExpenseHistory() {
     if (method) q = q.eq('payment_method', method);
     if (buffalo) q = q.eq('buffalo_id', buffalo);
     if (outstandingOnly) q = q.gt('pending_amount', 0);
+    const term = search.trim().replace(/[(),]/g, ' ').replace(/[%_]/g, '');
+    if (term) q = q.or(`category_name_snapshot.ilike.%${term}%,vendor_name_snapshot.ilike.%${term}%,description.ilike.%${term}%`);
+    const sortColumn = sort === 'amount' ? 'total_amount' : sort === 'pending' ? 'pending_amount' : sort === 'category' ? 'category_name_snapshot' : 'business_date';
+    q = q.order(sortColumn, { ascending: sortDirection === 'asc' }).range(offset, offset + pageSize - 1);
     const [e, c, v, b] = await Promise.all([
       q,
       supabase.from('expense_categories').select('id,name,category_group').order('name'),
@@ -100,6 +104,7 @@ export default function ExpenseHistory() {
       return;
     }
     const nextRows = e.data ?? [];
+    setTotalCount(e.count ?? 0);
     const expenseIds = nextRows.map((expense) => expense.id);
     if (expenseIds.length) {
       const [paymentResult, purchaseResult] = await Promise.all([
@@ -128,14 +133,8 @@ export default function ExpenseHistory() {
   useEffect(() => {
     const task = window.setTimeout(() => void load(), 0);
     return () => window.clearTimeout(task);
-  }, [from, to, category, group, vendor, status, method, buffalo, outstandingOnly]);
-  const visible = useMemo(() => rows.filter((r) => (`${r.category_name_snapshot} ${r.vendor_name_snapshot ?? ''} ${r.description ?? ''}`).toLowerCase().includes(search.toLowerCase().trim())).sort((left, right) => {
-    const direction = sortDirection === 'asc' ? 1 : -1;
-    if (sort === 'amount') return (Number(left.total_amount) - Number(right.total_amount)) * direction;
-    if (sort === 'pending') return (Number(left.pending_amount) - Number(right.pending_amount)) * direction;
-    if (sort === 'category') return left.category_name_snapshot.localeCompare(right.category_name_snapshot) * direction;
-    return left.business_date.localeCompare(right.business_date) * direction;
-  }), [rows, search, sort, sortDirection]);
+  }, [from, to, category, group, vendor, status, method, buffalo, outstandingOnly, search, sort, sortDirection, page, pageSize]);
+  const visible = rows;
   const totalAmount = visible.reduce((sum, row) => sum + Number(row.total_amount || 0), 0);
   const totalPaid = visible.reduce((sum, row) => sum + Number(row.paid_amount || 0), 0);
   const totalOutstanding = visible.reduce((sum, row) => sum + Number(row.pending_amount || 0), 0);
@@ -151,11 +150,11 @@ export default function ExpenseHistory() {
     });
     return [...grouped.entries()].map(([name, value]) => ({ name, ...value })).sort((left, right) => right.total - left.total);
   }, [visible]);
-  const pageCount = Math.max(1, Math.ceil(visible.length / pageSize));
+  const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
   const safePage = Math.min(page, pageCount);
-  const pageRows = visible.slice((safePage - 1) * pageSize, safePage * pageSize);
-  const firstResult = visible.length ? (safePage - 1) * pageSize + 1 : 0;
-  const lastResult = Math.min(safePage * pageSize, visible.length);
+  const pageRows = visible;
+  const firstResult = totalCount ? (safePage - 1) * pageSize + 1 : 0;
+  const lastResult = Math.min((safePage - 1) * pageSize + visible.length, totalCount);
   function setPagination(nextPage: number, nextSize = pageSize) {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', String(nextPage)); params.set('pageSize', String(nextSize));
@@ -267,10 +266,10 @@ export default function ExpenseHistory() {
   return (
     <ExpenseShell title="Expense history" subtitle="Filter, review and edit farm expenses">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="card"><p className="kpi-foot">Total expenses</p><p className="mt-1 text-2xl font-semibold">{money(totalAmount)}</p><p className="kpi-foot">Across {visible.length} matching records</p></div>
+        <div className="card"><p className="kpi-foot">Total expenses</p><p className="mt-1 text-2xl font-semibold">{money(totalAmount)}</p><p className="kpi-foot">Across {totalCount.toLocaleString('en-IN')} matching records</p></div>
         <div className="card"><p className="kpi-foot">Paid</p><p className="mt-1 text-2xl font-semibold">{money(totalPaid)}</p><p className="kpi-foot">Recorded against these expenses</p></div>
         <div className="card"><p className="kpi-foot">Outstanding</p><p className="mt-1 text-2xl font-semibold">{money(totalOutstanding)}</p><p className="kpi-foot">Remaining to be paid</p></div>
-        <div className="card"><p className="kpi-foot">Transactions</p><p className="mt-1 text-2xl font-semibold">{visible.length.toLocaleString('en-IN')}</p><p className="kpi-foot">Matching current filters</p></div>
+        <div className="card"><p className="kpi-foot">Transactions</p><p className="mt-1 text-2xl font-semibold">{totalCount.toLocaleString('en-IN')}</p><p className="kpi-foot">Matching current filters</p></div>
       </div>
         <div className="card space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold">Spending breakdown</h2><p className="kpi-foot">Category totals and recorded quantities for the same filtered results.</p></div><span className="text-sm text-muted-foreground">{categoryBreakdown.length} categories</span></div>
@@ -297,7 +296,7 @@ export default function ExpenseHistory() {
             {(from || to) && <span className="rounded-full border px-3 py-1 text-sm">Date range applied</span>}
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">{visible.length} matching {visible.length === 1 ? 'expense' : 'expenses'}</span>
+            <span className="text-sm text-muted-foreground">{totalCount} matching {totalCount === 1 ? 'expense' : 'expenses'}</span>
             <Button type="button" variant="ghost" onClick={() => { setFrom(''); setTo(''); setSearch(''); setCategory(''); setGroup(''); setVendor(''); setStatus(''); setMethod(''); setBuffalo(''); setOutstandingOnly(false); setSort('date'); }}>Reset filters</Button>
           </div>
         </div>
