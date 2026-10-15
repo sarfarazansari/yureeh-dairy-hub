@@ -10,13 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-type Props = { rows: FeedInventoryStock[]; loading?: boolean };
+type Props = { rows: FeedInventoryStock[]; loading?: boolean; error?: string; onRetry?: () => void };
 
 const money = (value: number | string | null) =>
   `₹${Number(value ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const label = (value: string) => value.replaceAll('_', ' ');
 
-export function FeedInventoryStockTable({ rows, loading = false }: Props) {
+export function FeedInventoryStockTable({ rows, loading = false, error, onRetry }: Props) {
   const [search, setSearch] = useState('');
   const [stockFilter, setStockFilter] = useState<'ALL' | 'LOW' | 'OUT' | 'INACTIVE'>('ALL');
   const visible = useMemo(() => {
@@ -47,6 +47,7 @@ export function FeedInventoryStockTable({ rows, loading = false }: Props) {
         <div className="field min-w-0"><Label htmlFor="feed-stock-filter">Stock status</Label><Select value={stockFilter} onValueChange={(value) => setStockFilter(value as typeof stockFilter)}><SelectTrigger id="feed-stock-filter"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ALL">All items</SelectItem><SelectItem value="LOW">Low stock</SelectItem><SelectItem value="OUT">Out of stock</SelectItem><SelectItem value="INACTIVE">Inactive items</SelectItem></SelectContent></Select></div>
         <div className="flex gap-2"><Button type="button" variant="ghost" onClick={resetFilters} disabled={!search && stockFilter === 'ALL'}>Reset</Button><Button variant="outline" asChild><Link href="/feeds/items">Manage thresholds</Link></Button></div>
       </div>
+      {error ? <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{error}</p>{onRetry && <Button type="button" variant="outline" size="sm" className="mt-3" onClick={onRetry}>Retry</Button>}</div> : <>
       <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]" aria-busy={loading}>
         <Table className="min-w-[850px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
           <TableHeader><TableRow><TableHead>FEED ITEM</TableHead><TableHead>CATEGORY</TableHead><TableHead>ON HAND</TableHead><TableHead>LOW-STOCK AT</TableHead><TableHead>AVG. COST / UNIT</TableHead><TableHead>STOCK VALUE</TableHead><TableHead>STATUS</TableHead><TableHead>ACTION</TableHead></TableRow></TableHeader>
@@ -68,6 +69,7 @@ export function FeedInventoryStockTable({ rows, loading = false }: Props) {
         </Table>
       </div>
       {!loading && !visible.length && <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">{search.trim() || stockFilter !== 'ALL' ? 'No feed items match these filters.' : 'No feed inventory items found.'}</div>}
+      </>}
       <p className="text-xs text-muted-foreground">Stock quantities and values are calculated from the movement ledger. A threshold of 0 disables low-stock alerts; zero stock is always flagged.</p>
     </div>
   );
