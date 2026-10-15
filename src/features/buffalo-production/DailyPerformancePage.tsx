@@ -1,22 +1,17 @@
 'use client';
 
+import { useMemo, useState } from 'react';
+import { AppShell } from '@/components/layout/AppShell';
+import { Button } from '@/components/ui/button';
+import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
-
-import { useMemo, useState } from 'react';
-
-import { DatePicker } from '@/components/ui/date-picker';
-import { AppShell } from '@/components/layout/AppShell';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { milkTxt } from '@/lib/farm-format';
 import { localDateKey, type MilkEntryShift } from '@/lib/milk-entry-list';
 import { buffaloMilkQuantitySchema } from './validation';
 import type { BuffaloProductionAnimal } from './types';
-import {
-  useProductionSheetQuery,
-  useSaveProductionSheetMutation,
-} from './buffalo-production.queries';
+import { useProductionSheetQuery, useSaveProductionSheetMutation } from './buffalo-production.queries';
 
 export default function DailyPerformancePage() {
   const [date, setDate] = useState(() => localDateKey());
@@ -25,25 +20,27 @@ export default function DailyPerformancePage() {
   const [fatValue, setFatValue] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-
   const sheetQuery = useProductionSheetQuery(date, shift);
   const saveMutation = useSaveProductionSheetMutation();
   const rows: BuffaloProductionAnimal[] = sheetQuery.data?.buffaloes ?? [];
   const production = sheetQuery.data?.production ?? [];
-  const getFatValue = () => fatValue ?? sheetQuery.data?.fatPercentage ?? '';
+  const savedFat = sheetQuery.data?.fatPercentage ?? '';
+  const getFatValue = () => fatValue ?? savedFat;
 
   const savedValues = useMemo(
-    () => Object.fromEntries(
-      production.map((record) => [record.buffalo_id, String(record.milk_quantity)]),
-    ),
+    () => Object.fromEntries(production.map((record) => [record.buffalo_id, String(record.milk_quantity)])),
     [production],
   );
-  const getValue = (buffaloId: string) => values[buffaloId] ?? savedValues[buffaloId] ?? '';
+  const getValue = (id: string) => values[id] ?? savedValues[id] ?? '';
+  const isDirty = (id: string) => Object.prototype.hasOwnProperty.call(values, id) && values[id] !== (savedValues[id] ?? '');
+  const savedCount = rows.filter((animal) => Object.prototype.hasOwnProperty.call(savedValues, animal.id)).length;
+  const hasFatChanges = fatValue !== null && fatValue !== savedFat;
+  const changedCount = rows.filter((animal) => isDirty(animal.id)).length + (hasFatChanges ? 1 : 0);
   const total = rows.reduce((sum, animal) => {
     const value = getValue(animal.id);
     return sum + (value.trim() ? Number(value) : 0);
   }, 0);
-  const recorded = rows.filter((animal) => getValue(animal.id).trim()).length;
+  const entered = rows.filter((animal) => getValue(animal.id).trim()).length;
 
   async function save() {
     setMessage('');
@@ -54,25 +51,16 @@ export default function DailyPerformancePage() {
         const value = getValue(animal.id).trim();
         if (!value) continue;
         const parsed = buffaloMilkQuantitySchema.safeParse(value);
-        if (!parsed.success) {
-          throw new Error(
-            `${animal.name || animal.buffalo_code}: ${parsed.error.issues[0]?.message ?? 'Enter a valid quantity.'}`,
-          );
-        }
+        if (!parsed.success) throw new Error(`${animal.name || animal.buffalo_code}: ${parsed.error.issues[0]?.message ?? 'Enter a valid quantity.'}`);
         submitted.push({ buffalo_id: animal.id, milk_quantity: parsed.data });
       }
-
       const fat = getFatValue().trim();
       if (fat && (!/^\d+(\.\d{1,2})?$/.test(fat) || Number(fat) < 0 || Number(fat) > 100)) {
         throw new Error('Enter pooled milk fat between 0 and 100, with at most 2 decimal places.');
       }
-
       await saveMutation.mutateAsync({
-        businessDate: date,
-        shift,
-        buffaloIds: rows.map((animal) => animal.id),
-        records: submitted,
-        fatPercentage: fat ? Number(fat) : null,
+        businessDate: date, shift, buffaloIds: rows.map((animal) => animal.id),
+        records: submitted, fatPercentage: fat ? Number(fat) : null,
       });
       setFatValue(null);
       setMessage('Production and pooled milk fat saved. Blank buffalo fields have no record; entered zero is recorded.');
@@ -81,133 +69,109 @@ export default function DailyPerformancePage() {
     }
   }
 
+  function updateQuantity(id: string, value: string) {
+    setValues((current) => ({ ...current, [id]: value }));
+    setMessage('');
+    setError('');
+  }
+
+  function statusFor(animal: BuffaloProductionAnimal) {
+    if (isDirty(animal.id)) return { label: 'Unsaved changes', className: 'production-status production-status-unsaved' };
+    if (Object.prototype.hasOwnProperty.call(savedValues, animal.id)) return { label: 'Saved', className: 'production-status production-status-saved' };
+    if (getValue(animal.id).trim()) return { label: 'Not saved', className: 'production-status production-status-unsaved' };
+    return { label: 'No record', className: 'production-status production-status-empty' };
+  }
+
   return (
     <AppShell title="Daily performance" subtitle="Record buffalo milk production by date and shift">
-      <div className="card">
+      <section className="card production-sheet">
         <div className="row production-controls">
-          <div>
+          <div className="production-heading">
             <h2 className="section-title">Herd production entry</h2>
-            <p className="kpi-foot">
-              Buffaloes are listed according to their status on the selected date. Only buffaloes that were active on that date are editable. Saving
-              production also updates the farm milk pool.
-            </p>
+            <p className="kpi-foot">Buffaloes are listed according to their status on the selected date. Only buffaloes that were active on that date are editable. Saving production also updates the farm milk pool.</p>
           </div>
-          <Label className="field production-date">
-            <span>Business date</span>
-            <DatePicker value={date} max={localDateKey()} disabled={saveMutation.isPending} onChange={(value) => { setDate(value); setValues({}); setFatValue(null); }} ariaLabel="Business date" />
-          </Label>
+          <div className="field production-date">
+            <Label htmlFor="production-business-date">Business date</Label>
+            <DatePicker id="production-business-date" value={date} max={localDateKey()} disabled={saveMutation.isPending} onChange={(value) => { setDate(value); setValues({}); setFatValue(null); setMessage(''); setError(''); }} ariaLabel="Business date" />
+          </div>
         </div>
 
-        <div className="date-range-segment" role="group" aria-label="Production shift">
+        <div className="date-range-segment production-shift" role="group" aria-label="Production shift">
           {(['MORNING', 'EVENING'] as const).map((value) => (
-            <Button
-              variant={shift === value ? 'default' : 'outline'}
-              size="sm"
-              type="button"
-              key={value}
-              className={shift === value ? 'active' : ''}
-              aria-pressed={shift === value}
+            <Button key={value} variant={shift === value ? 'default' : 'outline'} size="sm" type="button"
+              className={shift === value ? 'active' : ''} aria-pressed={shift === value}
               disabled={saveMutation.isPending || sheetQuery.isFetching}
-              onClick={() => {
-                setShift(value);
-                setValues({});
-                setFatValue(null);
-              }}
-            >
+              onClick={() => { setShift(value); setValues({}); setFatValue(null); setMessage(''); setError(''); }}>
               {value === 'MORNING' ? 'Morning' : 'Evening'}
             </Button>
           ))}
         </div>
 
-        <div className="row" style={{ marginTop: 12, marginBottom: 12, alignItems: 'end' }}>
-          <div className="field" style={{ maxWidth: 320, flex: 1 }}>
+        <div className="production-fat-row">
+          <div className="field production-fat-field">
             <Label htmlFor="pooled-milk-fat">Mixed milk fat (%) · {shift === 'MORNING' ? 'Morning' : 'Evening'}</Label>
-            <Input
-              id="pooled-milk-fat"
-              className="date-chip"
-              type="number"
-              min="0"
-              max="100"
-              step="0.01"
-              inputMode="decimal"
-              placeholder="Enter pooled milk fat"
-              disabled={saveMutation.isPending || sheetQuery.isFetching}
-              value={getFatValue()}
-              onChange={(event) => {
-                setFatValue(event.target.value);
-                setMessage('');
-              }}
-            />
+            <Input id="pooled-milk-fat" type="number" min="0" max="100" step="0.01" inputMode="decimal"
+              placeholder="Enter pooled milk fat" disabled={saveMutation.isPending || sheetQuery.isFetching}
+              value={getFatValue()} aria-describedby="pooled-milk-fat-help"
+              onChange={(event) => { setFatValue(event.target.value); setMessage(''); setError(''); }} />
           </div>
-          <span className="kpi-foot">Enter the fat measured from the combined milk, once per shift — not per buffalo.</span>
+          <p id="pooled-milk-fat-help" className="kpi-foot">Enter the fat measured from the combined milk, once per shift — not per buffalo.</p>
         </div>
 
-        <div className="row production-total">
-          <span>{recorded} of {rows.length} buffaloes recorded</span>
-          <b>{milkTxt(total)}</b>
+        <div className="production-summary" aria-live="polite">
+          <div className="production-summary-stat"><span className="production-summary-label">Saved records</span><strong>{savedCount}<span> / {rows.length}</span></strong></div>
+          <div className="production-summary-stat"><span className="production-summary-label">Current total</span><strong>{milkTxt(total)}</strong></div>
+          <div className="production-summary-stat"><span className="production-summary-label">Unsaved changes</span><strong>{changedCount}</strong></div>
         </div>
 
         {error && <p className="auth-message" role="alert">{error}</p>}
-        {sheetQuery.isError && (
-          <p className="auth-message" role="alert">{sheetQuery.error.message}</p>
+        {sheetQuery.isError && <p className="auth-message" role="alert">{sheetQuery.error.message}</p>}
+        {sheetQuery.isPending ? <div className="empty">Loading buffaloes and saved production…</div> : (
+          <>
+            <div className="table-wrap production-desktop-table">
+              <table className="table production-table">
+                <thead><tr><th>BUFFALO</th><th>MILK (L)</th><th>STATUS</th></tr></thead>
+                <tbody>{rows.map((animal) => {
+                  const status = statusFor(animal);
+                  return <tr key={animal.id}>
+                    <td><b>{animal.name || animal.buffalo_code}</b><div className="kpi-foot">{animal.buffalo_code}</div></td>
+                    <td><Input aria-label={`${animal.name || animal.buffalo_code} milk quantity in litres`} className="production-input"
+                      type="number" min="0" step="0.001" inputMode="decimal" placeholder="No record"
+                      disabled={saveMutation.isPending || sheetQuery.isFetching} value={getValue(animal.id)}
+                      onChange={(event) => updateQuantity(animal.id, event.target.value)} /></td>
+                    <td><span className={status.className}>{status.label}</span></td>
+                  </tr>;
+                })}</tbody>
+              </table>
+            </div>
+            <div className="production-mobile-list">
+              {rows.map((animal) => {
+                const status = statusFor(animal);
+                return <article className="production-animal-card" key={animal.id}>
+                  <div className="production-animal-heading">
+                    <div className="production-animal-identity"><b>{animal.name || animal.buffalo_code}</b><span className="kpi-foot">{animal.buffalo_code}</span></div>
+                    <span className={status.className}>{status.label}</span>
+                  </div>
+                  <div className="field production-mobile-quantity">
+                    <Label htmlFor={`milk-${animal.id}`}>Milk quantity (L)</Label>
+                    <Input id={`milk-${animal.id}`} type="number" min="0" step="0.001" inputMode="decimal" placeholder="No record"
+                      disabled={saveMutation.isPending || sheetQuery.isFetching} value={getValue(animal.id)}
+                      onChange={(event) => updateQuantity(animal.id, event.target.value)} />
+                  </div>
+                </article>;
+              })}
+            </div>
+          </>
         )}
-
-        {sheetQuery.isPending ? (
-          <div className="empty">Loading buffaloes and saved production…</div>
-        ) : (
-          <div className="table-wrap">
-            <table className="table">
-              <thead><tr><th>BUFFALO</th><th>MILK (L)</th><th>STATUS</th></tr></thead>
-              <tbody>
-                {rows.map((animal) => (
-                  <tr key={animal.id}>
-                    <td>
-                      <b>{animal.name || animal.buffalo_code}</b>
-                      <div className="kpi-foot">
-                        {animal.buffalo_code}
-                      </div>
-                    </td>
-                    <td>
-                      <Input
-                        aria-label={`${animal.name || animal.buffalo_code} milk quantity in litres`}
-                        className="date-chip production-input"
-                        type="number"
-                        min="0"
-                        step="0.001"
-                        inputMode="decimal"
-                        placeholder="No record"
-                        disabled={saveMutation.isPending || sheetQuery.isFetching}
-                        value={getValue(animal.id)}
-                        onChange={(event) => {
-                          setValues((current) => ({ ...current, [animal.id]: event.target.value }));
-                          setMessage('');
-                        }}
-                      />
-                    </td>
-                    <td>
-                      {values[animal.id]?.trim() ? (
-                        Number(getValue(animal.id)) === 0
-                          ? <span className="tag gold">Recorded · 0 L</span>
-                          : <span className="tag">Recorded</span>
-                      ) : (
-                        <span className="kpi-foot">No record</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {!sheetQuery.isPending && !rows.length && (
-          <div className="empty">No active buffaloes found. Add active buffaloes before recording production.</div>
-        )}
+        {!sheetQuery.isPending && !rows.length && <div className="empty">No active buffaloes found. Add active buffaloes before recording production.</div>}
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-        <Button type="button" disabled={saveMutation.isPending || sheetQuery.isPending || !rows.length} onClick={() => void save()}>
-          {saveMutation.isPending ? 'Saving…' : 'Save production'}
-        </Button>
-      </div>
+        <div className="production-save-bar">
+          <div className="production-save-context"><span>{entered} of {rows.length} filled</span><strong>{milkTxt(total)}</strong></div>
+          <Button className="production-save-button" type="button" disabled={saveMutation.isPending || sheetQuery.isPending || !rows.length || sheetQuery.isFetching} onClick={() => void save()}>
+            {saveMutation.isPending ? 'Saving production…' : 'Save production'}
+          </Button>
+        </div>
+      </section>
     </AppShell>
   );
 }
