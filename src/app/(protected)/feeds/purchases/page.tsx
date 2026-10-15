@@ -30,10 +30,13 @@ export default function FeedPurchasesPage() {
   const [vendorFilter, setVendorFilter] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   const load = useCallback(async () => {
-    if (!supabase) return;
-
+    if (!supabase) { setLoadError('Supabase is not configured.'); setLoading(false); return; }
+    setLoading(true);
+    setLoadError('');
     try {
       const [feeds, vendorResult, purchases] = await Promise.all([
         supabase.from('feed_items').select('*').eq('is_active', true).order('name'),
@@ -55,11 +58,8 @@ export default function FeedPurchasesPage() {
       setRows(purchases.rows);
       setCount(purchases.count);
     } catch (error) {
-      setToast({
-        message: error instanceof Error ? error.message : 'Could not load feed purchases.',
-        type: 'error',
-      });
-    }
+      setLoadError(error instanceof Error ? error.message : 'Could not load feed purchases.');
+    } finally { setLoading(false); }
   }, [page, from, to, feedFilter, vendorFilter, paymentFilter]);
 
   useEffect(() => { void load(); }, [load]);
@@ -92,6 +92,7 @@ export default function FeedPurchasesPage() {
     <AppShell title="Feed purchase archive" subtitle="View feed stock-in history with filters and pagination">
       <div className="management-stack">
         <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
+        {loadError && <div role="alert" className="rounded-md border border-destructive/30 p-3 text-sm">{loadError}<Button className="ml-3" type="button" size="sm" variant="outline" onClick={() => void load()}>Retry</Button></div>}
 
         <div className="card">
           <div className="row">
@@ -126,6 +127,9 @@ export default function FeedPurchasesPage() {
           pageSize={PAGE_SIZE}
           onPageChange={setPage}
           onDelete={handleDelete}
+          loading={loading}
+          error={loadError}
+          onRetry={() => void load()}
         />
       </div>
     </AppShell>
