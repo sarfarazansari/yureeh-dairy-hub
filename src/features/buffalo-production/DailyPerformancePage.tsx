@@ -3,6 +3,8 @@
 import { useMemo, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+
 import { DatePicker } from '@/components/ui/date-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -128,22 +130,9 @@ export default function DailyPerformancePage() {
         {sheetQuery.isError && <p className="auth-message" role="alert">{sheetQuery.error.message}</p>}
         {sheetQuery.isPending ? <div className="empty">Loading buffaloes and saved production…</div> : (
           <>
-            <div className="table-wrap production-desktop-table">
-              <table className="table production-table">
-                <thead><tr><th>BUFFALO</th><th>MILK (L)</th><th>STATUS</th></tr></thead>
-                <tbody>{rows.map((animal) => {
-                  const status = statusFor(animal);
-                  return <tr key={animal.id}>
-                    <td><b>{animal.name || animal.buffalo_code}</b><div className="kpi-foot">{animal.buffalo_code}</div></td>
-                    <td><Input aria-label={`${animal.name || animal.buffalo_code} milk quantity in litres`} className="production-input"
-                      type="number" min="0" step="0.001" inputMode="decimal" placeholder="No record"
-                      disabled={saveMutation.isPending || sheetQuery.isFetching} value={getValue(animal.id)}
-                      onChange={(event) => updateQuantity(animal.id, event.target.value)} /></td>
-                    <td><span className={status.className}>{status.label}</span></td>
-                  </tr>;
-                })}</tbody>
-              </table>
-            </div>
+            <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)] production-desktop-table"><Table className="production-table min-w-[650px]"><TableHeader><TableRow><TableHead>BUFFALO</TableHead><TableHead>MILK (L)</TableHead><TableHead>STATUS</TableHead></TableRow></TableHeader>
+              <TableBody>{rows.map((animal) => { const status = statusFor(animal); return <TableRow key={animal.id}><TableCell><b>{animal.name || animal.buffalo_code}</b><div className="text-xs text-muted-foreground">{animal.buffalo_code}</div></TableCell><TableCell><Input aria-label={`${animal.name || animal.buffalo_code} milk quantity in litres`} className="production-input" type="number" min="0" step="0.001" inputMode="decimal" placeholder="No record" disabled={saveMutation.isPending || sheetQuery.isFetching} value={getValue(animal.id)} onChange={(event) => updateQuantity(animal.id, event.target.value)} /></TableCell><TableCell><span className={status.className}>{status.label}</span></TableCell></TableRow>; })}</TableBody>
+            </Table></div>
             <div className="production-mobile-list">
               {rows.map((animal) => {
                 const status = statusFor(animal);
