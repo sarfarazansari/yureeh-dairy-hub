@@ -5,6 +5,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 import { useMemo, useState } from 'react';
 
@@ -200,19 +203,10 @@ export default function MilkPoolPage() {
         ) : !fatByDate.length ? (
           <div className="empty">No fat records in this date range. Enter mixed milk fat from Daily performance for each shift.</div>
         ) : (
-          <div className="table-wrap">
-            <table className="table">
-              <thead><tr><th>DATE</th><th>MORNING FAT</th><th>EVENING FAT</th></tr></thead>
-              <tbody>
-                {fatByDate.map(([dateKey, shifts]) => (
-                  <tr key={dateKey}>
-                    <td>{dateKey}</td>
-                    <td>{shifts.MORNING === undefined ? '—' : `${shifts.MORNING.toFixed(2)}%`}</td>
-                    <td>{shifts.EVENING === undefined ? '—' : `${shifts.EVENING.toFixed(2)}%`}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
+            <Table className="min-w-[420px]"><TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>MORNING FAT</TableHead><TableHead>EVENING FAT</TableHead></TableRow></TableHeader>
+              <TableBody>{fatByDate.map(([dateKey, shifts]) => <TableRow key={dateKey}><TableCell>{dateKey}</TableCell><TableCell>{shifts.MORNING === undefined ? '—' : `${shifts.MORNING.toFixed(2)}%`}</TableCell><TableCell>{shifts.EVENING === undefined ? '—' : `${shifts.EVENING.toFixed(2)}%`}</TableCell></TableRow>)}</TableBody>
+            </Table>
           </div>
         )}
       </div>
@@ -286,40 +280,14 @@ export default function MilkPoolPage() {
         ) : !rows.length ? (
           <div className="empty">No milk movements in the selected period.</div>
         ) : (
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>DATE</th>
-                  <th>OPENING</th>
-                  <th>PRODUCED</th>
-                  <th>DELIVERED</th>
-                  <th>HOUSEHOLD</th>
-                  <th>WASTAGE</th>
-                  <th>OTHER</th>
-                  <th>ADJUSTMENT</th>
-                  <th>CLOSING</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => {
-                  const adjustment = Number(row.adjustment_in_litres) - Number(row.adjustment_out_litres);
-                  return (
-                    <tr key={row.business_date}>
-                      <td>{row.business_date}</td>
-                      <td>{formatLitres(Number(row.opening_balance_litres))}</td>
-                      <td>{formatLitres(Number(row.production_litres))}</td>
-                      <td>{formatLitres(Number(row.customer_delivery_litres))}</td>
-                      <td>{formatLitres(Number(row.household_use_litres))}</td>
-                      <td>{formatLitres(Number(row.wastage_litres))}</td>
-                      <td>{formatLitres(Number(row.other_use_litres))}</td>
-                      <td>{formatLitres(adjustment)}</td>
-                      <td>{formatLitres(Number(row.closing_balance_litres))}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]" aria-busy={reconciliationQuery.isFetching}>
+            <Table className="min-w-[1000px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
+              <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>OPENING</TableHead><TableHead>PRODUCED</TableHead><TableHead>DELIVERED</TableHead><TableHead>HOUSEHOLD</TableHead><TableHead>WASTAGE</TableHead><TableHead>OTHER</TableHead><TableHead>ADJUSTMENT</TableHead><TableHead>CLOSING</TableHead></TableRow></TableHeader>
+              <TableBody>{rows.map((row) => {
+                const adjustment = Number(row.adjustment_in_litres) - Number(row.adjustment_out_litres);
+                return <TableRow key={row.business_date}><TableCell className="whitespace-nowrap">{row.business_date}</TableCell><TableCell>{formatLitres(Number(row.opening_balance_litres))}</TableCell><TableCell>{formatLitres(Number(row.production_litres))}</TableCell><TableCell>{formatLitres(Number(row.customer_delivery_litres))}</TableCell><TableCell>{formatLitres(Number(row.household_use_litres))}</TableCell><TableCell>{formatLitres(Number(row.wastage_litres))}</TableCell><TableCell>{formatLitres(Number(row.other_use_litres))}</TableCell><TableCell>{formatLitres(adjustment)}</TableCell><TableCell>{formatLitres(Number(row.closing_balance_litres))}</TableCell></TableRow>;
+              })}</TableBody>
+            </Table>
           </div>
         )}
       </div>
