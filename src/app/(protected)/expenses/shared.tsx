@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { AppShell } from '@/components/layout/AppShell';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,8 +17,16 @@ export function ExpenseShell({
   subtitle: string;
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const links = [
+    { href: '/expenses', label: 'Overview', match: (path: string) => path === '/expenses' },
+    { href: '/expenses/new', label: 'New expense', match: (path: string) => path === '/expenses/new' },
+    { href: '/expenses/history', label: 'History', match: (path: string) => path === '/expenses/history' },
+    { href: '/expenses/categories', label: 'Categories', match: (path: string) => path.startsWith('/expenses/categories') },
+    { href: '/expenses/vendors', label: 'Vendors', match: (path: string) => path.startsWith('/expenses/vendors') },
+  ];
   return (
-    <AppShell title={title} subtitle={subtitle} actions={<nav className="expense-nav flex flex-wrap justify-end gap-2"><Link href="/expenses">Overview</Link><Link href="/expenses/new" className="font-semibold">New expense</Link><Link href="/expenses/history">History</Link><Link href="/expenses/categories">Categories</Link><Link href="/expenses/vendors">Vendors</Link></nav>}>
+    <AppShell title={title} subtitle={subtitle} actions={<nav aria-label="Expense navigation" className="expense-nav flex flex-wrap justify-end gap-2">{links.map(({ href, label, match }) => { const active = match(pathname); return <Link key={href} href={href} aria-current={active ? 'page' : undefined} className={active ? 'active' : undefined}>{label}</Link>; })}</nav>}>
       {children}
     </AppShell>
   );
