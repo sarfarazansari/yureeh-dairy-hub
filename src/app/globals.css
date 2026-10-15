@@ -1468,12 +1468,6 @@ button {
     display: grid;
     flex: 0 0 28px;
   }
-  .sidebar .account-menu {
-    left: 0;
-    right: 0;
-    bottom: calc(100% + 7px);
-    width: auto;
-  }
   .main {
     width: 100%;
     max-width: none;
@@ -1580,13 +1574,6 @@ button {
   .milk-entry-filters .field {
     min-width: 0;
   }
-  .app-toast {
-    top: max(10px, env(safe-area-inset-top));
-    right: max(10px, env(safe-area-inset-right));
-    left: max(10px, env(safe-area-inset-left));
-    min-width: 0;
-    width: auto;
-    max-width: none;
   }
 }
 
