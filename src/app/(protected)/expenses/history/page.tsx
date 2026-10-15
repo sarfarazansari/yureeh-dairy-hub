@@ -256,7 +256,7 @@ export default function ExpenseHistory() {
   }
   return (
     <ExpenseShell title="Expense history" subtitle="Filter, review and edit farm expenses">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <div className="card"><p className="kpi-foot">Total expenses</p><p className="mt-1 text-2xl font-semibold">{money(totalAmount)}</p><p className="kpi-foot">Across {visible.length} matching records</p></div>
         <div className="card"><p className="kpi-foot">Paid</p><p className="mt-1 text-2xl font-semibold">{money(totalPaid)}</p><p className="kpi-foot">Recorded against these expenses</p></div>
         <div className="card"><p className="kpi-foot">Outstanding</p><p className="mt-1 text-2xl font-semibold">{money(totalOutstanding)}</p><p className="kpi-foot">Remaining to be paid</p></div>
@@ -288,7 +288,7 @@ export default function ExpenseHistory() {
           </div>
         </div>
         {showMoreFilters && (
-          <div className="grid grid-cols-1 gap-4 border-t pt-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 border-t pt-4 sm:grid-cols-2 xl:grid-cols-6">
             <div className="field min-w-0"><Label>Category</Label><Select value={category || 'all'} onValueChange={(value) => setCategory(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All categories</SelectItem>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div>
             <div className="field min-w-0"><Label>Category group</Label><Select value={group || 'all'} onValueChange={(value) => setGroup(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All groups</SelectItem>{['FEED','ANIMAL','FARM_OPERATIONS','TRANSPORT','UTILITIES','LABOUR','EQUIPMENT','ADMIN','OTHER'].map((g) => <SelectItem key={g} value={g}>{g.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select></div>
             <div className="field min-w-0"><Label>Vendor</Label><Select value={vendor || 'all'} onValueChange={(value) => setVendor(value === 'all' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All vendors</SelectItem>{vendors.map((v) => <SelectItem key={v.id} value={v.id}>{v.name}</SelectItem>)}</SelectContent></Select></div>
