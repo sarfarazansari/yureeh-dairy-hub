@@ -587,6 +587,9 @@ a {
   min-width: 0;
   width: 100%;
 }
+.management-stack > form [data-slot="button"] {
+  min-width: 180px;
+}
 .table-wrap {
   width: 100%;
   max-width: 100%;
@@ -607,6 +610,10 @@ a {
 @media (max-width: 700px) {
   .management-stack {
     gap: 12px;
+  }
+  .management-stack > form [data-slot="button"] {
+    width: 100%;
+    min-height: 46px;
   }
 }
 /* Keep record tables as readable as their forms and contain horizontal overflow. */
@@ -705,6 +712,9 @@ a {
 .buffalo-form {
   padding: 18px 20px;
 }
+.buffalo-form > [data-slot="button"] {
+  min-width: 180px;
+}
 .buffalo-primary-fields,
 .buffalo-secondary-fields,
 .buffalo-payment-fields {
@@ -790,6 +800,10 @@ a {
   }
   .buffalo-form {
     padding: 14px;
+  }
+  .buffalo-form > [data-slot="button"] {
+    width: 100%;
+    min-height: 46px;
   }
 }
 
