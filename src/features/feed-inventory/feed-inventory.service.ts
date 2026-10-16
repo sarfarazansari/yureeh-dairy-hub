@@ -1,10 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { FeedInventoryMovement, FeedInventoryStock } from './types';
+import type { FeedInventoryMovement, FeedInventoryMovementRow, FeedInventoryStock } from './types';
 
-export type FeedInventoryMovementRow = FeedInventoryMovement & {
-  feed_item_name: string;
-  base_unit: string;
-};
 
 export async function fetchFeedInventoryStock(client: SupabaseClient) {
   const { data, error } = await client
