@@ -42,6 +42,6 @@ Invalidation occurs only in mutation `onSuccess`, after the service/RPC resolves
 
 ## Coverage and validation boundary
 
-The rules above describe implemented invalidation hooks for the migrated paths, not proof that every mutation in the repository is covered. Expense history/new/category/vendor writes and scheduler run/retry paths remain to be migrated or audited. Some of the dependent query roots are placeholders for the corresponding future query-backed modules; invalidating a root does not replace migrating an effect-driven consumer to TanStack Query.
+The rules above describe implemented invalidation hooks for the migrated paths, not proof that every mutation in the repository is covered. Expense history/new/category/vendor reads and writes now have query/mutation boundaries; scheduler run/retry paths are migrated but still need live/disposable database verification. Some of the dependent query roots are placeholders for the corresponding future query-backed modules; invalidating a root does not replace migrating an effect-driven consumer to TanStack Query.
 
 Remote GitHub read-back confirms the intended source edits and shared key usage. No local checkout was available, so TypeScript, lint, format check, build, automated tests, browser regression, account-switch cache isolation, live/disposable Supabase RPC/RLS/concurrency checks were not run. REF-009 remains In Progress until those checks pass.
