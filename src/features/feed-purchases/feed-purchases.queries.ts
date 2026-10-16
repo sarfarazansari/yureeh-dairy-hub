@@ -41,6 +41,8 @@ async function invalidateFeedPurchaseDependents(queryClient: ReturnType<typeof u
     queryClient.invalidateQueries({ queryKey: ['feed-inventory'] }),
     queryClient.invalidateQueries({ queryKey: ['expenses'] }),
     queryClient.invalidateQueries({ queryKey: ['expense-vendors'] }),
+    queryClient.invalidateQueries({ queryKey: ['expense-categories'] }),
+    queryClient.invalidateQueries({ queryKey: ['feed-cost-analytics'] }),
     queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
     queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
   ]);
