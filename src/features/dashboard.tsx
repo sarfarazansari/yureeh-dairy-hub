@@ -4,6 +4,7 @@ import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
+import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -248,13 +249,9 @@ export default function Dashboard() {
               </div>
             );
           })}
-          <Link
-            href="/new-entry"
-            className="btn full"
-            style={{ display: 'block', textAlign: 'center' }}
-          >
-            ＋ &nbsp;Record milk entry
-          </Link>
+          <Button asChild className="w-full">
+            <Link href="/new-entry">＋ &nbsp;Record milk entry</Link>
+          </Button>
           <div style={{ height: 22 }} />
           <div className="row">
             <h2 className="section-title">Farm production today</h2>
