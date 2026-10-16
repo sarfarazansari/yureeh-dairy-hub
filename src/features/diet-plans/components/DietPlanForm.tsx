@@ -11,7 +11,8 @@ import { Button } from '@/components/ui/button';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { FormField } from '@/components/ui/form-field';
-import type { DietBuffaloOption, DietPlanFormValues } from '@/lib/diet-plan-types';
+import type { DietBuffaloOption } from '../types';
+import type { DietPlanFormValues } from '../diet-plan.schema';
 import { dietPlanSchema } from '@/features/diet-plans/diet-plan.schema';
 
 type FeedOption = { id: string; name: string; base_unit: string; category: string };
