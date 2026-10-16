@@ -124,7 +124,7 @@ export default function DietPlanSchedulePage() {
               </div>
             </div>
             <div className="row" style={{ marginTop: 16, justifyContent: 'flex-end' }}>
-              <button className="btn" type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save feeding times'}</button>
+              <Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save feeding times'}</Button>
             </div>
           </form>
         </div>
