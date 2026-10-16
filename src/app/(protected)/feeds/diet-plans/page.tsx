@@ -8,51 +8,30 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
-import { supabase } from '@/lib/supabase';
-import type { DietPlanListRow } from '@/lib/diet-plan-types';
-import { fetchDietPlans } from './services';
+import { useDietPlanArchiveQuery } from './queries';
 
 const PAGE_SIZE = 20;
 
 export default function DietPlansPage() {
-  const [rows, setRows] = useState<DietPlanListRow[]>([]);
-  const [count, setCount] = useState(0);
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(0);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  const archiveQuery = useDietPlanArchiveQuery({ page, search: searchQuery, status });
+  const rows = archiveQuery.data?.rows ?? [];
+  const count = archiveQuery.data?.count ?? 0;
+  const loading = archiveQuery.isPending;
+  const loadError = archiveQuery.error?.message ?? '';
+  const load = () => void archiveQuery.refetch();
 
   useEffect(() => {
     const timer = window.setTimeout(() => { setSearchQuery(search.trim()); setPage(0); }, 300);
     return () => window.clearTimeout(timer);
   }, [search]);
-
-  const load = useCallback(async () => {
-    if (!supabase) {
-      setLoadError('Supabase is not configured.');
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setLoadError('');
-    try {
-      const result = await fetchDietPlans(supabase, page, PAGE_SIZE, { search: searchQuery, status });
-      setRows(result.rows);
-      setCount(result.count);
-    } catch (error) {
-      setLoadError(error instanceof Error ? error.message : 'Could not load diet plans.');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, searchQuery, status]);
-
-  useEffect(() => { void load(); }, [load]);
 
   const pages = Math.max(1, Math.ceil(count / PAGE_SIZE));
   function resetFilters() {
