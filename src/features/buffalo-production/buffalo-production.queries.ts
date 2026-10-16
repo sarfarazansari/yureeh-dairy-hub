@@ -6,6 +6,7 @@ import {
   getProductionSheet,
   getBuffaloProductionHistory,
   getBuffaloProductionRange,
+  getMilkPoolShiftFatHistory,
   getProducingBuffaloes,
   saveProductionSheet,
 } from './services/buffalo-production.service';
@@ -37,6 +38,13 @@ export function useSaveProductionSheetMutation() {
         queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
       ]);
     },
+  });
+}
+
+export function useMilkPoolShiftFatHistoryQuery(from: string, to: string) {
+  return useQuery({
+    queryKey: buffaloProductionQueryKeys.fatRange(from, to),
+    queryFn: () => getMilkPoolShiftFatHistory(requireSupabase(), from, to),
   });
 }
 
