@@ -310,3 +310,9 @@ The user's short command `1 refactor karo` means:
 - Canonical feed domain types now live under their owning feature directories: feed items, inventory, purchases and consumption. Services and feature UI import these definitions directly. Inventory movement row projection type is owned by `src/features/feed-inventory/types.ts`, not the service.
 - The old `src/lib/feed-*-types.ts` modules were retained as re-export-only compatibility facades so any other consumers are not broken mid-migration; they contain no competing type definitions. Remove these facades only after a repository-wide consumer search proves they are unused.
 - No database/RPC or business behavior changes were made. Local checks remain unrun.
+
+
+### REF-013 continuation — 2026-10-16 (expense type ownership)
+
+- Expense types now have one canonical feature-owned definition in `src/features/expenses/types.ts`; the old `src/lib/expense-types.ts` is a re-export-only compatibility facade. `ExpensePayment` remains re-exported from the query module to avoid an accidental import API break.
+- No financial transaction logic changed. Local checks and expense/payment workflow tests remain outstanding.
