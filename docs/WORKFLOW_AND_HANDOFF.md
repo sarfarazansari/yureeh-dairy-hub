@@ -182,3 +182,15 @@ The user's short command `1 refactor karo` means:
 - The audit records a cross-domain invalidation checklist, pagination requirements, duplicate-submit/retry policy and per-module regression checklist. Full dependency mapping remains pending REF-007; do not implement broad invalidation changes before that audit and REF-008 phase planning.
 - Verification boundary: static GitHub file inspection only. No local checkout; build, lint, typecheck, tests, browser/manual regression, concurrency, RPC/RLS and database checks were not run. No source implementation or database changes; no PR or merge created.
 - Next task for `1 refactor karo same branch`: REF-007 — trace finance, milk pool, feed inventory, purchase/payment and consumption transaction integrity end-to-end.
+
+
+### Latest session handoff — 2026-10-16 (REF-007 + REF-008)
+
+- Current branch: `feature/refactor-engineering-standards`. Continue on this same branch as explicitly requested; do not create a PR or merge.
+- Completed static transaction audit: `docs/REFACTORING_TRANSACTION_INTEGRITY_AUDIT.md`. It maps milk production/delivery/pool, customer payments, feed purchase→expense→stock, consumption costing/reversals, diet scheduler, buffalo lifecycle/payments and financial reports to the inspected services/RPCs/migrations.
+- Completed final implementation roadmap: `docs/REFACTORING_IMPLEMENTATION_ROADMAP.md`. The first implementation task is REF-009 (canonical query keys and targeted cross-feature invalidation). Later work is ordered by transaction risk and dependency: canonical types/helpers, read-only analytics/reports, feed inventory/master, expenses/payments, feed purchases, feed consumption, diet scheduler, then buffalo/customer payment boundaries and final regression.
+- Confirmed gaps to fix in REF-009: milk mutations do not refresh customer directory/detail summaries; production save does not refresh the separate buffalo-detail production-history key. Avoid global cache invalidation.
+- Integrity invariants to preserve: PostgreSQL RPC atomicity and RLS; append-only milk-pool/feed inventory ledgers with reversals; feed-purchase idempotency and linked expense/stock integrity; consumption applied-cost snapshots and later-movement locks; dated payment ledgers/legacy undated balances; scheduler snapshots and explicit retry. Payment RPCs without request idempotency keys require a deliberate common retry policy; never add blind automatic retries.
+- Latest master base previously verified: `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`. Verify branch-vs-master comparison after this documentation update before reporting current ahead/behind counts.
+- Validation boundary: remote GitHub file/migration inspection only. No local checkout; build, lint, typecheck, tests, live database/RLS checks, SQL execution, concurrency tests, scheduler/cron verification and production data reconciliation were not run. No application source or database objects changed.
+- Next task for `1 refactor karo same branch`: REF-009 — standardize query-key ownership and targeted cross-feature invalidation, starting with the two confirmed cache gaps.
