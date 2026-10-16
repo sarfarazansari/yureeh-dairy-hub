@@ -9,7 +9,6 @@ import { formatDate, formatDateTime } from '@/lib/date-format';
 import Link from 'next/link';
 import { DatePicker } from '@/components/ui/date-picker';
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { ExpenseShell, money, todayLocal } from '../../shared';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
