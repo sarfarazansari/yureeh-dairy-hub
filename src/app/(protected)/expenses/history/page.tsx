@@ -99,7 +99,7 @@ export default function ExpenseHistory() {
     ]);
     if (e.error || c.error || v.error || b.error) {
       const error = e.error ?? c.error ?? v.error ?? b.error;
-      setMessage(error.message);
+      setMessage(error ? error.message : 'Could not load expense data.');
       setLoadError(true);
       return;
     }
