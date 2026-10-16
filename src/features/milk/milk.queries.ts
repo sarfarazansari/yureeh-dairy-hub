@@ -178,11 +178,7 @@ export function useRecordMilkPoolMovementMutation() {
     mutationFn: (input: RecordMilkPoolMovementInput) =>
       recordMilkPoolMovement(requireSupabase(), input),
     onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
-        queryClient.invalidateQueries({ queryKey: customerQueryKeys.directory() }),
-        queryClient.invalidateQueries({ queryKey: customerQueryKeys.details() }),
-      ]);
+      await queryClient.invalidateQueries({ queryKey: milkQueryKeys.all });
     },
   });
 }
