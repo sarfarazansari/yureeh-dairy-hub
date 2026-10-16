@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-import { useDietPlanScheduleQuery, useRetryDietFeedingRunMutation, useSaveDietPlanScheduleMutation } from './queries';
+import { useDietPlanScheduleQuery, useRetryDietFeedingRunMutation, useSaveDietPlanScheduleMutation, type FeedingRun } from './queries';
 
 export default function DietPlanSchedulePage() {
   const [morningTime, setMorningTime] = useState('');
