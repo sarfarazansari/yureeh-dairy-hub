@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
+import { customerQueryKeys } from './customer.query-keys';
+
+export { customerQueryKeys } from './customer.query-keys';
 import {
   createCustomer,
   getCustomerDetails,
@@ -15,13 +18,6 @@ import {
   type CustomerPayment,
   type CustomerSummary,
 } from './services/customer.service';
-
-export const customerQueryKeys = {
-  all: ['customers'] as const,
-  directory: () => [...customerQueryKeys.all, 'directory'] as const,
-  details: () => [...customerQueryKeys.all, 'detail'] as const,
-  detail: (customerId: string) => [...customerQueryKeys.details(), customerId] as const,
-};
 
 const requireSupabase = () => {
   if (!supabase) throw new Error('Supabase is not configured.');
