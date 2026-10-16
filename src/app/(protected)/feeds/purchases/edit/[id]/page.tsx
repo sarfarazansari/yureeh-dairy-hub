@@ -9,11 +9,13 @@ import { supabase } from '@/lib/supabase';
 import type { FeedItem } from '@/lib/feed-types';
 import type { ExpenseVendor } from '@/lib/expense-types';
 import { FeedPurchaseForm } from '../../components/FeedPurchaseForm';
-import { editFeedPurchase, fetchFeedPurchaseForEdit } from '../../services';
+import { fetchFeedPurchaseForEdit } from '../../services';
+import { useEditFeedPurchaseMutation } from '../../queries';
 import type { FeedPurchaseFormValues } from '../../schema';
 
 export default function EditFeedPurchasePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const editMutation = useEditFeedPurchaseMutation();
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [vendors, setVendors] = useState<Pick<ExpenseVendor, 'id' | 'name'>[]>([]);
   const [initialValues, setInitialValues] = useState<FeedPurchaseFormValues | null>(null);
@@ -62,7 +64,7 @@ export default function EditFeedPurchasePage({ params }: { params: Promise<{ id:
     setToast(null);
 
     try {
-      await editFeedPurchase(supabase, id, values);
+      await editMutation.mutateAsync({ purchaseId: id, values });
       setToast({ message: 'Feed purchase updated successfully.', type: 'success' });
       setCompleted(true);
       return null;
