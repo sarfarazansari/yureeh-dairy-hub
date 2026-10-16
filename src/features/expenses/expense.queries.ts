@@ -246,3 +246,25 @@ export function useExpenseHistoryQuery(filters: ExpenseHistoryFilters, enabled =
     },
   });
 }
+
+export function useNewExpenseOptionsQuery(ownerId: string, enabled = true) {
+  return useQuery({
+    queryKey: [...expenseQueryKeys.all, 'new-expense-options', ownerId] as const,
+    enabled: Boolean(ownerId && enabled),
+    queryFn: async () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const [categories, vendors, buffaloes] = await Promise.all([
+        supabase.from('expense_categories').select('*').eq('owner_id', ownerId).eq('is_active', true).order('name'),
+        supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
+        supabase.from('buffaloes').select('id,buffalo_code,name').order('buffalo_code'),
+      ]);
+      const error = categories.error ?? vendors.error ?? buffaloes.error;
+      if (error) throw new Error(error.message);
+      return {
+        categories: categories.data ?? [],
+        vendors: vendors.data ?? [],
+        buffaloes: buffaloes.data ?? [],
+      };
+    },
+  });
+}
