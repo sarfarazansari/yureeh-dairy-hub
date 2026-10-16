@@ -7,6 +7,7 @@ import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
 import { useFinancialReportQuery } from '@/features/financial-reports/financial-reports.queries';
+import type { BuffaloSaleSummary, FinancialSummary } from '@/features/financial-reports/services/financial-reports.service';
 import { money, todayLocal } from '@/app/(protected)/expenses/shared';
 
 export default function FinancialReportsPage() {
