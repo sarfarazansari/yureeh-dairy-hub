@@ -16,7 +16,7 @@ import { TimedNotice } from '@/components/ui/TimedNotice';
 import { milkTxt } from '@/lib/farm-format';
 import { calculateEntryAmount, type PricingType } from '@/lib/analytics';
 import { localDateKey } from '@/lib/milk-entry-list';
-import { milkEntrySchema } from '@/lib/milk-entry-validation';
+import { milkEntrySchema } from '@/features/milk/milk-entry.schema';
 
 import {
   useActiveMilkEntryCustomersQuery,
