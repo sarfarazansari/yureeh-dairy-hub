@@ -7,7 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
 import type { DietPlanFormValues } from '@/lib/diet-plan-types';
-import { DietPlanForm } from '../../components/DietPlanForm';
+import { DietPlanForm } from '@/features/diet-plans/components/DietPlanForm';
 import { useActiveDietFeedItemsQuery, useDietPlanDetailsQuery, useEligibleDietBuffaloesQuery, useSaveDietPlanMutation } from '@/features/diet-plans/diet-plan.queries';
 
 type FeedOption = { id: string; name: string; base_unit: string; category: string };
