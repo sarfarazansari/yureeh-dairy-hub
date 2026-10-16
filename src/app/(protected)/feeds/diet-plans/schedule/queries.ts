@@ -67,7 +67,7 @@ export function useRetryDietFeedingRunMutation() {
       if (error) throw new Error(error.message);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: dietPlanScheduleQueryKeys.runs() });
+      await queryClient.invalidateQueries({ queryKey: dietPlanScheduleQueryKeys.all });
     },
   });
 }
