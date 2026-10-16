@@ -239,3 +239,17 @@ The user's short command `1 refactor karo` means:
 - No Zustand store was added: the reviewed shared state is server-owned or page-local, and the architecture explicitly forbids duplicating server state in a store. Identify an actual cross-route client-owned state candidate before adding Zustand.
 - Validation boundary: static extraction review only. Local typecheck, lint, build, tests and browser flows were not run from this environment. User must run these on the branch before merging.
 - Next step: move expense route imports directly to feature-owned components/services/utils, then remove the compatibility module only when no imports remain; continue module-by-module after that.
+
+
+## REF-013 update — 2026-10-16
+
+- Branch: `feature/feature-folder-structure-foundation`, based directly on latest master `1f291af036ff737049af3db51936a3d72234da29`.
+- Expense module structure is now implemented in source (not just documented):
+  - `src/features/expenses/components/ExpenseNavigationShell.tsx` owns the expense shell and date filters.
+  - `src/features/expenses/services/expense-setup.service.ts` owns the category-seeding Supabase operation.
+  - `src/features/expenses/utils/expense-format.ts` owns currency formatting and local-date helpers.
+  - All seven expense route pages now import these feature-owned modules directly.
+  - Removed `src/app/(protected)/expenses/shared.tsx` after read-back confirmed the seven route pages no longer import it.
+- Store: no Zustand store added in this slice. The app's remote data belongs in TanStack Query; only real cross-route client-owned state should enter a Zustand store. A later store decision must name the exact shared state and consumers, not add a generic store by convention.
+- Verification: GitHub read-back confirmed imports and absence of legacy shared-module references in all seven expense routes. Local build/typecheck/lint/tests/browser checks were not run in this environment. Please run them locally before merge.
+- Next task: continue REF-013 with the next high-value module boundary after this expense extraction, using the same incremental migration approach. Keep user responsible for PR/merge.
