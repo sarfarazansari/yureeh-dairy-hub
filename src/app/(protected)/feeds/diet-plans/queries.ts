@@ -1,10 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
-import { saveDietPlan } from './services';
+import { fetchDietPlans, saveDietPlan } from './services';
 import type { DietPlanFormValues } from '@/lib/diet-plan-types';
-
-import { fetchDietPlans } from './services';
 
 const PAGE_SIZE = 20;
 
