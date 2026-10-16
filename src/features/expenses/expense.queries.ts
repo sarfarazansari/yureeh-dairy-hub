@@ -377,13 +377,14 @@ export function useSaveExpenseVendorMutation() {
   return useMutation({
     mutationFn: async (input: {
       id?: string;
-      userId: string;
       values: { name: string; mobile: string | null; city: string | null; address: string | null };
     }) => {
       if (!supabase) throw new Error('Supabase is not configured.');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error(userError?.message ?? 'Session expired. Sign in again.');
       const result = input.id
-        ? await supabase.from('expense_vendors').update(input.values).eq('id', input.id).eq('user_id', input.userId)
-        : await supabase.from('expense_vendors').insert({ ...input.values, user_id: input.userId });
+        ? await supabase.from('expense_vendors').update(input.values).eq('id', input.id).eq('user_id', user.id)
+        : await supabase.from('expense_vendors').insert({ ...input.values, user_id: user.id });
       if (result.error) throw new Error(result.error.message);
     },
     onSuccess: () => invalidateExpenseDirectories(queryClient),
@@ -393,10 +394,12 @@ export function useSaveExpenseVendorMutation() {
 export function useToggleExpenseVendorMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { id: string; userId: string; isActive: boolean }) => {
+    mutationFn: async (input: { id: string; isActive: boolean }) => {
       if (!supabase) throw new Error('Supabase is not configured.');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error(userError?.message ?? 'Session expired. Sign in again.');
       const { error } = await supabase.from('expense_vendors').update({ is_active: input.isActive })
-        .eq('id', input.id).eq('user_id', input.userId);
+        .eq('id', input.id).eq('user_id', user.id);
       if (error) throw new Error(error.message);
     },
     onSuccess: () => invalidateExpenseDirectories(queryClient),
