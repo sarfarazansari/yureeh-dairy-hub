@@ -21,7 +21,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 |---|---|---|---|---|---|
 | REF-001 | P0 | Establish permanent architecture standards and one-command workflow | Completed | — | Architecture, tracker and handoff created; permanent rules and workflow updated on feature branch |
 | REF-002 | P0 | Complete file-by-file inventory of all server/data access, Supabase calls, RPCs, fetches, effects and query/mutation hooks | Completed | REF-001 | Recursive tree (238 tracked files, 141 source files, 60 migrations) and all source files screened; detailed path-level inventory in `docs/REFACTORING_API_INVENTORY.md` |
-| REF-003 | P0 | Audit current query infrastructure and state ownership (TanStack Query, local state, Zustand/store usage) | Pending | REF-002 | Findings backed by source paths and concrete examples |
+| REF-003 | P0 | Audit current query infrastructure and state ownership (TanStack Query, local state, Zustand/store usage) | Completed | REF-002 | `docs/REFACTORING_QUERY_STATE_AUDIT.md`: source-backed query-key, invalidation, auth-cache and server-state findings; static validation limits recorded |
 | REF-004 | P1 | Map module boundaries, dependencies and shared types/schemas/helpers | Pending | REF-002 | Dependency map and duplicate-definition list |
 | REF-005 | P1 | Audit server-state fetching and effects; define migration pattern for ad hoc useEffect fetching | Pending | REF-003, REF-004 | Prioritized findings with regression considerations |
 | REF-006 | P1 | Audit mutation invalidation, duplicate submission, errors, loading/empty states and pagination | Pending | REF-003, REF-004 | Per-module checklist and confirmed gaps |
@@ -34,7 +34,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 
 ## Source inventory pointer
 
-The complete static API/query/effect/state inventory is in `docs/REFACTORING_API_INVENTORY.md`. The file list below remains a short orientation index, not the canonical exhaustive inventory. Do not infer that a file is absent merely because it is not listed here.
+The complete static API/query/effect/state inventory is in `docs/REFACTORING_API_INVENTORY.md`. REF-003 query/state findings are in `docs/REFACTORING_QUERY_STATE_AUDIT.md`. The file list below remains a short orientation index, not the canonical exhaustive inventory. Do not infer that a file is absent merely because it is not listed here.
 
 ### Shared infrastructure
 - `src/lib/supabase.ts` — Supabase client creation.
@@ -137,3 +137,16 @@ Append a dated entry here after each work session:
 - Checks not run / limitations: No local checkout was available (clone network resolution failed); build, lint, typecheck, tests and runtime checks were not executed. This task is a static inventory, not an implementation refactor.
 - Findings: TanStack Query is installed but adoption is partial; no Zustand dependency/store was found; expense/feed/report modules have multiple page-level data-access/effect patterns; a buffalo acquisition-cost component contains direct query/mutation code; `react-hook-form` is not listed in package dependencies.
 - Next task ID: REF-003 — audit query infrastructure, server/client state ownership, key conventions and cache invalidation using the source paths documented in the API inventory.
+
+
+### Session log — 2026-10-16 (REF-003)
+
+- Task ID: REF-003
+- Branch: `feature/refactor-engineering-standards`
+- Status: Completed (static audit; no implementation refactor)
+- Files changed: `docs/REFACTORING_QUERY_STATE_AUDIT.md`, `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`
+- Checks executed and results: Confirmed branch is 4 commits ahead of and 0 commits behind latest `master` at `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`; read QueryProvider, buffalo/customer/milk/production query modules, acquisition-cost component, buffalo-sales query consumer, related services, package scripts, inventory and tracker. Documented source-backed query-key ownership and invalidation findings.
+- Checks not run / limitations: No local checkout; build, lint, typecheck, tests, browser/account-switching checks and database operations were not run. Findings are static source review, not runtime proof.
+- Findings: Milk-entry mutations do not invalidate customer summary/detail caches; buffalo production history has two query-key owners and production saves do not invalidate the buffalo-detail history key; acquisition-cost UI owns direct query/mutation logic; auth-cache lifecycle needs validation; dashboards/analytics/expenses/feed/report screens still store remote state locally.
+- Blockers or decisions: No business decision needed for the audit. Cross-feature invalidation should be implemented only after the dependency map and transaction audit are complete; preserve existing RPC atomicity.
+- Next task ID: REF-004 — map module boundaries, dependencies and canonical shared types/schemas/helpers.
