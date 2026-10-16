@@ -16,8 +16,6 @@ export type FeedingRun = {
 
 export const dietPlanScheduleQueryKeys = {
   all: ['diet-plan-schedule'] as const,
-  settings: () => [...dietPlanScheduleQueryKeys.all, 'settings'] as const,
-  runs: () => [...dietPlanScheduleQueryKeys.all, 'runs'] as const,
 };
 
 export function useDietPlanScheduleQuery() {
