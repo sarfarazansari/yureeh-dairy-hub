@@ -1,5 +1,5 @@
-export type PricingType = 'FIXED_PER_LITRE' | 'FAT_BASED';
-export type Shift = 'MORNING' | 'EVENING';
+import type { PricingType, Shift } from './milk-domain';
+export type { PricingType, Shift } from './milk-domain';
 export interface MilkEntry {
   business_date: string;
   shift: Shift;
