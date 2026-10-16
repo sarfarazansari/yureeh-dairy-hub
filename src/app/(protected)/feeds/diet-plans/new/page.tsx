@@ -2,46 +2,31 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
-import { supabase } from '@/lib/supabase';
-import type { DietBuffaloOption, DietPlanFormValues } from '@/lib/diet-plan-types';
+import type { DietPlanFormValues } from '@/lib/diet-plan-types';
 import { DietPlanForm } from '../components/DietPlanForm';
-import { fetchActiveFeedItems, fetchEligibleBuffaloes, saveDietPlan } from '../services';
+import { useActiveDietFeedItemsQuery, useEligibleDietBuffaloesQuery, useSaveDietPlanMutation } from '../queries';
 
 type FeedOption = { id: string; name: string; base_unit: string; category: string };
 
 export default function NewDietPlanPage() {
   const router = useRouter();
-  const [feeds, setFeeds] = useState<FeedOption[]>([]);
-  const [buffaloes, setBuffaloes] = useState<DietBuffaloOption[]>([]);
+  const saveMutation = useSaveDietPlanMutation();
+  const feedsQuery = useActiveDietFeedItemsQuery();
+  const feeds = (feedsQuery.data ?? []) as FeedOption[];
   const [buffaloDate, setBuffaloDate] = useState('');
+  const buffaloesQuery = useEligibleDietBuffaloesQuery(buffaloDate);
+  const buffaloes = buffaloesQuery.data ?? [];
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const loadFeeds = useCallback(async () => {
-    if (!supabase) return;
-    try { setFeeds(await fetchActiveFeedItems(supabase) as FeedOption[]); }
-    catch (error) { setToast({ message: error instanceof Error ? error.message : 'Could not load feed items.', type: 'error' }); }
-  }, []);
-
-  useEffect(() => { void loadFeeds(); }, [loadFeeds]);
-
-  const loadBuffaloes = useCallback(async (date: string) => {
-    if (!supabase || !date) return;
-    try { setBuffaloes(await fetchEligibleBuffaloes(supabase, date)); }
-    catch (error) { setToast({ message: error instanceof Error ? error.message : 'Could not load eligible buffaloes.', type: 'error' }); }
-  }, []);
-
-  useEffect(() => { if (buffaloDate) void loadBuffaloes(buffaloDate); }, [buffaloDate, loadBuffaloes]);
-
   async function save(values: DietPlanFormValues) {
-    if (!supabase) return 'Supabase is not configured.';
     setBusy(true);
     try {
-      await saveDietPlan(supabase, null, values);
+      await saveMutation.mutateAsync({ id: null, values });
       setToast({ message: 'Diet plan created successfully.', type: 'success' });
       router.push('/feeds/diet-plans');
       return null;
@@ -56,7 +41,7 @@ export default function NewDietPlanPage() {
     <AppShell title="New diet plan" subtitle="Create a recurring feed plan for a buffalo group">
       <div className="management-stack">
         <Button variant="outline" size="sm" asChild><Link href="/feeds/diet-plans">← Back to diet plans</Link></Button>
-        <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
+        <Toast message={toast?.message ?? feedsQuery.error?.message ?? buffaloesQuery.error?.message ?? ''} type={toast?.type ?? (feedsQuery.isError || buffaloesQuery.isError ? 'error' : undefined)} onDismiss={() => setToast(null)} />
         <DietPlanForm feeds={feeds} buffaloes={buffaloes} onDateChange={setBuffaloDate} onSave={save} busy={busy} />
       </div>
     </AppShell>

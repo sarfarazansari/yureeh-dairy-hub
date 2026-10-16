@@ -29,9 +29,3 @@ export type BuffaloProductionSheetInput = {
   records: BuffaloProductionInput[];
   fatPercentage: number | null;
 };
-
-export type MilkPoolShiftFatRecord = {
-  business_date: string;
-  shift: MilkEntryShift;
-  fat_percentage: number | string;
-};

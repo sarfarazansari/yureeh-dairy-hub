@@ -6,21 +6,14 @@ import {
   getProductionSheet,
   getBuffaloProductionHistory,
   getBuffaloProductionRange,
+  getMilkPoolShiftFatHistory,
   getProducingBuffaloes,
   saveProductionSheet,
 } from './services/buffalo-production.service';
 import type { BuffaloProductionSheetInput } from './types';
+import { buffaloProductionQueryKeys } from './buffalo-production.query-keys';
 
-export const buffaloProductionQueryKeys = {
-  all: ['buffalo-production'] as const,
-  sheet: (businessDate: string, shift: string) =>
-    [...buffaloProductionQueryKeys.all, 'sheet', businessDate, shift] as const,
-  range: (from: string, to: string) =>
-    [...buffaloProductionQueryKeys.all, 'range', from, to] as const,
-  history: (buffaloId: string) =>
-    [...buffaloProductionQueryKeys.all, 'history', buffaloId] as const,
-  producingBuffaloes: () => [...buffaloProductionQueryKeys.all, 'producing-buffaloes'] as const,
-};
+export { buffaloProductionQueryKeys } from './buffalo-production.query-keys';
 
 const requireSupabase = () => {
   if (!supabase) throw new Error('Supabase is not configured.');
@@ -43,8 +36,18 @@ export function useSaveProductionSheetMutation() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: buffaloProductionQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['sales-analytics'] }),
+        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
       ]);
     },
+  });
+}
+
+export function useMilkPoolShiftFatHistoryQuery(from: string, to: string) {
+  return useQuery({
+    queryKey: buffaloProductionQueryKeys.fatRange(from, to),
+    queryFn: () => getMilkPoolShiftFatHistory(requireSupabase(), from, to),
   });
 }
 

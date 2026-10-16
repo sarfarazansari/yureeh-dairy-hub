@@ -2,90 +2,26 @@
 
 import { Label } from '@/components/ui/label';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
-import { supabase } from '@/lib/supabase';
+import { useFinancialReportQuery } from '@/features/financial-reports/financial-reports.queries';
+import type { BuffaloSaleSummary, FinancialSummary } from '@/features/financial-reports/services/financial-reports.service';
 import { money, todayLocal } from '@/app/(protected)/expenses/shared';
-
-type BuffaloSaleSummary = {
-  buffalo_sale_revenue: number | string;
-  buffalo_sale_collections: number | string;
-  buffalo_sale_outstanding: number | string;
-  buffalo_sales_count: number | string;
-  buffalo_sale_outstanding_as_of: number | string;
-};
-
-type FinancialSummary = {
-  milk_quantity_sold: number | string;
-  milk_sales_revenue: number | string;
-  customer_collections: number | string;
-  operating_expenses: number | string;
-  dated_expense_payments: number | string;
-  customer_receivables: number | string;
-  customer_credits: number | string;
-  supplier_outstanding: number | string;
-  buffalo_purchase_cost: number | string;
-  buffalo_purchase_payments: number | string;
-  buffalo_purchase_outstanding: number | string;
-  legacy_undated_paid_amount: number | string;
-  customer_receivables_as_of: number | string;
-  customer_credits_as_of: number | string;
-  supplier_outstanding_as_of_before_legacy: number | string;
-  supplier_legacy_undated_paid_amount: number | string;
-  buffalo_purchase_outstanding_as_of_before_legacy: number | string;
-  buffalo_purchase_legacy_undated_paid_amount: number | string;
-};
 
 export default function FinancialReportsPage() {
   const today = todayLocal();
   const [from, setFrom] = useState(`${today.slice(0, 8)}01`);
   const [to, setTo] = useState(today);
-  const [summary, setSummary] = useState<FinancialSummary | null>(null);
-  const [saleSummary, setSaleSummary] = useState<BuffaloSaleSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      if (!supabase) {
-        setError('Supabase is not configured.');
-        setSummary(null);
-        setSaleSummary(null);
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setError('');
-      if (!from || !to || from > to) {
-        setSummary(null);
-        setSaleSummary(null);
-        setError('Choose a valid date range.');
-        setLoading(false);
-        return;
-      }
-      const [financialResult, saleResult] = await Promise.all([
-        supabase.rpc('get_farm_financial_summary', { p_from: from, p_to: to }),
-        supabase.rpc('get_buffalo_sale_financial_summary', { p_from: from, p_to: to }),
-      ]);
-      if (!active) return;
-      if (financialResult.error || saleResult.error) {
-        setError(financialResult.error?.message ?? saleResult.error?.message ?? 'Could not load financial summary.');
-        setSummary(null);
-        setSaleSummary(null);
-      } else {
-        setSummary((financialResult.data?.[0] ?? null) as FinancialSummary | null);
-        setSaleSummary((saleResult.data?.[0] ?? null) as BuffaloSaleSummary | null);
-      }
-      setLoading(false);
-    }
-    void load();
-    return () => {
-      active = false;
-    };
-  }, [from, to]);
+  const reportQuery = useFinancialReportQuery(from, to);
+  const summary = reportQuery.data?.summary ?? null;
+  const saleSummary = reportQuery.data?.saleSummary ?? null;
+  const validRange = Boolean(from && to && from <= to);
+  const loading = validRange && reportQuery.isPending;
+  const error = !validRange
+    ? 'Choose a valid date range.'
+    : reportQuery.error?.message ?? '';
 
   const value = (key: keyof FinancialSummary) => Number(summary?.[key] ?? 0);
   const saleValue = (key: keyof BuffaloSaleSummary) => Number(saleSummary?.[key] ?? 0);

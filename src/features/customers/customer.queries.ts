@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
+import { customerQueryKeys } from './customer.query-keys';
+
+export { customerQueryKeys } from './customer.query-keys';
 import {
   createCustomer,
   getCustomerDetails,
@@ -15,12 +18,6 @@ import {
   type CustomerPayment,
   type CustomerSummary,
 } from './services/customer.service';
-
-export const customerQueryKeys = {
-  all: ['customers'] as const,
-  directory: () => [...customerQueryKeys.all, 'directory'] as const,
-  detail: (customerId: string) => [...customerQueryKeys.all, 'detail', customerId] as const,
-};
 
 const requireSupabase = () => {
   if (!supabase) throw new Error('Supabase is not configured.');
@@ -98,6 +95,8 @@ export function useRecordCustomerPaymentMutation() {
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: customerQueryKeys.detail(variables.customerId) });
       await queryClient.invalidateQueries({ queryKey: customerQueryKeys.directory() });
+      await queryClient.invalidateQueries({ queryKey: ['financial-reports'] });
+      await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -110,6 +109,8 @@ export function useUpdateCustomerPricingMutation() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: customerQueryKeys.all });
       await queryClient.invalidateQueries({ queryKey: ['milk'] });
+      await queryClient.invalidateQueries({ queryKey: ['financial-reports'] });
+      await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
@@ -122,6 +123,8 @@ export function useSetCustomerActiveMutation() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: customerQueryKeys.all });
       await queryClient.invalidateQueries({ queryKey: ['milk'] });
+      await queryClient.invalidateQueries({ queryKey: ['financial-reports'] });
+      await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }

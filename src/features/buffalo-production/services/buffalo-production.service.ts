@@ -9,8 +9,8 @@ import type {
   BuffaloProductionRecord,
   BuffaloProductionSheetInput,
   BuffaloProductionSheetRecord,
-  MilkPoolShiftFatRecord,
 } from '../types';
+import type { MilkPoolShiftFatRecord } from '@/features/milk/milk.types';
 
 export async function getProductionSheet(
   client: SupabaseClient,

@@ -49,6 +49,7 @@ export default function MilkPoolPage() {
   const fatByDate = useMemo(() => {
     const grouped: Record<string, { MORNING?: number; EVENING?: number }> = {};
     for (const record of fatQuery.data ?? []) {
+      if (record.shift !== 'MORNING' && record.shift !== 'EVENING') continue;
       grouped[record.business_date] ??= {};
       grouped[record.business_date][record.shift] = Number(record.fat_percentage);
     }

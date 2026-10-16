@@ -19,8 +19,9 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { calculateExpenseTotal, expensePaymentStatus } from '@/lib/expenses';
 import { ExpenseShell, money, ensureExpenseCategories, todayLocal } from '../shared';
-import type { ExpenseBuffaloOption, ExpenseCategory, ExpenseRow, ExpenseVendor } from '@/lib/expense-types';
+import type { ExpenseBuffaloOption, ExpenseRow } from '@/lib/expense-types';
 import { TimedNotice } from '@/components/ui/TimedNotice';
+import { useExpenseHistoryQuery, useSoftDeleteExpenseMutation, useUpdateExpenseMutation } from '@/features/expenses/expense.queries';
 export default function ExpenseHistory() {
   const pathname = usePathname();
   const router = useRouter();
@@ -29,14 +30,8 @@ export default function ExpenseHistory() {
   const page = Number.isSafeInteger(pageParam) && pageParam > 0 ? pageParam : 1;
   const sizeParam = Number(searchParams.get('pageSize') ?? '20');
   const pageSize = [10, 20, 50, 100].includes(sizeParam) ? sizeParam : 20;
-  const [rows, setRows] = useState<ExpenseRow[]>([]),
-    [totalCount, setTotalCount] = useState(0),
-    [ledgerExpenseIds, setLedgerExpenseIds] = useState<Set<string>>(new Set()),
-    [feedPurchaseExpenseIds, setFeedPurchaseExpenseIds] = useState<Set<string>>(new Set()),
-    [categories, setCategories] = useState<Pick<ExpenseCategory, 'id' | 'name' | 'category_group'>[]>([]),
-    [loadError, setLoadError] = useState(false),
-    [vendors, setVendors] = useState<Pick<ExpenseVendor, 'id' | 'name'>[]>([]),
-    [buffaloes, setBuffaloes] = useState<ExpenseBuffaloOption[]>([]),
+  const [setupReady, setSetupReady] = useState(false),
+    [setupError, setSetupError] = useState(''),
     [from, setFrom] = useState(''),
     [to, setTo] = useState(''),
     [category, setCategory] = useState(''),
@@ -59,81 +54,42 @@ export default function ExpenseHistory() {
     [deleteBusy, setDeleteBusy] = useState(false),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState('');
-  async function load() {
-    if (!supabase) {
-      setMessage('Supabase is not configured.');
-      setLoadError(true);
-      return;
-    }
-    setLoadError(false);
-    try {
-      await ensureExpenseCategories(supabase);
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Could not load categories');
-      setLoadError(true);
-      return;
-    }
-    const offset = (page - 1) * pageSize;
-    let q = supabase
-      .from('expenses')
-      .select('*', { count: 'exact' })
-      .is('deleted_at', null);
-    if (from) q = q.gte('business_date', from);
-    if (to) q = q.lte('business_date', to);
-    if (category) q = q.eq('category_id', category);
-    if (group) q = q.eq('category_group_snapshot', group);
-    if (vendor) q = q.eq('vendor_id', vendor);
-    if (status) q = q.eq('payment_status', status);
-    if (method) q = q.eq('payment_method', method);
-    if (buffalo) q = q.eq('buffalo_id', buffalo);
-    if (outstandingOnly) q = q.gt('pending_amount', 0);
-    const term = search.trim().replace(/[(),]/g, ' ').replace(/[%_]/g, '');
-    if (term) q = q.or(`category_name_snapshot.ilike.%${term}%,vendor_name_snapshot.ilike.%${term}%,description.ilike.%${term}%`);
-    const sortColumn = sort === 'amount' ? 'total_amount' : sort === 'pending' ? 'pending_amount' : sort === 'category' ? 'category_name_snapshot' : 'business_date';
-    q = q.order(sortColumn, { ascending: sortDirection === 'asc' }).range(offset, offset + pageSize - 1);
-    const [e, c, v, b] = await Promise.all([
-      q,
-      supabase.from('expense_categories').select('id,name,category_group').order('name'),
-      supabase.from('expense_vendors').select('id,name').order('name'),
-      supabase.from('buffaloes').select('id,name,buffalo_code').order('buffalo_code'),
-    ]);
-    if (e.error || c.error || v.error || b.error) {
-      const error = e.error ?? c.error ?? v.error ?? b.error;
-      setMessage(error ? error.message : 'Could not load expense data.');
-      setLoadError(true);
-      return;
-    }
-    const nextRows = e.data ?? [];
-    setTotalCount(e.count ?? 0);
-    const expenseIds = nextRows.map((expense) => expense.id);
-    if (expenseIds.length) {
-      const [paymentResult, purchaseResult] = await Promise.all([
-        supabase.from('expense_payments').select('expense_id').in('expense_id', expenseIds),
-        supabase.from('feed_purchases').select('expense_id').eq('status', 'ACTIVE').in('expense_id', expenseIds),
-      ]);
-      if (paymentResult.error || purchaseResult.error) {
-        setMessage((paymentResult.error ?? purchaseResult.error)!.message);
-        setLoadError(true);
-        setRows([]);
-        setLedgerExpenseIds(new Set());
-        setFeedPurchaseExpenseIds(new Set());
+  const historyQuery = useExpenseHistoryQuery(
+    { page, pageSize, from, to, category, group, vendor, status, method, buffalo, outstandingOnly, search, sort, sortDirection },
+    setupReady,
+  );
+  const updateExpenseMutation = useUpdateExpenseMutation();
+  const deleteExpenseMutation = useSoftDeleteExpenseMutation();
+  const rows = historyQuery.data?.rows ?? [];
+  const totalCount = historyQuery.data?.totalCount ?? 0;
+  const ledgerExpenseIds = new Set(historyQuery.data?.ledgerExpenseIds ?? []);
+  const feedPurchaseExpenseIds = new Set(historyQuery.data?.feedPurchaseExpenseIds ?? []);
+  const categories = historyQuery.data?.categories ?? [];
+  const vendors = historyQuery.data?.vendors ?? [];
+  const buffaloes = (historyQuery.data?.buffaloes ?? []) as ExpenseBuffaloOption[];
+  const loadError = Boolean(setupError || historyQuery.error);
+  useEffect(() => {
+    let alive = true;
+    async function initialize() {
+      if (!supabase) {
+        setSetupError('Supabase is not configured.');
         return;
       }
-      setLedgerExpenseIds(new Set((paymentResult.data ?? []).map((payment) => payment.expense_id)));
-      setFeedPurchaseExpenseIds(new Set((purchaseResult.data ?? []).map((purchase) => purchase.expense_id).filter((id): id is string => Boolean(id))));
-    } else {
-      setLedgerExpenseIds(new Set());
-      setFeedPurchaseExpenseIds(new Set());
+      try {
+        await ensureExpenseCategories(supabase);
+        if (alive) setSetupReady(true);
+      } catch (error) {
+        if (alive) {
+          setSetupError(error instanceof Error ? error.message : 'Could not prepare expense categories.');
+          setMessage(error instanceof Error ? error.message : 'Could not prepare expense categories.');
+        }
+      }
     }
-    setRows(nextRows);
-    setCategories(c.data ?? []);
-    setVendors(v.data ?? []);
-    setBuffaloes(b.data ?? []);
-  }
-  useEffect(() => {
-    const task = window.setTimeout(() => void load(), 0);
-    return () => window.clearTimeout(task);
-  }, [from, to, category, group, vendor, status, method, buffalo, outstandingOnly, search, sort, sortDirection, page, pageSize]);
+    void initialize();
+    return () => { alive = false; };
+  }, []);
+
+  const load = async () => { await historyQuery.refetch(); };
   const visible = rows;
   const totalAmount = visible.reduce((sum, row) => sum + Number(row.total_amount || 0), 0);
   const totalPaid = visible.reduce((sum, row) => sum + Number(row.paid_amount || 0), 0);
@@ -151,6 +107,8 @@ export default function ExpenseHistory() {
     return [...grouped.entries()].map(([name, value]) => ({ name, ...value })).sort((left, right) => right.total - left.total);
   }, [visible]);
   const pageCount = Math.max(1, Math.ceil(totalCount / pageSize));
+  const loading = !setupReady || historyQuery.isPending;
+  const loadErrorMessage = setupError || historyQuery.error?.message || '';
   const safePage = Math.min(page, pageCount);
   const pageRows = visible;
   const firstResult = totalCount ? (safePage - 1) * pageSize + 1 : 0;
@@ -170,7 +128,7 @@ export default function ExpenseHistory() {
   }, [filterSignature, page]);
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!editing || !supabase || busy) return;
+    if (!editing || busy) return;
     setMessage('');
     setBusy(true);
     try {
@@ -209,9 +167,9 @@ export default function ExpenseHistory() {
         throw new Error('Choose a unit for quantity-based expenses.');
       }
       const payment_status = expensePaymentStatus(amount, paid);
-      const { error } = await supabase
-        .from('expenses')
-        .update({
+      await updateExpenseMutation.mutateAsync({
+        expenseId: editing.id,
+        values: {
           business_date: editing.business_date,
           category_id: editing.category_id,
           vendor_id: editing.vendor_id || null,
@@ -223,13 +181,12 @@ export default function ExpenseHistory() {
           total_amount: amount,
           paid_amount: paid,
           payment_status,
-          payment_method: payment_status === 'CREDIT' ? 'CREDIT' : editing.payment_method,
+          payment_method: payment_status === 'CREDIT' ? 'CREDIT' : editing.payment_method || 'CASH',
           due_date: editing.due_date || null,
           notes: editing.notes || null,
           receipt_reference: editing.receipt_reference || null,
-        })
-        .eq('id', editing.id);
-      if (error) throw error;
+        },
+      });
       setEditing(null);
       setMessage('Expense updated.');
       await load();
@@ -240,7 +197,7 @@ export default function ExpenseHistory() {
     }
   }
   async function confirmDelete() {
-    if (!pendingDelete || !supabase || deleteBusy) return;
+    if (!pendingDelete || deleteBusy) return;
     if (loadError) {
       setMessage('Expense status could not be verified. Reload and try again.');
       return;
@@ -250,11 +207,7 @@ export default function ExpenseHistory() {
       if (ledgerExpenseIds.has(pendingDelete.id) || feedPurchaseExpenseIds.has(pendingDelete.id)) {
         throw new Error('This expense is locked and cannot be deleted from expense history.');
       }
-      const { error } = await supabase
-        .from('expenses')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', pendingDelete.id);
-      if (error) throw error;
+      await deleteExpenseMutation.mutateAsync(pendingDelete.id);
       setPendingDelete(null);
       await load();
     } catch (deleteError) {
@@ -440,7 +393,7 @@ export default function ExpenseHistory() {
           )}
           </DialogContent>
         </ShadcnDialog>
-        {loadError ? <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{message || 'Could not load expense history.'}</p><Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => void load()}>Retry</Button></div> : <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
+        {loadError ? <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{loadErrorMessage || message || 'Could not load expense history.'}</p><Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => void load()}>Retry</Button></div> : <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
           <Table className="min-w-[1200px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
             <TableHeader><TableRow>
               <TableHead>DATE</TableHead><TableHead>CATEGORY / GROUP</TableHead><TableHead>VENDOR</TableHead><TableHead>DESCRIPTION</TableHead><TableHead>QUANTITY</TableHead><TableHead>TOTAL</TableHead><TableHead>PAID</TableHead><TableHead>PENDING</TableHead><TableHead>STATUS</TableHead><TableHead>METHOD</TableHead><TableHead>ACTIONS</TableHead>

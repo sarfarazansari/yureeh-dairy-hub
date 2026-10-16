@@ -16,8 +16,10 @@ import { EXPENSE_GROUPS, UNITS, type ExpenseGroup } from '@/lib/expenses';
 import { ExpenseShell, ensureExpenseCategories } from '../shared';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseCategory } from '@/lib/expense-types';
+import { useExpenseCategoriesQuery, useSaveExpenseCategoryMutation, useToggleExpenseCategoryMutation } from '@/features/expenses/expense.queries';
 export default function ExpenseCategories() {
-  const [rows, setRows] = useState<ExpenseCategory[]>([]),
+  const [ownerId, setOwnerId] = useState(''),
+    [setupError, setSetupError] = useState(''),
     [id, setId] = useState(''),
     [name, setName] = useState(''),
     [group, setGroup] = useState<ExpenseGroup>('FEED'),
@@ -26,40 +28,36 @@ export default function ExpenseCategories() {
     [description, setDescription] = useState(''),
     [message, setMessage] = useState(''),
     [busy, setBusy] = useState(false),
-    [loading, setLoading] = useState(true),
-    [loadError, setLoadError] = useState(''),
     [statusTarget, setStatusTarget] = useState<ExpenseCategory | null>(null),
     [statusBusy, setStatusBusy] = useState(false);
-  async function load() {
-    if (!supabase) {
-      setLoadError('Supabase is not configured.');
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setLoadError('');
-    try {
-      await ensureExpenseCategories(supabase);
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw userError ?? new Error('Sign in again to load expense categories.');
-      const { data, error } = await supabase
-        .from('expense_categories')
-        .select('*')
-        .eq('owner_id', user.id)
-        .order('category_group')
-        .order('name');
-      if (error) throw error;
-      setRows(data ?? []);
-    } catch (error) {
-      setLoadError(error instanceof Error ? error.message : 'Could not load expense categories.');
-    } finally {
-      setLoading(false);
-    }
-  }
+  const categoryQuery = useExpenseCategoriesQuery(ownerId);
+  const saveCategoryMutation = useSaveExpenseCategoryMutation();
+  const toggleCategoryMutation = useToggleExpenseCategoryMutation();
+  const rows = categoryQuery.data ?? [];
+  const loading = !ownerId || categoryQuery.isPending;
+  const loadError = setupError || categoryQuery.error?.message || '';
+
   useEffect(() => {
-    const task = window.setTimeout(() => void load(), 0);
-    return () => window.clearTimeout(task);
+    let alive = true;
+    async function initialize() {
+      if (!supabase) {
+        setSetupError('Supabase is not configured.');
+        return;
+      }
+      try {
+        await ensureExpenseCategories(supabase);
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) throw error ?? new Error('Sign in again to load expense categories.');
+        if (alive) setOwnerId(user.id);
+      } catch (error) {
+        if (alive) setSetupError(error instanceof Error ? error.message : 'Could not load expense categories.');
+      }
+    }
+    void initialize();
+    return () => { alive = false; };
   }, []);
+
+  const load = async () => { await categoryQuery.refetch(); };
   function edit(c: ExpenseCategory) {
     setId(c.id);
     setName(c.name);
@@ -78,11 +76,8 @@ export default function ExpenseCategories() {
   }
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!supabase) return;
+    if (!ownerId || busy) return;
     setBusy(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
     const values = {
       name: name.trim(),
       category_group: group,
@@ -90,35 +85,33 @@ export default function ExpenseCategories() {
       is_quantity_based: quantity,
       description: description || null,
     };
-    const result = id
-      ? await supabase.from('expense_categories').update(values).eq('id', id)
-      : await supabase.from('expense_categories').insert({ ...values, owner_id: user?.id });
-    if (result.error) setMessage(result.error.message);
-    else {
+    try {
+      await saveCategoryMutation.mutateAsync({ id: id || undefined, ownerId, values });
       setMessage(id ? 'Category updated.' : 'Category created.');
       clear();
-      await load();
+      await categoryQuery.refetch();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not save expense category.');
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   }
+
   async function toggle(c: ExpenseCategory) {
-    if (!supabase || statusBusy) return;
+    if (!ownerId || statusBusy) return;
     setStatusBusy(true);
     try {
-      const { error } = await supabase
-        .from('expense_categories')
-        .update({ is_active: !c.is_active })
-        .eq('id', c.id);
-      if (error) throw error;
+      await toggleCategoryMutation.mutateAsync({ id: c.id, ownerId, isActive: !c.is_active });
       setStatusTarget(null);
       setMessage(c.is_active ? 'Category deactivated.' : 'Category activated.');
-      await load();
+      await categoryQuery.refetch();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not update category status.');
     } finally {
       setStatusBusy(false);
     }
   }
+
   const categoryForm = (
     <form className={id ? 'category-edit-form grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 xl:grid-cols-3' : 'card space-y-4'} onSubmit={save}>
       <h2 className="section-title" id={id ? 'edit-category-title' : undefined}>
@@ -126,13 +119,7 @@ export default function ExpenseCategories() {
       </h2>
       <div className="field">
         <Label htmlFor="expense-category-name">Name</Label>
-        <Input
-          id="expense-category-name"
-          required
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Mineral mixture"
-        />
+        <Input id="expense-category-name" required value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mineral mixture" />
       </div>
       <div className="field">
         <Label htmlFor="expense-category-group">Group</Label>
@@ -140,7 +127,7 @@ export default function ExpenseCategories() {
       </div>
       <div className="field">
         <Label htmlFor="expense-category-unit">Default unit</Label>
-        <Select value={unit || "none"} onValueChange={(value) => setUnit(value === "none" ? "" : value)}><SelectTrigger id="expense-category-unit"><SelectValue placeholder="No default unit" /></SelectTrigger><SelectContent><SelectItem value="none">No default unit</SelectItem>{UNITS.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
+        <Select value={unit || 'none'} onValueChange={(value) => setUnit(value === 'none' ? '' : value)}><SelectTrigger id="expense-category-unit"><SelectValue placeholder="No default unit" /></SelectTrigger><SelectContent><SelectItem value="none">No default unit</SelectItem>{UNITS.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
       </div>
       <div className="field flex min-h-10 items-center gap-3 rounded-md border p-3">
         <Checkbox id="expense-category-quantity" checked={quantity} onCheckedChange={(checked) => setQuantity(checked === true)} />
@@ -148,24 +135,15 @@ export default function ExpenseCategories() {
       </div>
       <div className="field sm:col-span-2 xl:col-span-3">
         <Label htmlFor="expense-category-description">Description <span className="text-muted-foreground">(optional)</span></Label>
-        <Input
-          id="expense-category-description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
+        <Input id="expense-category-description" value={description} onChange={(e) => setDescription(e.target.value)} />
       </div>
       <div className="dialog-footer sm:col-span-2 xl:col-span-3">
-        {id && (
-          <Button type="button" variant="secondary" onClick={clear} disabled={busy}>
-            Cancel
-          </Button>
-        )}
-        <Button type="submit" disabled={busy || !name.trim()}>
-          {busy ? 'Saving…' : id ? 'Save category' : 'Add category'}
-        </Button>
+        {id && <Button type="button" variant="secondary" onClick={clear} disabled={busy}>Cancel</Button>}
+        <Button type="submit" disabled={busy || !name.trim()}>{busy ? 'Saving…' : id ? 'Save category' : 'Add category'}</Button>
       </div>
     </form>
   );
+
   return (
     <ExpenseShell
       title="Expense categories"

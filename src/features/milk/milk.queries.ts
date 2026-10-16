@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { customerQueryKeys } from '@/features/customers/customer.query-keys';
 
 import { supabase } from '@/lib/supabase';
 import {
@@ -26,8 +27,8 @@ import {
   getMilkDeliveryContext,
   recordMilkPoolMovement,
   type RecordMilkPoolMovementInput,
-  type MilkPoolShiftFatRecord,
 } from './services/milk-pool.service';
+import type { MilkPoolShiftFatRecord } from './milk.types';
 import type { MilkEntryFormValues } from '@/lib/milk-entry-validation';
 
 export const milkQueryKeys = {
@@ -114,7 +115,14 @@ export function useCreateMilkEntryMutation() {
   return useMutation({
     mutationFn: (entry: MilkEntryFormValues) => createMilkEntry(requireSupabase(), entry),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: milkQueryKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.directory() }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.details() }),
+        queryClient.invalidateQueries({ queryKey: ['sales-analytics'] }),
+        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+      ]);
     },
   });
 }
@@ -125,7 +133,14 @@ export function useUpdateMilkEntryMutation() {
     mutationFn: ({ entryId, entry }: { entryId: string; entry: MilkEntryFormValues }) =>
       updateMilkEntry(requireSupabase(), entryId, entry),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: milkQueryKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.directory() }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.details() }),
+        queryClient.invalidateQueries({ queryKey: ['sales-analytics'] }),
+        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+      ]);
     },
   });
 }
@@ -135,7 +150,14 @@ export function useDeleteMilkEntryMutation() {
   return useMutation({
     mutationFn: (entryId: string) => deleteMilkEntry(requireSupabase(), entryId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: milkQueryKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.directory() }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.details() }),
+        queryClient.invalidateQueries({ queryKey: ['sales-analytics'] }),
+        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+      ]);
     },
   });
 }

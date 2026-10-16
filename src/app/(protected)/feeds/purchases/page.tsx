@@ -5,24 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
-import { supabase } from '@/lib/supabase';
-import type { FeedItem } from '@/lib/feed-types';
-import type { ExpenseVendor } from '@/lib/expense-types';
-import type { FeedPurchaseListRow } from '@/lib/feed-purchase-types';
+import { useDeleteFeedPurchaseMutation, useFeedPurchaseArchiveQuery } from './queries';
 import { FeedPurchaseTable } from './components/FeedPurchaseTable';
-import { deleteFeedPurchase, fetchFeedPurchases } from './services';
+
 
 const PAGE_SIZE = 20;
 
 export default function FeedPurchasesPage() {
-  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
-  const [vendors, setVendors] = useState<Pick<ExpenseVendor, 'id' | 'name'>[]>([]);
-  const [rows, setRows] = useState<FeedPurchaseListRow[]>([]);
-  const [count, setCount] = useState(0);
   const [page, setPage] = useState(0);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -30,47 +23,21 @@ export default function FeedPurchasesPage() {
   const [vendorFilter, setVendorFilter] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
-
-  const load = useCallback(async () => {
-    if (!supabase) { setLoadError('Supabase is not configured.'); setLoading(false); return; }
-    setLoading(true);
-    setLoadError('');
-    try {
-      const [feeds, vendorResult, purchases] = await Promise.all([
-        supabase.from('feed_items').select('*').eq('is_active', true).order('name'),
-        supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
-        fetchFeedPurchases(supabase, page, PAGE_SIZE, {
-          from,
-          to,
-          feedItemId: feedFilter,
-          vendorId: vendorFilter,
-          paymentStatus: paymentFilter,
-        }),
-      ]);
-
-      if (feeds.error) throw feeds.error;
-      if (vendorResult.error) throw vendorResult.error;
-
-      setFeedItems(feeds.data ?? []);
-      setVendors(vendorResult.data ?? []);
-      setRows(purchases.rows);
-      setCount(purchases.count);
-    } catch (error) {
-      setLoadError(error instanceof Error ? error.message : 'Could not load feed purchases.');
-    } finally { setLoading(false); }
-  }, [page, from, to, feedFilter, vendorFilter, paymentFilter]);
-
-  useEffect(() => { void load(); }, [load]);
+  const deleteMutation = useDeleteFeedPurchaseMutation();
+  const archiveQuery = useFeedPurchaseArchiveQuery({ page, from, to, feedFilter, vendorFilter, paymentFilter });
+  const feedItems = archiveQuery.data?.feedItems ?? [];
+  const vendors = archiveQuery.data?.vendors ?? [];
+  const rows = archiveQuery.data?.rows ?? [];
+  const count = archiveQuery.data?.count ?? 0;
+  const loading = archiveQuery.isPending;
+  const loadError = archiveQuery.error?.message ?? '';
+  const load = () => void archiveQuery.refetch();
 
   async function handleDelete(purchaseId: string) {
-    if (!supabase) return;
-
     try {
-      await deleteFeedPurchase(supabase, purchaseId);
+      await deleteMutation.mutateAsync(purchaseId);
       setToast({ message: 'Feed purchase deleted successfully.', type: 'success' });
-      await load();
+
     } catch (error) {
       setToast({
         message: error instanceof Error ? error.message : 'Could not delete feed purchase.',

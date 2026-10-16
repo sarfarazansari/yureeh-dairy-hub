@@ -5,54 +5,36 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import Link from 'next/link';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
-import { supabase } from '@/lib/supabase';
-import type { FeedItem } from '@/lib/feed-types';
-import type { FeedConsumptionListRow } from '@/lib/feed-consumption-types';
+import { useDeleteFeedConsumptionMutation, useFeedConsumptionArchiveQuery } from './queries';
 import { FeedConsumptionTable } from './components/FeedConsumptionTable';
-import { deleteFeedConsumption, fetchFeedConsumption, fetchFeedItems } from './services';
+
 
 const PAGE_SIZE = 20;
 
 export default function FeedConsumptionPage() {
-  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
-  const [rows, setRows] = useState<FeedConsumptionListRow[]>([]);
-  const [count, setCount] = useState(0);
   const [page, setPage] = useState(0);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [feedFilter, setFeedFilter] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
-
-  const load = useCallback(async () => {
-    if (!supabase) { setLoadError('Supabase is not configured.'); setLoading(false); return; }
-    setLoading(true); setLoadError('');
-    try {
-      const [feeds, consumption] = await Promise.all([
-        fetchFeedItems(supabase, false),
-        fetchFeedConsumption(supabase, page, PAGE_SIZE, { from, to, feedItemId: feedFilter }),
-      ]);
-      setFeedItems(feeds);
-      setRows(consumption.rows);
-      setCount(consumption.count);
-    } catch (error) {
-      setLoadError(error instanceof Error ? error.message : 'Could not load feed consumption.');
-    } finally { setLoading(false); }
-  }, [page, from, to, feedFilter]);
-
-  useEffect(() => { void load(); }, [load]);
+  const deleteMutation = useDeleteFeedConsumptionMutation();
+  const archiveQuery = useFeedConsumptionArchiveQuery({ page, from, to, feedFilter });
+  const feedItems = archiveQuery.data?.feedItems ?? [];
+  const rows = archiveQuery.data?.rows ?? [];
+  const count = archiveQuery.data?.count ?? 0;
+  const loading = archiveQuery.isPending;
+  const loadError = archiveQuery.error?.message ?? '';
+  const load = () => void archiveQuery.refetch();
 
   async function handleDelete(id: string) {
-    if (!supabase) return;
     try {
-      await deleteFeedConsumption(supabase, id);
+      await deleteMutation.mutateAsync(id);
       setToast({ message: 'Feed consumption deleted successfully.', type: 'success' });
-      await load();
+
     } catch (error) {
       setToast({ message: error instanceof Error ? error.message : 'Could not delete feed consumption.', type: 'error' });
     }
