@@ -8,8 +8,6 @@ export type CustomerOption = {
   is_active: boolean;
 };
 
-
-
 export type CustomerSummary = CustomerOption & {
   phone: string | null;
   address: string | null;
