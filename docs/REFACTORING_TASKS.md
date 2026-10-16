@@ -38,7 +38,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-011A | P1 | Refactor buffalo lifecycle/acquisition/sale and customer payment boundaries | In Progress (cache dependencies updated; remaining audit/validation pending) | REF-009, REF-010A, REF-010B | Buffalo mutation invalidation and customer payment/report invalidation improved; acquisition-cost UI and common payment retry/idempotency policy remain unverified |
 | REF-011B | P2 | Refactor any remaining modules one task per run | In Progress (expense/feed-item/scheduler boundaries implemented; remaining-module audit pending) | REF-010A–REF-011A | Expense history/new/category/vendor and feed-item writes are now query/mutation-backed; audit remaining direct-access modules and verify all cache dependencies |
 | REF-012 | P2 | Final architecture regression audit and remove obsolete duplicate patterns | Blocked (static audit recorded; prerequisite migrations and runtime validation outstanding) | REF-011A, REF-011B | `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` records current coverage and unresolved paths; final exhaustive audit/build/test evidence still required |
-| REF-013 | P1 | Implement feature-owned folder boundaries and justified client-state stores, one module at a time | In Progress (expense structural slice implemented; local validation pending) | REF-008 | Expense shell/date filters moved to `src/features/expenses/components`, category setup to `services`, formatting/date helpers to `utils`; all seven expense routes now import feature-owned modules and obsolete route-level `shared.tsx` was removed; further modules and store-candidate audit remain |
+| REF-013 | P1 | Implement feature-owned folder boundaries and justified client-state stores, one module at a time | In Progress (expenses and four feed domains structurally migrated; local validation pending) | REF-008 | Expense helpers are feature-owned; feed-items, feed-inventory, feed-purchases, feed-consumption and diet-plans services/query hooks/schemas now live under `src/features/*`; route imports updated and obsolete route-owned service/query/schema files removed for these slices; local validation and remaining module migration/store-candidate audit outstanding |
 
 ## Source inventory pointer
 
@@ -258,3 +258,17 @@ Append a dated entry here after each work session:
 - Read-back verification: fetched all seven routes from the feature branch and confirmed none references the removed `shared.tsx`; all show imports from `@/features/expenses/*`.
 - Runtime checks remain not run: local typecheck, lint, build, unit tests and browser smoke tests. The branch is not ready to merge until the user runs checks locally.
 - Store policy unchanged: no Zustand store is justified by this slice. TanStack Query remains the server cache; state should not be duplicated into Zustand. Store candidates are to be evaluated from concrete cross-route client-state requirements.
+
+
+### Session log — 2026-10-16 (REF-013 feed module migrations)
+
+- Branch: `feature/feature-folder-structure-foundation`; base remains latest master `1f291af036ff737049af3db51936a3d72234da29`.
+- Migrated service/query/schema ownership:
+  - Feed items: `src/features/feed-items/feed-items.service.ts`, `feed-items.queries.ts`.
+  - Feed inventory: `src/features/feed-inventory/feed-inventory.service.ts`, `feed-inventory.queries.ts`.
+  - Feed purchases: `src/features/feed-purchases/feed-purchases.service.ts`, `feed-purchases.queries.ts`, `feed-purchases.schema.ts`.
+  - Feed consumption: `src/features/feed-consumption/feed-consumption.service.ts`, `feed-consumption.queries.ts`, `feed-consumption.schema.ts`.
+  - Diet plans/scheduler: `src/features/diet-plans/diet-plan.service.ts`, `diet-plan.queries.ts`, `diet-plan.schema.ts`, `diet-plan-schedule.queries.ts`.
+- Updated consuming routes/forms to import the feature-owned files and deleted the old route-owned service/query/schema files for these modules. Existing shared domain types in `src/lib/*-types.ts` remain shared because multiple feed domains consume them; do not duplicate those types merely to populate feature folders.
+- Store audit: package has no Zustand dependency and current examined shared data is server-owned (TanStack Query), while sidebar mobile-open and page forms are local UI state. No global store was introduced without a demonstrated cross-route client-state requirement. If the user expects a specific store behavior, identify that state/consumer explicitly before choosing the store API.
+- Verification performed: GitHub read-back of source files and targeted route imports during migration. No local typecheck/lint/build/tests/browser checks run in this environment. These migrations are not merge-ready until user runs checks.
