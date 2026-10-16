@@ -1,5 +1,4 @@
 import type { MilkEntryShift } from '@/lib/milk-entry-list';
-import type { MilkPoolShiftFatRecord } from '@/features/milk/milk.types';
 
 export type BuffaloProductionAnimal = {
   id: string;
