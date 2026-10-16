@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
+import type { Shift } from '@/lib/milk-domain';
 import type { FeedingRun, ScheduleSettings } from './types';
 
 export const dietPlanScheduleQueryKeys = {
