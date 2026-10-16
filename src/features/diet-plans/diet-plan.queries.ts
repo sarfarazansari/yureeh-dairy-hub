@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
 import { fetchActiveFeedItems, fetchDietPlanForEdit, fetchDietPlans, fetchEligibleBuffaloes, saveDietPlan } from './diet-plan.service';
-import type { DietPlanFormValues } from '@/lib/diet-plan-types';
+import type { DietPlanFormValues } from './diet-plan.schema';
 
 const PAGE_SIZE = 20;
 
