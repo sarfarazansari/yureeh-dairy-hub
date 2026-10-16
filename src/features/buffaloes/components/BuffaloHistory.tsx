@@ -1,5 +1,6 @@
 import { formatDate } from '@/lib/date-format';
 import { money } from '@/lib/farm-format';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 import type { BuffaloPurchasePayment, BuffaloStatusHistory } from '../types';
 
@@ -12,28 +13,20 @@ export function BuffaloPaymentHistory({
     <HistoryCard title="Payment history">
       {payments.length ? (
         <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>DATE</th>
-                <th>AMOUNT</th>
-                <th>METHOD</th>
-                <th>REFERENCE</th>
-                <th>NOTES</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="min-w-[650px]">
+            <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>AMOUNT</TableHead><TableHead>METHOD</TableHead><TableHead>REFERENCE</TableHead><TableHead>NOTES</TableHead></TableRow></TableHeader>
+            <TableBody>
               {payments.map((payment) => (
-                <tr key={payment.id}>
-                  <td>{formatDate(payment.payment_date)}</td>
-                  <td>{money(payment.amount)}</td>
-                  <td>{payment.payment_method}</td>
-                  <td>{payment.transaction_reference || '—'}</td>
-                  <td>{payment.notes || '—'}</td>
-                </tr>
+                <TableRow key={payment.id}>
+                  <TableCell>{formatDate(payment.payment_date)}</TableCell>
+                  <TableCell>{money(payment.amount)}</TableCell>
+                  <TableCell>{payment.payment_method}</TableCell>
+                  <TableCell>{payment.transaction_reference || '—'}</TableCell>
+                  <TableCell>{payment.notes || '—'}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       ) : (
         <div className="empty">No later payment records.</div>
@@ -51,24 +44,18 @@ export function BuffaloStatusHistory({
     <HistoryCard title="Lifecycle history">
       {history.length ? (
         <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>DATE</th>
-                <th>STATUS</th>
-                <th>REASON / NOTES</th>
-              </tr>
-            </thead>
-            <tbody>
+          <Table className="min-w-[500px]">
+            <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>STATUS</TableHead><TableHead>REASON / NOTES</TableHead></TableRow></TableHeader>
+            <TableBody>
               {history.map((item) => (
-                <tr key={item.id}>
-                  <td>{formatDate(item.effective_date)}</td>
-                  <td><span className="tag">{item.status}</span></td>
-                  <td>{item.notes || '—'}</td>
-                </tr>
+                <TableRow key={item.id}>
+                  <TableCell>{formatDate(item.effective_date)}</TableCell>
+                  <TableCell><span className="tag">{item.status}</span></TableCell>
+                  <TableCell>{item.notes || '—'}</TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
       ) : (
         <div className="empty">No lifecycle history.</div>
