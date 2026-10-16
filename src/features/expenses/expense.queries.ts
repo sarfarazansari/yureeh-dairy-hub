@@ -101,3 +101,28 @@ export function useRecordExpensePaymentMutation() {
     },
   });
 }
+
+export const expenseDashboardQueryKeys = {
+  range: (from: string, to: string) => [...expenseQueryKeys.all, 'dashboard', from, to] as const,
+};
+
+export function useExpenseDashboardQuery(from: string, to: string) {
+  return useQuery({
+    queryKey: expenseDashboardQueryKeys.range(from, to),
+    enabled: Boolean(from && to && from <= to),
+    queryFn: async () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const [period, open] = await Promise.all([
+        supabase.from('expenses').select('*').gte('business_date', from).lte('business_date', to)
+          .is('deleted_at', null).order('business_date', { ascending: false }),
+        supabase.from('expenses').select('*').gt('pending_amount', 0).is('deleted_at', null)
+          .order('due_date', { ascending: true }).limit(500),
+      ]);
+      if (period.error || open.error) throw new Error((period.error ?? open.error)?.message ?? 'Could not load expenses.');
+      return {
+        rows: (period.data ?? []) as ExpenseRow[],
+        outstandingRows: (open.data ?? []) as ExpenseRow[],
+      };
+    },
+  });
+}
