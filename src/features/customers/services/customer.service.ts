@@ -1,7 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { PricingType } from '@/lib/milk-domain';
 import type {
-  CustomerDirectorySummary,
   CustomerEntry,
   CustomerFinancialSummary,
   CustomerOption,
@@ -10,6 +9,13 @@ import type {
   CustomerPricing,
   CustomerSummary,
 } from '../types';
+
+type CustomerDirectorySummary = {
+  customer_id: string;
+  total_milk_quantity: number | string | null;
+  total_sales_amount: number | string | null;
+  entry_count: number | string | null;
+};
 
 export async function getMilkEntryCustomers(client: SupabaseClient) {
   const { data, error } = await client
