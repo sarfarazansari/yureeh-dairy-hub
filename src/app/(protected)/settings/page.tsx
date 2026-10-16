@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
 
 export default function SettingsPage() {
@@ -13,9 +14,9 @@ export default function SettingsPage() {
         <p className="sub">
           Database migrations are managed from the Supabase CLI in this project.
         </p>
-        <Link className="btn secondary" href="/">
-          Return to dashboard
-        </Link>
+        <Button variant="secondary" asChild>
+          <Link href="/">Return to dashboard</Link>
+        </Button>
       </div>
     </AppShell>
   );
