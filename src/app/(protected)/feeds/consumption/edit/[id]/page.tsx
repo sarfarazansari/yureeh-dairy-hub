@@ -7,8 +7,8 @@ import { useParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
 import { FeedConsumptionForm } from '../../components/FeedConsumptionForm';
-import type { FeedConsumptionFormValues } from '../../schema';
-import { useEditFeedConsumptionMutation, useFeedConsumptionForEditQuery } from '../../queries';
+import type { FeedConsumptionFormValues } from '@/features/feed-consumption/feed-consumption.schema';
+import { useEditFeedConsumptionMutation, useFeedConsumptionForEditQuery } from '@/features/feed-consumption/feed-consumption.queries';
 
 export default function EditFeedConsumptionPage() {
   const params = useParams<{ id: string }>();
