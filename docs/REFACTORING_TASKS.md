@@ -27,7 +27,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-006 | P1 | Audit mutation invalidation, duplicate submission, errors, loading/empty states and pagination | Completed (static audit) | REF-003, REF-004 | `docs/REFACTORING_MUTATION_UX_AUDIT.md`: confirmed cache gaps, per-module safeguards/risks, invalidation matrix, pagination and regression checklists; static limitations recorded |
 | REF-007 | P1 | Audit finance, milk pool, feed inventory, purchase/payment and consumption transaction integrity | Completed (static audit) | REF-002 | `docs/REFACTORING_TRANSACTION_INTEGRITY_AUDIT.md`: operation-to-ledger map, RPC/migration/RLS contracts, confirmed cache gaps, retry/reversal risks and explicit validation limits |
 | REF-008 | P1 | Finalize refactor phases and acceptance criteria based on the full repository audit | Completed (planning artifact) | REF-002–REF-007 | `docs/REFACTORING_IMPLEMENTATION_ROADMAP.md`: ordered phases, dependencies, scope, acceptance criteria, regression plan and cross-domain invalidation contract |
-| REF-009 | P1 | Standardize shared query-key ownership and targeted cross-feature invalidation | Pending | REF-008 | Canonical production-history key owner; milk→customer invalidation; documented mutation dependency contract; query-key/invalidation tests |
+| REF-009 | P1 | Standardize shared query-key ownership and targeted cross-feature invalidation | In Progress (implementation committed; local validation pending) | REF-008 | Shared customer/production key factories, milk-entry→customer invalidation, production-history key unification, `docs/QUERY_INVALIDATION_CONTRACT.md`; local typecheck/lint/build/tests still required |
 | REF-010A | P1 | Consolidate verified canonical types and pure shared helpers | Pending | REF-009 | Duplicate type/helper review; import migration; date/timezone regression tests; typecheck/build |
 | REF-010B | P1 | Move dashboard, sales/production analytics and financial reports to query-backed read boundaries | Pending | REF-009 | Typed services/hooks, date-range query keys, unchanged server aggregate semantics, report regression |
 | REF-010C | P1 | Move feed inventory and feed-master reads to query-backed boundaries | Pending | REF-009 | Stock remains ledger-derived; independent loading/error/retry and server pagination preserved |
@@ -41,7 +41,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 
 ## Source inventory pointer
 
-The complete static API/query/effect/state inventory is in `docs/REFACTORING_API_INVENTORY.md`. REF-003 query/state findings are in `docs/REFACTORING_QUERY_STATE_AUDIT.md`; REF-004 module/dependency/type ownership findings are in `docs/REFACTORING_MODULE_BOUNDARIES_AUDIT.md`; REF-007 transaction findings are in `docs/REFACTORING_TRANSACTION_INTEGRITY_AUDIT.md`; REF-008 implementation ordering is in `docs/REFACTORING_IMPLEMENTATION_ROADMAP.md`. The file list below remains a short orientation index, not the canonical exhaustive inventory. Do not infer that a file is absent merely because it is not listed here.
+The complete static API/query/effect/state inventory is in `docs/REFACTORING_API_INVENTORY.md`. REF-003 query/state findings are in `docs/REFACTORING_QUERY_STATE_AUDIT.md`; REF-004 module/dependency/type ownership findings are in `docs/REFACTORING_MODULE_BOUNDARIES_AUDIT.md`; REF-007 transaction findings are in `docs/REFACTORING_TRANSACTION_INTEGRITY_AUDIT.md`; REF-008 implementation ordering is in `docs/REFACTORING_IMPLEMENTATION_ROADMAP.md`; REF-009 invalidation rules are in `docs/QUERY_INVALIDATION_CONTRACT.md`. The file list below remains a short orientation index, not the canonical exhaustive inventory. Do not infer that a file is absent merely because it is not listed here.
 
 ### Shared infrastructure
 - `src/lib/supabase.ts` — Supabase client creation.
@@ -209,3 +209,15 @@ Append a dated entry here after each work session:
 - Findings: Existing RPC/ledger protections must be preserved; milk→customer and production→buffalo-history invalidation gaps are confirmed; payment callers without request keys need an explicit retry/idempotency policy; feed purchase correction remains locked when payment history or later stock movements exist; scheduler deployment/runtime remains unverified.
 - Blockers or decisions: No business decision needed to finalize the plan. No application source or database changes. No PR or merge created.
 - Next task ID: REF-009 — standardize shared query-key ownership and targeted cross-feature invalidation.
+
+
+### Session log — 2026-10-16 (REF-009 implementation)
+
+- Task ID: REF-009
+- Branch: `feature/refactor-engineering-standards`
+- Status: In Progress (source edits committed; local validation pending)
+- Files changed: `src/features/customers/customer.query-keys.ts`, `src/features/customers/customer.queries.ts`, `src/features/buffalo-production/buffalo-production.query-keys.ts`, `src/features/buffalo-production/buffalo-production.queries.ts`, `src/features/buffaloes/hooks/use-buffaloes.ts`, `src/features/milk/milk.queries.ts`, `docs/QUERY_INVALIDATION_CONTRACT.md`, `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`
+- Implemented: Extracted customer and buffalo-production query-key factories to key-only modules; made buffalo detail production history use the canonical production-history key; milk-entry create/update/delete now invalidate milk data, customer directory and all customer-detail/payment descendants; manual pool movement retains milk-only invalidation. No transaction/RPC code was changed and no automatic retries were added.
+- Checks executed and results: Read project rules, workflow handoff, architecture, tracker, query/state and mutation audits, transaction audit and roadmap; inspected current query hooks; wrote changes on the existing branch; fetched source files back to confirm imports, shared key use and mutation invalidation paths.
+- Checks not run / limitations: No local checkout; TypeScript/typecheck, lint, build, tests and browser regression were not run. No query-key tests exist in this task's changed files; test infrastructure was not executed. Account-switch cache lifecycle remains a separate verification item.
+- Next step: User/local environment should run typecheck, lint, build and smoke-test milk entry create/update/delete (including customer reassignment) and production save → buffalo detail history refresh. After verification, mark REF-009 Completed and proceed to REF-010A/REF-010B in the roadmap.
