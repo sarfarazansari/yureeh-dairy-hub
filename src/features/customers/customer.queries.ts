@@ -19,7 +19,8 @@ import {
 export const customerQueryKeys = {
   all: ['customers'] as const,
   directory: () => [...customerQueryKeys.all, 'directory'] as const,
-  detail: (customerId: string) => [...customerQueryKeys.all, 'detail', customerId] as const,
+  details: () => [...customerQueryKeys.all, 'detail'] as const,
+  detail: (customerId: string) => [...customerQueryKeys.details(), customerId] as const,
 };
 
 const requireSupabase = () => {
