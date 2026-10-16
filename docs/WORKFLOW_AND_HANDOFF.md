@@ -295,3 +295,11 @@ The user's short command `1 refactor karo` means:
 - Store decision: no Zustand store has been introduced. Current inspected shared remote data belongs in TanStack Query; local form/sidebar state remains local. Revisit only if a concrete cross-route client-owned state requirement is identified.
 - Static source updates were written/read through GitHub. Typecheck, lint, formatting, build, tests and browser checks were not run in a local checkout. User should run them before merging.
 - Next structural slice: audit remaining module-owned type/service/component boundaries (especially milk and buffalo sales) and migrate one coherent set with all consumers verified; do not create empty folders or duplicate shared types.
+
+
+### REF-013 continuation — 2026-10-16 (diet plans)
+
+- Continued on `feature/feature-folder-structure-foundation` as requested; no branch, PR or merge was created.
+- Diet-plan types moved from `src/lib/diet-plan-types.ts` into `src/features/diet-plans/types.ts`; form values are now inferred from `diet-plan.schema.ts`, and schedule types use canonical `Shift` from `src/lib/milk-domain.ts`. The obsolete shared diet-plan type file was deleted after updating the known service, query, form, new-route and edit-route consumers.
+- No local test/build was run. Before merge, run `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`, then exercise diet-plan create/edit, schedule settings and explicit FAILED-run retry against a disposable/test environment.
+- Next: continue REF-013 with remaining module-owned type boundaries, then run full architecture audit REF-012 only after prerequisite implementation slices and user-side runtime validation are complete.
