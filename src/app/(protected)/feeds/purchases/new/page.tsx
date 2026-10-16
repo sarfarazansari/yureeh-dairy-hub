@@ -9,10 +9,11 @@ import { supabase } from '@/lib/supabase';
 import type { FeedItem } from '@/lib/feed-types';
 import type { ExpenseVendor } from '@/lib/expense-types';
 import { FeedPurchaseForm } from '../components/FeedPurchaseForm';
-import { createFeedPurchase } from '../services';
+import { useCreateFeedPurchaseMutation } from '../queries';
 import type { FeedPurchaseFormValues } from '../schema';
 
 export default function NewFeedPurchasePage() {
+  const createMutation = useCreateFeedPurchaseMutation();
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [vendors, setVendors] = useState<Pick<ExpenseVendor, 'id' | 'name'>[]>([]);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -46,7 +47,7 @@ export default function NewFeedPurchasePage() {
       if (requestKey.current?.fingerprint !== fingerprint) {
         requestKey.current = { fingerprint, key: crypto.randomUUID() };
       }
-      await createFeedPurchase(supabase, values, requestKey.current!.key);
+      await createMutation.mutateAsync({ values, idempotencyKey: requestKey.current!.key });
       requestKey.current = null;
       setToast({ message: 'Feed purchase recorded successfully.', type: 'success' });
       return null;
