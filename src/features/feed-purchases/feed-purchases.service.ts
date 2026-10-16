@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { FeedPurchase, FeedPurchasePreview, FeedPurchasePaymentStatus } from '@/lib/feed-purchase-types';
-import type { FeedItem } from '@/lib/feed-types';
+import type { FeedPurchase, FeedPurchasePreview, FeedPurchasePaymentStatus } from './types';
+import type { FeedItem } from '@/features/feed-items/types';
 
 export async function createFeedPurchase(client: SupabaseClient, values: {
   feedItemId: string;
