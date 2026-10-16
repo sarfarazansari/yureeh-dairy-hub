@@ -126,3 +126,37 @@ export function useExpenseDashboardQuery(from: string, to: string) {
     },
   });
 }
+
+export function useExpenseVendorDirectoryQuery() {
+  return useQuery({
+    queryKey: expenseQueryKeys.vendors(),
+    queryFn: async () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const [vendors, summaries] = await Promise.all([
+        supabase.from('expense_vendors').select('*').order('name'),
+        supabase.rpc('get_expense_vendor_directory_summaries'),
+      ]);
+      if (vendors.error || summaries.error) {
+        throw new Error((vendors.error ?? summaries.error)?.message ?? 'Could not load vendor directory.');
+      }
+      const summaryRows = (summaries.data ?? []) as unknown as Array<{
+        vendor_id: string;
+        expense_count: number | string | null;
+        total_amount: number | string | null;
+        paid_amount: number | string | null;
+        pending_amount: number | string | null;
+      }>;
+      const byVendor = new Map(summaryRows.map((summary) => [summary.vendor_id, summary]));
+      return (vendors.data ?? []).map((vendor) => {
+        const summary = byVendor.get(vendor.id);
+        return {
+          ...vendor,
+          count: Number(summary?.expense_count ?? 0),
+          total: Number(summary?.total_amount ?? 0),
+          paid: Number(summary?.paid_amount ?? 0),
+          pending: Number(summary?.pending_amount ?? 0),
+        };
+      });
+    },
+  });
+}
