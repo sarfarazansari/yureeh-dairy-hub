@@ -221,9 +221,9 @@ export default function BuffaloAnalyticsPage() {
             active buffaloes
           </p>
           <p className="sub">No record is distinct from explicitly recorded zero production.</p>
-          <Button variant="outline" asChild><Link href="/daily-performance">
-            Enter daily performance
-          </Link>
+          <Button variant="outline" asChild>
+            <Link href="/daily-performance">Enter daily performance</Link>
+          </Button>
         </div>
       </div>
       <div style={{ height: 14 }} />
