@@ -2,17 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { supabase } from '@/lib/supabase';
-import type { ExpenseRow } from '@/lib/expense-types';
-
-export type ExpensePayment = {
-  id: string;
-  payment_date: string;
-  amount: number | string;
-  payment_method: string;
-  transaction_reference: string | null;
-  notes: string | null;
-  created_at: string;
-};
+import type { ExpenseRow, ExpensePayment } from './types';
 
 export const expenseQueryKeys = {
   all: ['expenses'] as const,
