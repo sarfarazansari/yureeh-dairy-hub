@@ -194,3 +194,13 @@ The user's short command `1 refactor karo` means:
 - Latest master base previously verified: `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`. Verify branch-vs-master comparison after this documentation update before reporting current ahead/behind counts.
 - Validation boundary: remote GitHub file/migration inspection only. No local checkout; build, lint, typecheck, tests, live database/RLS checks, SQL execution, concurrency tests, scheduler/cron verification and production data reconciliation were not run. No application source or database objects changed.
 - Next task for `1 refactor karo same branch`: REF-009 — standardize query-key ownership and targeted cross-feature invalidation, starting with the two confirmed cache gaps.
+
+
+### Latest session handoff — 2026-10-16 (REF-009 implementation)
+
+- Continue on the same branch: `feature/refactor-engineering-standards`. No PR or merge was created.
+- REF-009 source implementation is committed, but task status remains In Progress until local validation. Read `docs/QUERY_INVALIDATION_CONTRACT.md` for ownership and invalidation rules.
+- Changes: added `src/features/customers/customer.query-keys.ts` and `src/features/buffalo-production/buffalo-production.query-keys.ts`; customer query hooks import/re-export the dedicated customer key factory; buffalo detail production history now uses `buffaloProductionQueryKeys.history`, the same key used by the production feature; milk entry create/update/delete invalidate milk queries plus customer directory and all customer detail/payment descendants. Manual pool movements invalidate milk only. Production save already invalidates the canonical production root, so the buffalo detail history refreshes through the shared key.
+- No RPC, SQL, migration, RLS, financial ledger or retry behavior changed. No automatic mutation retries were introduced.
+- Validation boundary: GitHub read-back/static checks only. No local checkout; typecheck, lint, build, tests, browser smoke tests and account-switch cache checks were not run.
+- Required next local checks: typecheck/lint/build; milk entry create/update/delete, especially reassignment between customers; verify customer directory and both old/new customer detail summaries refresh; save production and verify buffalo detail history refresh; verify manual pool movement doesn't cause unnecessary customer refetch. Then mark REF-009 Completed and move to REF-010A or REF-010B.
