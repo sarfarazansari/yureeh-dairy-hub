@@ -96,7 +96,7 @@ export function useFeedConsumptionForEditQuery(movementId: string) {
     queryFn: async () => {
       if (!supabase) throw new Error('Supabase is not configured.');
       const [options, consumption] = await Promise.all([
-        useFeedConsumptionFormOptionsQueryResult(supabase),
+        getFeedConsumptionFormOptions(supabase),
         fetchFeedConsumptionForEdit(supabase, movementId),
       ]);
       return { ...options, consumption };
