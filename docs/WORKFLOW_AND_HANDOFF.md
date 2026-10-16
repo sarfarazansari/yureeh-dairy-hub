@@ -218,3 +218,12 @@ The user's short command `1 refactor karo` means:
 - Tracker statuses are deliberately left In Progress/Blocked where the acceptance checks or implementation scope remain outstanding. Do not merge until remaining phases and local validation are complete.
 - Branch comparison checkpoint reported 101 commits ahead / 2 behind `master`. During this batch, one query-key edit was briefly committed to the default branch after omitting the branch argument. A follow-up commit restored the default-branch file content, which was read back and verified. The two extra default-branch commits remain in history; no force reset was attempted. This is disclosed so the branch history divergence is not mistaken for an application change.
 - No database migrations, RPC definitions, RLS policies or production data were changed.
+
+
+### Additional source implementation — 2026-10-16
+
+- Expense history is now read through a filter-keyed TanStack Query hook, including its category/vendor/buffalo options and related payment/feed-purchase lock checks.
+- New-expense reference options use an owner-scoped query; expense create/update/soft-delete, category CRUD and vendor CRUD use mutation hooks with dependent query invalidation.
+- Feed-item create/update/activation writes use mutation hooks.
+- Feeding schedule settings and recent runs use a query hook; saving times and retrying a FAILED run use mutations. The page does not run a browser timer and retry remains explicit.
+- These changes have been read back from the feature branch. They have not been locally typechecked, linted, built or tested because a local clone could not be obtained in this environment. REF-009 through REF-012 must not be marked complete until those checks and the remaining buffalo/report/ledger regressions are reviewed.
