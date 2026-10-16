@@ -9,12 +9,14 @@ import { Toast } from '@/components/ui/Toast';
 import { supabase } from '@/lib/supabase';
 import type { DietBuffaloOption, DietPlanFormValues } from '@/lib/diet-plan-types';
 import { DietPlanForm } from '../components/DietPlanForm';
-import { fetchActiveFeedItems, fetchEligibleBuffaloes, saveDietPlan } from '../services';
+import { fetchActiveFeedItems, fetchEligibleBuffaloes } from '../services';
+import { useSaveDietPlanMutation } from '../queries';
 
 type FeedOption = { id: string; name: string; base_unit: string; category: string };
 
 export default function NewDietPlanPage() {
   const router = useRouter();
+  const saveMutation = useSaveDietPlanMutation();
   const [feeds, setFeeds] = useState<FeedOption[]>([]);
   const [buffaloes, setBuffaloes] = useState<DietBuffaloOption[]>([]);
   const [buffaloDate, setBuffaloDate] = useState('');
@@ -41,7 +43,7 @@ export default function NewDietPlanPage() {
     if (!supabase) return 'Supabase is not configured.';
     setBusy(true);
     try {
-      await saveDietPlan(supabase, null, values);
+      await saveMutation.mutateAsync({ id: null, values });
       setToast({ message: 'Diet plan created successfully.', type: 'success' });
       router.push('/feeds/diet-plans');
       return null;
