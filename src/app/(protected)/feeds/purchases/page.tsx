@@ -6,15 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
-import { supabase } from '@/lib/supabase';
-import { feedPurchaseQueryKeys, useFeedPurchaseArchiveQuery } from './queries';
-import { feedInventoryQueryKeys } from '../inventory/queries';
+import { useDeleteFeedPurchaseMutation, useFeedPurchaseArchiveQuery } from './queries';
 import { FeedPurchaseTable } from './components/FeedPurchaseTable';
-import { deleteFeedPurchase, fetchFeedPurchases } from './services';
+import { useDeleteFeedPurchaseMutation, useFeedPurchaseArchiveQuery } from './queries';
 
 const PAGE_SIZE = 20;
 
@@ -26,7 +23,7 @@ export default function FeedPurchasesPage() {
   const [vendorFilter, setVendorFilter] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const queryClient = useQueryClient();
+  const deleteMutation = useDeleteFeedPurchaseMutation();
   const archiveQuery = useFeedPurchaseArchiveQuery({ page, from, to, feedFilter, vendorFilter, paymentFilter });
   const feedItems = archiveQuery.data?.feedItems ?? [];
   const vendors = archiveQuery.data?.vendors ?? [];
@@ -37,19 +34,10 @@ export default function FeedPurchasesPage() {
   const load = () => void archiveQuery.refetch();
 
   async function handleDelete(purchaseId: string) {
-    if (!supabase) return;
-
     try {
-      await deleteFeedPurchase(supabase, purchaseId);
+      await deleteMutation.mutateAsync(purchaseId);
       setToast({ message: 'Feed purchase deleted successfully.', type: 'success' });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: feedPurchaseQueryKeys.all }),
-        queryClient.invalidateQueries({ queryKey: feedInventoryQueryKeys.all }),
-        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
-        queryClient.invalidateQueries({ queryKey: ['expenses'] }),
-        queryClient.invalidateQueries({ queryKey: ['expense-vendors'] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
-      ]);
+
     } catch (error) {
       setToast({
         message: error instanceof Error ? error.message : 'Could not delete feed purchase.',
