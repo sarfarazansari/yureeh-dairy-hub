@@ -137,20 +137,24 @@ The user's short command `1 refactor karo` means:
 - Task tracker: `docs/REFACTORING_TASKS.md`
 - Completed source inventory: `docs/REFACTORING_API_INVENTORY.md`
 - Completed query/state audit: `docs/REFACTORING_QUERY_STATE_AUDIT.md`
-- `REF-001`, `REF-002`, and `REF-003` are Completed. REF-003 was a static audit, not an implementation refactor.
-- Next task: `REF-004` — map module boundaries, dependencies and canonical shared types/schemas/helpers.
-- Latest `master` remains `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`. Branch comparison confirmed `feature/refactor-engineering-standards` is 4 commits ahead and 0 behind master at the start of REF-003.
-- Query/state audit highlights: milk-entry mutations miss customer-summary/detail invalidation; buffalo production history has duplicate query-key ownership and the buffalo-detail history key is not invalidated on production save; acquisition-cost UI owns direct query/mutation code; auth-cache lifecycle needs validation; dashboard/analytics/expense/feed/report remote state is still often effect/local-state based.
-- No local checkout was available; build, lint, typecheck, tests, runtime/account-switching checks and database operations have not been run.
-- Do not start implementation migrations until the dependency map, mutation invalidation audit, transaction integrity audit and ordered phase plan are recorded.
+- Completed module/dependency/type audit: `docs/REFACTORING_MODULE_BOUNDARIES_AUDIT.md`
+- `REF-001` through `REF-004` are Completed. REF-002–REF-004 are documented static audits; no source implementation refactor has started.
+- Next task: `REF-005` — audit server-state fetching and effects, and define a safe migration pattern for effect-driven remote reads.
+- Latest `master` base verified before REF-004: `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`. Branch was 7 commits ahead and 0 behind before REF-004 changes; REF-004 added documentation commits on this same branch.
+- Query/state findings: milk-entry mutations miss customer-summary/detail invalidation; buffalo production history has duplicate query-key ownership and production save misses the buffalo-detail history key; acquisition-cost UI owns direct query/mutation logic; auth-cache lifecycle needs validation.
+- Module/type findings: duplicate `MilkPoolShiftFatRecord` definitions; `CustomerOption` overlaps `DashboardCustomer`; shift/pricing literals have inconsistent ownership; feed services live under route folders while types are in `src/lib`; expenses shared helpers mix UI, date/currency helpers and category seeding.
+- Transaction-critical audit REF-007 remains mandatory before moving feed/milk/expense service boundaries or consolidating domain types that depend on DB constraints.
+- No local checkout was available; build, lint, typecheck, tests, runtime flows and database/RLS checks have not been run.
+- Do not begin implementation migrations until REF-005 through REF-008 audits and the ordered phase plan are complete.
 
 
-### Latest session handoff — 2026-10-16 (REF-003)
+### Latest session handoff — 2026-10-16 (REF-004)
 
 - Current branch: `feature/refactor-engineering-standards`
-- Base: latest `master` commit `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`; branch was 4 commits ahead and 0 behind when audited.
-- Completed: `REF-003`, documented at `docs/REFACTORING_QUERY_STATE_AUDIT.md`; tracker updated in `docs/REFACTORING_TASKS.md`.
-- Concrete findings: milk-entry mutations invalidate only the milk root while customer directory/detail summaries depend on those entries; production history is keyed under both buffalo and production roots, and production save misses the buffalo-detail history key; acquisition-cost component owns direct Supabase reads/RPC mutation and literal query keys.
-- Additional risks: cross-domain invalidation matrix is incomplete/implicit; auth cache cleanup on identity change should be verified; dashboards, analytics, expenses, feed and financial-report pages still often load server data into local state.
-- Next task for `1 refactor karo`: `REF-004` — map module boundaries, dependencies, and duplicate/canonical types, schemas, helpers. Read all four required documents first, continue on the same branch per the user's explicit instruction, and do not begin implementation refactors before the dependency and transaction audits/phase plan are complete.
-- Verification boundary: GitHub source reads and branch comparison only. No local build, lint, typecheck, tests, runtime/account-switching checks or database operations were run. No PR or merge was created.
+- Latest master base: `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`; before this task branch comparison showed 7 commits ahead and 0 behind.
+- Completed: `REF-004`, documented at `docs/REFACTORING_MODULE_BOUNDARIES_AUDIT.md`; tracker updated in `docs/REFACTORING_TASKS.md`.
+- The audit maps buffalo lifecycle/finance, production, customers, milk/pool, analytics/dashboard, expenses, feed master/purchases/consumption/inventory/diet plans, and financial reports. It documents dependency edges and shared type/helper ownership.
+- Highest-confidence consolidation candidates: `MilkPoolShiftFatRecord` is declared independently in production and milk-pool modules; `DashboardCustomer` overlaps customer `CustomerOption`; shift/pricing literal unions and import direction need canonical ownership. Do not merge customer/buffalo payment method types without DB-constraint/domain review.
+- Boundary findings: feed services are under `src/app/(protected)/feeds/*` while their types are in `src/lib/*-types.ts`; milk list/service/schema responsibilities are spread between `src/lib` and the milk feature; expenses `shared.tsx` mixes UI, date/currency helpers and default category seeding.
+- Next task for `1 refactor karo same branch`: `REF-005` — audit effect-driven remote reads and define a migration pattern. Continue on this branch, read the four required docs, and preserve valid auth/UI effects. Do not implement type moves before REF-007 verifies transaction/RPC/RLS/report dependencies.
+- Verification boundary: GitHub source reads and branch comparison only. No local build, lint, typecheck, tests, runtime flows or database operations were run. No PR or merge was created.
