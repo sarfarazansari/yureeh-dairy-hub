@@ -109,7 +109,7 @@ export default function DietPlanSchedulePage() {
         <div className="card">
           <div className="row">
             <h2 className="section-title">Farm feeding times</h2>
-            <Link className="date-chip" href="/feeds/diet-plans">Back to diet plans</Link>
+            <Button variant="outline" size="sm" asChild><Link href="/feeds/diet-plans">Back to diet plans</Link></Button>
           </div>
           <p className="sub">Times use Asia/Kolkata. Automatic runs are created by the database scheduler; this page does not run a browser timer.</p>
           <form onSubmit={saveSchedule}>
