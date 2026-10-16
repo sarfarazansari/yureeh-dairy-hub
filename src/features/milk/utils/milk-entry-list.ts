@@ -1,0 +1,48 @@
+import dayjs from 'dayjs';
+import type { MilkEntryDatePreset } from '../milk-entry-list.types';
+
+export function localDateKey(date: Date = new Date()): string {
+  return dayjs(date).format('YYYY-MM-DD');
+}
+
+export function getMilkEntryPresetRange(
+  preset: Exclude<MilkEntryDatePreset, 'custom'>,
+  now: Date = new Date(),
+) {
+  const today = dayjs(now);
+  const to = today.format('YYYY-MM-DD');
+  const from =
+    preset === 'current-month'
+      ? today.startOf('month').format('YYYY-MM-DD')
+      : today.subtract(preset === 'last-7-days' ? 6 : 14, 'day').format('YYYY-MM-DD');
+  return { from, to };
+}
+
+export function isValidBusinessDate(value: string): boolean {
+  return (
+    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    dayjs(`${value}T12:00:00`).isValid() &&
+    dayjs(`${value}T12:00:00`).format('YYYY-MM-DD') === value
+  );
+}
+
+
+
+export function compactMilkEntryPages(current: number, last: number): (number | 'ellipsis')[] {
+  if (last <= 7) return Array.from({ length: last }, (_, index) => index + 1);
+  const pages = new Set<number>([1, last]);
+  for (let page = current - 1; page <= current + 1; page++) {
+    if (page > 1 && page < last) pages.add(page);
+  }
+  const sorted = [...pages].sort((left, right) => left - right);
+  const result: (number | 'ellipsis')[] = [];
+  for (let index = 0; index < sorted.length; index++) {
+    if (index && sorted[index] - sorted[index - 1] > 1) result.push('ellipsis');
+    result.push(sorted[index]);
+  }
+  return result;
+}
+
+
+/** Fetch every matching row in bounded chunks for accurate summaries and exports. */
+
