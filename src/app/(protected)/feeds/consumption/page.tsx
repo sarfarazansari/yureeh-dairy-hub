@@ -6,15 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
-import { supabase } from '@/lib/supabase';
-import { feedConsumptionQueryKeys, useFeedConsumptionArchiveQuery } from './queries';
-import { feedInventoryQueryKeys } from '../inventory/queries';
+import { useDeleteFeedConsumptionMutation, useFeedConsumptionArchiveQuery } from './queries';
 import { FeedConsumptionTable } from './components/FeedConsumptionTable';
-import { deleteFeedConsumption, fetchFeedConsumption, fetchFeedItems } from './services';
+import { useDeleteFeedConsumptionMutation, useFeedConsumptionArchiveQuery } from './queries';
 
 const PAGE_SIZE = 20;
 
@@ -24,7 +21,7 @@ export default function FeedConsumptionPage() {
   const [to, setTo] = useState('');
   const [feedFilter, setFeedFilter] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const queryClient = useQueryClient();
+  const deleteMutation = useDeleteFeedConsumptionMutation();
   const archiveQuery = useFeedConsumptionArchiveQuery({ page, from, to, feedFilter });
   const feedItems = archiveQuery.data?.feedItems ?? [];
   const rows = archiveQuery.data?.rows ?? [];
@@ -34,17 +31,10 @@ export default function FeedConsumptionPage() {
   const load = () => void archiveQuery.refetch();
 
   async function handleDelete(id: string) {
-    if (!supabase) return;
     try {
-      await deleteFeedConsumption(supabase, id);
+      await deleteMutation.mutateAsync(id);
       setToast({ message: 'Feed consumption deleted successfully.', type: 'success' });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: feedConsumptionQueryKeys.all }),
-        queryClient.invalidateQueries({ queryKey: feedInventoryQueryKeys.all }),
-        queryClient.invalidateQueries({ queryKey: ['diet-plans'] }),
-        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
-      ]);
+
     } catch (error) {
       setToast({ message: error instanceof Error ? error.message : 'Could not delete feed consumption.', type: 'error' });
     }
