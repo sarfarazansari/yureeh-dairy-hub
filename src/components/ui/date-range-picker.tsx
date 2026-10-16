@@ -74,7 +74,7 @@ export function DateRangePicker({ from, to, onChange, max, className = '', ariaL
             </Button>
           </PopoverTrigger>
           {(from || to) && (
-            <Button variant="ghost" size="icon" type="button" className="shadcn-date-clear absolute right-2 top-1/2 -translate-y-1/2" aria-label="Clear date range" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>
+            <Button variant="ghost" size="icon" type="button" className="shadcn-date-clear absolute right-2 top-1/2 -translate-y-1/2 p-0" aria-label="Clear date range" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>
               <X size={14} aria-hidden="true" />
             </Button>
           )}
