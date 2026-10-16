@@ -2,7 +2,7 @@
 
 Task: `REF-009`  
 Branch: `feature/refactor-engineering-standards`  
-Status: Implemented; local validation pending  
+Status: Partially implemented; local validation and full mutation coverage pending  
 Date: 2026-10-16
 
 ## Ownership
@@ -19,7 +19,14 @@ Date: 2026-10-16
 | Milk entry update | Same as create | Customer can change, so invalidate all cached customer detail/payment descendants rather than only the new customer ID; this also refreshes the previous customer's summary. |
 | Milk entry delete | Same as create | Refresh customer directory and all cached customer details after a delivery is removed. |
 | Manual milk-pool movement | `milkQueryKeys.all` only | Refresh pool/reconciliation/context without invalidating unrelated customer summaries. |
-| Buffalo production save | `buffaloProductionQueryKeys.all`, `milkQueryKeys.all` | Refresh production views/history and pool-dependent views. The buffalo detail history now uses the same canonical production history key, so invalidating the production root reaches it. |
+| Buffalo production save | `buffaloProductionQueryKeys.all`, `milkQueryKeys.all`, `['dashboard']`, `['sales-analytics']`, `['financial-reports']` | Refresh production views/history, milk pool-dependent views and report/dashboard aggregates. The buffalo detail history now uses the same canonical production history key. |
+| Customer payment/pricing/activation | Customer directory/detail/payment prefixes, `['milk']`, `['dashboard']`, `['financial-reports']` as applicable | Refresh customer balance, pricing lookup and report/dashboard projections. |
+| Buffalo acquisition/status/sale/payment/disposal | Buffalo query root, production query root, `['dashboard']`, `['financial-reports']` | Refresh lifecycle/payment views, production eligibility/history and balance/report projections. |
+| Feed-item create/update/activation | Feed-item, inventory, purchase, consumption, diet-plan, feed-cost, dashboard and financial-report roots | Refresh item selectors and views derived from item labels, unit conversions or active status. |
+| Feed purchase create/edit/delete | Purchase archive/detail, feed inventory, expense, vendor, dashboard and financial-report roots | Refresh stock, linked expense/payment status, supplier summaries and reports only after successful RPC completion. |
+| Feed consumption create/edit/delete | Consumption archive/detail, feed inventory, diet-plan, feed-cost, dashboard and financial-report roots | Refresh stock and applied-cost consumers after successful RPC completion; no automatic retry. |
+| Diet plan save | Diet-plan and feed-item query roots | Refresh plan lists/details and selectors; this does not imply that a scheduler run posted stock. |
+| Expense payment | Expense detail/list/dashboard, vendor/category, linked feed-purchase, dashboard and financial-report roots | Refresh dated payment ledger and balances after the payment RPC succeeds. |
 
 Invalidation occurs only in mutation `onSuccess`, after the service/RPC resolves successfully. No optimistic ledger updates or automatic mutation retries were added.
 
@@ -33,6 +40,8 @@ Invalidation occurs only in mutation `onSuccess`, after the service/RPC resolves
 - Preserve PostgreSQL RPC transaction boundaries and database constraints; cache invalidation does not replace transactional integrity.
 - On auth/account changes, separately verify query-cache lifecycle and user/farm isolation before claiming that stale cache cannot cross identities.
 
-## Validation boundary
+## Coverage and validation boundary
 
-Remote GitHub read-back confirms the intended source edits and shared key usage. No local checkout was available, so TypeScript, lint, build, automated tests and browser regression were not run. These remain required before REF-009 can be marked fully Completed.
+The rules above describe implemented invalidation hooks for the migrated paths, not proof that every mutation in the repository is covered. Expense history/new/category/vendor writes and scheduler run/retry paths remain to be migrated or audited. Some of the dependent query roots are placeholders for the corresponding future query-backed modules; invalidating a root does not replace migrating an effect-driven consumer to TanStack Query.
+
+Remote GitHub read-back confirms the intended source edits and shared key usage. No local checkout was available, so TypeScript, lint, format check, build, automated tests, browser regression, account-switch cache isolation, live/disposable Supabase RPC/RLS/concurrency checks were not run. REF-009 remains In Progress until those checks pass.
