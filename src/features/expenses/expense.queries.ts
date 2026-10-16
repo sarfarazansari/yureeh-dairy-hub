@@ -173,3 +173,75 @@ export function useExpenseCategoriesQuery(ownerId: string, enabled = true) {
     },
   });
 }
+
+export type ExpenseHistoryFilters = {
+  page: number;
+  pageSize: number;
+  from: string;
+  to: string;
+  category: string;
+  group: string;
+  vendor: string;
+  status: string;
+  method: string;
+  buffalo: string;
+  outstandingOnly: boolean;
+  search: string;
+  sort: string;
+  sortDirection: 'asc' | 'desc';
+};
+
+export function useExpenseHistoryQuery(filters: ExpenseHistoryFilters) {
+  return useQuery({
+    queryKey: [...expenseQueryKeys.list(), filters] as const,
+    queryFn: async () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const offset = (filters.page - 1) * filters.pageSize;
+      let query = supabase.from('expenses').select('*', { count: 'exact' }).is('deleted_at', null);
+      if (filters.from) query = query.gte('business_date', filters.from);
+      if (filters.to) query = query.lte('business_date', filters.to);
+      if (filters.category) query = query.eq('category_id', filters.category);
+      if (filters.group) query = query.eq('category_group_snapshot', filters.group);
+      if (filters.vendor) query = query.eq('vendor_id', filters.vendor);
+      if (filters.status) query = query.eq('payment_status', filters.status);
+      if (filters.method) query = query.eq('payment_method', filters.method);
+      if (filters.buffalo) query = query.eq('buffalo_id', filters.buffalo);
+      if (filters.outstandingOnly) query = query.gt('pending_amount', 0);
+      const term = filters.search.trim().replace(/[(),]/g, ' ').replace(/[%_]/g, '');
+      if (term) query = query.or(`category_name_snapshot.ilike.%${term}%,vendor_name_snapshot.ilike.%${term}%,description.ilike.%${term}%`);
+      const sortColumn = filters.sort === 'amount' ? 'total_amount' : filters.sort === 'pending' ? 'pending_amount' : filters.sort === 'category' ? 'category_name_snapshot' : 'business_date';
+      query = query.order(sortColumn, { ascending: filters.sortDirection === 'asc' }).range(offset, offset + filters.pageSize - 1);
+      const [expenses, categories, vendors, buffaloes] = await Promise.all([
+        query,
+        supabase.from('expense_categories').select('id,name,category_group').order('name'),
+        supabase.from('expense_vendors').select('id,name').order('name'),
+        supabase.from('buffaloes').select('id,name,buffalo_code').order('buffalo_code'),
+      ]);
+      const initialError = expenses.error ?? categories.error ?? vendors.error ?? buffaloes.error;
+      if (initialError) throw new Error(initialError.message);
+      const rows = expenses.data ?? [];
+      const ids = rows.map((row) => row.id);
+      let ledgerExpenseIds: string[] = [];
+      let feedPurchaseExpenseIds: string[] = [];
+      if (ids.length) {
+        const [payments, purchases] = await Promise.all([
+          supabase.from('expense_payments').select('expense_id').in('expense_id', ids),
+          supabase.from('feed_purchases').select('expense_id').eq('status', 'ACTIVE').in('expense_id', ids),
+        ]);
+        const relatedError = payments.error ?? purchases.error;
+        if (relatedError) throw new Error(relatedError.message);
+        ledgerExpenseIds = (payments.data ?? []).map((row) => row.expense_id);
+        feedPurchaseExpenseIds = (purchases.data ?? []).map((row) => row.expense_id).filter((id): id is string => Boolean(id));
+      }
+      return {
+        rows: rows as ExpenseRow[],
+        totalCount: expenses.count ?? 0,
+        categories: categories.data ?? [],
+        vendors: vendors.data ?? [],
+        buffaloes: buffaloes.data ?? [],
+        ledgerExpenseIds,
+        feedPurchaseExpenseIds,
+      };
+    },
+  });
+}
