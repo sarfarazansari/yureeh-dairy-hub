@@ -38,7 +38,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-011A | P1 | Refactor buffalo lifecycle/acquisition/sale and customer payment boundaries | In Progress (cache dependencies updated; remaining audit/validation pending) | REF-009, REF-010A, REF-010B | Buffalo mutation invalidation and customer payment/report invalidation improved; acquisition-cost UI and common payment retry/idempotency policy remain unverified |
 | REF-011B | P2 | Refactor any remaining modules one task per run | In Progress (expense/feed-item/scheduler boundaries implemented; remaining-module audit pending) | REF-010A–REF-011A | Expense history/new/category/vendor and feed-item writes are now query/mutation-backed; audit remaining direct-access modules and verify all cache dependencies |
 | REF-012 | P2 | Final architecture regression audit and remove obsolete duplicate patterns | Blocked (static audit recorded; prerequisite migrations and runtime validation outstanding) | REF-011A, REF-011B | `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` records current coverage and unresolved paths; final exhaustive audit/build/test evidence still required |
-| REF-013 | P1 | Implement feature-owned folder boundaries and justified client-state stores, one module at a time | In Progress (expenses and feed module service/query/schema/component boundaries migrated; local validation pending) | REF-008 | Expense helpers are feature-owned; feed-items, feed-inventory, feed-purchases, feed-consumption and diet-plans services/query hooks/schemas/components now live under `src/features/*`; route imports updated and obsolete route-owned files removed for these slices; local validation and remaining module migration/store-candidate audit outstanding |
+| REF-013 | P1 | Implement feature-owned folder boundaries and justified client-state stores, one module at a time | In Progress (expenses, feed modules and customer domain-type ownership migrated; local validation pending) | REF-008 | Expense helpers are feature-owned; feed-items, feed-inventory, feed-purchases, feed-consumption and diet-plans services/query hooks/schemas/components now live under `src/features/*`; customer domain types now live in `src/features/customers/types.ts` instead of the service; remaining module boundary/store-candidate audit and local validation outstanding |
 
 ## Source inventory pointer
 
@@ -287,3 +287,16 @@ Append a dated entry here after each work session:
 - Added `npm run typecheck` (`tsc --noEmit`) to `package.json` so the documented TypeScript validation has a standard one-command entry point.
 - No dependencies were added and no lockfile change was required for this script-only change.
 - Command has not been executed in this environment; user must run it locally.
+
+
+### Session log — 2026-10-16 (REF-013 customer type ownership)
+
+- Task ID: REF-013
+- Branch: `feature/feature-folder-structure-foundation`
+- Status: In Progress (customer type boundary migrated; full task validation pending)
+- Files changed: `src/features/customers/types.ts`, `src/features/customers/services/customer.service.ts`, `src/features/customers/customer.queries.ts`, `src/features/customers/CustomersPage.tsx`, `src/features/customers/CustomerDetailPage.tsx`, `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`.
+- Changes: created a feature-owned canonical customer types module; services now import domain types rather than defining exported domain shapes; customer query hooks and UI components import those types from the feature boundary. `PricingType` and `Shift` reuse the canonical `src/lib/milk-domain.ts` definitions. The RPC directory-summary row remains service-local because it is an internal database projection, not a UI/domain type.
+- Integrity boundary: no SQL, RPC behavior, RLS, payment mutation, query keys or business calculations changed.
+- Checks performed: GitHub read-back of source before edits and targeted updates on this branch; static review of imports and type ownership.
+- Checks not run: local typecheck, lint, formatting, build, automated tests and browser workflows. No local checkout was available; do not treat this as merge-ready until these checks pass.
+- Next: continue REF-013 with the next safe feature boundary/type ownership slice after inspecting current consumers; keep Zustand deferred until a real cross-route client-owned state requirement is identified.
