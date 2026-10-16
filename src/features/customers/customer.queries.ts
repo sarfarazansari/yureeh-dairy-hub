@@ -13,11 +13,8 @@ import {
   setCustomerActive,
   updateCustomer,
   updateCustomerPricing,
-  type CustomerEntry,
-  type CustomerFinancialSummary,
-  type CustomerPayment,
-  type CustomerSummary,
 } from './services/customer.service';
+import type { CustomerEntry, CustomerFinancialSummary, CustomerPayment, CustomerSummary } from './types';
 
 const requireSupabase = () => {
   if (!supabase) throw new Error('Supabase is not configured.');
