@@ -47,7 +47,7 @@ export type CustomerFinancialSummary = {
 export type CustomerEntry = {
   id: string;
   business_date: string;
-  shift: 'MORNING' | 'EVENING';
+  shift: Shift;
   milk_quantity: number;
   fat: number | null;
   pricing_type: PricingType;
