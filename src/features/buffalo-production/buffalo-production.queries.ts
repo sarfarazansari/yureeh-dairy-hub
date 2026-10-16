@@ -36,6 +36,9 @@ export function useSaveProductionSheetMutation() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: buffaloProductionQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['sales-analytics'] }),
+        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
       ]);
     },
   });
