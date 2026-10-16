@@ -21,7 +21,7 @@ import { calculateExpenseTotal, expensePaymentStatus } from '@/lib/expenses';
 import { ExpenseShell, money, ensureExpenseCategories, todayLocal } from '../shared';
 import type { ExpenseBuffaloOption, ExpenseRow } from '@/lib/expense-types';
 import { TimedNotice } from '@/components/ui/TimedNotice';
-import { useExpenseHistoryQuery } from '@/features/expenses/expense.queries';
+import { useExpenseHistoryQuery, useSoftDeleteExpenseMutation, useUpdateExpenseMutation } from '@/features/expenses/expense.queries';
 export default function ExpenseHistory() {
   const pathname = usePathname();
   const router = useRouter();
@@ -34,6 +34,8 @@ export default function ExpenseHistory() {
     [setupError, setSetupError] = useState(''),
     [message, setMessage] = useState('');
   const historyQuery = useExpenseHistoryQuery({ page, pageSize, from, to, category, group, vendor, status, method, buffalo, outstandingOnly, search, sort, sortDirection }, setupReady);
+  const updateExpenseMutation = useUpdateExpenseMutation();
+  const deleteExpenseMutation = useSoftDeleteExpenseMutation();
   const rows = historyQuery.data?.rows ?? [];
   const totalCount = historyQuery.data?.totalCount ?? 0;
   const ledgerExpenseIds = new Set(historyQuery.data?.ledgerExpenseIds ?? []);
@@ -124,7 +126,7 @@ export default function ExpenseHistory() {
   }, [filterSignature, page]);
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!editing || !supabase || busy) return;
+    if (!editing || busy) return;
     setMessage('');
     setBusy(true);
     try {
@@ -163,9 +165,9 @@ export default function ExpenseHistory() {
         throw new Error('Choose a unit for quantity-based expenses.');
       }
       const payment_status = expensePaymentStatus(amount, paid);
-      const { error } = await supabase
-        .from('expenses')
-        .update({
+      await updateExpenseMutation.mutateAsync({
+        expenseId: editing.id,
+        values: {
           business_date: editing.business_date,
           category_id: editing.category_id,
           vendor_id: editing.vendor_id || null,
@@ -181,9 +183,8 @@ export default function ExpenseHistory() {
           due_date: editing.due_date || null,
           notes: editing.notes || null,
           receipt_reference: editing.receipt_reference || null,
-        })
-        .eq('id', editing.id);
-      if (error) throw error;
+        },
+      });
       setEditing(null);
       setMessage('Expense updated.');
       await load();
@@ -194,7 +195,7 @@ export default function ExpenseHistory() {
     }
   }
   async function confirmDelete() {
-    if (!pendingDelete || !supabase || deleteBusy) return;
+    if (!pendingDelete || deleteBusy) return;
     if (loadError) {
       setMessage('Expense status could not be verified. Reload and try again.');
       return;
@@ -204,11 +205,7 @@ export default function ExpenseHistory() {
       if (ledgerExpenseIds.has(pendingDelete.id) || feedPurchaseExpenseIds.has(pendingDelete.id)) {
         throw new Error('This expense is locked and cannot be deleted from expense history.');
       }
-      const { error } = await supabase
-        .from('expenses')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', pendingDelete.id);
-      if (error) throw error;
+      await deleteExpenseMutation.mutateAsync(pendingDelete.id);
       setPendingDelete(null);
       await load();
     } catch (deleteError) {
