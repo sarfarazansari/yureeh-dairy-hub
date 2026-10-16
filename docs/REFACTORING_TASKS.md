@@ -20,7 +20,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | ID | Priority | Task | Status | Depends on | Completion evidence |
 |---|---|---|---|---|---|
 | REF-001 | P0 | Establish permanent architecture standards and one-command workflow | Completed | — | Architecture, tracker and handoff created; permanent rules and workflow updated on feature branch |
-| REF-002 | P0 | Complete file-by-file inventory of all server/data access, Supabase calls, RPCs, fetches, effects and query/mutation hooks | In Progress | REF-001 | Initial confirmed paths recorded; repository-wide verification remains outstanding |
+| REF-002 | P0 | Complete file-by-file inventory of all server/data access, Supabase calls, RPCs, fetches, effects and query/mutation hooks | Completed | REF-001 | Recursive tree (238 tracked files, 141 source files, 60 migrations) and all source files screened; detailed path-level inventory in `docs/REFACTORING_API_INVENTORY.md` |
 | REF-003 | P0 | Audit current query infrastructure and state ownership (TanStack Query, local state, Zustand/store usage) | Pending | REF-002 | Findings backed by source paths and concrete examples |
 | REF-004 | P1 | Map module boundaries, dependencies and shared types/schemas/helpers | Pending | REF-002 | Dependency map and duplicate-definition list |
 | REF-005 | P1 | Audit server-state fetching and effects; define migration pattern for ad hoc useEffect fetching | Pending | REF-003, REF-004 | Prioritized findings with regression considerations |
@@ -32,9 +32,9 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-011 | P2 | Refactor remaining modules one task per run, in dependency-aware order | Pending | REF-010 | Each module independently verified and tracker updated |
 | REF-012 | P2 | Final architecture regression audit and remove obsolete duplicate patterns | Pending | REF-011 | Search-based audit and validation report |
 
-## Initial source inventory (confirmed paths; not yet exhaustive)
+## Source inventory pointer
 
-This is a starting inventory from code inspected during planning. REF-002 must expand and verify it against the actual repository tree. Do not infer that a file is absent merely because it is not listed here.
+The complete static API/query/effect/state inventory is in `docs/REFACTORING_API_INVENTORY.md`. The file list below remains a short orientation index, not the canonical exhaustive inventory. Do not infer that a file is absent merely because it is not listed here.
 
 ### Shared infrastructure
 - `src/lib/supabase.ts` — Supabase client creation.
@@ -125,3 +125,15 @@ Append a dated entry here after each work session:
 - Checks not run / limitations: Application build, lint, tests and local Git status were not run because this session used remote GitHub file operations, not a local checkout.
 - Blockers or decisions: The repository-wide search endpoint did not return indexed code results in this session. The initial API inventory is intentionally marked partial rather than falsely claiming exhaustive coverage.
 - Next task ID: REF-002 — obtain/verify a complete source-file inventory and trace all API/data-access/effect/query patterns before planning module refactors.
+
+
+### Session log — 2026-10-16 (REF-002)
+
+- Task ID: REF-002
+- Branch: `feature/refactor-engineering-standards`
+- Status: Completed
+- Files changed: `docs/REFACTORING_API_INVENTORY.md`, `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`
+- Checks executed and results: Retrieved latest `master` ref at `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`; rebased this documentation branch onto that base using Git data APIs and a force-with-lease ref update; retrieved an untruncated recursive tree (238 tracked files, 141 TS/JS source files, 60 migrations); screened all 141 source files for Supabase/RPC/query/effect/store patterns; read back key service and query-hook files.
+- Checks not run / limitations: No local checkout was available (clone network resolution failed); build, lint, typecheck, tests and runtime checks were not executed. This task is a static inventory, not an implementation refactor.
+- Findings: TanStack Query is installed but adoption is partial; no Zustand dependency/store was found; expense/feed/report modules have multiple page-level data-access/effect patterns; a buffalo acquisition-cost component contains direct query/mutation code; `react-hook-form` is not listed in package dependencies.
+- Next task ID: REF-003 — audit query infrastructure, server/client state ownership, key conventions and cache invalidation using the source paths documented in the API inventory.
