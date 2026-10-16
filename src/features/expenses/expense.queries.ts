@@ -405,3 +405,46 @@ export function useToggleExpenseVendorMutation() {
     onSuccess: () => invalidateExpenseDirectories(queryClient),
   });
 }
+
+export function useUpdateExpenseMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      expenseId: string;
+      values: {
+        business_date: string;
+        category_id: string;
+        vendor_id: string | null;
+        buffalo_id: string | null;
+        description: string | null;
+        quantity: number | null;
+        unit: string | null;
+        rate: number | null;
+        total_amount: number;
+        paid_amount: number;
+        payment_status: string;
+        payment_method: string;
+        due_date: string | null;
+        notes: string | null;
+        receipt_reference: string | null;
+      };
+    }) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const { error } = await supabase.from('expenses').update(input.values).eq('id', input.expenseId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => invalidateExpenseDirectories(queryClient),
+  });
+}
+
+export function useSoftDeleteExpenseMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (expenseId: string) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const { error } = await supabase.from('expenses').update({ deleted_at: new Date().toISOString() }).eq('id', expenseId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => invalidateExpenseDirectories(queryClient),
+  });
+}
