@@ -1,6 +1,9 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
+import { createFeedPurchase, deleteFeedPurchase, editFeedPurchase } from './services';
+import type { FeedPurchase } from '@/lib/feed-purchase-types';
+
 import { fetchFeedPurchases } from './services';
 
 const PAGE_SIZE = 20;
@@ -31,5 +34,50 @@ export function useFeedPurchaseArchiveQuery(input: {
       if (vendorResult.error) throw vendorResult.error;
       return { feedItems: feeds.data ?? [], vendors: vendorResult.data ?? [], ...purchases };
     },
+  });
+}
+
+
+async function invalidateFeedPurchaseDependents(queryClient: ReturnType<typeof useQueryClient>) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: feedPurchaseQueryKeys.all }),
+    queryClient.invalidateQueries({ queryKey: ['feed-inventory'] }),
+    queryClient.invalidateQueries({ queryKey: ['expenses'] }),
+    queryClient.invalidateQueries({ queryKey: ['expense-vendors'] }),
+    queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+  ]);
+}
+
+export function useCreateFeedPurchaseMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { values: Parameters<typeof createFeedPurchase>[1]; idempotencyKey: string }) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      return createFeedPurchase(supabase, input.values, input.idempotencyKey);
+    },
+    onSuccess: () => invalidateFeedPurchaseDependents(queryClient),
+  });
+}
+
+export function useEditFeedPurchaseMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { purchaseId: string; values: Parameters<typeof editFeedPurchase>[2] }) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      return editFeedPurchase(supabase, input.purchaseId, input.values);
+    },
+    onSuccess: () => invalidateFeedPurchaseDependents(queryClient),
+  });
+}
+
+export function useDeleteFeedPurchaseMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (purchaseId: string) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      return deleteFeedPurchase(supabase, purchaseId);
+    },
+    onSuccess: () => invalidateFeedPurchaseDependents(queryClient),
   });
 }
