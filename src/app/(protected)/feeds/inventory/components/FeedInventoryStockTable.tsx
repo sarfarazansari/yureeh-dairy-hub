@@ -52,7 +52,7 @@ export function FeedInventoryStockTable({ rows, loading = false, error, onRetry 
         <Table className="min-w-[850px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
           <TableHeader><TableRow><TableHead>FEED ITEM</TableHead><TableHead>CATEGORY</TableHead><TableHead>ON HAND</TableHead><TableHead>LOW-STOCK AT</TableHead><TableHead>AVG. COST / UNIT</TableHead><TableHead>STOCK VALUE</TableHead><TableHead>STATUS</TableHead><TableHead>ACTION</TableHead></TableRow></TableHeader>
           <TableBody>
-            {loading ? Array.from({ length: 4 }, (_, i) => <TableRow key={i}>{Array.from({ length: 8 }, (_, j) => <TableCell key={j}><div className="h-4 w-20 animate-pulse rounded bg-muted" /></TableCell>)}</TableRow> : visible.map((row) => {
+            {loading ? Array.from({ length: 4 }, (_, i) => <TableRow key={i}>{Array.from({ length: 8 }, (_, j) => <TableCell key={j}><div className="h-4 w-20 animate-pulse rounded bg-muted" /></TableCell>)}</TableRow>) : visible.map((row) => {
               const itemStatus = status(row);
               return <TableRow key={row.feed_item_id}>
                 <TableCell><b>{row.feed_item_name}</b><div className="text-xs text-muted-foreground">{row.base_unit}</div></TableCell>

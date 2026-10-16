@@ -4,6 +4,8 @@ import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -248,13 +250,9 @@ export default function Dashboard() {
               </div>
             );
           })}
-          <Link
-            href="/new-entry"
-            className="btn full"
-            style={{ display: 'block', textAlign: 'center' }}
-          >
-            ＋ &nbsp;Record milk entry
-          </Link>
+          <Button asChild className="w-full">
+            <Link href="/new-entry">＋ &nbsp;Record milk entry</Link>
+          </Button>
           <div style={{ height: 22 }} />
           <div className="row">
             <h2 className="section-title">Farm production today</h2>
@@ -293,32 +291,19 @@ export default function Dashboard() {
           </div>
           {customerRows.length ? (
             <div className="table-wrap">
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>CUSTOMER</th>
-                    <th>PRICING</th>
-                    <th>MILK</th>
-                    <th>REVENUE</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table className="min-w-[520px]">
+                <TableHeader><TableRow><TableHead>CUSTOMER</TableHead><TableHead>PRICING</TableHead><TableHead>MILK</TableHead><TableHead>REVENUE</TableHead></TableRow></TableHeader>
+                <TableBody>
                   {customerRows.map((c) => (
-                    <tr key={c.name}>
-                      <td>
-                        <Link href={`/customers/${c.id}`}>
-                          <b>{c.name}</b>
-                        </Link>
-                      </td>
-                      <td>
-                        <span className="tag">{c.type}</span>
-                      </td>
-                      <td>{milkTxt(c.milk)}</td>
-                      <td>{money(c.revenue)}</td>
-                    </tr>
+                    <TableRow key={c.id}>
+                      <TableCell><Link href={`/customers/${c.id}`}><b>{c.name}</b></Link></TableCell>
+                      <TableCell><span className="tag">{c.type}</span></TableCell>
+                      <TableCell>{milkTxt(c.milk)}</TableCell>
+                      <TableCell>{money(c.revenue)}</TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           ) : (
             <div className="empty">Customer totals appear after milk entries are recorded.</div>
@@ -361,35 +346,21 @@ export default function Dashboard() {
       <div className="card">
         <h2 className="section-title">Daily sales summary · last 7 days</h2>
         <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>DATE</th>
-                <th>MORNING</th>
-                <th>EVENING</th>
-                <th>TOTAL MILK</th>
-                <th>AVG FAT</th>
-                <th>REVENUE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {daily
-                .slice()
-                .reverse()
-                .map((d) => (
-                  <tr key={d.d}>
-                    <td>
-                      <b>{d.d}</b>
-                    </td>
-                    <td>{milkTxt(d.m)}</td>
-                    <td>{milkTxt(d.e)}</td>
-                    <td>{milkTxt(d.m + d.e)}</td>
-                    <td>{d.f === null ? '—' : `${d.f.toFixed(2)}%`}</td>
-                    <td>{money(d.r)}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
+          <Table className="min-w-[650px]">
+            <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>MORNING</TableHead><TableHead>EVENING</TableHead><TableHead>TOTAL MILK</TableHead><TableHead>AVG FAT</TableHead><TableHead>REVENUE</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {daily.slice().reverse().map((d) => (
+                <TableRow key={d.d}>
+                  <TableCell><b>{d.d}</b></TableCell>
+                  <TableCell>{milkTxt(d.m)}</TableCell>
+                  <TableCell>{milkTxt(d.e)}</TableCell>
+                  <TableCell>{milkTxt(d.m + d.e)}</TableCell>
+                  <TableCell>{d.f === null ? '—' : `${d.f.toFixed(2)}%`}</TableCell>
+                  <TableCell>{money(d.r)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         </div>
         {!entries.length && !loading && (
           <div className="empty">No milk sales in this range. Start with a new milk entry.</div>

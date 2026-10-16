@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
+import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -220,9 +221,9 @@ export default function BuffaloAnalyticsPage() {
             active buffaloes
           </p>
           <p className="sub">No record is distinct from explicitly recorded zero production.</p>
-          <Link className="btn" href="/daily-performance">
-            Enter daily performance
-          </Link>
+          <Button variant="outline" asChild>
+            <Link href="/daily-performance">Enter daily performance</Link>
+          </Button>
         </div>
       </div>
       <div style={{ height: 14 }} />

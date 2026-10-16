@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { useParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
@@ -65,7 +66,7 @@ export default function EditFeedConsumptionPage() {
     <AppShell title="Edit feed consumption" subtitle="Correct a consumption record when inventory activity allows it">
       <div className="management-stack">
         <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
-        <Link className="date-chip" href="/feeds/consumption">← Back to consumption archive</Link>
+        <Button variant="outline" size="sm" asChild><Link href="/feeds/consumption">← Back to consumption archive</Link></Button>
         {initialValues ? (
           <FeedConsumptionForm
             feedItems={feedItems}

@@ -170,7 +170,7 @@ export default function NewExpense() {
   return (
     <ExpenseShell title="New expense" subtitle="Record a purchase, payment or farm cost">
       <div className="row" style={{ marginBottom: 14 }}>
-        <Link href="/expenses" className="date-chip">← Back to expenses</Link>
+        <Button variant="outline" size="sm" asChild><Link href="/expenses">← Back to expenses</Link></Button>
       </div>
       <form className="layout" onSubmit={save} aria-busy={busy}>
         <div className="card">

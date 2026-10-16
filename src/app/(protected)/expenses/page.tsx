@@ -24,6 +24,7 @@ import {
   todayLocal,
 } from './shared';
 import { KPI } from '@/components/ui/KPI';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { ExpenseRow } from '@/lib/expense-types';
@@ -205,9 +206,9 @@ export default function ExpenseDashboard() {
         />
         <div className="card">
           <div className="kpi-label">QUICK ACTION</div>
-          <Link className="btn full" href="/expenses/new">
-            ＋ &nbsp;Record expense
-          </Link>
+          <Button asChild className="w-full">
+            <Link href="/expenses/new">＋ &nbsp;Record expense</Link>
+          </Button>
         </div>
         <div className="card">
           <div className="kpi-label">MANAGE</div>

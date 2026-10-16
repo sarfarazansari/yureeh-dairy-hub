@@ -9,6 +9,13 @@ export type CustomerOption = {
   is_active: boolean;
 };
 
+type CustomerDirectorySummary = {
+  customer_id: string;
+  total_milk_quantity: number | string | null;
+  total_sales_amount: number | string | null;
+  entry_count: number | string | null;
+};
+
 export type CustomerSummary = CustomerOption & {
   phone: string | null;
   address: string | null;
@@ -71,8 +78,9 @@ export async function getCustomerDirectory(client: SupabaseClient) {
   if (customers.error || summaries.error) {
     throw new Error('Could not load the customer directory. Please try again.');
   }
+  const summaryRows = (summaries.data ?? []) as unknown as CustomerDirectorySummary[];
   const byCustomer = new Map(
-    (summaries.data ?? []).map((summary) => [summary.customer_id, summary]),
+    summaryRows.map((summary) => [summary.customer_id, summary]),
   );
   return {
     customers: (customers.data ?? []).map((customer) => {

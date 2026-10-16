@@ -15,7 +15,14 @@ import { supabase } from '@/lib/supabase';
 import { ExpenseShell, money } from '../shared';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseVendor } from '@/lib/expense-types';
-type VendorSummary = ExpenseVendor & { count: number; total: number; pending: number };
+type VendorSummary = ExpenseVendor & { count: number; total: number; paid: number; pending: number };
+type VendorExpenseSummary = {
+  vendor_id: string;
+  expense_count: number | string | null;
+  total_amount: number | string | null;
+  paid_amount: number | string | null;
+  pending_amount: number | string | null;
+};
 export default function ExpenseVendors() {
   const [rows, setRows] = useState<VendorSummary[]>([]),
     [name, setName] = useState(''),
@@ -49,7 +56,8 @@ export default function ExpenseVendors() {
         supabase.rpc('get_expense_vendor_directory_summaries'),
       ]);
       if (v.error || summaries.error) throw (v.error ?? summaries.error)!;
-      const byVendor = new Map((summaries.data ?? []).map((summary) => [summary.vendor_id, summary]));
+      const summaryRows = (summaries.data ?? []) as unknown as VendorExpenseSummary[];
+      const byVendor = new Map(summaryRows.map((summary) => [summary.vendor_id, summary]));
       setRows((v.data ?? []).map((vendorRow) => {
         const summary = byVendor.get(vendorRow.id);
         return {

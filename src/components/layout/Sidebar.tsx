@@ -131,7 +131,7 @@ export function Sidebar() {
 
   return (
     <>
-      <button type="button" ref={triggerButtonRef} className="mobile-menu-trigger"
+      <Button type="button" variant="ghost" size="icon" ref={triggerButtonRef} className="mobile-menu-trigger"
         aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={mobileOpen} aria-controls={menuId}
         onClick={() => {
@@ -140,13 +140,13 @@ export function Sidebar() {
           setMobileOpen(nextOpen);
         }}>
         <span className="mobile-menu-icon" aria-hidden="true"><span /><span /><span /></span>
-      </button>
+      </Button>
       <div className={`mobile-nav-backdrop${mobileOpen ? ' is-open' : ''}`} aria-hidden="true" onClick={closeMobileMenu} />
       <aside id={menuId} className={`sidebar${mobileOpen ? ' mobile-open' : ''}`} aria-label="Application navigation">
         <div className="brand">
           <div className="brand-icon brand-logo"><Image src="/favicon.svg" alt="" width={38} height={38} priority /></div>
           <div>Yureeh<span style={{ fontWeight: 400, color: '#829087' }}> Dairy Hub</span></div>
-          <button type="button" ref={closeButtonRef} className="mobile-menu-close" aria-label="Close navigation menu" onClick={closeMobileMenu}><X size={20} /></button>
+          <Button type="button" variant="ghost" size="icon" ref={closeButtonRef} className="mobile-menu-close" aria-label="Close navigation menu" onClick={closeMobileMenu}><X size={20} /></Button>
         </div>
         <nav className="nav" aria-label="Primary">
           {navigationGroups.map((group) => (

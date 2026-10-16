@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
 import { supabase } from '@/lib/supabase';
@@ -50,7 +51,7 @@ export default function NewFeedConsumptionPage() {
     <AppShell title="New feed consumption" subtitle="Record feed usage against available inventory">
       <div className="management-stack">
         <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
-        <Link className="date-chip" href="/feeds/consumption">← Back to consumption archive</Link>
+        <Button variant="outline" size="sm" asChild><Link href="/feeds/consumption">← Back to consumption archive</Link></Button>
         <FeedConsumptionForm
           feedItems={feedItems}
           stock={stock}

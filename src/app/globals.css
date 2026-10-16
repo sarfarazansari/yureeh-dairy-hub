@@ -291,25 +291,6 @@ a {
   background: #37805f;
   border-radius: 9px;
 }
-.btn {
-  border: 0;
-  background: var(--green);
-  color: white;
-  border-radius: 9px;
-  padding: 11px 15px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.btn.secondary {
-  background: white;
-  border: 1px solid var(--line);
-  color: #496055;
-}
-.btn.full {
-  width: 100%;
-  margin-top: 16px;
-}
 .layout {
   display: grid;
   grid-template-columns: 1fr 330px;
@@ -606,7 +587,7 @@ a {
   min-width: 0;
   width: 100%;
 }
-.management-stack > form .btn {
+.management-stack > form [data-slot="button"] {
   min-width: 180px;
 }
 .table-wrap {
@@ -630,7 +611,7 @@ a {
   .management-stack {
     gap: 12px;
   }
-  .management-stack > form .btn {
+  .management-stack > form [data-slot="button"] {
     width: 100%;
     min-height: 46px;
   }
@@ -731,7 +712,7 @@ a {
 .buffalo-form {
   padding: 18px 20px;
 }
-.buffalo-form > .btn {
+.buffalo-form > [data-slot="button"] {
   min-width: 180px;
 }
 .buffalo-primary-fields,
@@ -820,7 +801,7 @@ a {
   .buffalo-form {
     padding: 14px;
   }
-  .buffalo-form > .btn {
+  .buffalo-form > [data-slot="button"] {
     width: 100%;
     min-height: 46px;
   }
@@ -920,13 +901,6 @@ a {
   justify-content: flex-end;
   gap: 9px;
   margin-top: 20px;
-}
-.btn.destructive {
-  background: #b33f36;
-  color: #fff;
-}
-.btn.destructive:hover {
-  background: #96352e;
 }
 .danger-text {
   color: #a43e38;
