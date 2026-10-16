@@ -10,8 +10,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
 import { Button } from '@/components/ui/button';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState } from 'react';
 import {
   Area,
   AreaChart,
@@ -24,9 +23,11 @@ import {
 import { formatDate } from '@/lib/date-format';
 import { localDateKey } from '@/lib/milk-entry-list';
 import { getAnalyticsDateRange, type AnalyticsDatePreset } from '@/lib/analytics-date-range';
-import { getBuffaloProductionRange, getMilkPoolShiftFatHistory, getProducingBuffaloes } from './services/buffalo-production.service';
-import type { MilkPoolShiftFatRecord } from '@/features/milk/milk.types';
-import type { BuffaloProductionAnimal, BuffaloProductionRecord } from './types';
+import {
+  useBuffaloProductionRangeQuery,
+  useMilkPoolShiftFatHistoryQuery,
+  useProducingBuffaloesQuery,
+} from './buffalo-production.queries';
 function setPreset(value: string, setFrom: (date: string) => void, setTo: (date: string) => void) {
   const range = getAnalyticsDateRange(value as AnalyticsDatePreset);
   setFrom(range.from);
@@ -38,42 +39,15 @@ export default function BuffaloAnalyticsPage() {
     [from, setFrom] = useState(today),
     [to, setTo] = useState(today),
     [range, setRange] = useState('today'),
-    [records, setRecords] = useState<BuffaloProductionRecord[]>([]),
-    [fatRecords, setFatRecords] = useState<MilkPoolShiftFatRecord[]>([]),
-    [herd, setHerd] = useState<BuffaloProductionAnimal[]>([]),
-    [sort, setSort] = useState<'total' | 'average' | 'morning' | 'evening'>('total'),
-    [busy, setBusy] = useState(true),
-    [error, setError] = useState('');
-  useEffect(() => {
-    let live = true;
-    async function load() {
-      if (!supabase) return;
-      setBusy(true);
-      try {
-        const [production, buffaloes, fatHistory] = await Promise.all([
-          getBuffaloProductionRange(supabase, from, to),
-          getProducingBuffaloes(supabase),
-          getMilkPoolShiftFatHistory(supabase, from, to),
-        ]);
-        if (!live) return;
-        setRecords(production);
-        setHerd(buffaloes);
-        setFatRecords(fatHistory);
-        setError('');
-      } catch (loadError) {
-        if (live)
-          setError(
-            loadError instanceof Error ? loadError.message : 'Could not load production analytics.',
-          );
-      } finally {
-        if (live) setBusy(false);
-      }
-    }
-    void load();
-    return () => {
-      live = false;
-    };
-  }, [from, to]);
+    [sort, setSort] = useState<'total' | 'average' | 'morning' | 'evening'>('total');
+  const productionQuery = useBuffaloProductionRangeQuery(from, to);
+  const fatQuery = useMilkPoolShiftFatHistoryQuery(from, to);
+  const herdQuery = useProducingBuffaloesQuery();
+  const records = productionQuery.data ?? [];
+  const fatRecords = fatQuery.data ?? [];
+  const herd = herdQuery.data ?? [];
+  const busy = productionQuery.isPending || fatQuery.isPending || herdQuery.isPending;
+  const error = productionQuery.error?.message ?? fatQuery.error?.message ?? herdQuery.error?.message ?? '';
   const total = records.reduce((sum, record) => sum + Number(record.milk_quantity), 0),
     days = new Set(
       records.map((record) => record.business_date),
