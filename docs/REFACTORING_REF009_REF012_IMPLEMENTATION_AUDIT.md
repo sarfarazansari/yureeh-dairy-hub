@@ -77,3 +77,36 @@ Then run the targeted workflow tests listed in `docs/REFACTORING_IMPLEMENTATION_
 ## Merge/branch policy
 
 No pull request or merge was created by this work. Continue on `feature/refactor-engineering-standards`. The user owns PR creation and merge. No database schema, migration, RPC, RLS policy or production data was changed.
+
+
+## Final continuation pass — 2026-10-16 — current execution branch
+
+**Branch:** `feature/feature-folder-structure-foundation`  
+**Review mode:** remote source read-back/static analysis; no local checkout, browser session or database session available.
+
+### Findings fixed in this pass
+
+1. Customer create/profile update could leave milk-entry customer selectors stale. Successful create/update now invalidates the milk query root. Customer payment keys use the customer feature's canonical key factory.
+2. Buffalo lifecycle/acquisition mutations refreshed buffalo/production/report views but did not refresh diet-plan eligible-animal choices or buffalo-linked expense option queries. The shared buffalo mutation invalidation now covers `['diet-plans']` and `['expenses']`.
+3. The buffalo acquisition-cost panel performed its own Supabase reads and RPC write with literal query keys. Query keys are now feature-owned; data access is in `buffalo.service.ts`; query/mutation hooks are in `use-buffaloes.ts`; the panel keeps only form/local UI state. The existing `record_buffalo_acquisition_cost` RPC boundary is unchanged.
+4. Successful explicit diet-feeding-run retry refreshed only run history. It now refreshes consumption, inventory, feed-cost analytics, financial reports and dashboard after the RPC succeeds. Saving schedule times still invalidates only schedule/run data.
+5. The browser QueryClient had no identity-transition cleanup. QueryProvider now clears cached queries when the authenticated user ID changes; same-user token refreshes do not clear the cache.
+6. Canonical type/helper migrations remain feature-owned; old `src/lib/*-types`, milk-entry-list and milk-entry-validation paths that were migrated are re-export-only compatibility facades rather than competing definitions. They are intentionally not deleted without reliable full-branch consumer/typecheck evidence.
+
+### Remaining architecture/security findings and limits
+
+- The repository-wide invalidation matrix is materially improved but must be verified by exercising each mutation and checking its real active query consumers; static invalidation alone cannot prove data freshness.
+- The complete consumer graph for every compatibility facade cannot be compiler-confirmed in this environment. Retain facades until a local branch-wide search/typecheck confirms there are no remaining imports, then remove unused facades in a separate safe cleanup.
+- Existing transaction-integrity audit requirements remain: concurrent/idempotent payment checks; milk production/delivery reversal and balance reconciliation; feed purchase → linked expense → stock-in exactly once; consumption reversal/cost stability; scheduler overlap/FAILED-only retry/atomic posting; report-to-ledger reconciliation.
+- Supabase security is only statically reviewed from migration source. Deployed migration parity, current RLS/grants/function owners/triggers, cross-farm direct table/RPC access and actual concurrency behavior have not been verified against the database.
+- No local TypeScript check, lint, format check, Next build, browser workflow, unit/integration test, SQL/RLS test, account-switch test or production-data reconciliation ran. Do not mark REF-012 fully completed or merge-ready on this evidence alone.
+
+### Updated status
+
+The **static audit pass** for query invalidation, buffalo/customer/expense/feed architecture and current type/helper boundaries is recorded and fixes are committed on the requested branch. REF-012 remains blocked on executable validation and complete compiler-backed facade-consumer verification. No PR, merge, migration or production-data change was performed.
+
+Branch comparison at the time of this audit showed the working branch based on current `master` with zero commits behind; its ahead count reflects connector-generated per-file commits and is not a quality/verification signal.
+
+### Required next validation
+
+Run `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`; then perform account-switch cache isolation and the disposable Supabase RPC/RLS/concurrency/reconciliation scenarios in `docs/REFACTORING_TRANSACTION_INTEGRITY_AUDIT.md` and `docs/REFACTORING_IMPLEMENTATION_ROADMAP.md`. No check should be marked passed unless executed.
