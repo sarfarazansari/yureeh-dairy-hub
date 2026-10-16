@@ -28,6 +28,11 @@ export function isValidBusinessDate(value: string): boolean {
 
 
 
+export function getMilkEntryListUrl(pathname: string, params: URLSearchParams) {
+  const query = params.toString();
+  return query ? `${pathname}?${query}` : pathname;
+}
+
 export function compactMilkEntryPages(current: number, last: number): (number | 'ellipsis')[] {
   if (last <= 7) return Array.from({ length: last }, (_, index) => index + 1);
   const pages = new Set<number>([1, last]);
@@ -42,7 +47,3 @@ export function compactMilkEntryPages(current: number, last: number): (number | 
   }
   return result;
 }
-
-
-/** Fetch every matching row in bounded chunks for accurate summaries and exports. */
-
