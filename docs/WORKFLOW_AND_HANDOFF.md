@@ -332,3 +332,15 @@ The user's short command `1 refactor karo` means:
 
 
 - Static review correction during milk-list extraction: `getMilkEntryListUrl` was initially placed in the service module and the facade pointed at the utility module. This was corrected before handoff: the URL helper now lives in `src/features/milk/utils/milk-entry-list.ts`, and the service contains only list reads. The utility file's trailing orphan comment was also removed.
+
+
+### REF-009 / REF-011A / REF-012 continuation — 2026-10-16 (cross-domain audit)
+
+- Continued only on `feature/feature-folder-structure-foundation`; no PR or merge created.
+- Fixed customer create/profile-update invalidation for milk selector/context queries and introduced the canonical customer payments query-key factory.
+- Centralized buffalo query keys in `src/features/buffaloes/buffalo.query-keys.ts`; buffalo mutations now invalidate diet-plan and expense roots. Moved buffalo acquisition-cost Supabase reads and the existing RPC write behind buffalo service/query hooks; the panel now retains local form state and uses the canonical date-only helper.
+- Explicit scheduler retry now invalidates run history and downstream consumption/inventory/feed-cost/report/dashboard queries after success.
+- QueryProvider now clears cached query data when authenticated user identity changes. This requires manual same-tab account-switch verification.
+- Updated `docs/QUERY_INVALIDATION_CONTRACT.md` and `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` with findings, fixes and the remaining validation boundary.
+- Verification remains static read-back only. No local typecheck, lint, format, build, browser tests or Supabase RPC/RLS/concurrency tests ran. Keep REF-012 blocked until these are executed and the legacy compatibility-facade consumer graph is confirmed with a full local search/typecheck.
+- Next: inspect remaining effect-driven read candidates and residual duplicate date/payment helpers; then run the complete validation checklist. User retains PR/merge control.
