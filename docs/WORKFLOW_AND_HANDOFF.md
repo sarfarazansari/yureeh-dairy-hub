@@ -253,3 +253,16 @@ The user's short command `1 refactor karo` means:
 - Store: no Zustand store added in this slice. The app's remote data belongs in TanStack Query; only real cross-route client-owned state should enter a Zustand store. A later store decision must name the exact shared state and consumers, not add a generic store by convention.
 - Verification: GitHub read-back confirmed imports and absence of legacy shared-module references in all seven expense routes. Local build/typecheck/lint/tests/browser checks were not run in this environment. Please run them locally before merge.
 - Next task: continue REF-013 with the next high-value module boundary after this expense extraction, using the same incremental migration approach. Keep user responsible for PR/merge.
+
+
+## REF-013 update — feed feature boundaries — 2026-10-16
+
+- Continued on `feature/feature-folder-structure-foundation` (fresh branch from latest master).
+- Moved feed-items service/query files to `src/features/feed-items` and feed-inventory service/query files to `src/features/feed-inventory`; consuming pages now import feature-owned query hooks. Removed their old route-owned service/query duplicates.
+- Moved feed-purchases service/query/schema to `src/features/feed-purchases`; updated the purchase archive/new/edit routes and form to import those files, then removed old route-owned service/query/schema files.
+- Moved feed-consumption service/query/schema to `src/features/feed-consumption`; updated archive/new/edit routes and form, then removed old route-owned files.
+- Moved diet-plan service/query/schema and scheduler query hooks to `src/features/diet-plans`; updated plan archive/new/edit/schedule routes and form, then removed old route-owned files.
+- Shared domain types in `src/lib/*-types.ts` intentionally remain shared until consumer analysis confirms a safe canonical owner.
+- No Zustand store was introduced because the current candidate state is either server-owned (TanStack Query) or local to the UI component. Adding a store without cross-route client-state requirements would violate project rules. This is a documented decision, not a claim that store architecture work is fully complete.
+- Static verification only: route import edits were checked against source files while migrating. Full repository import scan, typecheck, lint, build, tests and browser regression checks still need to be run locally before merge.
+- Next: audit the remaining feed module component ownership, then buffalo/customer/milk shared types and service boundaries; only then finalize the app-wide folder architecture and remove duplicate types/helpers.
