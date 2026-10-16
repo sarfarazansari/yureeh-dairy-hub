@@ -104,7 +104,7 @@ export function useFeedConsumptionForEditQuery(movementId: string) {
   });
 }
 
-async function useFeedConsumptionFormOptionsQueryResult(client: NonNullable<typeof supabase>) {
+async function getFeedConsumptionFormOptions(client: NonNullable<typeof supabase>) {
   const [feedItems, stock] = await Promise.all([fetchFeedItems(client, false), fetchFeedStock(client)]);
   return { feedItems, stock };
 }
