@@ -1,7 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { FeedConsumption, FeedConsumptionListRow } from '@/lib/feed-consumption-types';
-import type { FeedItem } from '@/lib/feed-types';
-import type { FeedInventoryStock } from '@/lib/feed-inventory-types';
+import type { FeedConsumption, FeedConsumptionListRow } from './types';
+import type { FeedItem } from '@/features/feed-items/types';
+import type { FeedInventoryStock } from '@/features/feed-inventory/types';
 
 export async function createFeedConsumption(
   client: SupabaseClient,
