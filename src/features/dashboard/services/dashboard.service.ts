@@ -1,13 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { MilkEntry } from '@/lib/analytics';
+import type { CustomerOption } from '@/features/customers/services/customer.service';
 
-export type DashboardCustomer = {
-  id: string;
-  name: string;
-  pricing_type: 'FIXED_PER_LITRE' | 'FAT_BASED';
-  default_rate: number;
-  is_active: boolean;
-};
+export type DashboardCustomer = CustomerOption;
 export type DashboardBuffalo = { id: string; buffalo_code: string; name: string | null };
 export type DashboardHerdItem = DashboardBuffalo & {
   performance: { milk_quantity: number; record_count: number } | null;
