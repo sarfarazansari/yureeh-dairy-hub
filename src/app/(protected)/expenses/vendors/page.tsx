@@ -56,7 +56,7 @@ export default function ExpenseVendors() {
         supabase.rpc('get_expense_vendor_directory_summaries'),
       ]);
       if (v.error || summaries.error) throw (v.error ?? summaries.error)!;
-      const summaryRows = (summaries.data ?? []) as VendorExpenseSummary[];
+      const summaryRows = (summaries.data ?? []) as unknown as VendorExpenseSummary[];
       const byVendor = new Map(summaryRows.map((summary) => [summary.vendor_id, summary]));
       setRows((v.data ?? []).map((vendorRow) => {
         const summary = byVendor.get(vendorRow.id);
