@@ -42,7 +42,7 @@ export function useCustomerDetailQuery(customerId: string) {
 
 export function useCustomerPaymentsQuery(customerId: string) {
   return useQuery<CustomerPayment[], Error>({
-    queryKey: [...customerQueryKeys.detail(customerId), 'payments'],
+    queryKey: customerQueryKeys.payments(customerId),
     queryFn: () => getCustomerPayments(requireSupabase(), customerId),
     enabled: Boolean(customerId),
   });
@@ -54,7 +54,10 @@ export function useCreateCustomerMutation() {
     mutationFn: (input: { userId: string; name: string; pricingType: Parameters<typeof createCustomer>[1]['pricingType']; defaultRate: number }) =>
       createCustomer(requireSupabase(), input),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: customerQueryKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['milk'] }),
+      ]);
     },
   });
 }
@@ -77,7 +80,10 @@ export function useUpdateCustomerMutation() {
       }),
     onSuccess: async (_data, variables) => {
       await queryClient.invalidateQueries({ queryKey: customerQueryKeys.all });
-      await queryClient.invalidateQueries({ queryKey: customerQueryKeys.detail(variables.customerId) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.detail(variables.customerId) }),
+        queryClient.invalidateQueries({ queryKey: ['milk'] }),
+      ]);
     },
   });
 }
