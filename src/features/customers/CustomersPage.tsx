@@ -25,7 +25,7 @@ import {
   useSetCustomerActiveMutation,
   useUpdateCustomerPricingMutation,
 } from './customer.queries';
-import type { CustomerSummary } from './services/customer.service';
+import type { CustomerSummary } from './types';
 export default function CustomersPage() {
   const [name, setName] = useState(''),
     [rate, setRate] = useState(''),
