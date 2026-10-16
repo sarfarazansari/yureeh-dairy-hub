@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
-import { createFeedPurchase, deleteFeedPurchase, editFeedPurchase } from './services';
+import { createFeedPurchase, deleteFeedPurchase, editFeedPurchase, fetchFeedPurchaseForEdit, fetchFeedPurchases } from './services';
 import { fetchFeedPurchases } from './services';
 
 const PAGE_SIZE = 20;
@@ -77,5 +77,45 @@ export function useDeleteFeedPurchaseMutation() {
       return deleteFeedPurchase(supabase, purchaseId);
     },
     onSuccess: () => invalidateFeedPurchaseDependents(queryClient),
+  });
+}
+
+
+export function useFeedPurchaseFormOptionsQuery() {
+  return useQuery({
+    queryKey: feedPurchaseQueryKeys.formOptions(),
+    queryFn: async () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const [feeds, vendors] = await Promise.all([
+        supabase.from('feed_items').select('*').eq('is_active', true).order('name'),
+        supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
+      ]);
+      if (feeds.error) throw feeds.error;
+      if (vendors.error) throw vendors.error;
+      return { feedItems: feeds.data ?? [], vendors: vendors.data ?? [] };
+    },
+  });
+}
+
+export function useFeedPurchaseForEditQuery(purchaseId: string) {
+  return useQuery({
+    queryKey: [...feedPurchaseQueryKeys.all, 'detail', purchaseId] as const,
+    enabled: Boolean(purchaseId),
+    queryFn: async () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const [options, existing] = await Promise.all([
+        (async () => {
+          const [feeds, vendors] = await Promise.all([
+            supabase.from('feed_items').select('*').eq('is_active', true).order('name'),
+            supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
+          ]);
+          if (feeds.error) throw feeds.error;
+          if (vendors.error) throw vendors.error;
+          return { feedItems: feeds.data ?? [], vendors: vendors.data ?? [] };
+        })(),
+        fetchFeedPurchaseForEdit(supabase, purchaseId),
+      ]);
+      return { ...options, existing };
+    },
   });
 }
