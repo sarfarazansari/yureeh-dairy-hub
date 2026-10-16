@@ -38,7 +38,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-011A | P1 | Refactor buffalo lifecycle/acquisition/sale and customer payment boundaries | In Progress (cache dependencies updated; remaining audit/validation pending) | REF-009, REF-010A, REF-010B | Buffalo mutation invalidation and customer payment/report invalidation improved; acquisition-cost UI and common payment retry/idempotency policy remain unverified |
 | REF-011B | P2 | Refactor any remaining modules one task per run | In Progress (expense/feed-item/scheduler boundaries implemented; remaining-module audit pending) | REF-010A–REF-011A | Expense history/new/category/vendor and feed-item writes are now query/mutation-backed; audit remaining direct-access modules and verify all cache dependencies |
 | REF-012 | P2 | Final architecture regression audit and remove obsolete duplicate patterns | Blocked (static audit recorded; prerequisite migrations and runtime validation outstanding) | REF-011A, REF-011B | `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` records current coverage and unresolved paths; final exhaustive audit/build/test evidence still required |
-| REF-013 | P1 | Implement feature-owned folder boundaries and justified client-state stores, one module at a time | In Progress (expenses, feed modules and customer domain-type ownership migrated; local validation pending) | REF-008 | Expense helpers are feature-owned; feed-items, feed-inventory, feed-purchases, feed-consumption and diet-plans services/query hooks/schemas/components now live under `src/features/*`; customer domain types now live in `src/features/customers/types.ts` instead of the service, with milk query consumers updated; remaining module boundary/store-candidate audit and local validation outstanding |
+| REF-013 | P1 | Implement feature-owned folder boundaries and justified client-state stores, one module at a time | In Progress (expenses, feed modules and customer domain-type ownership migrated; local validation pending) | REF-008 | Expense helpers are feature-owned; feed-items, feed-inventory, feed-purchases, feed-consumption and diet-plans services/query hooks/schemas/components now live under `src/features/*`; customer domain types now live in `src/features/customers/types.ts` instead of the service, with milk query consumers updated; diet-plan database/domain types and schedule types now live in `src/features/diet-plans/types.ts`, form values are schema-inferred, and the obsolete `src/lib/diet-plan-types.ts` was removed; remaining module boundary/store-candidate audit and local validation outstanding |
 
 ## Source inventory pointer
 
@@ -300,3 +300,14 @@ Append a dated entry here after each work session:
 - Checks performed: GitHub read-back of source before edits and targeted updates on this branch; static review of imports and type ownership.
 - Checks not run: local typecheck, lint, formatting, build, automated tests and browser workflows. No local checkout was available; do not treat this as merge-ready until these checks pass.
 - Next: continue REF-013 with the next safe feature boundary/type ownership slice after inspecting current consumers; keep Zustand deferred until a real cross-route client-owned state requirement is identified.
+
+
+### Session log — 2026-10-16 (REF-013 diet-plan type ownership)
+
+- Task ID: REF-013
+- Branch: `feature/feature-folder-structure-foundation`
+- Status: In Progress (diet-plan type boundary migrated; validation pending)
+- Files changed: `src/features/diet-plans/types.ts` (new), `src/features/diet-plans/diet-plan.service.ts`, `src/features/diet-plans/diet-plan.queries.ts`, `src/features/diet-plans/diet-plan.schema.ts`, `src/features/diet-plans/diet-plan-schedule.queries.ts`, `src/features/diet-plans/components/DietPlanForm.tsx`, `src/app/(protected)/feeds/diet-plans/new/page.tsx`, `src/app/(protected)/feeds/diet-plans/edit/[id]/page.tsx`; removed `src/lib/diet-plan-types.ts`.
+- Changes: moved diet-plan list/detail/buffalo-option and scheduler types into the owning feature; moved form-value ownership to the Zod schema output type; centralized status values and reused the canonical milk `Shift` type for scheduled runs.
+- Integrity boundary: no scheduler RPC, stock-posting, retry, database schema, or diet-plan business behavior intentionally changed.
+- Validation: GitHub read/write succeeded. Local typecheck, lint, format, build, scheduler regression and Supabase posting/retry checks remain unrun.
