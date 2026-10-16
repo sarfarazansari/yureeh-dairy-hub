@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { supabase } from '@/lib/supabase';
 import type { ExpenseRow, ExpensePayment } from './types';
+export type { ExpensePayment } from './types';
 
 export const expenseQueryKeys = {
   all: ['expenses'] as const,
