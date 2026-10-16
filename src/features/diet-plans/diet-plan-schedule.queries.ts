@@ -40,14 +40,7 @@ export function useSaveDietPlanScheduleMutation() {
       if (error) throw new Error(error.message);
     },
     onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: dietPlanScheduleQueryKeys.all }),
-        queryClient.invalidateQueries({ queryKey: ['feed-consumption'] }),
-        queryClient.invalidateQueries({ queryKey: ['feed-inventory'] }),
-        queryClient.invalidateQueries({ queryKey: ['feed-cost-analytics'] }),
-        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
-      ]);
+      await queryClient.invalidateQueries({ queryKey: dietPlanScheduleQueryKeys.all });
     },
   });
 }
@@ -62,7 +55,14 @@ export function useRetryDietFeedingRunMutation() {
       if (error) throw new Error(error.message);
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: dietPlanScheduleQueryKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: dietPlanScheduleQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['feed-consumption'] }),
+        queryClient.invalidateQueries({ queryKey: ['feed-inventory'] }),
+        queryClient.invalidateQueries({ queryKey: ['feed-cost-analytics'] }),
+        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+      ]);
     },
   });
 }
