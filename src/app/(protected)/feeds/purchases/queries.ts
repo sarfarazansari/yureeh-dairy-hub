@@ -2,8 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
 import { createFeedPurchase, deleteFeedPurchase, editFeedPurchase } from './services';
-import type { FeedPurchase } from '@/lib/feed-purchase-types';
-
 import { fetchFeedPurchases } from './services';
 
 const PAGE_SIZE = 20;
