@@ -227,3 +227,15 @@ The user's short command `1 refactor karo` means:
 - Feed-item create/update/activation writes use mutation hooks.
 - Feeding schedule settings and recent runs use a query hook; saving times and retrying a FAILED run use mutations. The page does not run a browser timer and retry remains explicit.
 - These changes have been read back from the feature branch. They have not been locally typechecked, linted, built or tested because a local clone could not be obtained in this environment. REF-009 through REF-012 must not be marked complete until those checks and the remaining buffalo/report/ledger regressions are reviewed.
+
+
+## Structural refactor handoff — 2026-10-16
+
+- Latest master base verified: `1f291af036ff737049af3db51936a3d72234da29`.
+- New working branch: `feature/feature-folder-structure-foundation` (created directly from latest master).
+- User clarified that the previous refactoring changes did not visibly deliver the requested feature folder structure and store architecture. Treat that feedback as a scope correction: source-boundary migrations must be implemented, not merely documented.
+- REF-013 was added to `docs/REFACTORING_TASKS.md` for incremental feature-owned folder boundaries and justified client-state stores.
+- First structural slice: expense shell/date filter UI moved to `src/features/expenses/components/ExpenseNavigationShell.tsx`; expense category setup moved to `src/features/expenses/services/expense-setup.service.ts`; `money` and `todayLocal` moved to `src/features/expenses/utils/expense-format.ts`. `src/app/(protected)/expenses/shared.tsx` currently provides temporary compatibility re-exports so existing imports remain valid while routes are migrated incrementally.
+- No Zustand store was added: the reviewed shared state is server-owned or page-local, and the architecture explicitly forbids duplicating server state in a store. Identify an actual cross-route client-owned state candidate before adding Zustand.
+- Validation boundary: static extraction review only. Local typecheck, lint, build, tests and browser flows were not run from this environment. User must run these on the branch before merging.
+- Next step: move expense route imports directly to feature-owned components/services/utils, then remove the compatibility module only when no imports remain; continue module-by-module after that.
