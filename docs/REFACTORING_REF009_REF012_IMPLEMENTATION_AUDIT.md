@@ -110,3 +110,6 @@ Branch comparison at the time of this audit showed the working branch based on c
 ### Required next validation
 
 Run `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`; then perform account-switch cache isolation and the disposable Supabase RPC/RLS/concurrency/reconciliation scenarios in `docs/REFACTORING_TRANSACTION_INTEGRITY_AUDIT.md` and `docs/REFACTORING_IMPLEMENTATION_ROADMAP.md`. No check should be marked passed unless executed.
+
+
+Additional final-pass fixes: feed purchase mutations now invalidate expense-category summaries and feed-cost analytics alongside linked expense, vendor, inventory and report roots. Diet-plan save now invalidates scheduler/run-history data so the joined plan name cannot remain stale after a plan edit. Both changes are static-only pending mutation workflow checks.
