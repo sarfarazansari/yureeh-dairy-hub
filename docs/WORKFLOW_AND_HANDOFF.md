@@ -204,3 +204,17 @@ The user's short command `1 refactor karo` means:
 - No RPC, SQL, migration, RLS, financial ledger or retry behavior changed. No automatic mutation retries were introduced.
 - Validation boundary: GitHub read-back/static checks only. No local checkout; typecheck, lint, build, tests, browser smoke tests and account-switch cache checks were not run.
 - Required next local checks: typecheck/lint/build; milk entry create/update/delete, especially reassignment between customers; verify customer directory and both old/new customer detail summaries refresh; save production and verify buffalo detail history refresh; verify manual pool movement doesn't cause unnecessary customer refetch. Then mark REF-009 Completed and move to REF-010A or REF-010B.
+
+
+---
+
+## Latest handoff — 2026-10-16 (REF-009 through REF-012 batch)
+
+- Working branch remains `feature/refactor-engineering-standards`. No PR or merge was created.
+- Detailed coverage and unresolved work: `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md`.
+- Implemented in this batch: canonical milk shift/pricing types and mixed-fat record; dashboard, sales analytics, buffalo analytics, financial-report and expense-dashboard query boundaries; feed master/inventory/purchase/consumption/diet-plan query boundaries; feed purchase/consumption/diet-plan mutation hooks; expense detail/payment query and mutation boundary; expanded milk/customer/buffalo/feed cache invalidation.
+- Not complete: expense history/new/category/vendor route boundaries; scheduler settings/run-history/retry refactor and disposable DB validation; remaining buffalo acquisition-cost direct data access review; full mutation-to-consumer invalidation audit.
+- Validation boundary: GitHub read-back/static review only. No local checkout; `npm run lint`, `npm run format:check`, `npx tsc --noEmit`, `npm run build`, automated tests, browser smoke tests, live/disposable Supabase RPC/RLS/concurrency checks and account-switch cache isolation were not run. No CI workflow/status checks were found for the latest branch commit.
+- Tracker statuses are deliberately left In Progress/Blocked where the acceptance checks or implementation scope remain outstanding. Do not merge until remaining phases and local validation are complete.
+- Branch comparison checkpoint reported 101 commits ahead / 2 behind `master`. During this batch, one query-key edit was briefly committed to the default branch after omitting the branch argument. A follow-up commit restored the default-branch file content, which was read back and verified. The two extra default-branch commits remain in history; no force reset was attempted. This is disclosed so the branch history divergence is not mistaken for an application change.
+- No database migrations, RPC definitions, RLS policies or production data were changed.
