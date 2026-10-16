@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { MilkPoolShiftFatRecord } from '../milk.types';
 
 import type {
   MilkPoolManualMovementType,
@@ -107,12 +108,6 @@ export async function getMilkDeliveryContext(
   };
 }
 
-
-export type MilkPoolShiftFatRecord = {
-  business_date: string;
-  shift: 'MORNING' | 'EVENING';
-  fat_percentage: number | string;
-};
 
 export async function getMilkPoolShiftFatHistory(
   client: SupabaseClient,
