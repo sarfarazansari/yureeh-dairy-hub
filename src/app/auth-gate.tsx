@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { TimedNotice } from '@/components/ui/TimedNotice';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null),
@@ -59,7 +61,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         <p className="sub">Sign in to access your private farm records.</p>
         <label className="field">
           Email
-          <input
+          <Input
             autoComplete="email"
             type="email"
             required
@@ -69,7 +71,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
         </label>
         <label className="field">
           Password
-          <input
+          <Input
             autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
             type="password"
             minLength={6}
@@ -79,11 +81,13 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           />
         </label>
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-        <button className="btn full" disabled={busy}>
+        <Button type="submit" className="w-full" disabled={busy}>
           {busy ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           className="auth-switch"
           onClick={() => {
             setMode(mode === 'signin' ? 'signup' : 'signin');
@@ -91,7 +95,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           }}
         >
           {mode === 'signin' ? 'New here? Create account' : 'Already registered? Sign in'}
-        </button>
+        </Button>
       </form>
     </div>
   );
