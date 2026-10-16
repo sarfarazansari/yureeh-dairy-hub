@@ -21,11 +21,14 @@ Status: **In progress — not merge-ready until the remaining phases and validat
 - Moved purchase create/edit/delete and consumption create/edit/delete RPC calls behind mutation hooks. The purchase creation request-key is still generated and retained by the page per unchanged form intent; no automatic mutation retry was added.
 - Moved diet-plan save RPC invocation behind a mutation hook.
 - Query-backed form references/details were added for purchase, consumption and diet-plan forms.
+- Feed-item create/update/activation writes were moved from the page into mutation hooks with dependent inventory, purchase, consumption, diet-plan, feed-cost, dashboard and report invalidation.
+- Feeding schedule settings and recent run history now use a query hook; schedule save and explicit FAILED-only retry use mutation hooks. No browser timer or automatic retry was introduced.
 - Successful feed mutations invalidate their affected stock, archive, plan, expense/vendor, dashboard and report query families; failed mutations do not trigger success invalidation.
 
 ### Expenses and lifecycle/payment cache dependencies
 - Added a typed expense-detail query and moved `record_expense_payment` behind a mutation hook without changing RPC arguments or adding automatic retry.
-- Added a query-backed expense dashboard read boundary.
+- Added query-backed expense dashboard, history/archive and new-expense reference reads.
+- Expense create/update/soft-delete, category CRUD and vendor CRUD writes now use mutation hooks. The category bootstrap/authentication effect remains separate, while list reads are query-owned.
 - Expanded successful milk-entry invalidation to refresh customer directory/detail descendants plus dashboard, sales analytics and financial-report queries.
 - Expanded production-save invalidation to refresh dashboard, sales analytics and financial reports.
 - Buffalo lifecycle/acquisition/sale/payment mutation hooks now also invalidate production eligibility/history and the dashboard/financial-report query families.
@@ -43,8 +46,8 @@ Status: **In progress — not merge-ready until the remaining phases and validat
 
 The roadmap has not been fully completed. Remaining items include:
 
-1. **Expense module:** history/archive, new-expense reference reads, categories and vendors still have page-owned Supabase access and need a dedicated query/service migration. The existing category-seeding behavior must remain intentional and idempotent.
-2. **Feed scheduler:** scheduler settings/run-history reads and scheduled-post verification have not been fully migrated or tested. Preserve run snapshots, uniqueness, atomic posting and explicit FAILED-only retry.
+1. **Expense module:** query/mutation boundaries now cover history/archive, new-expense references, category/vendor directories and create/update/soft-delete/payment writes. Remaining review: category-seeding behavior under concurrent initialization, edit/delete locks, and mutation invalidation against live data.
+2. **Feed scheduler:** settings/run-history and save/explicit retry boundaries are migrated, but scheduled-post verification, run snapshot invariants, uniqueness, atomic posting and FAILED-only retry must still be verified against a disposable Supabase database.
 3. **Buffalo/customer lifecycle:** audit remaining direct acquisition-cost UI access and verify sale/acquisition/payment flows; establish a common uncertain-payment reconciliation/idempotency policy only after reviewing existing RPC constraints.
 4. **Canonical helpers:** date helper consolidation is intentionally unfinished until Asia/Kolkata business-date semantics and all consumers can be compared. Do not merge customer and buffalo payment method types without database constraint review.
 5. **Invalidation completeness:** the new query roots are in place for the migrated paths, but a repository-wide mutation-to-consumer matrix still needs verification for every remaining expense, scheduler, buffalo and report write.
