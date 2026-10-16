@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { customerQueryKeys } from '@/features/customers/customer.queries';
 
 import { supabase } from '@/lib/supabase';
 import {
@@ -114,7 +115,11 @@ export function useCreateMilkEntryMutation() {
   return useMutation({
     mutationFn: (entry: MilkEntryFormValues) => createMilkEntry(requireSupabase(), entry),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: milkQueryKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.directory() }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.details() }),
+      ]);
     },
   });
 }
