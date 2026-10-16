@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
-import type { DietPlanFormValues } from '@/lib/diet-plan-types';
+import type { DietPlanFormValues } from '@/features/diet-plans/diet-plan.schema';
 import { DietPlanForm } from '@/features/diet-plans/components/DietPlanForm';
 import { useActiveDietFeedItemsQuery, useDietPlanDetailsQuery, useEligibleDietBuffaloesQuery, useSaveDietPlanMutation } from '@/features/diet-plans/diet-plan.queries';
 
