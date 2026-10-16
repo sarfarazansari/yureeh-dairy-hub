@@ -329,3 +329,6 @@ The user's short command `1 refactor karo` means:
 
 - Milk-entry validation now has one feature-owned definition at `src/features/milk/milk-entry.schema.ts`; the former lib module is re-export-only. The three known feature consumers were switched to the canonical path.
 - The Zod validation and transform behavior were preserved during extraction. Runtime validation and milk/pool reconciliation checks remain pending.
+
+
+- Static review correction during milk-list extraction: `getMilkEntryListUrl` was initially placed in the service module and the facade pointed at the utility module. This was corrected before handoff: the URL helper now lives in `src/features/milk/utils/milk-entry-list.ts`, and the service contains only list reads. The utility file's trailing orphan comment was also removed.
