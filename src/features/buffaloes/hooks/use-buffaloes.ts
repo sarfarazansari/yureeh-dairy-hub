@@ -44,12 +44,12 @@ import type {
 import { getBuffaloProductionHistory } from '@/features/buffalo-production/services/buffalo-production.service';
 import type { BuffaloProductionHistoryRecord } from '@/features/buffalo-production/types';
 import type { BuffaloPurchaseFormValues } from '../validation';
+import { buffaloProductionQueryKeys } from '@/features/buffalo-production/buffalo-production.query-keys';
 
 const buffaloKeys = {
   all: ['buffaloes'] as const,
   directory: () => [...buffaloKeys.all, 'directory'] as const,
   detail: (id: string) => [...buffaloKeys.all, 'detail', id] as const,
-  production: (buffaloId: string) => [...buffaloKeys.all, 'production', buffaloId] as const,
   payments: (buffaloId: string) => [...buffaloKeys.all, 'payments', buffaloId] as const,
   statusHistory: (buffaloId: string) => [...buffaloKeys.all, 'status-history', buffaloId] as const,
   sale: (buffaloId: string) => [...buffaloKeys.all, 'sale', buffaloId] as const,
@@ -102,7 +102,7 @@ export function useBuffaloStatusHistory(buffaloId: string | undefined) {
 
 export function useBuffaloProductionHistory(buffaloId: string | undefined) {
   return useQuery<BuffaloProductionHistoryRecord[]>({
-    queryKey: buffaloKeys.production(buffaloId ?? ''),
+    queryKey: buffaloProductionQueryKeys.history(buffaloId ?? ''),
     queryFn: () => getBuffaloProductionHistory(getClient(), buffaloId!),
     enabled: Boolean(buffaloId),
   });
