@@ -38,7 +38,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-011A | P1 | Refactor buffalo lifecycle/acquisition/sale and customer payment boundaries | In Progress (cache dependencies updated; remaining audit/validation pending) | REF-009, REF-010A, REF-010B | Buffalo mutation invalidation and customer payment/report invalidation improved; acquisition-cost UI and common payment retry/idempotency policy remain unverified |
 | REF-011B | P2 | Refactor any remaining modules one task per run | In Progress (expense/feed-item/scheduler boundaries implemented; remaining-module audit pending) | REF-010A–REF-011A | Expense history/new/category/vendor and feed-item writes are now query/mutation-backed; audit remaining direct-access modules and verify all cache dependencies |
 | REF-012 | P2 | Final architecture regression audit and remove obsolete duplicate patterns | Blocked (static audit recorded; prerequisite migrations and runtime validation outstanding) | REF-011A, REF-011B | `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` records current coverage and unresolved paths; final exhaustive audit/build/test evidence still required |
-| REF-013 | P1 | Implement feature-owned folder boundaries and justified client-state stores, one module at a time | In Progress (expense shared helpers extracted; validation pending) | REF-008 | Expense shell/date filters moved to `src/features/expenses/components`, category setup to `services`, formatting/date helpers to `utils`; decide on Zustand only after identifying genuine shared client-owned state; imports/runtime validation and remaining module migrations outstanding |
+| REF-013 | P1 | Implement feature-owned folder boundaries and justified client-state stores, one module at a time | In Progress (expense structural slice implemented; local validation pending) | REF-008 | Expense shell/date filters moved to `src/features/expenses/components`, category setup to `services`, formatting/date helpers to `utils`; all seven expense routes now import feature-owned modules and obsolete route-level `shared.tsx` was removed; further modules and store-candidate audit remain |
 
 ## Source inventory pointer
 
@@ -249,3 +249,12 @@ Append a dated entry here after each work session:
 - Checks executed: read latest master branch SHA and relevant source files; statically compared extracted implementations to previous shared helper behavior.
 - Checks not run: local typecheck, lint, build, tests and browser smoke tests; this session uses remote GitHub file operations without a local checkout.
 - Next: review new files and imports, run local checks on the feature branch, then continue the next structural slice by moving remaining expense-route imports off the compatibility module. Do not merge until local checks pass.
+
+
+### Session log — 2026-10-16 (REF-013 structural slice updated)
+
+- Implemented on `feature/feature-folder-structure-foundation` from latest master `1f291af036ff737049af3db51936a3d72234da29`.
+- Migrated imports in all seven expense routes to feature-owned components, services and utilities; removed `src/app/(protected)/expenses/shared.tsx`.
+- Read-back verification: fetched all seven routes from the feature branch and confirmed none references the removed `shared.tsx`; all show imports from `@/features/expenses/*`.
+- Runtime checks remain not run: local typecheck, lint, build, unit tests and browser smoke tests. The branch is not ready to merge until the user runs checks locally.
+- Store policy unchanged: no Zustand store is justified by this slice. TanStack Query remains the server cache; state should not be duplicated into Zustand. Store candidates are to be evaluated from concrete cross-route client-state requirements.
