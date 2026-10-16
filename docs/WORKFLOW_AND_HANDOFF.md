@@ -303,3 +303,10 @@ The user's short command `1 refactor karo` means:
 - Diet-plan types moved from `src/lib/diet-plan-types.ts` into `src/features/diet-plans/types.ts`; form values are now inferred from `diet-plan.schema.ts`, and schedule types use canonical `Shift` from `src/lib/milk-domain.ts`. The obsolete shared diet-plan type file was deleted after updating the known service, query, form, new-route and edit-route consumers.
 - No local test/build was run. Before merge, run `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`, then exercise diet-plan create/edit, schedule settings and explicit FAILED-run retry against a disposable/test environment.
 - Next: continue REF-013 with remaining module-owned type boundaries, then run full architecture audit REF-012 only after prerequisite implementation slices and user-side runtime validation are complete.
+
+
+### REF-013 continuation — 2026-10-16 (feed type ownership)
+
+- Canonical feed domain types now live under their owning feature directories: feed items, inventory, purchases and consumption. Services and feature UI import these definitions directly. Inventory movement row projection type is owned by `src/features/feed-inventory/types.ts`, not the service.
+- The old `src/lib/feed-*-types.ts` modules were retained as re-export-only compatibility facades so any other consumers are not broken mid-migration; they contain no competing type definitions. Remove these facades only after a repository-wide consumer search proves they are unused.
+- No database/RPC or business behavior changes were made. Local checks remain unrun.
