@@ -27,8 +27,8 @@ import {
   getMilkDeliveryContext,
   recordMilkPoolMovement,
   type RecordMilkPoolMovementInput,
-  type MilkPoolShiftFatRecord,
 } from './services/milk-pool.service';
+import type { MilkPoolShiftFatRecord } from './milk.types';
 import type { MilkEntryFormValues } from '@/lib/milk-entry-validation';
 
 export const milkQueryKeys = {
