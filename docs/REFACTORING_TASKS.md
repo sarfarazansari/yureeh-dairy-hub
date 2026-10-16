@@ -38,7 +38,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-011A | P1 | Refactor buffalo lifecycle/acquisition/sale and customer payment boundaries | In Progress (cache dependencies updated; remaining audit/validation pending) | REF-009, REF-010A, REF-010B | Buffalo mutation invalidation and customer payment/report invalidation improved; acquisition-cost UI and common payment retry/idempotency policy remain unverified |
 | REF-011B | P2 | Refactor any remaining modules one task per run | In Progress (expense/feed-item/scheduler boundaries implemented; remaining-module audit pending) | REF-010A–REF-011A | Expense history/new/category/vendor and feed-item writes are now query/mutation-backed; audit remaining direct-access modules and verify all cache dependencies |
 | REF-012 | P2 | Final architecture regression audit and remove obsolete duplicate patterns | Blocked (static audit recorded; prerequisite migrations and runtime validation outstanding) | REF-011A, REF-011B | `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` records current coverage and unresolved paths; final exhaustive audit/build/test evidence still required |
-| REF-013 | P1 | Implement feature-owned folder boundaries and justified client-state stores, one module at a time | In Progress (expenses and four feed domains structurally migrated; local validation pending) | REF-008 | Expense helpers are feature-owned; feed-items, feed-inventory, feed-purchases, feed-consumption and diet-plans services/query hooks/schemas now live under `src/features/*`; route imports updated and obsolete route-owned service/query/schema files removed for these slices; local validation and remaining module migration/store-candidate audit outstanding |
+| REF-013 | P1 | Implement feature-owned folder boundaries and justified client-state stores, one module at a time | In Progress (expenses and feed module service/query/schema/component boundaries migrated; local validation pending) | REF-008 | Expense helpers are feature-owned; feed-items, feed-inventory, feed-purchases, feed-consumption and diet-plans services/query hooks/schemas/components now live under `src/features/*`; route imports updated and obsolete route-owned files removed for these slices; local validation and remaining module migration/store-candidate audit outstanding |
 
 ## Source inventory pointer
 
@@ -272,3 +272,11 @@ Append a dated entry here after each work session:
 - Updated consuming routes/forms to import the feature-owned files and deleted the old route-owned service/query/schema files for these modules. Existing shared domain types in `src/lib/*-types.ts` remain shared because multiple feed domains consume them; do not duplicate those types merely to populate feature folders.
 - Store audit: package has no Zustand dependency and current examined shared data is server-owned (TanStack Query), while sidebar mobile-open and page forms are local UI state. No global store was introduced without a demonstrated cross-route client-state requirement. If the user expects a specific store behavior, identify that state/consumer explicitly before choosing the store API.
 - Verification performed: GitHub read-back of source files and targeted route imports during migration. No local typecheck/lint/build/tests/browser checks run in this environment. These migrations are not merge-ready until user runs checks.
+
+
+### Session log — 2026-10-16 (feed UI component ownership)
+
+- Moved feed item, inventory, purchase, consumption and diet-plan UI components from route folders into their respective `src/features/*/components` directories.
+- Updated route pages to import feature-owned components. Updated moved components to reference feature-owned schemas/services and the canonical expense date utility where needed.
+- Removed the old route-owned component files after creating feature-owned replacements.
+- GitHub tree/source read-back and targeted import inspection performed; full local build/typecheck/lint/tests were not run. This is still In Progress until the user confirms local checks.
