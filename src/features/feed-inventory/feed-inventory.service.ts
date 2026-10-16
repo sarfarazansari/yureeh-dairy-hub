@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { FeedInventoryMovement, FeedInventoryStock } from '@/lib/feed-inventory-types';
+import type { FeedInventoryMovement, FeedInventoryStock } from './types';
 
 export type FeedInventoryMovementRow = FeedInventoryMovement & {
   feed_item_name: string;
