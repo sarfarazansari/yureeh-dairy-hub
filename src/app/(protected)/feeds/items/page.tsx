@@ -1,56 +1,36 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
 import { supabase } from '@/lib/supabase';
 import type { FeedItem } from '@/lib/feed-types';
+import { feedItemsQueryKeys, useFeedItemsPageQuery } from './queries';
 import { FeedItemEditDialog } from './components/FeedItemEditDialog';
 import { FeedItemForm, type FeedItemFormValues } from './components/FeedItemForm';
 import { FeedItemTable } from './components/FeedItemTable';
 
 export default function FeedItemsPage() {
-  const [rows, setRows] = useState<FeedItem[]>([]);
-  const [totalRows, setTotalRows] = useState(0);
-  const [activeCount, setActiveCount] = useState(0);
   const [page, setPage] = useState(1);
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const pageSize = 20;
   const [search, setSearch] = useState('');
   const [editingItem, setEditingItem] = useState<FeedItem | null>(null);
   const [message, setMessage] = useState('');
-  const [loadError, setLoadError] = useState('');
   const [busy, setBusy] = useState(false);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     const timer = window.setTimeout(() => { setDebouncedSearch(search.trim()); setPage(1); }, 300);
     return () => window.clearTimeout(timer);
   }, [search]);
 
-  const load = useCallback(async () => {
-    if (!supabase) { setLoadError('Supabase is not configured.'); return; }
-    setBusy(true);
-    setLoadError('');
-    let query = supabase.from('feed_items').select('*', { count: 'exact' }).order('is_active', { ascending: false }).order('name');
-    if (debouncedSearch) {
-      const safeSearch = debouncedSearch.replace(/[,%()]/g, ' ').trim();
-      if (safeSearch) query = query.or(`name.ilike.%${safeSearch}%,category.ilike.%${safeSearch}%`);
-    }
-    const [{ data, error, count }, activeResult] = await Promise.all([
-      query.range((page - 1) * pageSize, page * pageSize - 1),
-      supabase.from('feed_items').select('id', { count: 'exact', head: true }).eq('is_active', true),
-    ]);
-    if (error || activeResult.error) {
-      setLoadError((error ?? activeResult.error)?.message ?? 'Could not load feed items.');
-      setBusy(false);
-      return;
-    }
-    setRows(data ?? []);
-    setTotalRows(count ?? 0);
-    setActiveCount(activeResult.count ?? 0);
-    setBusy(false);
-  }, [page, debouncedSearch]);
-
-  useEffect(() => { void load(); }, [load]);
+  const feedItemsQuery = useFeedItemsPageQuery(page, pageSize, debouncedSearch);
+  const rows = feedItemsQuery.data?.rows ?? [];
+  const totalRows = feedItemsQuery.data?.totalRows ?? 0;
+  const activeCount = feedItemsQuery.data?.activeCount ?? 0;
+  const loadError = feedItemsQuery.error?.message ?? '';
+  const load = () => void feedItemsQuery.refetch();
 
   async function save(values: FeedItemFormValues, id?: string) {
     if (!supabase) return 'Supabase is not configured.';
@@ -84,7 +64,7 @@ export default function FeedItemsPage() {
 
       if (result.error) return result.error.code === '23505' ? 'A feed item with this name already exists.' : result.error.message;
       setMessage(id ? 'Feed item updated.' : 'Feed item created.');
-      await load();
+      await queryClient.invalidateQueries({ queryKey: feedItemsQueryKeys.all });
       return null;
     } finally {
       setBusy(false);
@@ -95,14 +75,14 @@ export default function FeedItemsPage() {
     if (!supabase) return;
     const { error } = await supabase.from('feed_items').update({ is_active: !row.is_active }).eq('id', row.id);
     if (error) setMessage(error.message);
-    else await load();
+    else await queryClient.invalidateQueries({ queryKey: feedItemsQueryKeys.all });
   }
 
   return (
     <AppShell title="Feed items" subtitle="Manage the farm's physical feed master">
       <div className="management-stack">
         <FeedItemForm onSave={save} busy={busy} message={message} />
-        <FeedItemTable rows={rows} activeCount={activeCount} search={search} onSearchChange={setSearch} onEdit={setEditingItem} onToggle={toggle} loading={busy} error={loadError} onRetry={() => void load()} page={page} pageSize={pageSize} totalRows={totalRows} onPageChange={setPage} />
+        <FeedItemTable rows={rows} activeCount={activeCount} search={search} onSearchChange={setSearch} onEdit={setEditingItem} onToggle={toggle} loading={busy || feedItemsQuery.isPending} error={loadError} onRetry={load} page={page} pageSize={pageSize} totalRows={totalRows} onPageChange={setPage} />
         <FeedItemEditDialog item={editingItem} open={Boolean(editingItem)} onOpenChange={(open) => !open && setEditingItem(null)} onSave={save} busy={busy} />
       </div>
     </AppShell>
