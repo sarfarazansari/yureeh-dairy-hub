@@ -123,6 +123,8 @@ export function useSetCustomerActiveMutation() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: customerQueryKeys.all });
       await queryClient.invalidateQueries({ queryKey: ['milk'] });
+      await queryClient.invalidateQueries({ queryKey: ['financial-reports'] });
+      await queryClient.invalidateQueries({ queryKey: ['dashboard'] });
     },
   });
 }
