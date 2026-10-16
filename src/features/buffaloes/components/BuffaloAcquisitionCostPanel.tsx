@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -90,8 +91,8 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }
 
       {costsQuery.isPending ? <div className="empty">Loading acquisition costs…</div> :
         costsQuery.isError ? <p role="alert" className="auth-message">{costsQuery.error.message}</p> :
-        (costsQuery.data ?? []).length ? <div className="table-wrap"><table className="table"><thead><tr><th>DATE</th><th>DESCRIPTION</th><th>AMOUNT</th><th>NOTES</th></tr></thead>
-          <tbody>{costsQuery.data!.map((cost) => <tr key={cost.id}><td>{cost.cost_date}</td><td>{cost.description}</td><td>{money(Number(cost.amount))}</td><td>{cost.notes || '—'}</td></tr>)}</tbody></table></div> :
+        (costsQuery.data ?? []).length ? <div className="table-wrap"><Table className="min-w-[600px]"><TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>DESCRIPTION</TableHead><TableHead>AMOUNT</TableHead><TableHead>NOTES</TableHead></TableRow></TableHeader>
+          <TableBody>{costsQuery.data!.map((cost) => <TableRow key={cost.id}><TableCell>{cost.cost_date}</TableCell><TableCell>{cost.description}</TableCell><TableCell>{money(Number(cost.amount))}</TableCell><TableCell>{cost.notes || '—'}</TableCell></TableRow>)}</TableBody></Table></div> :
         <div className="empty">No acquisition costs capitalized yet.</div>}
 
       {canAdd && <form className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" onSubmit={(event) => { event.preventDefault(); saveMutation.mutate(); }} noValidate>
