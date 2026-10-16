@@ -8,73 +8,45 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { formatDate, formatDateTime } from '@/lib/date-format';
 import Link from 'next/link';
 import { DatePicker } from '@/components/ui/date-picker';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ExpenseShell, money, todayLocal } from '../../shared';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 
-import type { ExpenseRow } from '@/lib/expense-types';
-
-type ExpensePayment = {
-  id: string;
-  payment_date: string;
-  amount: number | string;
-  payment_method: string;
-  transaction_reference: string | null;
-  notes: string | null;
-  created_at: string;
-};
+import { useExpenseDetailQuery, useRecordExpensePaymentMutation } from '@/features/expenses/expense.queries';
 
 const PAYMENT_METHODS = ['CASH', 'UPI', 'BANK_TRANSFER', 'CARD', 'OTHER'] as const;
 
 export default function ExpenseDetail({ params }: { params: Promise<{ id: string }> }) {
   const [id, setId] = useState(''),
-    [row, setRow] = useState<ExpenseRow | null>(null),
-    [payments, setPayments] = useState<ExpensePayment[]>([]),
     [paymentDate, setPaymentDate] = useState(todayLocal()),
     [amount, setAmount] = useState(''),
     [method, setMethod] = useState<(typeof PAYMENT_METHODS)[number]>('CASH'),
     [reference, setReference] = useState(''),
     [notes, setNotes] = useState(''),
-    [saving, setSaving] = useState(false),
     [error, setError] = useState(''),
     [message, setMessage] = useState('');
 
-  const load = useCallback(async (expenseId: string) => {
-    if (!supabase) return;
-    const [expenseResult, paymentsResult] = await Promise.all([
-      supabase.from('expenses').select('*').eq('id', expenseId).is('deleted_at', null).maybeSingle(),
-      supabase
-        .from('expense_payments')
-        .select('id,payment_date,amount,payment_method,transaction_reference,notes,created_at')
-        .eq('expense_id', expenseId)
-        .order('payment_date', { ascending: false })
-        .order('created_at', { ascending: false }),
-    ]);
-    if (expenseResult.error || paymentsResult.error) {
-      setError((expenseResult.error ?? paymentsResult.error)!.message);
-      return;
-    }
-    setRow(expenseResult.data as ExpenseRow | null);
-    setPayments((paymentsResult.data ?? []) as ExpensePayment[]);
-  }, []);
+  const expenseQuery = useExpenseDetailQuery(id);
+  const paymentMutation = useRecordExpensePaymentMutation();
+  const row = expenseQuery.data?.row ?? null;
+  const payments = expenseQuery.data?.payments ?? [];
+  const saving = paymentMutation.isPending;
 
   useEffect(() => {
     let alive = true;
     Promise.resolve(params).then((p) => {
-      if (!alive) return;
-      setId(p.id);
-      void load(p.id);
+      if (alive) setId(p.id);
     });
     return () => {
       alive = false;
     };
-  }, [params, load]);
+  }, [params]);
 
   async function recordPayment(e: React.FormEvent) {
     e.preventDefault();
-    if (!supabase || !row || saving) return;
+    if (!row || saving) return;
     const value = Number(amount);
     if (!Number.isFinite(value) || value <= 0) {
       setError('Enter a payment amount greater than ₹0.');
@@ -88,28 +60,23 @@ export default function ExpenseDetail({ params }: { params: Promise<{ id: string
       setError('Payment date must be today or earlier.');
       return;
     }
-    setSaving(true);
     setError('');
     setMessage('');
     try {
-      const { error: paymentError } = await supabase.rpc('record_expense_payment', {
-        p_expense_id: row.id,
-        p_payment_date: paymentDate,
-        p_amount: value,
-        p_payment_method: method,
-        p_transaction_reference: reference.trim() || null,
-        p_notes: notes.trim() || null,
+      await paymentMutation.mutateAsync({
+        expenseId: row.id,
+        paymentDate,
+        amount: value,
+        paymentMethod: method,
+        transactionReference: reference.trim() || null,
+        notes: notes.trim() || null,
       });
-      if (paymentError) throw new Error(paymentError.message);
       setAmount('');
       setReference('');
       setNotes('');
       setMessage('Payment recorded.');
-      await load(row.id);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Could not record payment.');
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -141,7 +108,7 @@ export default function ExpenseDetail({ params }: { params: Promise<{ id: string
       <Link href="/expenses/history" style={{ fontSize: 12, color: '#277452' }}>
         ← Expense history
       </Link>
-      {error && <p className="auth-message">{error}</p>}
+      {(error || expenseQuery.error) && <p className="auth-message">{error || expenseQuery.error?.message}</p>}
       {message && <p className="auth-message">{message}</p>}
       {row ? (
         <>
