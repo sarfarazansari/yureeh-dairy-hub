@@ -46,7 +46,7 @@ export function TimedNotice({
     };
     if (isSuccessMessage(message)) toast.success(message, options);
     else toast.error(message, options);
-    return () => toast.dismiss(id);
+    return () => { toast.dismiss(id); };
   }, [message]);
 
   // Retained for source compatibility with existing call sites.
