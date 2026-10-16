@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { DietBuffaloOption, DietPlanDetails, DietPlanFormValues, DietPlanListRow } from '@/lib/diet-plan-types';
+import type { DietBuffaloOption, DietPlanDetails, DietPlanListRow } from './types';
+import type { DietPlanFormValues } from './diet-plan.schema';
 
 export async function fetchDietPlans(
   client: SupabaseClient,
