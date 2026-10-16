@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { customerQueryKeys } from '@/features/customers/customer.queries';
+import { customerQueryKeys } from '@/features/customers/customer.query-keys';
 
 import { supabase } from '@/lib/supabase';
 import {
@@ -130,7 +130,11 @@ export function useUpdateMilkEntryMutation() {
     mutationFn: ({ entryId, entry }: { entryId: string; entry: MilkEntryFormValues }) =>
       updateMilkEntry(requireSupabase(), entryId, entry),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: milkQueryKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.directory() }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.details() }),
+      ]);
     },
   });
 }
@@ -140,7 +144,11 @@ export function useDeleteMilkEntryMutation() {
   return useMutation({
     mutationFn: (entryId: string) => deleteMilkEntry(requireSupabase(), entryId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: milkQueryKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.directory() }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.details() }),
+      ]);
     },
   });
 }
@@ -170,7 +178,11 @@ export function useRecordMilkPoolMovementMutation() {
     mutationFn: (input: RecordMilkPoolMovementInput) =>
       recordMilkPoolMovement(requireSupabase(), input),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: milkQueryKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.directory() }),
+        queryClient.invalidateQueries({ queryKey: customerQueryKeys.details() }),
+      ]);
     },
   });
 }
