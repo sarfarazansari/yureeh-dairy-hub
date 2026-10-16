@@ -98,9 +98,9 @@ export function DatePicker({
             </Button>
           </PopoverTrigger>
           {clearable && value && !disabled && (
-            <Button variant="ghost"
+            <Button variant="ghost" size="icon"
               type="button"
-              className="shadcn-date-clear absolute right-2 top-1/2 inline-grid size-6 -translate-y-1/2 place-items-center rounded-md text-[#66756b] hover:bg-[#f1f4f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--green)]"
+              className="shadcn-date-clear absolute right-2 top-1/2 inline-grid size-6 -translate-y-1/2 place-items-center rounded-md p-0 text-[#66756b] hover:bg-[#f1f4f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--green)]"
               aria-label={`Clear ${ariaLabel.toLowerCase()}`}
               onClick={() => onChange('')}
             >
