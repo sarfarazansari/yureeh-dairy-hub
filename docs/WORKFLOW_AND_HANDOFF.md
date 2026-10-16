@@ -134,6 +134,21 @@ The user's short command `1 refactor karo` means:
 
 - Planning/standards branch: `feature/refactor-engineering-standards`
 - Architecture standard: `docs/REFACTORING_ARCHITECTURE.md`
-- Task tracker and initial confirmed data-access inventory: `docs/REFACTORING_TASKS.md`
-- Next task after standards setup: `REF-002` — complete a repository-wide, path-exact inventory of Supabase/API access, RPC calls, effects, query hooks, mutations and state patterns. The initial inventory is explicitly partial and must be verified against the actual repository before it is treated as complete.
+- Task tracker: `docs/REFACTORING_TASKS.md`
+- Completed static source inventory: `docs/REFACTORING_API_INVENTORY.md`
+- `REF-001` (permanent standards/workflow) and `REF-002` (path-level API/query/effect inventory) are Completed.
+- Next task: `REF-003` — audit TanStack Query infrastructure, server/client state ownership, query-key conventions and cache invalidation, with findings backed by source paths.
+- Audit snapshot is based on latest master commit `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`; the named branch was rebased onto this latest master base before continuing.
+- The inventory is a static source review; build, lint, typecheck, tests and runtime checks have not been executed in a local checkout.
 - Do not begin module implementation refactors until the inventory, architecture gap analysis and dependency-aware phase plan are completed and recorded in the tracker.
+
+
+### Latest session handoff — 2026-10-16
+
+- Current branch: `feature/refactor-engineering-standards`
+- Base: latest `master` commit `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`
+- Completed: `REF-002`, path-level source inventory at `docs/REFACTORING_API_INVENTORY.md`.
+- Source snapshot: 238 tracked files, 141 TS/JS source files, 60 Supabase migrations; tree was not truncated.
+- Important findings: TanStack Query adoption is partial; no Zustand store/dependency was found; several expense/feed/report routes load server data via effects and access Supabase directly; acquisition-cost UI owns its own query/mutation; React Hook Form is not a declared dependency.
+- Next command `1 refactor karo`: select `REF-003` after reading all four required documents. Do not start feature-module implementation until the architecture/gap/transaction audits and phase plan are complete.
+- Verification boundary: GitHub source and tree inspection only; local build, lint, typecheck, tests and database execution not run.
