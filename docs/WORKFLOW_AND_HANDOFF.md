@@ -132,23 +132,25 @@ The user's short command `1 refactor karo` means:
 
 ### Current refactoring state
 
-- Planning/standards branch: `feature/refactor-engineering-standards`
+- Working branch: `feature/refactor-engineering-standards` (continue on this same branch when the user says `1 refactor karo`).
 - Architecture standard: `docs/REFACTORING_ARCHITECTURE.md`
 - Task tracker: `docs/REFACTORING_TASKS.md`
-- Completed static source inventory: `docs/REFACTORING_API_INVENTORY.md`
-- `REF-001` (permanent standards/workflow) and `REF-002` (path-level API/query/effect inventory) are Completed.
-- Next task: `REF-003` — audit TanStack Query infrastructure, server/client state ownership, query-key conventions and cache invalidation, with findings backed by source paths.
-- Audit snapshot is based on latest master commit `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`; the named branch was rebased onto this latest master base before continuing.
-- The inventory is a static source review; build, lint, typecheck, tests and runtime checks have not been executed in a local checkout.
-- Do not begin module implementation refactors until the inventory, architecture gap analysis and dependency-aware phase plan are completed and recorded in the tracker.
+- Completed source inventory: `docs/REFACTORING_API_INVENTORY.md`
+- Completed query/state audit: `docs/REFACTORING_QUERY_STATE_AUDIT.md`
+- `REF-001`, `REF-002`, and `REF-003` are Completed. REF-003 was a static audit, not an implementation refactor.
+- Next task: `REF-004` — map module boundaries, dependencies and canonical shared types/schemas/helpers.
+- Latest `master` remains `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`. Branch comparison confirmed `feature/refactor-engineering-standards` is 4 commits ahead and 0 behind master at the start of REF-003.
+- Query/state audit highlights: milk-entry mutations miss customer-summary/detail invalidation; buffalo production history has duplicate query-key ownership and the buffalo-detail history key is not invalidated on production save; acquisition-cost UI owns direct query/mutation code; auth-cache lifecycle needs validation; dashboard/analytics/expense/feed/report remote state is still often effect/local-state based.
+- No local checkout was available; build, lint, typecheck, tests, runtime/account-switching checks and database operations have not been run.
+- Do not start implementation migrations until the dependency map, mutation invalidation audit, transaction integrity audit and ordered phase plan are recorded.
 
 
-### Latest session handoff — 2026-10-16
+### Latest session handoff — 2026-10-16 (REF-003)
 
 - Current branch: `feature/refactor-engineering-standards`
-- Base: latest `master` commit `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`
-- Completed: `REF-002`, path-level source inventory at `docs/REFACTORING_API_INVENTORY.md`.
-- Source snapshot: 238 tracked files, 141 TS/JS source files, 60 Supabase migrations; tree was not truncated.
-- Important findings: TanStack Query adoption is partial; no Zustand store/dependency was found; several expense/feed/report routes load server data via effects and access Supabase directly; acquisition-cost UI owns its own query/mutation; React Hook Form is not a declared dependency.
-- Next command `1 refactor karo`: select `REF-003` after reading all four required documents. Do not start feature-module implementation until the architecture/gap/transaction audits and phase plan are complete.
-- Verification boundary: GitHub source and tree inspection only; local build, lint, typecheck, tests and database execution not run.
+- Base: latest `master` commit `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`; branch was 4 commits ahead and 0 behind when audited.
+- Completed: `REF-003`, documented at `docs/REFACTORING_QUERY_STATE_AUDIT.md`; tracker updated in `docs/REFACTORING_TASKS.md`.
+- Concrete findings: milk-entry mutations invalidate only the milk root while customer directory/detail summaries depend on those entries; production history is keyed under both buffalo and production roots, and production save misses the buffalo-detail history key; acquisition-cost component owns direct Supabase reads/RPC mutation and literal query keys.
+- Additional risks: cross-domain invalidation matrix is incomplete/implicit; auth cache cleanup on identity change should be verified; dashboards, analytics, expenses, feed and financial-report pages still often load server data into local state.
+- Next task for `1 refactor karo`: `REF-004` — map module boundaries, dependencies, and duplicate/canonical types, schemas, helpers. Read all four required documents first, continue on the same branch per the user's explicit instruction, and do not begin implementation refactors before the dependency and transaction audits/phase plan are complete.
+- Verification boundary: GitHub source reads and branch comparison only. No local build, lint, typecheck, tests, runtime/account-switching checks or database operations were run. No PR or merge was created.
