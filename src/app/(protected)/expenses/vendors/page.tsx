@@ -10,28 +10,18 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ExpenseShell, money } from '../shared';
+import { useExpenseVendorDirectoryQuery } from '@/features/expenses/expense.queries';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseVendor } from '@/lib/expense-types';
-type VendorSummary = ExpenseVendor & { count: number; total: number; paid: number; pending: number };
-type VendorExpenseSummary = {
-  vendor_id: string;
-  expense_count: number | string | null;
-  total_amount: number | string | null;
-  paid_amount: number | string | null;
-  pending_amount: number | string | null;
-};
 export default function ExpenseVendors() {
-  const [rows, setRows] = useState<VendorSummary[]>([]),
     [name, setName] = useState(''),
     [mobile, setMobile] = useState(''),
     [city, setCity] = useState(''),
     [address, setAddress] = useState(''),
     [busy, setBusy] = useState(false),
-    [loading, setLoading] = useState(true),
-    [loadError, setLoadError] = useState(''),
     [search, setSearch] = useState(''),
     [message, setMessage] = useState(''),
     [editingVendor, setEditingVendor] = useState<ExpenseVendor | null>(null),
@@ -42,42 +32,11 @@ export default function ExpenseVendors() {
     [editMobile, setEditMobile] = useState(''),
     [editCity, setEditCity] = useState(''),
     [editAddress, setEditAddress] = useState('');
-  async function load() {
-    if (!supabase) {
-      setLoadError('Supabase is not configured.');
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setLoadError('');
-    try {
-      const [v, summaries] = await Promise.all([
-        supabase.from('expense_vendors').select('*').order('name'),
-        supabase.rpc('get_expense_vendor_directory_summaries'),
-      ]);
-      if (v.error || summaries.error) throw (v.error ?? summaries.error)!;
-      const summaryRows = (summaries.data ?? []) as unknown as VendorExpenseSummary[];
-      const byVendor = new Map(summaryRows.map((summary) => [summary.vendor_id, summary]));
-      setRows((v.data ?? []).map((vendorRow) => {
-        const summary = byVendor.get(vendorRow.id);
-        return {
-          ...vendorRow,
-          count: Number(summary?.expense_count ?? 0),
-          total: Number(summary?.total_amount ?? 0),
-          paid: Number(summary?.paid_amount ?? 0),
-          pending: Number(summary?.pending_amount ?? 0),
-        };
-      }));
-    } catch (error) {
-      setLoadError(error instanceof Error ? error.message : 'Could not load vendor directory.');
-    } finally {
-      setLoading(false);
-    }
-  }
-  useEffect(() => {
-    const task = window.setTimeout(() => void load(), 0);
-    return () => window.clearTimeout(task);
-  }, []);
+  const vendorQuery = useExpenseVendorDirectoryQuery();
+  const rows = vendorQuery.data ?? [];
+  const loading = vendorQuery.isPending;
+  const loadError = vendorQuery.error?.message ?? '';
+  const load = async () => { await vendorQuery.refetch(); };
   async function save(e: React.FormEvent) {
     e.preventDefault();
     if (!supabase) return;
