@@ -206,7 +206,7 @@ export default function ExpenseDashboard() {
         />
         <div className="card">
           <div className="kpi-label">QUICK ACTION</div>
-          <Button asChild className="full">
+          <Button asChild className="w-full">
             <Link href="/expenses/new">＋ &nbsp;Record expense</Link>
           </Button>
         </div>
