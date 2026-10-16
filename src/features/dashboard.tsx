@@ -6,8 +6,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useDashboardDataQuery } from './dashboard/dashboard.queries';
 import {
   Area,
   AreaChart,
@@ -18,25 +17,7 @@ import {
   YAxis,
 } from 'recharts';
 import { formatDate } from '@/lib/date-format';
-import {
-  getDashboardData,
-  type DashboardCustomer,
-  type DashboardHerdItem,
-  type DashboardMonthlyTotals,
-} from './dashboard/services/dashboard.service';
-import type { MilkEntry } from '@/lib/analytics';
 export default function Dashboard() {
-  const [entries, setEntries] = useState<MilkEntry[]>([]),
-    [herd, setHerd] = useState<DashboardHerdItem[]>([]),
-    [customersLive, setCustomersLive] = useState<DashboardCustomer[]>([]),
-    [monthSummary, setMonthSummary] = useState<DashboardMonthlyTotals>({
-      expenseTotal: 0,
-      revenue: 0,
-      milkProduced: 0,
-      milkSold: 0,
-    }),
-    [loading, setLoading] = useState(true),
-    [error, setError] = useState('');
   const today = new Date();
   const asDate = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -46,42 +27,21 @@ export default function Dashboard() {
   const startKey = asDate(start);
   const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
   const monthKey = asDate(monthStart);
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
-      setLoading(true);
-      setError('');
-      try {
-        const data = await getDashboardData(supabase, {
-          startDate: startKey,
-          today: todayKey,
-          monthStart: monthKey,
-        });
-        if (!active) return;
-        setEntries(data.entries);
-        setCustomersLive(data.customers);
-        setHerd(data.herd);
-        setMonthSummary(data.monthSummary);
-      } catch (loadError) {
-        if (active)
-          setError(loadError instanceof Error ? loadError.message : 'Could not load farm data.');
-      } finally {
-        if (active) setLoading(false);
-      }
-    }
-    void load();
-    return () => {
-      active = false;
-    };
-  }, [startKey, todayKey, monthKey]);
-  const monthExpenseTotal = monthSummary.expenseTotal,
-    monthRevenue = monthSummary.revenue,
-    monthProduced = monthSummary.milkProduced,
-    monthSold = monthSummary.milkSold;
+  const dashboardQuery = useDashboardDataQuery({
+    startDate: startKey,
+    today: todayKey,
+    monthStart: monthKey,
+  });
+  const entries = dashboardQuery.data?.entries ?? [];
+  const customersLive = dashboardQuery.data?.customers ?? [];
+  const herd = dashboardQuery.data?.herd ?? [];
+  const monthSummary = dashboardQuery.data?.monthSummary;
+  const loading = dashboardQuery.isPending;
+  const error = dashboardQuery.error?.message ?? '';
+  const monthExpenseTotal = monthSummary?.expenseTotal ?? 0,
+    monthRevenue = monthSummary?.revenue ?? 0,
+    monthProduced = monthSummary?.milkProduced ?? 0,
+    monthSold = monthSummary?.milkSold ?? 0;
   const todayEntries = entries.filter((e) => e.business_date === todayKey),
     milk = (rows: MilkEntry[]) => rows.reduce((s, e) => s + Number(e.milk_quantity), 0),
     revenue = (rows: MilkEntry[]) => rows.reduce((s, e) => s + Number(e.calculated_amount), 0),
