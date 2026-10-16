@@ -191,9 +191,10 @@ export type ExpenseHistoryFilters = {
   sortDirection: 'asc' | 'desc';
 };
 
-export function useExpenseHistoryQuery(filters: ExpenseHistoryFilters) {
+export function useExpenseHistoryQuery(filters: ExpenseHistoryFilters, enabled = true) {
   return useQuery({
     queryKey: [...expenseQueryKeys.list(), filters] as const,
+    enabled,
     queryFn: async () => {
       if (!supabase) throw new Error('Supabase is not configured.');
       const offset = (filters.page - 1) * filters.pageSize;
