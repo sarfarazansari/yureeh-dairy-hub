@@ -22,7 +22,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-001 | P0 | Establish permanent architecture standards and one-command workflow | Completed | — | Architecture, tracker and handoff created; permanent rules and workflow updated on feature branch |
 | REF-002 | P0 | Complete file-by-file inventory of all server/data access, Supabase calls, RPCs, fetches, effects and query/mutation hooks | Completed | REF-001 | Recursive tree (238 tracked files, 141 source files, 60 migrations) and all source files screened; detailed path-level inventory in `docs/REFACTORING_API_INVENTORY.md` |
 | REF-003 | P0 | Audit current query infrastructure and state ownership (TanStack Query, local state, Zustand/store usage) | Completed | REF-002 | `docs/REFACTORING_QUERY_STATE_AUDIT.md`: source-backed query-key, invalidation, auth-cache and server-state findings; static validation limits recorded |
-| REF-004 | P1 | Map module boundaries, dependencies and shared types/schemas/helpers | Pending | REF-002 | Dependency map and duplicate-definition list |
+| REF-004 | P1 | Map module boundaries, dependencies and shared types/schemas/helpers | Completed | REF-002 | `docs/REFACTORING_MODULE_BOUNDARIES_AUDIT.md`: module/dependency map, overlapping types/helpers, canonical ownership candidates and validation limits |
 | REF-005 | P1 | Audit server-state fetching and effects; define migration pattern for ad hoc useEffect fetching | Pending | REF-003, REF-004 | Prioritized findings with regression considerations |
 | REF-006 | P1 | Audit mutation invalidation, duplicate submission, errors, loading/empty states and pagination | Pending | REF-003, REF-004 | Per-module checklist and confirmed gaps |
 | REF-007 | P1 | Audit finance, milk pool, feed inventory, purchase/payment and consumption transaction integrity | Pending | REF-002 | Trace from UI to service/RPC/migration/RLS/report consumers |
@@ -34,7 +34,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 
 ## Source inventory pointer
 
-The complete static API/query/effect/state inventory is in `docs/REFACTORING_API_INVENTORY.md`. REF-003 query/state findings are in `docs/REFACTORING_QUERY_STATE_AUDIT.md`. The file list below remains a short orientation index, not the canonical exhaustive inventory. Do not infer that a file is absent merely because it is not listed here.
+The complete static API/query/effect/state inventory is in `docs/REFACTORING_API_INVENTORY.md`. REF-003 query/state findings are in `docs/REFACTORING_QUERY_STATE_AUDIT.md`; REF-004 module/dependency/type ownership findings are in `docs/REFACTORING_MODULE_BOUNDARIES_AUDIT.md`. The file list below remains a short orientation index, not the canonical exhaustive inventory. Do not infer that a file is absent merely because it is not listed here.
 
 ### Shared infrastructure
 - `src/lib/supabase.ts` — Supabase client creation.
@@ -150,3 +150,16 @@ Append a dated entry here after each work session:
 - Findings: Milk-entry mutations do not invalidate customer summary/detail caches; buffalo production history has two query-key owners and production saves do not invalidate the buffalo-detail history key; acquisition-cost UI owns direct query/mutation logic; auth-cache lifecycle needs validation; dashboards/analytics/expenses/feed/report screens still store remote state locally.
 - Blockers or decisions: No business decision needed for the audit. Cross-feature invalidation should be implemented only after the dependency map and transaction audit are complete; preserve existing RPC atomicity.
 - Next task ID: REF-004 — map module boundaries, dependencies and canonical shared types/schemas/helpers.
+
+
+### Session log — 2026-10-16 (REF-004)
+
+- Task ID: REF-004
+- Branch: `feature/refactor-engineering-standards`
+- Status: Completed (static architecture/type audit; no source implementation changes)
+- Files changed: `docs/REFACTORING_MODULE_BOUNDARIES_AUDIT.md`, `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`
+- Checks executed and results: Compared the branch with latest `master` at `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9` (7 commits ahead, 0 behind before this task); inspected feature/shared types and services for buffaloes, production, customers, milk, dashboard, analytics, expenses and feed domains. Documented module ownership, dependency map and source-backed overlapping type/helper candidates.
+- Checks not run / limitations: No local checkout; no build, lint, typecheck, tests, runtime flows, SQL/RLS/database checks or exhaustive compiler-backed import search. Type consolidation candidates require import/constraint verification before implementation.
+- Findings: Duplicate `MilkPoolShiftFatRecord` definitions in production and milk-pool modules; `CustomerOption` overlaps `DashboardCustomer`; shift/pricing literals and aliases have inconsistent ownership; feed services are route-scoped while feed domain types live in `src/lib`; expense shared file mixes UI/helpers/category seeding; date helpers have multiple implementations.
+- Blockers or decisions: No business decision required for the map. Do not consolidate payment method types or date helpers without checking database constraints, all consumers and timezone expectations. Transaction-critical feed/milk boundaries remain pending REF-007.
+- Next task ID: REF-005 — audit server-state fetching and effects; define a safe migration pattern for effect-driven remote reads.
