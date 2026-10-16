@@ -326,3 +326,79 @@ export function useCreateExpenseMutation() {
     },
   });
 }
+
+async function invalidateExpenseDirectories(queryClient: ReturnType<typeof useQueryClient>) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: expenseQueryKeys.all }),
+    queryClient.invalidateQueries({ queryKey: expenseQueryKeys.categories() }),
+    queryClient.invalidateQueries({ queryKey: expenseQueryKeys.vendors() }),
+    queryClient.invalidateQueries({ queryKey: ['feed-items'] }),
+    queryClient.invalidateQueries({ queryKey: ['feed-purchases'] }),
+    queryClient.invalidateQueries({ queryKey: ['feed-consumption'] }),
+    queryClient.invalidateQueries({ queryKey: ['diet-plans'] }),
+    queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+  ]);
+}
+
+export function useSaveExpenseCategoryMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id?: string;
+      ownerId: string;
+      values: { name: string; category_group: string; default_unit: string | null; is_quantity_based: boolean; description: string | null };
+    }) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const result = input.id
+        ? await supabase.from('expense_categories').update(input.values).eq('id', input.id).eq('owner_id', input.ownerId)
+        : await supabase.from('expense_categories').insert({ ...input.values, owner_id: input.ownerId });
+      if (result.error) throw new Error(result.error.message);
+    },
+    onSuccess: () => invalidateExpenseDirectories(queryClient),
+  });
+}
+
+export function useToggleExpenseCategoryMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; ownerId: string; isActive: boolean }) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const { error } = await supabase.from('expense_categories').update({ is_active: input.isActive })
+        .eq('id', input.id).eq('owner_id', input.ownerId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => invalidateExpenseDirectories(queryClient),
+  });
+}
+
+export function useSaveExpenseVendorMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      id?: string;
+      userId: string;
+      values: { name: string; mobile: string | null; city: string | null; address: string | null };
+    }) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const result = input.id
+        ? await supabase.from('expense_vendors').update(input.values).eq('id', input.id).eq('user_id', input.userId)
+        : await supabase.from('expense_vendors').insert({ ...input.values, user_id: input.userId });
+      if (result.error) throw new Error(result.error.message);
+    },
+    onSuccess: () => invalidateExpenseDirectories(queryClient),
+  });
+}
+
+export function useToggleExpenseVendorMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; userId: string; isActive: boolean }) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const { error } = await supabase.from('expense_vendors').update({ is_active: input.isActive })
+        .eq('id', input.id).eq('user_id', input.userId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => invalidateExpenseDirectories(queryClient),
+  });
+}
