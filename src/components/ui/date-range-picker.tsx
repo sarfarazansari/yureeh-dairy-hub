@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { CalendarDays, X } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import { Calendar } from '@/components/ui/calendar';
+import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { normalizeDateKey } from '@/lib/date-key';
 import { cn } from '@/lib/utils';
@@ -67,15 +68,15 @@ export function DateRangePicker({ from, to, onChange, max, className = '', ariaL
       <Popover open={open} onOpenChange={setOpen}>
         <div className="relative flex min-w-0 items-center">
           <PopoverTrigger asChild>
-            <button type="button" aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open} className={cn("shadcn-date-trigger min-w-0 w-full", (from || to) && "pr-10")}>
+            <Button variant="outline" type="button" aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open} className={cn("shadcn-date-trigger min-w-0 w-full", (from || to) && "pr-10")}>
               <CalendarDays size={16} aria-hidden="true" />
               <span className={cn('min-w-0 flex-1 truncate text-left', selectedFrom ? 'shadcn-date-value' : 'shadcn-date-placeholder')}>{label}</span>
-            </button>
+            </Button>
           </PopoverTrigger>
           {(from || to) && (
-            <button type="button" className="shadcn-date-clear absolute right-2 top-1/2 -translate-y-1/2" aria-label="Clear date range" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>
+            <Button variant="ghost" size="icon" type="button" className="shadcn-date-clear absolute right-2 top-1/2 -translate-y-1/2 p-0" aria-label="Clear date range" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>
               <X size={14} aria-hidden="true" />
-            </button>
+            </Button>
           )}
         </div>
         <PopoverContent align="start" sideOffset={6} className="w-[340px] max-w-[calc(100vw-2rem)] p-2">
@@ -90,7 +91,7 @@ export function DateRangePicker({ from, to, onChange, max, className = '', ariaL
           />
           <div className="flex items-center justify-between gap-3 border-t border-[var(--line)] pt-2">
             <span className="text-xs text-[var(--muted)]">{draft?.from && !draft.to ? `Start: ${format(draft.from, 'd MMM yyyy')}. Choose end date.` : 'Select start and end dates'}</span>
-            <button type="button" className="shadcn-calendar-today" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>Clear</button>
+            <Button variant="ghost" size="sm" type="button" className="shadcn-calendar-today" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>Clear</Button>
           </div>
         </PopoverContent>
       </Popover>

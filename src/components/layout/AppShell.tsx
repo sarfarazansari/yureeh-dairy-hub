@@ -1,17 +1,18 @@
 'use client';
 
-import { formatDate } from '@/lib/date-format';
+import type { ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
-import { Clock } from 'lucide-react';
 
 export function AppShell({
   children,
   title,
   subtitle,
+  actions,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   title: string;
   subtitle: string;
+  actions?: ReactNode;
 }) {
   return (
     <div className="app">
@@ -23,6 +24,7 @@ export function AppShell({
             <h1 className="title">{title}</h1>
             <div className="sub">{subtitle}</div>
           </div>
+          {actions ? <div className="topbar-actions">{actions}</div> : null}
         </header>
         {children}
       </main>

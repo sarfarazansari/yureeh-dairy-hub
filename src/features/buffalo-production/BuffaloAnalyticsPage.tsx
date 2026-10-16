@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Skeleton } from '@/components/ui/skeleton';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
+import { Button } from '@/components/ui/button';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
@@ -161,8 +162,8 @@ export default function BuffaloAnalyticsPage() {
       <div className="card">
         <h2 className="section-title">Mixed milk fat history</h2>
         <p className="kpi-foot">Fat is recorded once for the combined milk for each date and shift.</p>
-        <div className="w-full min-w-0">
-          <Table>
+        <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
+          <Table className="min-w-[650px]">
             <TableHeader><TableRow><TableHead>BUSINESS DATE</TableHead><TableHead>SHIFT</TableHead><TableHead>MIXED MILK FAT</TableHead></TableRow></TableHeader>
             <TableBody>
               {busy ? Array.from({ length: 3 }, (_, index) => <TableRow key={index}><TableCell><Skeleton className="h-4 w-28" /></TableCell><TableCell><Skeleton className="h-4 w-20" /></TableCell><TableCell><Skeleton className="h-4 w-16" /></TableCell></TableRow>) : fatRecords.map((record) => (
@@ -220,9 +221,9 @@ export default function BuffaloAnalyticsPage() {
             active buffaloes
           </p>
           <p className="sub">No record is distinct from explicitly recorded zero production.</p>
-          <Link className="btn" href="/daily-performance">
-            Enter daily performance
-          </Link>
+          <Button variant="outline" asChild>
+            <Link href="/daily-performance">Enter daily performance</Link>
+          </Button>
         </div>
       </div>
       <div style={{ height: 14 }} />
@@ -231,8 +232,8 @@ export default function BuffaloAnalyticsPage() {
           <h2 className="section-title">Buffalo comparison</h2>
           <Select value={sort} onValueChange={(value) => setSort(value as typeof sort)}><SelectTrigger aria-label="Sort buffalo comparison" className="date-chip"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="total">Total milk</SelectItem><SelectItem value="average">Average per recorded day</SelectItem><SelectItem value="morning">Morning average</SelectItem><SelectItem value="evening">Evening average</SelectItem></SelectContent></Select>
         </div>
-        <div className="w-full min-w-0">
-          <Table>
+        <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
+          <Table className="min-w-[850px]">
             <TableHeader>
               <TableRow>
                 <TableHead>BUFFALO</TableHead>

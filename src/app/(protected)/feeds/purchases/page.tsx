@@ -1,6 +1,7 @@
 'use client';
 
 import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import Link from 'next/link';
@@ -29,10 +30,13 @@ export default function FeedPurchasesPage() {
   const [vendorFilter, setVendorFilter] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
 
   const load = useCallback(async () => {
-    if (!supabase) return;
-
+    if (!supabase) { setLoadError('Supabase is not configured.'); setLoading(false); return; }
+    setLoading(true);
+    setLoadError('');
     try {
       const [feeds, vendorResult, purchases] = await Promise.all([
         supabase.from('feed_items').select('*').eq('is_active', true).order('name'),
@@ -54,11 +58,8 @@ export default function FeedPurchasesPage() {
       setRows(purchases.rows);
       setCount(purchases.count);
     } catch (error) {
-      setToast({
-        message: error instanceof Error ? error.message : 'Could not load feed purchases.',
-        type: 'error',
-      });
-    }
+      setLoadError(error instanceof Error ? error.message : 'Could not load feed purchases.');
+    } finally { setLoading(false); }
   }, [page, from, to, feedFilter, vendorFilter, paymentFilter]);
 
   useEffect(() => { void load(); }, [load]);
@@ -95,7 +96,7 @@ export default function FeedPurchasesPage() {
         <div className="card">
           <div className="row">
             <h2 className="section-title">Purchase archive</h2>
-            <Link className="btn" href="/feeds/purchases/new">New purchase</Link>
+            <Button asChild><Link href="/feeds/purchases/new">New purchase</Link></Button>
           </div>
 
           <div className="mb-4 max-w-md"><Label className="mb-2 block">Date range</Label><DateRangePicker from={from} to={to} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); setPage(0); }} /></div>
@@ -113,7 +114,7 @@ export default function FeedPurchasesPage() {
               <Select value={paymentFilter || 'all'} onValueChange={(value) => { setPaymentFilter(value === 'all' ? '' : value); setPage(0); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="PAID">Paid</SelectItem><SelectItem value="PARTIAL">Partial</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select>
             </div>
             <div className="field" style={{ alignSelf: 'end' }}>
-              <button type="button" className="date-chip" onClick={clearFilters}>Clear filters</button>
+              <Button type="button" variant="outline" onClick={clearFilters}>Clear filters</Button>
             </div>
           </div>
         </div>
@@ -125,6 +126,9 @@ export default function FeedPurchasesPage() {
           pageSize={PAGE_SIZE}
           onPageChange={setPage}
           onDelete={handleDelete}
+          loading={loading}
+          error={loadError}
+          onRetry={() => void load()}
         />
       </div>
     </AppShell>

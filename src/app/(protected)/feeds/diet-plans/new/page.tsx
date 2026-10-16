@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
@@ -54,7 +55,7 @@ export default function NewDietPlanPage() {
   return (
     <AppShell title="New diet plan" subtitle="Create a recurring feed plan for a buffalo group">
       <div className="management-stack">
-        <Link className="date-chip" href="/feeds/diet-plans">← Back to diet plans</Link>
+        <Button variant="outline" size="sm" asChild><Link href="/feeds/diet-plans">← Back to diet plans</Link></Button>
         <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
         <DietPlanForm feeds={feeds} buffaloes={buffaloes} onDateChange={setBuffaloDate} onSave={save} busy={busy} />
       </div>

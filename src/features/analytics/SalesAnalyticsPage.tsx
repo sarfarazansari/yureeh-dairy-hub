@@ -1,6 +1,7 @@
 'use client';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
@@ -153,19 +154,10 @@ export default function SalesAnalyticsPage() {
         ) : !poolFatRows.length ? (
           <div className="empty">No mixed milk fat recorded for this date range.</div>
         ) : (
-          <div className="table-wrap">
-            <table className="table">
-              <thead><tr><th>DATE</th><th>MORNING FAT</th><th>EVENING FAT</th></tr></thead>
-              <tbody>
-                {poolFatRows.map(([dateKey, shifts]) => (
-                  <tr key={dateKey}>
-                    <td>{formatDate(dateKey)}</td>
-                    <td>{shifts.MORNING === undefined ? '—' : `${shifts.MORNING.toFixed(2)}%`}</td>
-                    <td>{shifts.EVENING === undefined ? '—' : `${shifts.EVENING.toFixed(2)}%`}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
+            <Table className="min-w-[420px]"><TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>MORNING FAT</TableHead><TableHead>EVENING FAT</TableHead></TableRow></TableHeader>
+              <TableBody>{poolFatRows.map(([dateKey, shifts]) => <TableRow key={dateKey}><TableCell>{formatDate(dateKey)}</TableCell><TableCell>{shifts.MORNING === undefined ? '—' : `${shifts.MORNING.toFixed(2)}%`}</TableCell><TableCell>{shifts.EVENING === undefined ? '—' : `${shifts.EVENING.toFixed(2)}%`}</TableCell></TableRow>)}</TableBody>
+            </Table>
           </div>
         )}
       </div>
@@ -215,27 +207,10 @@ export default function SalesAnalyticsPage() {
         </div>
         <div className="card">
           <h2 className="section-title">Morning vs evening</h2>
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>SHIFT</th>
-                  <th>MILK</th>
-                  <th>REVENUE</th>
-                  <th>AVG FAT</th>
-                </tr>
-              </thead>
-              <tbody>
-                {shifts.map((x) => (
-                  <tr key={x.shift}>
-                    <td>{x.shift}</td>
-                    <td>{milkTxt(x.milk)}</td>
-                    <td>{money(x.revenue)}</td>
-                    <td>{x.fat === null ? '—' : `${x.fat.toFixed(2)}%`}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
+            <Table className="min-w-[480px]"><TableHeader><TableRow><TableHead>SHIFT</TableHead><TableHead>MILK</TableHead><TableHead>REVENUE</TableHead><TableHead>AVG FAT</TableHead></TableRow></TableHeader>
+              <TableBody>{shifts.map((x) => <TableRow key={x.shift}><TableCell>{x.shift}</TableCell><TableCell>{milkTxt(x.milk)}</TableCell><TableCell>{money(x.revenue)}</TableCell><TableCell>{x.fat === null ? '—' : `${x.fat.toFixed(2)}%`}</TableCell></TableRow>)}</TableBody>
+            </Table>
           </div>
           <div style={{ height: 20 }} />
           <h2 className="section-title">Pricing model</h2>
@@ -252,29 +227,10 @@ export default function SalesAnalyticsPage() {
       <div style={{ height: 14 }} />
       <div className="card">
         <h2 className="section-title">Customer contribution</h2>
-        <div className="table-wrap">
-          <table className="table">
-            <thead>
-              <tr>
-                <th>CUSTOMER</th>
-                <th>MILK</th>
-                <th>% MILK</th>
-                <th>REVENUE</th>
-                <th>% REVENUE</th>
-              </tr>
-            </thead>
-            <tbody>
-              {contrib.map((c) => (
-                <tr key={c.id}>
-                  <td>{c.name}</td>
-                  <td>{milkTxt(c.milk)}</td>
-                  <td>{total ? `${((c.milk / total) * 100).toFixed(1)}%` : '—'}</td>
-                  <td>{money(c.revenue)}</td>
-                  <td>{rev ? `${((c.revenue / rev) * 100).toFixed(1)}%` : '—'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
+          <Table className="min-w-[600px]"><TableHeader><TableRow><TableHead>CUSTOMER</TableHead><TableHead>MILK</TableHead><TableHead>% MILK</TableHead><TableHead>REVENUE</TableHead><TableHead>% REVENUE</TableHead></TableRow></TableHeader>
+            <TableBody>{contrib.map((c) => <TableRow key={c.id}><TableCell>{c.name}</TableCell><TableCell>{milkTxt(c.milk)}</TableCell><TableCell>{total ? `${((c.milk / total) * 100).toFixed(1)}%` : '—'}</TableCell><TableCell>{money(c.revenue)}</TableCell><TableCell>{rev ? `${((c.revenue / rev) * 100).toFixed(1)}%` : '—'}</TableCell></TableRow>)}</TableBody>
+          </Table>
         </div>
         {!contrib.length && <div className="empty">No customer sales in this range.</div>}
       </div>

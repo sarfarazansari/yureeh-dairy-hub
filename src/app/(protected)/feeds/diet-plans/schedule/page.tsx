@@ -7,6 +7,10 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+
 import { supabase } from '@/lib/supabase';
 
 type ScheduleSettings = { morning_time: string | null; evening_time: string | null };
@@ -105,7 +109,7 @@ export default function DietPlanSchedulePage() {
         <div className="card">
           <div className="row">
             <h2 className="section-title">Farm feeding times</h2>
-            <Link className="date-chip" href="/feeds/diet-plans">Back to diet plans</Link>
+            <Button variant="outline" size="sm" asChild><Link href="/feeds/diet-plans">Back to diet plans</Link></Button>
           </div>
           <p className="sub">Times use Asia/Kolkata. Automatic runs are created by the database scheduler; this page does not run a browser timer.</p>
           <form onSubmit={saveSchedule}>
@@ -120,7 +124,7 @@ export default function DietPlanSchedulePage() {
               </div>
             </div>
             <div className="row" style={{ marginTop: 16, justifyContent: 'flex-end' }}>
-              <button className="btn" type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save feeding times'}</button>
+              <Button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save feeding times'}</Button>
             </div>
           </form>
         </div>
@@ -130,22 +134,9 @@ export default function DietPlanSchedulePage() {
           <p className="sub">Failed runs are never posted automatically after the scheduled minute. Review stock, then use Retry explicitly.</p>
           {loading ? <div className="empty">Loading feeding history…</div> : (
             <>
-              <div className="table-wrap">
-                <table className="table">
-                  <thead><tr><th>DATE / SLOT</th><th>PLAN</th><th>STATUS</th><th>DETAILS</th><th>ACTION</th></tr></thead>
-                  <tbody>
-                    {runs.map((run) => (
-                      <tr key={run.id}>
-                        <td>{run.feeding_date}<div className="sub">{run.shift === 'MORNING' ? 'Morning' : 'Evening'} · {new Date(run.scheduled_for).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}</div></td>
-                        <td>{run.diet_plans?.name ?? 'Diet plan'}</td>
-                        <td><span className="tag">{run.status}</span></td>
-                        <td>{run.failure_reason ?? (run.status === 'POSTED' ? 'Inventory posted' : run.status === 'SKIPPED' ? 'No eligible buffaloes or plan inactive' : '—')}</td>
-                        <td>{run.status === 'FAILED' ? <button type="button" className="date-chip" disabled={retryingId !== null} onClick={() => void retryRun(run)}>{retryingId === run.id ? 'Retrying…' : 'Retry'}</button> : '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[850px]"><TableHeader><TableRow><TableHead>DATE / SLOT</TableHead><TableHead>PLAN</TableHead><TableHead>STATUS</TableHead><TableHead>DETAILS</TableHead><TableHead>ACTION</TableHead></TableRow></TableHeader><TableBody>
+                {runs.map((run) => <TableRow key={run.id}><TableCell>{run.feeding_date}<div className="text-xs text-muted-foreground">{run.shift === 'MORNING' ? 'Morning' : 'Evening'} · {new Date(run.scheduled_for).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}</div></TableCell><TableCell>{run.diet_plans?.name ?? 'Diet plan'}</TableCell><TableCell><Badge variant={run.status === 'POSTED' ? 'secondary' : run.status === 'FAILED' ? 'destructive' : 'outline'}>{run.status}</Badge></TableCell><TableCell>{run.failure_reason ?? (run.status === 'POSTED' ? 'Inventory posted' : run.status === 'SKIPPED' ? 'No eligible buffaloes or plan inactive' : '—')}</TableCell><TableCell>{run.status === 'FAILED' ? <Button type="button" variant="outline" size="sm" disabled={retryingId !== null} onClick={() => void retryRun(run)}>{retryingId === run.id ? 'Retrying…' : 'Retry'}</Button> : '—'}</TableCell></TableRow>)}
+              </TableBody></Table></div>
               {!runs.length && <div className="empty">No feeding runs recorded yet. Configure the feeding times and activate a diet plan.</div>}
             </>
           )}

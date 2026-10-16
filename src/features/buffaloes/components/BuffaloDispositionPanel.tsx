@@ -1,6 +1,7 @@
 'use client';
 
 import { formatDate } from '@/lib/date-format';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { money } from '@/lib/farm-format';
 import {
   useBuffaloDisposal,
@@ -53,9 +54,9 @@ export function BuffaloDispositionPanel({ buffalo, mode = 'all' }: { buffalo: Bu
           <div className="card">
             <h2 className="section-title">Sale payment history</h2>
             {paymentsQuery.isPending ? <div className="empty">Loading payments…</div> : paymentsQuery.isError ? <div className="empty">{paymentsQuery.error.message}</div> : paymentsQuery.data?.length ? (
-              <div className="table-wrap"><table className="table"><thead><tr><th>DATE</th><th>AMOUNT</th><th>METHOD</th><th>REFERENCE / NOTES</th></tr></thead><tbody>
-                {paymentsQuery.data.map((payment) => <tr key={payment.id}><td>{formatDate(payment.payment_date)}</td><td>{money(Number(payment.amount))}</td><td>{payment.payment_method}</td><td>{[payment.transaction_reference, payment.notes].filter(Boolean).join(' · ') || '—'}</td></tr>)}
-              </tbody></table></div>
+              <div className="table-wrap"><Table className="min-w-[600px]"><TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>AMOUNT</TableHead><TableHead>METHOD</TableHead><TableHead>REFERENCE / NOTES</TableHead></TableRow></TableHeader><TableBody>
+                {paymentsQuery.data.map((payment) => <TableRow key={payment.id}><TableCell>{formatDate(payment.payment_date)}</TableCell><TableCell>{money(Number(payment.amount))}</TableCell><TableCell>{payment.payment_method}</TableCell><TableCell>{[payment.transaction_reference, payment.notes].filter(Boolean).join(' · ') || '—'}</TableCell></TableRow>)}
+              </TableBody></Table></div>
             ) : <div className="empty">No sale payments recorded.</div>}
           </div>
         </div>

@@ -1,6 +1,12 @@
 'use client';
 
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,7 +15,6 @@ import { supabase } from '@/lib/supabase';
 import { EXPENSE_GROUPS, UNITS, type ExpenseGroup } from '@/lib/expenses';
 import { ExpenseShell, ensureExpenseCategories } from '../shared';
 import { TimedNotice } from '@/components/ui/TimedNotice';
-import { Dialog } from '@/app/dialog';
 import type { ExpenseCategory } from '@/lib/expense-types';
 export default function ExpenseCategories() {
   const [rows, setRows] = useState<ExpenseCategory[]>([]),
@@ -20,25 +25,36 @@ export default function ExpenseCategories() {
     [quantity, setQuantity] = useState(true),
     [description, setDescription] = useState(''),
     [message, setMessage] = useState(''),
-    [busy, setBusy] = useState(false);
+    [busy, setBusy] = useState(false),
+    [loading, setLoading] = useState(true),
+    [loadError, setLoadError] = useState(''),
+    [statusTarget, setStatusTarget] = useState<ExpenseCategory | null>(null),
+    [statusBusy, setStatusBusy] = useState(false);
   async function load() {
-    if (!supabase) return;
+    if (!supabase) {
+      setLoadError('Supabase is not configured.');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setLoadError('');
     try {
       await ensureExpenseCategories(supabase);
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Could not load default categories');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError || !user) throw userError ?? new Error('Sign in again to load expense categories.');
+      const { data, error } = await supabase
+        .from('expense_categories')
+        .select('*')
+        .eq('owner_id', user.id)
+        .order('category_group')
+        .order('name');
+      if (error) throw error;
+      setRows(data ?? []);
+    } catch (error) {
+      setLoadError(error instanceof Error ? error.message : 'Could not load expense categories.');
+    } finally {
+      setLoading(false);
     }
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const { data, error } = await supabase
-      .from('expense_categories')
-      .select('*')
-      .eq('owner_id', user?.id)
-      .order('category_group')
-      .order('name');
-    if (error) setMessage(error.message);
-    setRows(data ?? []);
   }
   useEffect(() => {
     const task = window.setTimeout(() => void load(), 0);
@@ -86,15 +102,25 @@ export default function ExpenseCategories() {
     setBusy(false);
   }
   async function toggle(c: ExpenseCategory) {
-    const { error } = await supabase!
-      .from('expense_categories')
-      .update({ is_active: !c.is_active })
-      .eq('id', c.id);
-    if (error) setMessage(error.message);
-    else await load();
+    if (!supabase || statusBusy) return;
+    setStatusBusy(true);
+    try {
+      const { error } = await supabase
+        .from('expense_categories')
+        .update({ is_active: !c.is_active })
+        .eq('id', c.id);
+      if (error) throw error;
+      setStatusTarget(null);
+      setMessage(c.is_active ? 'Category deactivated.' : 'Category activated.');
+      await load();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not update category status.');
+    } finally {
+      setStatusBusy(false);
+    }
   }
   const categoryForm = (
-    <form className={id ? 'category-edit-form' : 'card'} onSubmit={save}>
+    <form className={id ? 'category-edit-form grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2 xl:grid-cols-3' : 'card space-y-4'} onSubmit={save}>
       <h2 className="section-title" id={id ? 'edit-category-title' : undefined}>
         {id ? 'Edit category' : 'Add category'}
       </h2>
@@ -114,40 +140,29 @@ export default function ExpenseCategories() {
       </div>
       <div className="field">
         <Label htmlFor="expense-category-unit">Default unit</Label>
-        <Input
-          id="expense-category-unit"
-          list="category-unit-list"
-          value={unit}
-          onChange={(e) => setUnit(e.target.value)}
-          placeholder="e.g. KG, BAG, scoop"
-        />
-        <datalist id="category-unit-list">
-          {UNITS.map((u) => (
-            <option key={u} value={u} />
-          ))}
-        </datalist>
+        <Select value={unit || "none"} onValueChange={(value) => setUnit(value === "none" ? "" : value)}><SelectTrigger id="expense-category-unit"><SelectValue placeholder="No default unit" /></SelectTrigger><SelectContent><SelectItem value="none">No default unit</SelectItem>{UNITS.map((value) => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select>
       </div>
-      <Label className="field">
-        <span>Quantity based</span>
-        <Checkbox checked={quantity} onCheckedChange={(checked) => setQuantity(checked === true)} />
-      </Label>
-      <div className="field">
-        <Label htmlFor="expense-category-description">Description</Label>
+      <div className="field flex min-h-10 items-center gap-3 rounded-md border p-3">
+        <Checkbox id="expense-category-quantity" checked={quantity} onCheckedChange={(checked) => setQuantity(checked === true)} />
+        <Label htmlFor="expense-category-quantity">Quantity based</Label>
+      </div>
+      <div className="field sm:col-span-2 xl:col-span-3">
+        <Label htmlFor="expense-category-description">Description <span className="text-muted-foreground">(optional)</span></Label>
         <Input
           id="expense-category-description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
       </div>
-      <div className="dialog-footer">
+      <div className="dialog-footer sm:col-span-2 xl:col-span-3">
         {id && (
-          <button type="button" className="btn secondary" onClick={clear} disabled={busy}>
+          <Button type="button" variant="secondary" onClick={clear} disabled={busy}>
             Cancel
-          </button>
+          </Button>
         )}
-        <button className="btn" disabled={busy}>
+        <Button type="submit" disabled={busy || !name.trim()}>
           {busy ? 'Saving…' : id ? 'Save category' : 'Add category'}
-        </button>
+        </Button>
       </div>
     </form>
   );
@@ -164,60 +179,59 @@ export default function ExpenseCategories() {
             <h2 className="section-title">Categories</h2>
             <span className="tag">{rows.filter((c) => c.is_active).length} active</span>
           </div>
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>NAME</th>
-                  <th>GROUP</th>
-                  <th>UNIT</th>
-                  <th>MODE</th>
-                  <th>STATUS</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((c) => (
-                  <tr key={c.id}>
-                    <td>
-                      <b>{c.name}</b>
-                    </td>
-                    <td>{c.category_group.replaceAll('_', ' ')}</td>
-                    <td>{c.default_unit ?? '—'}</td>
-                    <td>{c.is_quantity_based ? 'Quantity × rate' : 'Direct amount'}</td>
-                    <td>
-                      <span className={`tag ${c.is_active ? '' : 'gold'}`}>
-                        {c.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                    </td>
-                    <td>
-                      <button type="button" className="date-chip" onClick={() => edit(c)}>
-                        Edit
-                      </button>{' '}
-                      <button type="button" className="date-chip" onClick={() => toggle(c)}>
-                        {c.is_active ? 'Deactivate' : 'Activate'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {loadError ? (
+            <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm">
+              <p>{loadError}</p>
+              <Button className="mt-3" type="button" size="sm" variant="outline" onClick={() => void load()}>Retry</Button>
+            </div>
+          ) : (
+            <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]" aria-busy={loading}>
+              <Table className="min-w-[700px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
+                <TableHeader><TableRow><TableHead>NAME</TableHead><TableHead>GROUP</TableHead><TableHead>UNIT</TableHead><TableHead>MODE</TableHead><TableHead>STATUS</TableHead><TableHead>ACTIONS</TableHead></TableRow></TableHeader>
+                <TableBody>
+                  {loading ? Array.from({ length: 4 }, (_, i) => <TableRow key={i}>{Array.from({ length: 6 }, (_, j) => <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : rows.map((c) => (
+                    <TableRow key={c.id}>
+                      <TableCell><b>{c.name}</b></TableCell>
+                      <TableCell>{c.category_group.replaceAll('_', ' ')}</TableCell>
+                      <TableCell>{c.default_unit ?? '—'}</TableCell>
+                      <TableCell>{c.is_quantity_based ? 'Quantity × rate' : 'Direct amount'}</TableCell>
+                      <TableCell><Badge variant={c.is_active ? 'secondary' : 'muted'}>{c.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
+                      <TableCell><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" size="sm" onClick={() => edit(c)}>Edit</Button><Button type="button" variant="outline" size="sm" onClick={() => c.is_active ? setStatusTarget(c) : void toggle(c)}>{c.is_active ? 'Deactivate' : 'Activate'}</Button></div></TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+          {!loading && !loadError && !rows.length && <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">No expense categories found.</div>}
           <p className="kpi-foot">
             Categories used by expenses are deactivated instead of deleted; saved expenses keep
             their original category snapshot.
           </p>
         </div>
       </div>
-      <Dialog
-        open={!!id}
-        onOpenChange={(open) => {
-          if (!open && !busy) clear();
-        }}
-        labelledBy="edit-category-title"
-      >
-        {id && categoryForm}
+      <Dialog open={!!id} onOpenChange={(open) => { if (!open && !busy) clear(); }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle id="edit-category-title">Edit expense category</DialogTitle><DialogDescription>Changes to category defaults affect future expense entries. Existing expense snapshots remain intact.</DialogDescription></DialogHeader>
+          {id && categoryForm}
+        </DialogContent>
       </Dialog>
+      <AlertDialog open={!!statusTarget} onOpenChange={(open) => { if (!open && !statusBusy) setStatusTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Deactivate expense category?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {statusTarget?.name} will no longer be available for new expenses. Existing expense snapshots and history will remain unchanged.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={statusBusy}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={(event) => { event.preventDefault(); if (statusTarget) void toggle(statusTarget); }} disabled={statusBusy}>
+              {statusBusy ? 'Updating…' : 'Deactivate category'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </ExpenseShell>
   );
 }

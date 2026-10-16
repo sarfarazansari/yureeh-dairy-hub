@@ -2,7 +2,10 @@
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 import { useMemo, useState } from 'react';
 
@@ -191,26 +194,17 @@ export default function MilkPoolPage() {
         {fatQuery.isError ? (
           <div className="list-error" role="alert">
             <span>{fatQuery.error.message}</span>
-            <button type="button" className="btn secondary" onClick={() => void fatQuery.refetch()}>Retry</button>
+            <Button type="button" variant="outline" onClick={() => void fatQuery.refetch()}>Retry</Button>
           </div>
         ) : fatQuery.isPending ? (
           <div className="empty">Loading mixed milk fat…</div>
         ) : !fatByDate.length ? (
           <div className="empty">No fat records in this date range. Enter mixed milk fat from Daily performance for each shift.</div>
         ) : (
-          <div className="table-wrap">
-            <table className="table">
-              <thead><tr><th>DATE</th><th>MORNING FAT</th><th>EVENING FAT</th></tr></thead>
-              <tbody>
-                {fatByDate.map(([dateKey, shifts]) => (
-                  <tr key={dateKey}>
-                    <td>{dateKey}</td>
-                    <td>{shifts.MORNING === undefined ? '—' : `${shifts.MORNING.toFixed(2)}%`}</td>
-                    <td>{shifts.EVENING === undefined ? '—' : `${shifts.EVENING.toFixed(2)}%`}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
+            <Table className="min-w-[420px]"><TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>MORNING FAT</TableHead><TableHead>EVENING FAT</TableHead></TableRow></TableHeader>
+              <TableBody>{fatByDate.map(([dateKey, shifts]) => <TableRow key={dateKey}><TableCell>{dateKey}</TableCell><TableCell>{shifts.MORNING === undefined ? '—' : `${shifts.MORNING.toFixed(2)}%`}</TableCell><TableCell>{shifts.EVENING === undefined ? '—' : `${shifts.EVENING.toFixed(2)}%`}</TableCell></TableRow>)}</TableBody>
+            </Table>
           </div>
         )}
       </div>
@@ -222,27 +216,28 @@ export default function MilkPoolPage() {
           their source transactions.
         </p>
         <form className="grid three" onSubmit={recordMovement}>
-          <Label className="field">
-            <span>Business date</span>
-            <DatePicker value={businessDate} max={localDateKey()} onChange={setBusinessDate} ariaLabel="Business date" />
-          </Label>
-          <Label className="field">
-            <span>Shift (optional)</span>
-            <Select value={shift || 'none'} onValueChange={(value) => setShift(value === 'none' ? '' : value as 'MORNING' | 'EVENING')}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not specified</SelectItem>{MILK_POOL_SHIFT_OPTIONS.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select>
-          </Label>
-          <Label className="field">
-            <span>Movement</span>
-            <Select value={movementType} onValueChange={(rawValue) => { const value = rawValue as MilkPoolManualMovementType; setMovementType(value); if (value !== 'ADJUSTMENT') setDirection('OUT'); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{MILK_POOL_MOVEMENT_TYPES.map((value) => <SelectItem key={value} value={value}>{MILK_POOL_MOVEMENT_LABELS[value]}</SelectItem>)}</SelectContent></Select>
-          </Label>
+          <div className="field">
+            <Label htmlFor="pool-movement-date">Business date</Label>
+            <DatePicker id="pool-movement-date" value={businessDate} max={localDateKey()} onChange={setBusinessDate} ariaLabel="Business date" />
+          </div>
+          <div className="field">
+            <Label htmlFor="pool-movement-shift">Shift (optional)</Label>
+            <Select value={shift || 'none'} onValueChange={(value) => setShift(value === 'none' ? '' : value as 'MORNING' | 'EVENING')}><SelectTrigger id="pool-movement-shift"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Not specified</SelectItem>{MILK_POOL_SHIFT_OPTIONS.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}</SelectContent></Select>
+          </div>
+          <div className="field">
+            <Label htmlFor="pool-movement-type">Movement</Label>
+            <Select value={movementType} onValueChange={(rawValue) => { const value = rawValue as MilkPoolManualMovementType; setMovementType(value); if (value !== 'ADJUSTMENT') setDirection('OUT'); }}><SelectTrigger id="pool-movement-type"><SelectValue /></SelectTrigger><SelectContent>{MILK_POOL_MOVEMENT_TYPES.map((value) => <SelectItem key={value} value={value}>{MILK_POOL_MOVEMENT_LABELS[value]}</SelectItem>)}</SelectContent></Select>
+          </div>
           {movementType === 'ADJUSTMENT' && (
-            <Label className="field">
-              <span>Direction</span>
-              <Select value={direction} onValueChange={(value) => setDirection(value as MilkPoolMovementDirection)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="OUT">Decrease pool</SelectItem><SelectItem value="IN">Increase pool</SelectItem></SelectContent></Select>
-            </Label>
+            <div className="field">
+              <Label htmlFor="pool-movement-direction">Direction</Label>
+              <Select value={direction} onValueChange={(value) => setDirection(value as MilkPoolMovementDirection)}><SelectTrigger id="pool-movement-direction"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="OUT">Decrease pool</SelectItem><SelectItem value="IN">Increase pool</SelectItem></SelectContent></Select>
+            </div>
           )}
-          <Label className="field">
-            <span>Quantity (L)</span>
+          <div className="field">
+            <Label htmlFor="pool-movement-quantity">Quantity (L)</Label>
             <Input
+              id="pool-movement-quantity"
               type="number"
               min="0.001"
               step="0.001"
@@ -251,15 +246,15 @@ export default function MilkPoolPage() {
               onChange={(event) => setQuantity(event.target.value)}
               placeholder="e.g. 2.5"
             />
-          </Label>
-          <Label className="field">
-            <span>Notes</span>
-            <Input value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Why was milk consumed/adjusted?" />
-          </Label>
+          </div>
+          <div className="field">
+            <Label htmlFor="pool-movement-notes">Notes</Label>
+            <Textarea id="pool-movement-notes" value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Why was milk consumed/adjusted?" rows={2} />
+          </div>
           <div>
-            <button className="btn" disabled={recordMutation.isPending}>
+            <Button type="submit" disabled={recordMutation.isPending}>
               {recordMutation.isPending ? 'Saving…' : 'Record movement'}
-            </button>
+            </Button>
           </div>
         </form>
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
@@ -276,47 +271,21 @@ export default function MilkPoolPage() {
         {reconciliationQuery.isError ? (
           <div className="list-error" role="alert">
             <span>{reconciliationQuery.error.message}</span>
-            <button type="button" className="btn secondary" onClick={() => void reconciliationQuery.refetch()}>Retry</button>
+            <Button type="button" variant="outline" onClick={() => void reconciliationQuery.refetch()}>Retry</Button>
           </div>
         ) : reconciliationQuery.isPending ? (
           <div className="empty">Loading reconciliation…</div>
         ) : !rows.length ? (
           <div className="empty">No milk movements in the selected period.</div>
         ) : (
-          <div className="table-wrap">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>DATE</th>
-                  <th>OPENING</th>
-                  <th>PRODUCED</th>
-                  <th>DELIVERED</th>
-                  <th>HOUSEHOLD</th>
-                  <th>WASTAGE</th>
-                  <th>OTHER</th>
-                  <th>ADJUSTMENT</th>
-                  <th>CLOSING</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => {
-                  const adjustment = Number(row.adjustment_in_litres) - Number(row.adjustment_out_litres);
-                  return (
-                    <tr key={row.business_date}>
-                      <td>{row.business_date}</td>
-                      <td>{formatLitres(Number(row.opening_balance_litres))}</td>
-                      <td>{formatLitres(Number(row.production_litres))}</td>
-                      <td>{formatLitres(Number(row.customer_delivery_litres))}</td>
-                      <td>{formatLitres(Number(row.household_use_litres))}</td>
-                      <td>{formatLitres(Number(row.wastage_litres))}</td>
-                      <td>{formatLitres(Number(row.other_use_litres))}</td>
-                      <td>{formatLitres(adjustment)}</td>
-                      <td>{formatLitres(Number(row.closing_balance_litres))}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]" aria-busy={reconciliationQuery.isFetching}>
+            <Table className="min-w-[1000px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
+              <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>OPENING</TableHead><TableHead>PRODUCED</TableHead><TableHead>DELIVERED</TableHead><TableHead>HOUSEHOLD</TableHead><TableHead>WASTAGE</TableHead><TableHead>OTHER</TableHead><TableHead>ADJUSTMENT</TableHead><TableHead>CLOSING</TableHead></TableRow></TableHeader>
+              <TableBody>{rows.map((row) => {
+                const adjustment = Number(row.adjustment_in_litres) - Number(row.adjustment_out_litres);
+                return <TableRow key={row.business_date}><TableCell className="whitespace-nowrap">{row.business_date}</TableCell><TableCell>{formatLitres(Number(row.opening_balance_litres))}</TableCell><TableCell>{formatLitres(Number(row.production_litres))}</TableCell><TableCell>{formatLitres(Number(row.customer_delivery_litres))}</TableCell><TableCell>{formatLitres(Number(row.household_use_litres))}</TableCell><TableCell>{formatLitres(Number(row.wastage_litres))}</TableCell><TableCell>{formatLitres(Number(row.other_use_litres))}</TableCell><TableCell>{formatLitres(adjustment)}</TableCell><TableCell>{formatLitres(Number(row.closing_balance_litres))}</TableCell></TableRow>;
+              })}</TableBody>
+            </Table>
           </div>
         )}
       </div>

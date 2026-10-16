@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
@@ -77,7 +78,7 @@ export default function EditDietPlanPage() {
   return (
     <AppShell title="Edit diet plan" subtitle="Update future feeding configuration without changing posted history">
       <div className="management-stack">
-        <Link className="date-chip" href="/feeds/diet-plans">← Back to diet plans</Link>
+        <Button variant="outline" size="sm" asChild><Link href="/feeds/diet-plans">← Back to diet plans</Link></Button>
         <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
         {plan && initialValues ? <DietPlanForm key={plan.id} feeds={feeds} buffaloes={buffaloes} onDateChange={setBuffaloDate} onSave={save} busy={busy} initialValues={initialValues} submitLabel="Save changes" /> : <div className="card"><div className="empty">Loading diet plan…</div></div>}
       </div>

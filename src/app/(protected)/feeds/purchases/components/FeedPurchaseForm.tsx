@@ -3,6 +3,8 @@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -112,30 +114,33 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
 
       <div className="expense-form-grid">
         <div className="field">
-          <Label>Purchase date</Label>
-          <DatePicker value={values.businessDate} max={todayLocal()} onChange={(value) => update('businessDate', value)} ariaLabel="Purchase date" />
+          <Label htmlFor="feed-purchase-date">Purchase date</Label>
+          <DatePicker id="feed-purchase-date" value={values.businessDate} max={todayLocal()} onChange={(value) => update('businessDate', value)} ariaLabel="Purchase date" aria-invalid={!!errors.businessDate} />
+          <p className="kpi-foot">Today or an earlier date.</p>
           {errors.businessDate && <span className="auth-message">{errors.businessDate}</span>}
         </div>
 
         <div className="field">
-          <Label>Feed item</Label>
-          <Select value={values.feedItemId || undefined} onValueChange={(value) => update('feedItemId', value)}><SelectTrigger><SelectValue placeholder="Select feed item" /></SelectTrigger><SelectContent>{feedItems.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>
+          <Label htmlFor="feed-purchase-item">Feed item</Label>
+          <Select value={values.feedItemId || undefined} onValueChange={(value) => update('feedItemId', value)}><SelectTrigger id="feed-purchase-item"><SelectValue placeholder="Select feed item" /></SelectTrigger><SelectContent>{feedItems.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>
           {errors.feedItemId && <span className="auth-message">{errors.feedItemId}</span>}
         </div>
 
         <div className="field">
-          <Label>Vendor</Label>
-          <Select value={values.vendorId || undefined} onValueChange={(value) => update('vendorId', value === 'none' ? '' : value)}><SelectTrigger><SelectValue placeholder="No vendor" /></SelectTrigger><SelectContent><SelectItem value="none">No vendor</SelectItem>{vendors.map((vendor) => <SelectItem key={vendor.id} value={vendor.id}>{vendor.name}</SelectItem>)}</SelectContent></Select>
+          <Label htmlFor="feed-purchase-vendor">Vendor</Label>
+          <Select value={values.vendorId || "none"} onValueChange={(value) => update('vendorId', value === 'none' ? '' : value)}><SelectTrigger id="feed-purchase-vendor"><SelectValue placeholder="No vendor" /></SelectTrigger><SelectContent><SelectItem value="none">No vendor</SelectItem>{vendors.map((vendor) => <SelectItem key={vendor.id} value={vendor.id}>{vendor.name}</SelectItem>)}</SelectContent></Select>
         </div>
 
         <div className="field">
-          <Label>Purchase unit</Label>
-          <Input value={feed?.purchase_unit ?? '—'} readOnly />
+          <Label htmlFor="feed-purchase-unit">Purchase unit</Label>
+          <Input id="feed-purchase-unit" value={feed?.purchase_unit ?? '—'} readOnly aria-describedby="feed-purchase-unit-help" />
+          <p id="feed-purchase-unit-help" className="kpi-foot">Unit is controlled by the selected feed item.</p>
         </div>
 
         <div className="field">
-          <Label>Quantity</Label>
+          <Label htmlFor="feed-purchase-quantity">Quantity</Label>
           <Input
+            id="feed-purchase-quantity"
             type="number"
             min="0.001"
             step="0.001"
@@ -149,8 +154,9 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
         </div>
 
         <div className="field">
-          <Label>Rate per purchase unit (₹)</Label>
+          <Label htmlFor="feed-purchase-rate">Rate per purchase unit (₹)</Label>
           <Input
+            id="feed-purchase-rate"
             type="number"
             min="0.01"
             step="0.01"
@@ -162,13 +168,14 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
         </div>
 
         <div className="field">
-          <Label>Payment status</Label>
-          <Select value={values.paymentStatus} onValueChange={(value) => update('paymentStatus', value as FeedPurchaseFormValues['paymentStatus'])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="PAID">Paid</SelectItem><SelectItem value="PARTIAL">Partial</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select>
+          <Label htmlFor="feed-purchase-status">Payment status</Label>
+          <Select value={values.paymentStatus} onValueChange={(value) => update('paymentStatus', value as FeedPurchaseFormValues['paymentStatus'])}><SelectTrigger id="feed-purchase-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="PAID">Paid</SelectItem><SelectItem value="PARTIAL">Partial</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select>
         </div>
 
         <div className="field">
-          <Label>Paid amount (₹)</Label>
+          <Label htmlFor="feed-purchase-paid">Paid amount (₹)</Label>
           <Input
+            id="feed-purchase-paid"
             type="number"
             min="0"
             step="0.01"
@@ -181,24 +188,26 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
 
         {values.paymentStatus !== 'CREDIT' && (
           <div className="field">
-            <Label>Payment method</Label>
-            <Select value={values.paymentMethod} onValueChange={(value) => update('paymentMethod', value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="CASH">Cash</SelectItem><SelectItem value="UPI">UPI</SelectItem><SelectItem value="BANK_TRANSFER">Bank transfer</SelectItem><SelectItem value="CARD">Card</SelectItem><SelectItem value="OTHER">Other</SelectItem></SelectContent></Select>
+            <Label htmlFor="feed-purchase-method">Payment method</Label>
+            <Select value={values.paymentMethod} onValueChange={(value) => update('paymentMethod', value)}><SelectTrigger id="feed-purchase-method"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="CASH">Cash</SelectItem><SelectItem value="UPI">UPI</SelectItem><SelectItem value="BANK_TRANSFER">Bank transfer</SelectItem><SelectItem value="CARD">Card</SelectItem><SelectItem value="OTHER">Other</SelectItem></SelectContent></Select>
           </div>
         )}
 
         {values.paymentStatus !== 'PAID' && (
           <div className="field">
-            <Label>Due date</Label>
-            <DatePicker value={values.dueDate || ""} min={values.businessDate} clearable onChange={(value) => update('dueDate', value)} ariaLabel="Due date" />
+            <Label htmlFor="feed-purchase-due-date">Due date</Label>
+            <DatePicker id="feed-purchase-due-date" value={values.dueDate || ""} min={values.businessDate} clearable onChange={(value) => update('dueDate', value)} ariaLabel="Due date" aria-invalid={!!errors.dueDate} />
+            <p className="kpi-foot">Optional; cannot be earlier than purchase date. Hidden for fully paid purchases.</p>
           </div>
         )}
 
         <div className="field wide-field">
-          <Label>Notes</Label>
-          <Input
+          <Label htmlFor="feed-purchase-notes">Notes</Label>
+          <Textarea id="feed-purchase-notes"
             value={values.notes}
             onChange={(e) => update('notes', e.target.value)}
             placeholder="Optional"
+            rows={3}
           />
         </div>
       </div>
@@ -248,9 +257,9 @@ export function FeedPurchaseForm({ feedItems, vendors, onSave, busy, initialValu
 
       {errors.form && <span className="auth-message">{errors.form}</span>}
 
-      <button type="submit" className="btn" disabled={busy || submittingRef.current || !feedItems.length}>
+      <Button type="submit" disabled={busy || !feedItems.length}>
         {busy ? 'Saving…' : submitLabel}
-      </button>
+      </Button>
     </form>
   );
 }

@@ -1,122 +1,74 @@
 'use client';
 
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-import { useState } from 'react';
-
+import { Textarea } from '@/components/ui/textarea';
 import { useUpdateBuffaloProfile } from '../hooks/use-buffaloes';
 import type { BuffaloDetail } from '../types';
 
-export function BuffaloProfileForm({
-  buffalo,
-  onCancel,
-}: {
-  buffalo: BuffaloDetail;
-  onCancel: () => void;
-}) {
+export function BuffaloProfileForm({ buffalo, onCancel }: { buffalo: BuffaloDetail; onCancel: () => void }) {
   const mutation = useUpdateBuffaloProfile();
   const [code, setCode] = useState(buffalo.buffalo_code);
   const [name, setName] = useState(buffalo.name ?? '');
   const [breed, setBreed] = useState(buffalo.breed ?? '');
   const [color, setColor] = useState(buffalo.color ?? '');
-  const [identificationMark, setIdentificationMark] = useState(
-    buffalo.identification_mark ?? '',
-  );
-  const [ageMonths, setAgeMonths] = useState(
-    buffalo.age_at_purchase_months == null ? '' : String(buffalo.age_at_purchase_months),
-  );
+  const [identificationMark, setIdentificationMark] = useState(buffalo.identification_mark ?? '');
+  const [ageMonths, setAgeMonths] = useState(buffalo.age_at_purchase_months == null ? '' : String(buffalo.age_at_purchase_months));
   const [notes, setNotes] = useState(buffalo.notes ?? '');
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  async function handleSave() {
-    if (!code.trim() || !breed.trim()) return;
-
+  async function handleSave(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const nextErrors: Record<string, string> = {};
+    if (!code.trim()) nextErrors.code = 'Buffalo code is required.';
+    if (!breed.trim()) nextErrors.breed = 'Breed is required.';
     const age = ageMonths.trim() ? Number(ageMonths) : null;
-
-    if (age !== null && (!Number.isInteger(age) || age < 0)) {
-      return;
-    }
+    if (age !== null && (!Number.isInteger(age) || age < 0)) nextErrors.ageMonths = 'Age must be a non-negative whole number.';
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length) return;
 
     try {
       await mutation.mutateAsync({
         buffaloId: buffalo.id,
         profile: {
-          buffalo_code: code,
-          name,
-          breed,
-          color,
-          identification_mark: identificationMark,
+          buffalo_code: code.trim().toUpperCase(),
+          name: name.trim(),
+          breed: breed.trim(),
+          color: color.trim(),
+          identification_mark: identificationMark.trim(),
           age_at_purchase_months: age,
-          notes,
+          notes: notes.trim(),
         },
       });
-
       onCancel();
     } catch {
-      // The mutation error is rendered below.
+      // Keep the form open so the error can be corrected.
     }
   }
 
   return (
-    <div className="card" style={{ marginBottom: 14 }}>
+    <form className="card mb-4 space-y-4" onSubmit={handleSave} noValidate>
       <h2 className="section-title">Edit buffalo profile</h2>
-
-      <div className="grid two">
-        <Field label="Buffalo Code">
-          <Input value={code} onChange={(event) => setCode(event.target.value)} />
-        </Field>
-
-        <Field label="Name">
-          <Input value={name} onChange={(event) => setName(event.target.value)} />
-        </Field>
-
-        <Field label="Breed">
-          <Input value={breed} onChange={(event) => setBreed(event.target.value)} />
-        </Field>
-
-        <Field label="Color">
-          <Input value={color} onChange={(event) => setColor(event.target.value)} />
-        </Field>
-
-        <Field label="Identification Mark">
-          <Input
-            value={identificationMark}
-            onChange={(event) => setIdentificationMark(event.target.value)}
-          />
-        </Field>
-
-        <Field label="Age at Purchase · Months">
-          <Input
-            type="number"
-            min="0"
-            step="1"
-            value={ageMonths}
-            onChange={(event) => setAgeMonths(event.target.value)}
-          />
-        </Field>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="Buffalo code" error={errors.code}><Input id="buffalo-profile-code" value={code} onChange={(event) => setCode(event.target.value)} aria-invalid={Boolean(errors.code)} /></Field>
+        <Field label="Name"><Input id="buffalo-profile-name" value={name} onChange={(event) => setName(event.target.value)} /></Field>
+        <Field label="Breed" error={errors.breed}><Input id="buffalo-profile-breed" value={breed} onChange={(event) => setBreed(event.target.value)} aria-invalid={Boolean(errors.breed)} /></Field>
+        <Field label="Color"><Input id="buffalo-profile-color" value={color} onChange={(event) => setColor(event.target.value)} /></Field>
+        <Field label="Identification mark"><Input id="buffalo-profile-mark" value={identificationMark} onChange={(event) => setIdentificationMark(event.target.value)} /></Field>
+        <Field label="Age at purchase · months" error={errors.ageMonths}><Input id="buffalo-profile-age" type="number" min="0" step="1" value={ageMonths} onChange={(event) => setAgeMonths(event.target.value)} aria-invalid={Boolean(errors.ageMonths)} /></Field>
       </div>
-
-      <Field label="Notes">
-        <Input value={notes} onChange={(event) => setNotes(event.target.value)} />
-      </Field>
-
-      {mutation.isError && <p className="auth-message">{mutation.error.message}</p>}
-
-      <button className="btn" type="button" disabled={mutation.isPending} onClick={() => void handleSave()}>
-        {mutation.isPending ? 'Saving…' : 'Save changes'}
-      </button>{' '}
-      <button className="btn" type="button" disabled={mutation.isPending} onClick={onCancel}>
-        Cancel
-      </button>
-    </div>
+      <Field label="Notes"><Textarea id="buffalo-profile-notes" rows={3} value={notes} onChange={(event) => setNotes(event.target.value)} /></Field>
+      {mutation.isError && <p role="alert" className="auth-message">{mutation.error.message}</p>}
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" disabled={mutation.isPending}>{mutation.isPending ? 'Saving…' : 'Save changes'}</Button>
+        <Button type="button" variant="outline" disabled={mutation.isPending} onClick={onCancel}>Cancel</Button>
+      </div>
+    </form>
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="field">
-      <Label>{label}</Label>
-      {children}
-    </div>
-  );
+function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+  return <div className="field"><Label>{label}</Label>{children}{error && <p className="field-error" role="alert">{error}</p>}</div>;
 }
