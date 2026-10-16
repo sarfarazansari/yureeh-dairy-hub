@@ -316,3 +316,10 @@ The user's short command `1 refactor karo` means:
 
 - Expense types now have one canonical feature-owned definition in `src/features/expenses/types.ts`; the old `src/lib/expense-types.ts` is a re-export-only compatibility facade. `ExpensePayment` remains re-exported from the query module to avoid an accidental import API break.
 - No financial transaction logic changed. Local checks and expense/payment workflow tests remain outstanding.
+
+
+### REF-013 / REF-010A continuation — 2026-10-16 (milk list boundaries)
+
+- Split the mixed milk-entry list module into `src/features/milk/milk-entry-list.types.ts`, `src/features/milk/utils/milk-entry-list.ts`, and `src/features/milk/services/milk-entry-list.service.ts`. The milk query hook now consumes those feature-owned boundaries directly.
+- `src/lib/milk-entry-list.ts` remains a re-export-only compatibility facade because some other screens may still import shared date/list helpers. Remove it only after all consumers are migrated and checked.
+- Existing query filters, server-side pagination, row order, date helpers and chunked list loading were preserved by extraction; runtime behavior has not been executed in this environment.
