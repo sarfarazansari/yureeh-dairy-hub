@@ -90,8 +90,7 @@ export function useRecordExpensePaymentMutation() {
     },
     onSuccess: async (_data, input) => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: expenseQueryKeys.detail(input.expenseId) }),
-        queryClient.invalidateQueries({ queryKey: expenseQueryKeys.list() }),
+        queryClient.invalidateQueries({ queryKey: expenseQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: expenseQueryKeys.vendors() }),
         queryClient.invalidateQueries({ queryKey: expenseQueryKeys.categories() }),
         queryClient.invalidateQueries({ queryKey: ['feed-purchases'] }),
