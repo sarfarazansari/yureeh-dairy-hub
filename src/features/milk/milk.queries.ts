@@ -6,8 +6,8 @@ import {
   getActiveCustomersForMilkEntry,
   getCustomerPricingForDate,
   getMilkEntryCustomers,
-  type CustomerOption,
 } from '@/features/customers/services/customer.service';
+import type { CustomerOption } from '@/features/customers/types';
 import {
   createMilkEntry,
   deleteMilkEntry,
