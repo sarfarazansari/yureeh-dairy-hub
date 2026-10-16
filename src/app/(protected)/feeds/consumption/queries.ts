@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
-import { createFeedConsumption, deleteFeedConsumption, editFeedConsumption, fetchFeedConsumption, fetchFeedItems } from './services';
+import { createFeedConsumption, deleteFeedConsumption, editFeedConsumption, fetchFeedConsumption, fetchFeedConsumptionForEdit, fetchFeedItems, fetchFeedStock } from './services';
 
 const PAGE_SIZE = 20;
 
@@ -72,4 +72,39 @@ export function useDeleteFeedConsumptionMutation() {
     },
     onSuccess: () => invalidateConsumptionDependents(queryClient),
   });
+}
+
+
+export function useFeedConsumptionFormOptionsQuery(activeOnly = true) {
+  return useQuery({
+    queryKey: [...feedConsumptionQueryKeys.all, 'form-options', activeOnly] as const,
+    queryFn: async () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const [feedItems, stock] = await Promise.all([
+        fetchFeedItems(supabase, activeOnly),
+        fetchFeedStock(supabase),
+      ]);
+      return { feedItems, stock };
+    },
+  });
+}
+
+export function useFeedConsumptionForEditQuery(movementId: string) {
+  return useQuery({
+    queryKey: [...feedConsumptionQueryKeys.all, 'detail', movementId] as const,
+    enabled: Boolean(movementId),
+    queryFn: async () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const [options, consumption] = await Promise.all([
+        useFeedConsumptionFormOptionsQueryResult(supabase),
+        fetchFeedConsumptionForEdit(supabase, movementId),
+      ]);
+      return { ...options, consumption };
+    },
+  });
+}
+
+async function useFeedConsumptionFormOptionsQueryResult(client: NonNullable<typeof supabase>) {
+  const [feedItems, stock] = await Promise.all([fetchFeedItems(client, false), fetchFeedStock(client)]);
+  return { feedItems, stock };
 }
