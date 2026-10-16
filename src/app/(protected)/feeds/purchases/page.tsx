@@ -11,7 +11,7 @@ import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
 import { useDeleteFeedPurchaseMutation, useFeedPurchaseArchiveQuery } from './queries';
 import { FeedPurchaseTable } from './components/FeedPurchaseTable';
-import { useDeleteFeedPurchaseMutation, useFeedPurchaseArchiveQuery } from './queries';
+
 
 const PAGE_SIZE = 20;
 
