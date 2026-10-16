@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
-import { fetchDietPlans, saveDietPlan } from './services';
+import { fetchActiveFeedItems, fetchDietPlanForEdit, fetchDietPlans, fetchEligibleBuffaloes, saveDietPlan } from './services';
 import type { DietPlanFormValues } from '@/lib/diet-plan-types';
 
 const PAGE_SIZE = 20;
@@ -35,6 +35,39 @@ export function useSaveDietPlanMutation() {
         queryClient.invalidateQueries({ queryKey: dietPlanQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: ['feed-items'] }),
       ]);
+    },
+  });
+}
+
+
+export function useActiveDietFeedItemsQuery() {
+  return useQuery({
+    queryKey: [...dietPlanQueryKeys.all, 'active-feed-items'] as const,
+    queryFn: () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      return fetchActiveFeedItems(supabase);
+    },
+  });
+}
+
+export function useEligibleDietBuffaloesQuery(date: string) {
+  return useQuery({
+    queryKey: [...dietPlanQueryKeys.all, 'eligible-buffaloes', date] as const,
+    enabled: Boolean(date),
+    queryFn: () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      return fetchEligibleBuffaloes(supabase, date);
+    },
+  });
+}
+
+export function useDietPlanDetailsQuery(id: string) {
+  return useQuery({
+    queryKey: [...dietPlanQueryKeys.all, 'detail', id] as const,
+    enabled: Boolean(id),
+    queryFn: () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      return fetchDietPlanForEdit(supabase, id);
     },
   });
 }
