@@ -11,7 +11,7 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { todayLocal } from '../../../expenses/shared';
 import type { FeedItem } from '@/lib/feed-types';
 import type { FeedInventoryStock } from '@/lib/feed-inventory-types';
-import { feedConsumptionSchema, type FeedConsumptionFormValues } from '../schema';
+import { feedConsumptionSchema, type FeedConsumptionFormValues } from '@/features/feed-consumption/feed-consumption.schema';
 
 type Props = {
   feedItems: FeedItem[];
