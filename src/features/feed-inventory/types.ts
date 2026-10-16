@@ -40,3 +40,8 @@ export type FeedInventoryStock = {
   category: FeedCategory;
   is_active: boolean;
 };
+
+export type FeedInventoryMovementRow = FeedInventoryMovement & {
+  feed_item_name: string;
+  base_unit: string;
+};
