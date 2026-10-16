@@ -16,8 +16,10 @@ import { EXPENSE_GROUPS, UNITS, type ExpenseGroup } from '@/lib/expenses';
 import { ExpenseShell, ensureExpenseCategories } from '../shared';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseCategory } from '@/lib/expense-types';
+import { useExpenseCategoriesQuery } from '@/features/expenses/expense.queries';
 export default function ExpenseCategories() {
-  const [rows, setRows] = useState<ExpenseCategory[]>([]),
+  const [ownerId, setOwnerId] = useState(''),
+    [setupError, setSetupError] = useState(''),
     [id, setId] = useState(''),
     [name, setName] = useState(''),
     [group, setGroup] = useState<ExpenseGroup>('FEED'),
@@ -26,40 +28,34 @@ export default function ExpenseCategories() {
     [description, setDescription] = useState(''),
     [message, setMessage] = useState(''),
     [busy, setBusy] = useState(false),
-    [loading, setLoading] = useState(true),
-    [loadError, setLoadError] = useState(''),
     [statusTarget, setStatusTarget] = useState<ExpenseCategory | null>(null),
     [statusBusy, setStatusBusy] = useState(false);
-  async function load() {
-    if (!supabase) {
-      setLoadError('Supabase is not configured.');
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setLoadError('');
-    try {
-      await ensureExpenseCategories(supabase);
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError || !user) throw userError ?? new Error('Sign in again to load expense categories.');
-      const { data, error } = await supabase
-        .from('expense_categories')
-        .select('*')
-        .eq('owner_id', user.id)
-        .order('category_group')
-        .order('name');
-      if (error) throw error;
-      setRows(data ?? []);
-    } catch (error) {
-      setLoadError(error instanceof Error ? error.message : 'Could not load expense categories.');
-    } finally {
-      setLoading(false);
-    }
-  }
+  const categoryQuery = useExpenseCategoriesQuery(ownerId);
+  const rows = categoryQuery.data ?? [];
+  const loading = !ownerId || categoryQuery.isPending;
+  const loadError = setupError || categoryQuery.error?.message || '';
+
   useEffect(() => {
-    const task = window.setTimeout(() => void load(), 0);
-    return () => window.clearTimeout(task);
+    let alive = true;
+    async function initialize() {
+      if (!supabase) {
+        setSetupError('Supabase is not configured.');
+        return;
+      }
+      try {
+        await ensureExpenseCategories(supabase);
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) throw error ?? new Error('Sign in again to load expense categories.');
+        if (alive) setOwnerId(user.id);
+      } catch (error) {
+        if (alive) setSetupError(error instanceof Error ? error.message : 'Could not load expense categories.');
+      }
+    }
+    void initialize();
+    return () => { alive = false; };
   }, []);
+
+  const load = async () => { await categoryQuery.refetch(); };
   function edit(c: ExpenseCategory) {
     setId(c.id);
     setName(c.name);
