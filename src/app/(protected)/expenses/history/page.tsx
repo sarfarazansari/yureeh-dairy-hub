@@ -19,7 +19,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { calculateExpenseTotal, expensePaymentStatus } from '@/lib/expenses';
 import { ExpenseShell, money, ensureExpenseCategories, todayLocal } from '../shared';
-import type { ExpenseBuffaloOption, ExpenseCategory, ExpenseRow, ExpenseVendor } from '@/lib/expense-types';
+import type { ExpenseBuffaloOption, ExpenseRow } from '@/lib/expense-types';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { useExpenseHistoryQuery } from '@/features/expenses/expense.queries';
 export default function ExpenseHistory() {
@@ -394,7 +394,7 @@ export default function ExpenseHistory() {
           )}
           </DialogContent>
         </ShadcnDialog>
-        {loadError ? <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{message || 'Could not load expense history.'}</p><Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => void load()}>Retry</Button></div> : <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
+        {loadError ? <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{loadErrorMessage || message || 'Could not load expense history.'}</p><Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => void load()}>Retry</Button></div> : <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
           <Table className="min-w-[1200px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
             <TableHeader><TableRow>
               <TableHead>DATE</TableHead><TableHead>CATEGORY / GROUP</TableHead><TableHead>VENDOR</TableHead><TableHead>DESCRIPTION</TableHead><TableHead>QUANTITY</TableHead><TableHead>TOTAL</TableHead><TableHead>PAID</TableHead><TableHead>PENDING</TableHead><TableHead>STATUS</TableHead><TableHead>METHOD</TableHead><TableHead>ACTIONS</TableHead>
