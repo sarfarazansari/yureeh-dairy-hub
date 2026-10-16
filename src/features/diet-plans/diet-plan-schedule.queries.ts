@@ -1,18 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 
-export type ScheduleSettings = { morning_time: string | null; evening_time: string | null };
-export type FeedingRun = {
-  id: string;
-  plan_id: string;
-  feeding_date: string;
-  shift: 'MORNING' | 'EVENING';
-  scheduled_for: string;
-  status: 'PENDING' | 'PROCESSING' | 'POSTED' | 'FAILED' | 'SKIPPED';
-  failure_reason: string | null;
-  retry_count: number;
-  diet_plans: { name: string } | null;
-};
+import type { FeedingRun, ScheduleSettings } from './types';
 
 export const dietPlanScheduleQueryKeys = {
   all: ['diet-plan-schedule'] as const,
