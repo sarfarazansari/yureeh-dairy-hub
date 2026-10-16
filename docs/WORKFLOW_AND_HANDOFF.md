@@ -346,3 +346,5 @@ The user's short command `1 refactor karo` means:
 - Next: inspect remaining effect-driven read candidates and residual duplicate date/payment helpers; then run the complete validation checklist. User retains PR/merge control.
 
 - Further invalidation review: feed purchase create/edit/delete now refresh expense-category summaries and feed-cost analytics; diet-plan save refreshes scheduler run history (joined plan labels). These still require browser/runtime verification.
+
+- Duplicate helper pass: expense formatting now re-exports shared `money` and canonical date-only `todayDateKey`; milk list date normalization/validation delegates to `src/lib/date-key.ts`; buffalo payment-type validation reuses the feature's canonical formula. Legacy type/schema/list facades remain until the full consumer graph can be verified.
