@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { CalendarDays, X } from 'lucide-react';
 import { Calendar } from '@/components/ui/calendar';
+import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { normalizeDateKey } from '@/lib/date-key';
 import { cn } from '@/lib/utils';
@@ -76,7 +77,7 @@ export function DatePicker({
       <Popover open={open} onOpenChange={setOpen}>
         <div className="relative flex min-w-0 flex-1 items-center">
           <PopoverTrigger asChild>
-            <button
+            <Button variant="outline"
               id={id}
               type="button"
               disabled={disabled}
@@ -94,17 +95,17 @@ export function DatePicker({
               <span className={cn('min-w-0 flex-1 truncate', selectedDate ? 'shadcn-date-value' : 'shadcn-date-placeholder')}>
                 {selectedDate ? new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(selectedDate) : placeholder}
               </span>
-            </button>
+            </Button>
           </PopoverTrigger>
           {clearable && value && !disabled && (
-            <button
+            <Button variant="outline"
               type="button"
               className="shadcn-date-clear absolute right-2 top-1/2 inline-grid size-6 -translate-y-1/2 place-items-center rounded-md text-[#66756b] hover:bg-[#f1f4f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--green)]"
               aria-label={`Clear ${ariaLabel.toLowerCase()}`}
               onClick={() => onChange('')}
             >
               <X size={14} aria-hidden="true" />
-            </button>
+            </Button>
           )}
         </div>
         <PopoverContent
@@ -127,7 +128,7 @@ export function DatePicker({
             autoFocus
           />
           <div className="flex justify-end border-t border-[var(--line)] px-2 pt-2">
-            <button
+            <Button variant="outline"
               type="button"
               className="rounded-md px-2 py-1.5 text-xs font-semibold text-[var(--green)] hover:bg-[#edf5ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--green)] disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!isTodayAllowed}
@@ -138,7 +139,7 @@ export function DatePicker({
               }}
             >
               Today
-            </button>
+            </Button>
           </div>
         </PopoverContent>
       </Popover>
