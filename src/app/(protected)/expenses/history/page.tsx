@@ -181,7 +181,7 @@ export default function ExpenseHistory() {
           total_amount: amount,
           paid_amount: paid,
           payment_status,
-          payment_method: payment_status === 'CREDIT' ? 'CREDIT' : editing.payment_method,
+          payment_method: payment_status === 'CREDIT' ? 'CREDIT' : editing.payment_method || 'CASH',
           due_date: editing.due_date || null,
           notes: editing.notes || null,
           receipt_reference: editing.receipt_reference || null,
