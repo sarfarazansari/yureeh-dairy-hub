@@ -5,9 +5,8 @@ import { useRef, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { Toast } from '@/components/ui/Toast';
-import { useFeedPurchaseFormOptionsQuery } from '../queries';
 import { FeedPurchaseForm } from '../components/FeedPurchaseForm';
-import { useCreateFeedPurchaseMutation } from '../queries';
+import { useCreateFeedPurchaseMutation, useFeedPurchaseFormOptionsQuery } from '../queries';
 import type { FeedPurchaseFormValues } from '../schema';
 
 export default function NewFeedPurchasePage() {
