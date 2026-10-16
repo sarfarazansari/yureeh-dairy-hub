@@ -5,9 +5,8 @@ import { use, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { Toast } from '@/components/ui/Toast';
-import { useFeedPurchaseForEditQuery } from '../../queries';
 import { FeedPurchaseForm } from '../../components/FeedPurchaseForm';
-import { useEditFeedPurchaseMutation } from '../../queries';
+import { useEditFeedPurchaseMutation, useFeedPurchaseForEditQuery } from '../../queries';
 import type { FeedPurchaseFormValues } from '../../schema';
 
 export default function EditFeedPurchasePage({ params }: { params: Promise<{ id: string }> }) {
