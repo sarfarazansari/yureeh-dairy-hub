@@ -19,7 +19,7 @@ import {
 
 export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }: { buffaloId: string; canAdd: boolean; purchasePrice: number | null }) {
   const [expenseId, setExpenseId] = useState('');
-  const [costDate, setCostDate] = useState(localDate());
+  const [costDate, setCostDate] = useState(todayDateKey());
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
