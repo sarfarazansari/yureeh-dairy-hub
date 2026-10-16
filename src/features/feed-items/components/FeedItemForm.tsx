@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 
 import { useState } from 'react';
 import { TimedNotice } from '@/components/ui/TimedNotice';
-import { FEED_CATEGORIES, FEED_UNITS, type FeedCategory } from '@/lib/feed-types';
+import { FEED_CATEGORIES, FEED_UNITS, type FeedCategory } from '../types';
 
 export type FeedItemFormValues = {
   name: string;
