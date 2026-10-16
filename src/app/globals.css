@@ -291,25 +291,6 @@ a {
   background: #37805f;
   border-radius: 9px;
 }
-.btn {
-  border: 0;
-  background: var(--green);
-  color: white;
-  border-radius: 9px;
-  padding: 11px 15px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.btn.secondary {
-  background: white;
-  border: 1px solid var(--line);
-  color: #496055;
-}
-.btn.full {
-  width: 100%;
-  margin-top: 16px;
-}
 .layout {
   display: grid;
   grid-template-columns: 1fr 330px;
@@ -606,9 +587,6 @@ a {
   min-width: 0;
   width: 100%;
 }
-.management-stack > form .btn {
-  min-width: 180px;
-}
 .table-wrap {
   width: 100%;
   max-width: 100%;
@@ -629,10 +607,6 @@ a {
 @media (max-width: 700px) {
   .management-stack {
     gap: 12px;
-  }
-  .management-stack > form .btn {
-    width: 100%;
-    min-height: 46px;
   }
 }
 /* Keep record tables as readable as their forms and contain horizontal overflow. */
@@ -731,9 +705,6 @@ a {
 .buffalo-form {
   padding: 18px 20px;
 }
-.buffalo-form > .btn {
-  min-width: 180px;
-}
 .buffalo-primary-fields,
 .buffalo-secondary-fields,
 .buffalo-payment-fields {
@@ -819,10 +790,6 @@ a {
   }
   .buffalo-form {
     padding: 14px;
-  }
-  .buffalo-form > .btn {
-    width: 100%;
-    min-height: 46px;
   }
 }
 
@@ -920,13 +887,6 @@ a {
   justify-content: flex-end;
   gap: 9px;
   margin-top: 20px;
-}
-.btn.destructive {
-  background: #b33f36;
-  color: #fff;
-}
-.btn.destructive:hover {
-  background: #96352e;
 }
 .danger-text {
   color: #a43e38;
