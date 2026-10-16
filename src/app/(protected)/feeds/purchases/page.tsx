@@ -10,7 +10,7 @@ import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
 import { useDeleteFeedPurchaseMutation, useFeedPurchaseArchiveQuery } from '@/features/feed-purchases/feed-purchases.queries';
-import { FeedPurchaseTable } from './components/FeedPurchaseTable';
+import { FeedPurchaseTable } from '@/features/feed-purchases/components/FeedPurchaseTable';
 
 
 const PAGE_SIZE = 20;
