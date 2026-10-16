@@ -9,7 +9,8 @@ import { Toast } from '@/components/ui/Toast';
 import { supabase } from '@/lib/supabase';
 import type { DietBuffaloOption, DietPlanFormValues, DietPlanDetails } from '@/lib/diet-plan-types';
 import { DietPlanForm } from '../../components/DietPlanForm';
-import { fetchActiveFeedItems, fetchDietPlanForEdit, fetchEligibleBuffaloes, saveDietPlan } from '../../services';
+import { fetchActiveFeedItems, fetchDietPlanForEdit, fetchEligibleBuffaloes } from '../../services';
+import { useSaveDietPlanMutation } from '../../queries';
 
 type FeedOption = { id: string; name: string; base_unit: string; category: string };
 
@@ -17,6 +18,7 @@ export default function EditDietPlanPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
   const router = useRouter();
+  const saveMutation = useSaveDietPlanMutation();
   const [feeds, setFeeds] = useState<FeedOption[]>([]);
   const [buffaloes, setBuffaloes] = useState<DietBuffaloOption[]>([]);
   const [plan, setPlan] = useState<DietPlanDetails | null>(null);
@@ -64,7 +66,7 @@ export default function EditDietPlanPage() {
     if (!supabase) return 'Supabase is not configured.';
     setBusy(true);
     try {
-      await saveDietPlan(supabase, id, values);
+      await saveMutation.mutateAsync({ id, values });
       setToast({ message: 'Diet plan updated successfully.', type: 'success' });
       router.push('/feeds/diet-plans');
       return null;
