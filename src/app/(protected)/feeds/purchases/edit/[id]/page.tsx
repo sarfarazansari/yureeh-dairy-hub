@@ -1,65 +1,39 @@
 'use client';
 
 import Link from 'next/link';
-import { use, useCallback, useEffect, useState } from 'react';
+import { use, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Button } from '@/components/ui/button';
 import { Toast } from '@/components/ui/Toast';
-import { supabase } from '@/lib/supabase';
-import type { FeedItem } from '@/lib/feed-types';
-import type { ExpenseVendor } from '@/lib/expense-types';
+import { useFeedPurchaseForEditQuery } from '../../queries';
 import { FeedPurchaseForm } from '../../components/FeedPurchaseForm';
-import { fetchFeedPurchaseForEdit } from '../../services';
 import { useEditFeedPurchaseMutation } from '../../queries';
 import type { FeedPurchaseFormValues } from '../../schema';
 
 export default function EditFeedPurchasePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const editMutation = useEditFeedPurchaseMutation();
-  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
-  const [vendors, setVendors] = useState<Pick<ExpenseVendor, 'id' | 'name'>[]>([]);
-  const [initialValues, setInitialValues] = useState<FeedPurchaseFormValues | null>(null);
+  const editQuery = useFeedPurchaseForEditQuery(id);
+  const feedItems = editQuery.data?.feedItems ?? [];
+  const vendors = editQuery.data?.vendors ?? [];
+  const existing = editQuery.data?.existing;
+  const initialValues: FeedPurchaseFormValues | null = existing ? {
+    feedItemId: existing.purchase.feed_item_id,
+    vendorId: existing.purchase.vendor_id ?? '',
+    businessDate: existing.purchase.business_date,
+    purchaseQuantity: Number(existing.purchase.purchase_quantity),
+    rate: Number(existing.purchase.rate_per_purchase_unit),
+    paymentStatus: existing.paymentStatus,
+    paidAmount: existing.paidAmount,
+    paymentMethod: existing.paymentMethod,
+    dueDate: existing.dueDate,
+    notes: existing.purchase.notes ?? '',
+  } : null;
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [busy, setBusy] = useState(false);
   const [completed, setCompleted] = useState(false);
 
-  const load = useCallback(async () => {
-    if (!supabase) return;
-    try {
-      const [feeds, vendorResult, existing] = await Promise.all([
-        supabase.from('feed_items').select('*').eq('is_active', true).order('name'),
-        supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
-        fetchFeedPurchaseForEdit(supabase, id),
-      ]);
-      if (feeds.error) throw feeds.error;
-      if (vendorResult.error) throw vendorResult.error;
-
-      setFeedItems(feeds.data ?? []);
-      setVendors(vendorResult.data ?? []);
-      setInitialValues({
-        feedItemId: existing.purchase.feed_item_id,
-        vendorId: existing.purchase.vendor_id ?? '',
-        businessDate: existing.purchase.business_date,
-        purchaseQuantity: Number(existing.purchase.purchase_quantity),
-        rate: Number(existing.purchase.rate_per_purchase_unit),
-        paymentStatus: existing.paymentStatus,
-        paidAmount: existing.paidAmount,
-        paymentMethod: existing.paymentMethod,
-        dueDate: existing.dueDate,
-        notes: existing.purchase.notes ?? '',
-      });
-    } catch (error) {
-      setToast({
-        message: error instanceof Error ? error.message : 'Could not load purchase.',
-        type: 'error',
-      });
-    }
-  }, [id]);
-
-  useEffect(() => { void load(); }, [load]);
-
   async function save(values: FeedPurchaseFormValues) {
-    if (!supabase) return 'Supabase is not configured.';
     setBusy(true);
     setToast(null);
 
@@ -84,7 +58,7 @@ export default function EditFeedPurchasePage({ params }: { params: Promise<{ id:
           <Button asChild variant="outline"><Link href="/feeds/purchases">← Back to purchases</Link></Button>
         </div>
 
-        <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
+        <Toast message={toast?.message ?? editQuery.error?.message ?? ''} type={toast?.type ?? (editQuery.isError ? 'error' : undefined)} onDismiss={() => setToast(null)} />
 
         {completed ? (
           <div className="card">
