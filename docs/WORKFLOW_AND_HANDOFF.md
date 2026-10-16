@@ -160,7 +160,7 @@ The user's short command `1 refactor karo` means:
 - Verification boundary: GitHub source reads and branch comparison only. No local build, lint, typecheck, tests, runtime flows or database operations were run. No PR or merge was created.
 
 
-### Latest session handoff — 2026-10-16 (REF-005)
+### Previous session handoff — 2026-10-16 (REF-005)
 
 - Current branch: `feature/refactor-engineering-standards`
 - Latest master base: `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`; branch comparison before this task was 10 commits ahead and 0 behind. The branch remains the user's requested working branch; no new branch was created.
@@ -170,3 +170,15 @@ The user's short command `1 refactor karo` means:
 - No source implementation or database files changed. This remains an audit-first workflow: do not start implementation migrations until REF-006, REF-007 and REF-008 are complete, especially the transaction-integrity audit.
 - Verification boundary: GitHub source/doc inspection and static synthesis only. No local checkout; build, lint, typecheck, tests, runtime/account-switch checks and database/RLS operations were not run. No PR or merge was created.
 - Next task for `1 refactor karo same branch`: REF-006 — mutation invalidation, duplicate-submission, error/loading/empty-state and pagination audit.
+
+
+### Latest session handoff — 2026-10-16 (REF-006)
+
+- Current branch: `feature/refactor-engineering-standards`
+- Latest master base: `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`; branch was 13 commits ahead and 0 behind before REF-006.
+- Completed: REF-006 static audit documented in `docs/REFACTORING_MUTATION_UX_AUDIT.md`; tracker updated.
+- Confirmed query-cache gaps: milk-entry create/update/delete invalidates the milk root but not customer directory/detail summaries; production save invalidates production/milk roots but not the separate buffalo-detail production-history key.
+- Existing safeguards worth preserving: feed purchase create uses an idempotency-key RPC; feed consumption operations are RPC-backed; expense history has ledger/feed-purchase lock checks, busy/error/retry states and URL-backed server pagination; scheduler failed-run retry is explicit and guarded.
+- The audit records a cross-domain invalidation checklist, pagination requirements, duplicate-submit/retry policy and per-module regression checklist. Full dependency mapping remains pending REF-007; do not implement broad invalidation changes before that audit and REF-008 phase planning.
+- Verification boundary: static GitHub file inspection only. No local checkout; build, lint, typecheck, tests, browser/manual regression, concurrency, RPC/RLS and database checks were not run. No source implementation or database changes; no PR or merge created.
+- Next task for `1 refactor karo same branch`: REF-007 — trace finance, milk pool, feed inventory, purchase/payment and consumption transaction integrity end-to-end.
