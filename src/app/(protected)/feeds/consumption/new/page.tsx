@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
 import { useFeedConsumptionFormOptionsQuery } from '@/features/feed-consumption/feed-consumption.queries';
-import { FeedConsumptionForm } from '../components/FeedConsumptionForm';
+import { FeedConsumptionForm } from '@/features/feed-consumption/components/FeedConsumptionForm';
 import type { FeedConsumptionFormValues } from '@/features/feed-consumption/feed-consumption.schema';
 import { useCreateFeedConsumptionMutation } from '@/features/feed-consumption/feed-consumption.queries';
 
