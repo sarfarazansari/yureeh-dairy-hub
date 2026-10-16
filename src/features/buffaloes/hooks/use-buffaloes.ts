@@ -147,6 +147,8 @@ function useBuffaloMutation<TVariables, TData = void>(
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: buffaloKeys.all }),
         queryClient.invalidateQueries({ queryKey: buffaloProductionQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['diet-plans'] }),
+        queryClient.invalidateQueries({ queryKey: ['expenses'] }),
         queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
       ]);
