@@ -344,3 +344,5 @@ The user's short command `1 refactor karo` means:
 - Updated `docs/QUERY_INVALIDATION_CONTRACT.md` and `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` with findings, fixes and the remaining validation boundary.
 - Verification remains static read-back only. No local typecheck, lint, format, build, browser tests or Supabase RPC/RLS/concurrency tests ran. Keep REF-012 blocked until these are executed and the legacy compatibility-facade consumer graph is confirmed with a full local search/typecheck.
 - Next: inspect remaining effect-driven read candidates and residual duplicate date/payment helpers; then run the complete validation checklist. User retains PR/merge control.
+
+- Further invalidation review: feed purchase create/edit/delete now refresh expense-category summaries and feed-cost analytics; diet-plan save refreshes scheduler run history (joined plan labels). These still require browser/runtime verification.
