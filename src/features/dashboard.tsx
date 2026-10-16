@@ -42,6 +42,7 @@ export default function Dashboard() {
     monthRevenue = monthSummary?.revenue ?? 0,
     monthProduced = monthSummary?.milkProduced ?? 0,
     monthSold = monthSummary?.milkSold ?? 0;
+  type MilkEntry = (typeof entries)[number];
   const todayEntries = entries.filter((e) => e.business_date === todayKey),
     milk = (rows: MilkEntry[]) => rows.reduce((s, e) => s + Number(e.milk_quantity), 0),
     revenue = (rows: MilkEntry[]) => rows.reduce((s, e) => s + Number(e.calculated_amount), 0),
