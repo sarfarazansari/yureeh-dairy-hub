@@ -74,7 +74,7 @@ export function DateRangePicker({ from, to, onChange, max, className = '', ariaL
             </Button>
           </PopoverTrigger>
           {(from || to) && (
-            <Button variant="outline" type="button" className="shadcn-date-clear absolute right-2 top-1/2 -translate-y-1/2" aria-label="Clear date range" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>
+            <Button variant="ghost" size="icon" type="button" className="shadcn-date-clear absolute right-2 top-1/2 -translate-y-1/2" aria-label="Clear date range" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>
               <X size={14} aria-hidden="true" />
             </Button>
           )}
@@ -91,7 +91,7 @@ export function DateRangePicker({ from, to, onChange, max, className = '', ariaL
           />
           <div className="flex items-center justify-between gap-3 border-t border-[var(--line)] pt-2">
             <span className="text-xs text-[var(--muted)]">{draft?.from && !draft.to ? `Start: ${format(draft.from, 'd MMM yyyy')}. Choose end date.` : 'Select start and end dates'}</span>
-            <Button variant="outline" type="button" className="shadcn-calendar-today" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>Clear</Button>
+            <Button variant="ghost" size="sm" type="button" className="shadcn-calendar-today" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>Clear</Button>
           </div>
         </PopoverContent>
       </Popover>
