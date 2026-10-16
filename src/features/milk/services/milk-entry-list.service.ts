@@ -1,11 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { MilkEntryFilters, MilkEntryListResult, MilkEntryListRow, MilkEntryPagination } from '../milk-entry-list.types';
 
-export function getMilkEntryListUrl(pathname: string, params: URLSearchParams) {
-  const query = params.toString();
-  return query ? `${pathname}?${query}` : pathname;
-}
-
 export async function getMilkEntryList(
   client: SupabaseClient,
   filters: MilkEntryFilters,
