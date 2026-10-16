@@ -361,3 +361,6 @@ Append a dated entry here after each work session:
 - Scheduler retry invalidation now includes consumption, stock, feed-cost, financial-report and dashboard roots. QueryProvider clears the cache when authenticated user identity changes.
 - Static audit notes and validation checklist are in `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` and `docs/QUERY_INVALIDATION_CONTRACT.md`.
 - Status is not Completed: local typecheck/lint/format/build, browser workflows, account-switch testing, full compatibility-facade consumer search, and disposable Supabase RPC/RLS/concurrency/reconciliation tests remain unrun.
+
+
+- REF-010A follow-up — 2026-10-16: removed duplicate expense `money` and current-date implementations by re-exporting `farm-format.money` and `date-input.todayDateKey`; milk date-key helpers now delegate to the canonical date-key module; buffalo purchase validation reuses the canonical buffalo payment-type formula. Static read-back only; full typecheck/lint/build and consumer graph verification remain pending.
