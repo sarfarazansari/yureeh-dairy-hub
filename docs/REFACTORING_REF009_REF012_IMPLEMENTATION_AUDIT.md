@@ -113,3 +113,12 @@ Run `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`
 
 
 Additional final-pass fixes: feed purchase mutations now invalidate expense-category summaries and feed-cost analytics alongside linked expense, vendor, inventory and report roots. Diet-plan save now invalidates scheduler/run-history data so the joined plan name cannot remain stale after a plan edit. Both changes are static-only pending mutation workflow checks.
+
+
+### Duplicate helper/formula consolidation
+
+- `src/features/expenses/utils/expense-format.ts` now re-exports shared `money` from `src/lib/farm-format.ts` and aliases canonical `todayDateKey` as the existing `todayLocal` API; duplicate implementations were removed without changing consumer import names.
+- Milk-entry list `localDateKey` now delegates date normalization to `src/lib/date-key.ts`, and `isValidBusinessDate` delegates calendar validation to `isValidDateKey`. Day.js remains for date presets/range arithmetic.
+- Buffalo purchase validation now reuses `getBuffaloPaymentType` from the buffalo feature rather than maintaining a second payment-type formula.
+- Payment-method string unions remain domain-owned for buffalo/customer until their database constraints and business semantics are compared; identical current literals alone are not enough to merge them.
+- Re-export-only compatibility facades remain in place for old type/schema/list import paths until a branch-wide compiler-backed consumer audit proves safe removal.
