@@ -5,9 +5,9 @@ import { AppShell } from '@/components/layout/AppShell';
 import { supabase } from '@/lib/supabase';
 import type { FeedItem } from '@/lib/feed-types';
 import { useFeedItemsPageQuery, useSaveFeedItemMutation, useToggleFeedItemMutation } from '@/features/feed-items/feed-items.queries';
-import { FeedItemEditDialog } from './components/FeedItemEditDialog';
-import { FeedItemForm, type FeedItemFormValues } from './components/FeedItemForm';
-import { FeedItemTable } from './components/FeedItemTable';
+import { FeedItemEditDialog } from '@/features/feed-items/components/FeedItemEditDialog';
+import { FeedItemForm, type FeedItemFormValues } from '@/features/feed-items/components/FeedItemForm';
+import { FeedItemTable } from '@/features/feed-items/components/FeedItemTable';
 
 export default function FeedItemsPage() {
   const [page, setPage] = useState(1);
