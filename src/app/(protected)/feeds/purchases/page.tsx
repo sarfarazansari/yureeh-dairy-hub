@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
-import { useDeleteFeedPurchaseMutation, useFeedPurchaseArchiveQuery } from './queries';
+import { useDeleteFeedPurchaseMutation, useFeedPurchaseArchiveQuery } from '@/features/feed-purchases/feed-purchases.queries';
 import { FeedPurchaseTable } from './components/FeedPurchaseTable';
 
 
