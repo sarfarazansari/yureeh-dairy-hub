@@ -24,7 +24,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-003 | P0 | Audit current query infrastructure and state ownership (TanStack Query, local state, Zustand/store usage) | Completed | REF-002 | `docs/REFACTORING_QUERY_STATE_AUDIT.md`: source-backed query-key, invalidation, auth-cache and server-state findings; static validation limits recorded |
 | REF-004 | P1 | Map module boundaries, dependencies and shared types/schemas/helpers | Completed | REF-002 | `docs/REFACTORING_MODULE_BOUNDARIES_AUDIT.md`: module/dependency map, overlapping types/helpers, canonical ownership candidates and validation limits |
 | REF-005 | P1 | Audit server-state fetching and effects; define migration pattern for ad hoc useEffect fetching | Completed (static audit) | REF-003, REF-004 | `docs/REFACTORING_EFFECTS_AUDIT.md`: prioritized path-level candidates, preserved UI/auth effects, migration pattern, risk ordering and acceptance checklist; runtime limitations recorded |
-| REF-006 | P1 | Audit mutation invalidation, duplicate submission, errors, loading/empty states and pagination | Pending | REF-003, REF-004 | Per-module checklist and confirmed gaps |
+| REF-006 | P1 | Audit mutation invalidation, duplicate submission, errors, loading/empty states and pagination | Completed (static audit) | REF-003, REF-004 | `docs/REFACTORING_MUTATION_UX_AUDIT.md`: confirmed cache gaps, per-module safeguards/risks, invalidation matrix, pagination and regression checklists; static limitations recorded |
 | REF-007 | P1 | Audit finance, milk pool, feed inventory, purchase/payment and consumption transaction integrity | Pending | REF-002 | Trace from UI to service/RPC/migration/RLS/report consumers |
 | REF-008 | P1 | Finalize refactor phases and acceptance criteria based on the full repository audit | Pending | REF-002–REF-007 | Ordered task list with dependencies, files and validation plan |
 | REF-009 | P1 | Refactor shared query conventions and shared data-access foundations if needed | Pending | REF-008 | Tests/typecheck/lint and migration plan if applicable |
@@ -176,3 +176,16 @@ Append a dated entry here after each work session:
 - Findings: Dashboard, sales/production analytics, financial reports, expenses and feed inventory/purchase/consumption/diet-plan pages are candidates for query-backed reads. Auth subscriptions, timers, date-picker synchronization, form/dialog synchronization and local pagination correction must not be removed blindly. Transactional feed and financial modules remain gated on REF-007.
 - Blockers or decisions: No business decision required for this audit. Do not begin source migrations until REF-006 through REF-008 are completed.
 - Next task ID: REF-006 — audit mutation invalidation, duplicate submission, errors, loading/empty states and pagination.
+
+
+### Session log — 2026-10-16 (REF-006)
+
+- Task ID: REF-006
+- Branch: `feature/refactor-engineering-standards`
+- Status: Completed (static audit; no source implementation changes)
+- Files changed: `docs/REFACTORING_MUTATION_UX_AUDIT.md`, `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`
+- Checks executed and results: Read prior inventory/query/effects audits; inspected milk/customer/production query modules, buffalo mutation hooks, feed purchase/consumption/inventory/diet-plan services, expense history/detail and key feed pages. Confirmed missing customer cache invalidation for milk writes and missing buffalo-detail production-history invalidation after production save. Documented per-module mutation guards, pagination behavior, dependency matrix and regression checklist.
+- Checks not run / limitations: No local checkout; build, lint, typecheck, tests, browser/manual regression, concurrency, RPC/RLS and database checks were not run. Not every page's pending/error path or the full downstream invalidation graph can be confirmed by this static pass.
+- Findings: Existing safeguards include feed-purchase idempotency RPC, RPC-backed feed consumption writes, expense ledger lock checks, server-side expense/feed pagination and explicit guarded scheduler retry. Broad cross-domain invalidation still needs the REF-007 transaction map.
+- Blockers or decisions: No business decision needed. Do not implement cross-domain invalidation or transactional write refactors before REF-007 and REF-008.
+- Next task ID: REF-007 — audit finance, milk pool, feed inventory, purchase/payment and consumption transaction integrity end-to-end.
