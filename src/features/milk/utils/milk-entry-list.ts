@@ -1,8 +1,9 @@
 import dayjs from 'dayjs';
+import { isValidDateKey, normalizeDateKey } from '@/lib/date-key';
 import type { MilkEntryDatePreset } from '../milk-entry-list.types';
 
 export function localDateKey(date: Date = new Date()): string {
-  return dayjs(date).format('YYYY-MM-DD');
+  return normalizeDateKey(date) ?? '';
 }
 
 export function getMilkEntryPresetRange(
@@ -19,11 +20,7 @@ export function getMilkEntryPresetRange(
 }
 
 export function isValidBusinessDate(value: string): boolean {
-  return (
-    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
-    dayjs(`${value}T12:00:00`).isValid() &&
-    dayjs(`${value}T12:00:00`).format('YYYY-MM-DD') === value
-  );
+  return isValidDateKey(value);
 }
 
 
