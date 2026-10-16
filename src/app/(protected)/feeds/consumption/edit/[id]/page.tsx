@@ -11,11 +11,13 @@ import type { FeedItem } from '@/lib/feed-types';
 import type { FeedInventoryStock } from '@/lib/feed-inventory-types';
 import { FeedConsumptionForm } from '../../components/FeedConsumptionForm';
 import type { FeedConsumptionFormValues } from '../../schema';
-import { editFeedConsumption, fetchFeedConsumptionForEdit, fetchFeedItems, fetchFeedStock } from '../../services';
+import { fetchFeedConsumptionForEdit, fetchFeedItems, fetchFeedStock } from '../../services';
+import { useEditFeedConsumptionMutation } from '../../queries';
 
 export default function EditFeedConsumptionPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const editMutation = useEditFeedConsumptionMutation();
   const id = params.id;
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [stock, setStock] = useState<FeedInventoryStock[]>([]);
@@ -51,7 +53,7 @@ export default function EditFeedConsumptionPage() {
     if (!supabase) return 'Supabase is not configured.';
     setBusy(true);
     try {
-      await editFeedConsumption(supabase, id, values);
+      await editMutation.mutateAsync({ movementId: id, values });
       setToast({ message: 'Feed consumption updated successfully.', type: 'success' });
       router.push('/feeds/consumption');
       return null;
