@@ -205,8 +205,8 @@ export default function ExpenseDashboard() {
         />
         <div className="card">
           <div className="kpi-label">QUICK ACTION</div>
-          <Link className="btn full" href="/expenses/new">
-            ＋ &nbsp;Record expense
+          <Link href="/expenses/new" className="inline-flex">
+            <span className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[var(--green)] px-4 text-sm font-medium text-white transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--green)] focus-visible:ring-offset-2">＋ &nbsp;Record expense</span>
           </Link>
         </div>
         <div className="card">
