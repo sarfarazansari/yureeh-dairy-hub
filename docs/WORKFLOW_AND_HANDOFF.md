@@ -266,3 +266,16 @@ The user's short command `1 refactor karo` means:
 - No Zustand store was introduced because the current candidate state is either server-owned (TanStack Query) or local to the UI component. Adding a store without cross-route client-state requirements would violate project rules. This is a documented decision, not a claim that store architecture work is fully complete.
 - Static verification only: route import edits were checked against source files while migrating. Full repository import scan, typecheck, lint, build, tests and browser regression checks still need to be run locally before merge.
 - Next: audit the remaining feed module component ownership, then buffalo/customer/milk shared types and service boundaries; only then finalize the app-wide folder architecture and remove duplicate types/helpers.
+
+
+## REF-013 update — feed component ownership — 2026-10-16
+
+- Moved all feed module UI components out of `src/app/(protected)/feeds/**/components` and into feature-owned component folders:
+  - `src/features/feed-items/components/*`
+  - `src/features/feed-inventory/components/*`
+  - `src/features/feed-purchases/components/*`
+  - `src/features/feed-consumption/components/*`
+  - `src/features/diet-plans/components/*`
+- Updated feed archive/new/edit routes to import feature-owned components, and adjusted moved components' dependencies to feature-owned services/schemas/utilities. Removed old route-owned component duplicates.
+- Remaining routes stay under `src/app/(protected)/feeds` as routing entry points; business logic, query hooks, schemas and reusable module UI now belong under `src/features` for the migrated feed domains.
+- Static checks only. Run local typecheck, lint, build, purchase/consumption/plan scheduler regression flows and browser smoke tests before merge.
