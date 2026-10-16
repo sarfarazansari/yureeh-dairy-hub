@@ -268,3 +268,61 @@ export function useNewExpenseOptionsQuery(ownerId: string, enabled = true) {
     },
   });
 }
+
+export type CreateExpenseInput = {
+  userId: string;
+  businessDate: string;
+  categoryId: string;
+  vendorId: string | null;
+  buffaloId: string | null;
+  description: string | null;
+  quantity: number | null;
+  unit: string | null;
+  rate: number | null;
+  totalAmount: number;
+  paymentStatus: string;
+  paidAmount: number;
+  paymentMethod: string;
+  dueDate: string | null;
+  notes: string | null;
+  receiptReference: string | null;
+};
+
+export function useCreateExpenseMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateExpenseInput) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const { error } = await supabase.from('expenses').insert({
+        user_id: input.userId,
+        business_date: input.businessDate,
+        category_id: input.categoryId,
+        vendor_id: input.vendorId,
+        buffalo_id: input.buffaloId,
+        description: input.description,
+        quantity: input.quantity,
+        unit: input.unit,
+        rate: input.rate,
+        total_amount: input.totalAmount,
+        payment_status: input.paymentStatus,
+        paid_amount: input.paidAmount,
+        payment_method: input.paymentMethod,
+        due_date: input.dueDate,
+        notes: input.notes,
+        receipt_reference: input.receiptReference,
+      });
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: expenseQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: expenseQueryKeys.vendors() }),
+        queryClient.invalidateQueries({ queryKey: expenseQueryKeys.categories() }),
+        queryClient.invalidateQueries({ queryKey: ['feed-purchases'] }),
+        queryClient.invalidateQueries({ queryKey: ['feed-inventory'] }),
+        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+      ]);
+    },
+  });
+}
