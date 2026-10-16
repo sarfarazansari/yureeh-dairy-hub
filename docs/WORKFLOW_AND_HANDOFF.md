@@ -6,7 +6,7 @@ Last updated: 2026-10-06
 
 Repository: https://github.com/sarfarazansari/yureeh-dairy-hub  
 Default branch: `master`  
-Current work branch at handoff: `feature/buffalo-domain-audit`
+Current work branch at handoff: `feature/feature-folder-structure-foundation`
 
 Yureeh Dairy Hub is a practical dairy-farm operations app built with Next.js App Router, TypeScript, React, Supabase/PostgreSQL, RLS, React Hook Form, Zod, and TanStack Query.
 
@@ -285,3 +285,13 @@ The user's short command `1 refactor karo` means:
 
 - Added `npm run typecheck` → `tsc --noEmit` to `package.json`. Use it alongside `npm run lint`, `npm run format:check`, and `npm run build` before merging the structural refactor.
 - These commands were not run remotely by this session.
+
+
+## Structural refactor handoff — 2026-10-16
+
+- Active branch: `feature/feature-folder-structure-foundation` (user requested continuing on this same branch).
+- REF-013 now includes feature-owned expense helpers/navigation, feed item/inventory/purchase/consumption/diet-plan components and service/query/schema boundaries, plus canonical customer domain types in `src/features/customers/types.ts`.
+- Customer type consumers updated: `customer.service.ts`, `customer.queries.ts`, `CustomersPage.tsx`, and `CustomerDetailPage.tsx`. The customer directory RPC summary projection remains private to the service. Shared `PricingType` and `Shift` remain canonical in `src/lib/milk-domain.ts`.
+- Store decision: no Zustand store has been introduced. Current inspected shared remote data belongs in TanStack Query; local form/sidebar state remains local. Revisit only if a concrete cross-route client-owned state requirement is identified.
+- Static source updates were written/read through GitHub. Typecheck, lint, formatting, build, tests and browser checks were not run in a local checkout. User should run them before merging.
+- Next structural slice: audit remaining module-owned type/service/component boundaries (especially milk and buffalo sales) and migrate one coherent set with all consumers verified; do not create empty folders or duplicate shared types.
