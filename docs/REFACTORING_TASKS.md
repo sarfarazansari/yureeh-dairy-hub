@@ -280,3 +280,10 @@ Append a dated entry here after each work session:
 - Updated route pages to import feature-owned components. Updated moved components to reference feature-owned schemas/services and the canonical expense date utility where needed.
 - Removed the old route-owned component files after creating feature-owned replacements.
 - GitHub tree/source read-back and targeted import inspection performed; full local build/typecheck/lint/tests were not run. This is still In Progress until the user confirms local checks.
+
+
+### Session log — 2026-10-16 (developer verification command)
+
+- Added `npm run typecheck` (`tsc --noEmit`) to `package.json` so the documented TypeScript validation has a standard one-command entry point.
+- No dependencies were added and no lockfile change was required for this script-only change.
+- Command has not been executed in this environment; user must run it locally.
