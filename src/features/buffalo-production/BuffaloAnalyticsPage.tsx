@@ -25,7 +25,7 @@ import { formatDate } from '@/lib/date-format';
 import { localDateKey } from '@/lib/milk-entry-list';
 import { getAnalyticsDateRange, type AnalyticsDatePreset } from '@/lib/analytics-date-range';
 import { getBuffaloProductionRange, getMilkPoolShiftFatHistory, getProducingBuffaloes } from './services/buffalo-production.service';
-import type { MilkPoolShiftFatRecord } from './types';
+import type { MilkPoolShiftFatRecord } from '@/features/milk/milk.types';
 import type { BuffaloProductionAnimal, BuffaloProductionRecord } from './types';
 function setPreset(value: string, setFrom: (date: string) => void, setTo: (date: string) => void) {
   const range = getAnalyticsDateRange(value as AnalyticsDatePreset);
