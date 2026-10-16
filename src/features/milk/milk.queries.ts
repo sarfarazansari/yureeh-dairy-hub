@@ -14,13 +14,8 @@ import {
   hasDuplicateMilkEntry,
   updateMilkEntry,
 } from './services/milk-entry.service';
-import {
-  getMilkEntryList,
-  getMilkEntryListAll,
-  type MilkEntryFilters,
-  type MilkEntryListResult,
-  type MilkEntryPagination,
-} from '@/lib/milk-entry-list';
+import { getMilkEntryList, getMilkEntryListAll } from './services/milk-entry-list.service';
+import type { MilkEntryFilters, MilkEntryListResult, MilkEntryPagination } from './milk-entry-list.types';
 import {
   getMilkPoolReconciliation,
   getMilkPoolShiftFatHistory,
