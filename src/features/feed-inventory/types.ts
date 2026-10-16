@@ -45,3 +45,8 @@ export type FeedInventoryMovementRow = FeedInventoryMovement & {
   feed_item_name: string;
   base_unit: string;
 };
+
+export type FeedInventoryMovementRow = FeedInventoryMovement & {
+  feed_item_name: string;
+  base_unit: string;
+};
