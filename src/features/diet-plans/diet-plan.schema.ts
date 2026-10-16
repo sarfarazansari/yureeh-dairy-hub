@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { dateKeySchema, optionalDateKeySchema } from '@/lib/date-input';
+import { DIET_PLAN_STATUSES } from './types';
 
 export const dietPlanSchema = z.object({
   name: z.string().trim().min(1, 'Plan name is required.').max(120),
   notes: z.string().max(1000).default(''),
   startDate: dateKeySchema('Start date'),
   endDate: optionalDateKeySchema('End date').default(''),
-  status: z.enum(['ACTIVE', 'PAUSED', 'STOPPED']),
+  status: z.enum(DIET_PLAN_STATUSES),
   items: z.array(z.object({
     feedItemId: z.string().uuid('Select a feed item.'),
     morningQuantity: z.coerce.number().min(0).max(999999999),
