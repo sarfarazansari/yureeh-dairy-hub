@@ -11,10 +11,12 @@ import type { FeedItem } from '@/lib/feed-types';
 import type { FeedInventoryStock } from '@/lib/feed-inventory-types';
 import { FeedConsumptionForm } from '../components/FeedConsumptionForm';
 import type { FeedConsumptionFormValues } from '../schema';
-import { createFeedConsumption, fetchFeedItems, fetchFeedStock } from '../services';
+import { fetchFeedItems, fetchFeedStock } from '../services';
+import { useCreateFeedConsumptionMutation } from '../queries';
 
 export default function NewFeedConsumptionPage() {
   const router = useRouter();
+  const createMutation = useCreateFeedConsumptionMutation();
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
   const [stock, setStock] = useState<FeedInventoryStock[]>([]);
   const [busy, setBusy] = useState(false);
@@ -36,7 +38,7 @@ export default function NewFeedConsumptionPage() {
     if (!supabase) return 'Supabase is not configured.';
     setBusy(true);
     try {
-      await createFeedConsumption(supabase, values);
+      await createMutation.mutateAsync(values);
       setToast({ message: 'Feed consumption recorded successfully.', type: 'success' });
       router.push('/feeds/consumption');
       return null;
