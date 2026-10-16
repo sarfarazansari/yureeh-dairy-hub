@@ -91,7 +91,7 @@ export default function BuffaloDetailPage({ id }: { id: string }) {
         <BuffaloStatusHistory history={statusHistoryQuery.data ?? []} />
       </div>
       <div className="card">
-        <div className="row"><div><h2 className="section-title">Performance history</h2><p className="sub">Milk recorded for this buffalo by date and shift.</p></div><Link className="date-chip" href="/daily-performance">Open production</Link></div>
+        <div className="row"><div><h2 className="section-title">Performance history</h2><p className="sub">Milk recorded for this buffalo by date and shift.</p></div><Button variant="outline" size="sm" asChild><Link href="/daily-performance">Open production</Link></Button></div>
         {productionQuery.isPending ? <div className="empty">Loading production history…</div> : productionQuery.isError ? <div role="alert" className="empty">{productionQuery.error.message}</div> : <ProductionTable production={production} />}
       </div>
     </AppShell>
