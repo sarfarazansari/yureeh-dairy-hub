@@ -16,7 +16,7 @@ import { useExpenseVendorDirectoryQuery, useSaveExpenseVendorMutation, useToggle
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseVendor } from '@/lib/expense-types';
 export default function ExpenseVendors() {
-    [name, setName] = useState(''),
+  const [name, setName] = useState(''),
     [mobile, setMobile] = useState(''),
     [city, setCity] = useState(''),
     [address, setAddress] = useState(''),
