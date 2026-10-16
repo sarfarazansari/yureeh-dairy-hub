@@ -108,3 +108,32 @@ Continue work on the Yureeh Dairy Hub repository: https://github.com/sarfarazans
 Read `docs/WORKFLOW_AND_HANDOFF.md` and `YUREEH_PROJECT_RULES.md` first, then inspect the latest repository state. The user is handling the PR and merge for `feature/buffalo-domain-audit` themselves. Do not raise or merge a PR.
 
 Before starting new work, use the latest `master` as the base and create a fresh feature branch from it; never branch the next module from the previous feature branch. The next task is a deep audit of Milk Production and its real-world flow into farm milk pool and milk sales/customer delivery. Inspect migrations and all relevant code first, map the current implementation, and identify domain gaps before editing. Follow the engineering and testing rules in this document. Be transparent about which checks are static versus actually executed.
+
+
+## Refactoring workflow (permanent)
+
+Read these documents at the start of every refactoring session, in this order:
+1. `YUREEH_PROJECT_RULES.md`
+2. `docs/WORKFLOW_AND_HANDOFF.md`
+3. `docs/REFACTORING_ARCHITECTURE.md`
+4. `docs/REFACTORING_TASKS.md`
+
+### Single-command continuation
+
+The user's short command `1 refactor karo` means:
+- Inspect latest remote `master`; create a fresh feature branch from it, never from an old feature branch.
+- Select the highest-priority Pending task whose dependencies are Completed.
+- Inspect all relevant source, migrations, RPCs, RLS and downstream consumers before changing code.
+- Complete one coherent task, run relevant checks, and update the task tracker with evidence.
+- Record branch, changed files, checks, limitations, blockers and next task in the tracker/handoff.
+- Do not ask the user to repeat established requirements.
+- Do not create a PR or merge; the user owns those actions.
+- Do not claim local tests/builds or remote database operations that were not actually run.
+
+### Current refactoring state
+
+- Planning/standards branch: `feature/refactor-engineering-standards`
+- Architecture standard: `docs/REFACTORING_ARCHITECTURE.md`
+- Task tracker and initial confirmed data-access inventory: `docs/REFACTORING_TASKS.md`
+- Next task after standards setup: `REF-002` — complete a repository-wide, path-exact inventory of Supabase/API access, RPC calls, effects, query hooks, mutations and state patterns. The initial inventory is explicitly partial and must be verified against the actual repository before it is treated as complete.
+- Do not begin module implementation refactors until the inventory, architecture gap analysis and dependency-aware phase plan are completed and recorded in the tracker.

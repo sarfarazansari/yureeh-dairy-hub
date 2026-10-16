@@ -1,0 +1,127 @@
+# Refactoring Task Tracker
+
+Last reviewed: 2026-10-16
+Repository: https://github.com/sarfarazansari/yureeh-dairy-hub
+Base branch: `master`
+Execution branch for this planning baseline: `feature/refactor-engineering-standards`
+
+## Status definitions
+
+- **Pending** — not started.
+- **In Progress** — currently being worked on; update at each handoff.
+- **Blocked** — cannot safely proceed; state the exact dependency.
+- **Completed** — implementation and required verification are complete.
+- **Deferred** — deliberately postponed with a reason.
+
+Never mark a task Completed based only on a proposed plan or static inspection. Record verification evidence and limitations.
+
+## Current priority queue
+
+| ID | Priority | Task | Status | Depends on | Completion evidence |
+|---|---|---|---|---|---|
+| REF-001 | P0 | Establish permanent architecture standards and one-command workflow | Completed | — | Architecture, tracker and handoff created; permanent rules and workflow updated on feature branch |
+| REF-002 | P0 | Complete file-by-file inventory of all server/data access, Supabase calls, RPCs, fetches, effects and query/mutation hooks | In Progress | REF-001 | Initial confirmed paths recorded; repository-wide verification remains outstanding |
+| REF-003 | P0 | Audit current query infrastructure and state ownership (TanStack Query, local state, Zustand/store usage) | Pending | REF-002 | Findings backed by source paths and concrete examples |
+| REF-004 | P1 | Map module boundaries, dependencies and shared types/schemas/helpers | Pending | REF-002 | Dependency map and duplicate-definition list |
+| REF-005 | P1 | Audit server-state fetching and effects; define migration pattern for ad hoc useEffect fetching | Pending | REF-003, REF-004 | Prioritized findings with regression considerations |
+| REF-006 | P1 | Audit mutation invalidation, duplicate submission, errors, loading/empty states and pagination | Pending | REF-003, REF-004 | Per-module checklist and confirmed gaps |
+| REF-007 | P1 | Audit finance, milk pool, feed inventory, purchase/payment and consumption transaction integrity | Pending | REF-002 | Trace from UI to service/RPC/migration/RLS/report consumers |
+| REF-008 | P1 | Finalize refactor phases and acceptance criteria based on the full repository audit | Pending | REF-002–REF-007 | Ordered task list with dependencies, files and validation plan |
+| REF-009 | P1 | Refactor shared query conventions and shared data-access foundations if needed | Pending | REF-008 | Tests/typecheck/lint and migration plan if applicable |
+| REF-010 | P1 | Refactor first selected feature module end-to-end | Pending | REF-009 | No direct DB access in UI, standardized queries/services/schemas, regression checks |
+| REF-011 | P2 | Refactor remaining modules one task per run, in dependency-aware order | Pending | REF-010 | Each module independently verified and tracker updated |
+| REF-012 | P2 | Final architecture regression audit and remove obsolete duplicate patterns | Pending | REF-011 | Search-based audit and validation report |
+
+## Initial source inventory (confirmed paths; not yet exhaustive)
+
+This is a starting inventory from code inspected during planning. REF-002 must expand and verify it against the actual repository tree. Do not infer that a file is absent merely because it is not listed here.
+
+### Shared infrastructure
+- `src/lib/supabase.ts` — Supabase client creation.
+- `src/app/auth-gate.tsx` — session retrieval and auth-state subscription via `useEffect`.
+- `package.json` — Next.js, React, Supabase, TanStack Query, Zod, React Hook Form-related project conventions; scripts currently include dev/build/start/lint/format but no explicit test or typecheck script.
+
+### Buffaloes and production
+- `src/features/buffaloes/services/buffalo.service.ts` — buffalo profile, purchase, payment, status, sale/disposal data access and RPC calls.
+- `src/features/buffaloes/hooks/use-buffaloes.ts` — TanStack Query hook(s).
+- `src/features/buffalo-production/services/buffalo-production.service.ts` — production sheet and save RPCs; production/fat/buffalo queries.
+- `src/features/buffalo-production/buffalo-production.queries.ts` — query/mutation hooks.
+- `src/features/buffalo-production/BuffaloAnalyticsPage.tsx` — effect-based loading observed.
+- `src/features/buffalo-production/DailyPerformancePage.tsx` — listed in handoff as a key production route; audit direct access and dependencies.
+
+### Customers and milk
+- `src/features/customers/services/customer.service.ts` — customer data, pricing and payment-related RPCs.
+- `src/features/customers/customer.queries.ts` — query/mutation hooks.
+- `src/features/customers/CustomersPage.tsx` — directory query usage and auth lookup observed.
+- `src/features/customers/CustomerDetailPage.tsx` — detail/query retry patterns observed.
+- `src/features/milk/services/milk-entry.service.ts` — milk-entry create/update/delete RPCs and counts.
+- `src/features/milk/services/milk-pool.service.ts` — milk-pool reconciliation, movement and shift-context RPCs; production/fat queries.
+- `src/features/milk/milk.queries.ts` — query/mutation hooks.
+- `src/features/milk/EntriesPage.tsx` — list/export query hooks and refetch paths observed.
+- `src/features/milk/MilkPoolPage.tsx` — query results/retry patterns observed.
+
+### Dashboard, analytics and finance
+- `src/features/analytics/services/sales-analytics.service.ts` — sales analytics RPC and customer lookup.
+- `src/features/analytics/SalesAnalyticsPage.tsx` — effect-based loading observed.
+- `src/features/dashboard/services/dashboard.service.ts` — dashboard data queries and sales analytics RPC.
+- `src/features/dashboard.tsx` — effect-based loading observed.
+- `src/app/(protected)/financial-reports/page.tsx` — financial summary RPCs and effect-based loading observed.
+- `src/features/buffalo-production/BuffaloAnalyticsPage.tsx` — production analytics data path also feeds analytics.
+
+### Expenses
+- `src/app/(protected)/expenses/page.tsx` — expense list data access and effect.
+- `src/app/(protected)/expenses/new/page.tsx` — lookup queries and expense creation observed.
+- `src/app/(protected)/expenses/history/page.tsx` — paginated expense query, related lookups, update and soft-delete paths observed.
+- `src/app/(protected)/expenses/history/[id]/page.tsx` — expense/payment queries and `record_expense_payment` RPC observed.
+- `src/app/(protected)/expenses/categories/page.tsx` — category CRUD and auth calls observed.
+- `src/app/(protected)/expenses/vendors/page.tsx` — vendor queries and directory-summary RPC observed.
+- `src/app/(protected)/expenses/shared.tsx` — category lookup/default category insertion observed.
+
+### Feed purchases, consumption, inventory and diet plans
+- `src/app/(protected)/feeds/items/page.tsx` — feed item query/count and CRUD/activation observed in route page.
+- `src/app/(protected)/feeds/purchases/services.ts` — purchase create/edit/delete RPCs and movement queries.
+- `src/app/(protected)/feeds/consumption/services.ts` — consumption create/edit/delete RPCs, movements, feed items and stock queries.
+- `src/app/(protected)/feeds/inventory/services.ts` — stock and movement queries.
+- `src/app/(protected)/feeds/diet-plans/services.ts` — plans/items, feed items, production-sheet RPC and save-plan RPC.
+- `src/app/(protected)/feeds/purchases/page.tsx` — lookup loading observed.
+- `src/app/(protected)/feeds/consumption/page.tsx` — effect-based loading observed.
+- `src/app/(protected)/feeds/inventory/page.tsx` — stock/movement effects observed.
+- `src/app/(protected)/feeds/diet-plans/page.tsx` — effect-based list loading observed.
+- `src/app/(protected)/feeds/purchases/components/FeedPurchaseForm.tsx` — effect observed.
+- `src/app/(protected)/feeds/diet-plans/components/DietPlanForm.tsx` — effects observed.
+- `src/app/(protected)/buffalo-sales/page.tsx` — effect and query/refetch usage requires tracing.
+
+## Per-task handoff record
+
+Append a dated entry here after each work session:
+
+- Date:
+- Task ID:
+- Branch:
+- Status:
+- Files changed:
+- Checks executed and results:
+- Checks not run / limitations:
+- Blockers or decisions:
+- Next task ID:
+
+## Rules for updating this tracker
+
+1. Update status when starting and finishing a task.
+2. Never mark a task complete until acceptance criteria and relevant checks are satisfied.
+3. Keep file inventory path-exact; label unverified leads as unverified.
+4. If scope changes, add a task and dependency rather than silently broadening an existing task.
+5. Keep one coherent implementation task per `1 refactor karo` run unless a small prerequisite is essential.
+6. The next task is the highest-priority Pending task whose dependencies are Completed.
+
+
+### Session log — 2026-10-16
+
+- Task ID: REF-001
+- Branch: `feature/refactor-engineering-standards`
+- Status: Completed
+- Files changed: `YUREEH_PROJECT_RULES.md`, `docs/WORKFLOW_AND_HANDOFF.md`, `docs/REFACTORING_ARCHITECTURE.md`, `docs/REFACTORING_TASKS.md`
+- Checks executed and results: GitHub branch/file read-back confirmed all four files exist on the feature branch; static documentation consistency review only.
+- Checks not run / limitations: Application build, lint, tests and local Git status were not run because this session used remote GitHub file operations, not a local checkout.
+- Blockers or decisions: The repository-wide search endpoint did not return indexed code results in this session. The initial API inventory is intentionally marked partial rather than falsely claiming exhaustive coverage.
+- Next task ID: REF-002 — obtain/verify a complete source-file inventory and trace all API/data-access/effect/query patterns before planning module refactors.

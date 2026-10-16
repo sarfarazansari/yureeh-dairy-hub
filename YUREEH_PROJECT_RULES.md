@@ -232,3 +232,44 @@ Ask internally:
 10. What happens when the user edits or deletes it?
 
 Only then implement.
+
+--------------------------------------------------
+
+REFACTORING AND STATE MANAGEMENT STANDARDS
+
+For all refactoring work, also read `docs/REFACTORING_ARCHITECTURE.md` and `docs/REFACTORING_TASKS.md`.
+
+Server state:
+- Use TanStack Query for Supabase/API-backed data, query lifecycle, cache, pagination, and invalidation.
+- Centralize stable query-key factories. Keys must include every filter and input that changes a result.
+- Query hooks call typed feature services. Components and route pages must not scatter Supabase reads/writes.
+- Mutations must invalidate or update all affected entity, list, inventory, finance, dashboard, and analytics queries.
+- Never copy remote/server state into Zustand as a second cache.
+- Do not automatically retry non-idempotent financial, payment, purchase, stock or consumption mutations.
+
+Client state:
+- Use local React state for local UI state.
+- Use Zustand only for justified shared client-owned state that genuinely spans distant components/routes. Document ownership, consumers, lifecycle and why local state/props/context are insufficient.
+- Do not use a store for server records, form values already managed by React Hook Form, or derived values.
+
+Module structure:
+- Prefer feature-owned components, hooks, queries, services, schemas, types, utils and constants.
+- Add store/effects/tests folders only when justified; do not create empty folders.
+- Route files should be thin. Keep data access in typed services and query/mutation hooks.
+- Search for existing canonical types, schemas, helpers and formulas before adding new ones. Remove obsolete duplicates after migration.
+- Use React Hook Form + Zod for non-trivial forms where appropriate.
+- Effects synchronize with external systems; they are not the default data-fetching mechanism.
+- Comments explain business invariants and non-obvious WHY decisions, not obvious WHAT statements.
+
+Refactoring execution:
+1. Read project rules, workflow handoff, architecture standards and task tracker before coding.
+2. Fetch latest origin/master and create a fresh feature branch from it. Never branch from an older feature branch.
+3. Select the next highest-priority Pending task whose dependencies are Completed.
+4. Trace relevant modules, migrations, RPCs, RLS policies, downstream consumers and reporting before changing code.
+5. Refactor one coherent task at a time and preserve verified behavior unless correcting a documented defect.
+6. Run relevant type, lint, build, test and regression checks; report what was and was not actually executed.
+7. Update `docs/REFACTORING_TASKS.md` and this handoff with status, changed files, validation, blockers and the next task.
+8. Do not create PRs, merge branches or modify production data unless explicitly instructed.
+
+Automation command:
+When the user says `1 refactor karo` or an unambiguous equivalent, read all four documents above, inspect the latest remote master and current task state, create a fresh branch from latest master, then execute the next unblocked task from the tracker without asking the user to repeat the prompt. Update the tracker and handoff before reporting a concise summary. Ask only for a genuine blocker or a decision that materially affects business correctness.
