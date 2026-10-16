@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { FeedItem } from '@/lib/feed-types';
+import type { FeedItem } from './types';
 
 export async function getFeedItemsPage(
   client: SupabaseClient,
