@@ -24,7 +24,7 @@ import {
   type RecordMilkPoolMovementInput,
 } from './services/milk-pool.service';
 import type { MilkPoolShiftFatRecord } from './milk.types';
-import type { MilkEntryFormValues } from '@/lib/milk-entry-validation';
+import type { MilkEntryFormValues } from '@/features/milk/milk-entry.schema';
 
 export const milkQueryKeys = {
   all: ['milk'] as const,
