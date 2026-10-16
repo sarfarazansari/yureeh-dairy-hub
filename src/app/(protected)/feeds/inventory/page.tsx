@@ -4,71 +4,38 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
-import { supabase } from '@/lib/supabase';
-import type { FeedInventoryStock } from '@/lib/feed-inventory-types';
 import type { FeedInventoryMovementType } from '@/lib/feed-inventory-types';
 import { FEED_INVENTORY_MOVEMENT_TYPES } from '@/lib/feed-inventory-types';
 import { FeedInventoryMovementTable } from './components/FeedInventoryMovementTable';
 import { FeedInventoryStockTable } from './components/FeedInventoryStockTable';
-import { fetchFeedInventoryMovements, fetchFeedInventoryStock } from './services';
+import { useFeedInventoryMovementsQuery, useFeedInventoryStockQuery } from './queries';
 
 const PAGE_SIZE = 20;
 const money = (value: number) => `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const movementLabel = (value: string) => value.replaceAll('_', ' ');
 
 export default function FeedInventoryPage() {
-  const [stock, setStock] = useState<FeedInventoryStock[]>([]);
-  const [movements, setMovements] = useState<Awaited<ReturnType<typeof fetchFeedInventoryMovements>>['rows']>([]);
-  const [movementCount, setMovementCount] = useState(0);
   const [page, setPage] = useState(0);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [feedItemId, setFeedItemId] = useState('');
   const [movementType, setMovementType] = useState<'' | FeedInventoryMovementType>('');
-  const [loadingStock, setLoadingStock] = useState(true);
-  const [loadingMovements, setLoadingMovements] = useState(true);
-  const [stockError, setStockError] = useState('');
-  const [movementError, setMovementError] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-
-  const loadStock = useCallback(async () => {
-    if (!supabase) {
-      setStockError('Supabase is not configured.');
-      setLoadingStock(false);
-      return;
-    }
-    setLoadingStock(true);
-    setStockError('');
-    try {
-      setStock(await fetchFeedInventoryStock(supabase));
-    } catch (error) {
-      setStockError(error instanceof Error ? error.message : 'Could not load inventory stock.');
-    } finally { setLoadingStock(false); }
-  }, []);
-
-  const loadMovements = useCallback(async () => {
-    if (!supabase) {
-      setMovementError('Supabase is not configured.');
-      setLoadingMovements(false);
-      return;
-    }
-    setLoadingMovements(true);
-    setMovementError('');
-    try {
-      const result = await fetchFeedInventoryMovements(supabase, page, PAGE_SIZE, { from, to, feedItemId, movementType });
-      setMovements(result.rows);
-      setMovementCount(result.count);
-    } catch (error) {
-      setMovementError(error instanceof Error ? error.message : 'Could not load inventory history.');
-    } finally { setLoadingMovements(false); }
-  }, [page, from, to, feedItemId, movementType]);
-
-  useEffect(() => { void loadStock(); }, [loadStock]);
-  useEffect(() => { void loadMovements(); }, [loadMovements]);
+  const stockQuery = useFeedInventoryStockQuery();
+  const movementQuery = useFeedInventoryMovementsQuery({ page, from, to, feedItemId, movementType });
+  const stock = stockQuery.data ?? [];
+  const movements = movementQuery.data?.rows ?? [];
+  const movementCount = movementQuery.data?.count ?? 0;
+  const loadingStock = stockQuery.isPending;
+  const loadingMovements = movementQuery.isPending;
+  const stockError = stockQuery.error?.message ?? '';
+  const movementError = movementQuery.error?.message ?? '';
+  const loadStock = () => void stockQuery.refetch();
+  const loadMovements = () => void movementQuery.refetch();
 
   const totalValue = stock.reduce((sum, row) => sum + Number(row.stock_value), 0);
   const lowStockCount = stock.filter((row) => row.is_active && Number(row.quantity_on_hand) > 0 && Number(row.low_stock_threshold) > 0 && Number(row.quantity_on_hand) <= Number(row.low_stock_threshold)).length;
