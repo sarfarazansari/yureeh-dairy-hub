@@ -38,6 +38,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-011A | P1 | Refactor buffalo lifecycle/acquisition/sale and customer payment boundaries | In Progress (cache dependencies updated; remaining audit/validation pending) | REF-009, REF-010A, REF-010B | Buffalo mutation invalidation and customer payment/report invalidation improved; acquisition-cost UI and common payment retry/idempotency policy remain unverified |
 | REF-011B | P2 | Refactor any remaining modules one task per run | In Progress (expense/feed-item/scheduler boundaries implemented; remaining-module audit pending) | REF-010A–REF-011A | Expense history/new/category/vendor and feed-item writes are now query/mutation-backed; audit remaining direct-access modules and verify all cache dependencies |
 | REF-012 | P2 | Final architecture regression audit and remove obsolete duplicate patterns | Blocked (static audit recorded; prerequisite migrations and runtime validation outstanding) | REF-011A, REF-011B | `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` records current coverage and unresolved paths; final exhaustive audit/build/test evidence still required |
+| REF-013 | P1 | Implement feature-owned folder boundaries and justified client-state stores, one module at a time | In Progress (expense shared helpers extracted; validation pending) | REF-008 | Expense shell/date filters moved to `src/features/expenses/components`, category setup to `services`, formatting/date helpers to `utils`; decide on Zustand only after identifying genuine shared client-owned state; imports/runtime validation and remaining module migrations outstanding |
 
 ## Source inventory pointer
 
@@ -234,3 +235,17 @@ Append a dated entry here after each work session:
 - Remaining modules are explicitly listed in the implementation audit. REF-012 remains blocked until the remaining expense/scheduler/acquisition-cost paths are migrated and the required validations pass.
 - Branch comparison at this checkpoint reported 101 commits ahead and 2 behind `master`. During this session, one query-key update was briefly written to the default branch because the branch argument was omitted; a subsequent commit restored the file content to its prior state. The default-branch file content was read back and verified restored. The two extra default-branch commits remain in history; no force-reset was attempted.
 - Next: finish remaining REF-010D/010G/011A/011B modules, perform the repository-wide REF-012 audit, then run local validation before the user creates a PR/merges.
+
+
+### Session log — 2026-10-16 (REF-013 initial structural implementation)
+
+- Task ID: REF-013
+- Branch: `feature/feature-folder-structure-foundation`
+- Base: latest `master` at `1f291af036ff737049af3db51936a3d72234da29` (fetched immediately before branch creation).
+- Status: In Progress
+- Files changed: `src/features/expenses/components/ExpenseNavigationShell.tsx`, `src/features/expenses/services/expense-setup.service.ts`, `src/features/expenses/utils/expense-format.ts`, `src/app/(protected)/expenses/shared.tsx`.
+- Changes: moved expense navigation/date-filter UI into feature-owned components, category-seeding data access into an expense service, and currency/local-date helpers into feature utilities. The old route-level `shared.tsx` now temporarily re-exports the new canonical implementations to keep existing route imports compatible during incremental migration.
+- Store decision: no Zustand dependency/store added in this first slice. Existing shared data is server-owned and should remain in TanStack Query; no specific cross-route client-owned state has yet been demonstrated to justify a store. Store candidates must be identified from actual consumers before introducing a global store.
+- Checks executed: read latest master branch SHA and relevant source files; statically compared extracted implementations to previous shared helper behavior.
+- Checks not run: local typecheck, lint, build, tests and browser smoke tests; this session uses remote GitHub file operations without a local checkout.
+- Next: review new files and imports, run local checks on the feature branch, then continue the next structural slice by moving remaining expense-route imports off the compatibility module. Do not merge until local checks pass.
