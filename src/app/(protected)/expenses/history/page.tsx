@@ -32,18 +32,6 @@ export default function ExpenseHistory() {
   const pageSize = [10, 20, 50, 100].includes(sizeParam) ? sizeParam : 20;
   const [setupReady, setSetupReady] = useState(false),
     [setupError, setSetupError] = useState(''),
-    [message, setMessage] = useState('');
-  const historyQuery = useExpenseHistoryQuery({ page, pageSize, from, to, category, group, vendor, status, method, buffalo, outstandingOnly, search, sort, sortDirection }, setupReady);
-  const updateExpenseMutation = useUpdateExpenseMutation();
-  const deleteExpenseMutation = useSoftDeleteExpenseMutation();
-  const rows = historyQuery.data?.rows ?? [];
-  const totalCount = historyQuery.data?.totalCount ?? 0;
-  const ledgerExpenseIds = new Set(historyQuery.data?.ledgerExpenseIds ?? []);
-  const feedPurchaseExpenseIds = new Set(historyQuery.data?.feedPurchaseExpenseIds ?? []);
-  const categories = historyQuery.data?.categories ?? [];
-  const vendors = historyQuery.data?.vendors ?? [];
-  const buffaloes = (historyQuery.data?.buffaloes ?? []) as ExpenseBuffaloOption[];
-  const loadError = Boolean(setupError || historyQuery.error);
     [from, setFrom] = useState(''),
     [to, setTo] = useState(''),
     [category, setCategory] = useState(''),
@@ -66,6 +54,20 @@ export default function ExpenseHistory() {
     [deleteBusy, setDeleteBusy] = useState(false),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState('');
+  const historyQuery = useExpenseHistoryQuery(
+    { page, pageSize, from, to, category, group, vendor, status, method, buffalo, outstandingOnly, search, sort, sortDirection },
+    setupReady,
+  );
+  const updateExpenseMutation = useUpdateExpenseMutation();
+  const deleteExpenseMutation = useSoftDeleteExpenseMutation();
+  const rows = historyQuery.data?.rows ?? [];
+  const totalCount = historyQuery.data?.totalCount ?? 0;
+  const ledgerExpenseIds = new Set(historyQuery.data?.ledgerExpenseIds ?? []);
+  const feedPurchaseExpenseIds = new Set(historyQuery.data?.feedPurchaseExpenseIds ?? []);
+  const categories = historyQuery.data?.categories ?? [];
+  const vendors = historyQuery.data?.vendors ?? [];
+  const buffaloes = (historyQuery.data?.buffaloes ?? []) as ExpenseBuffaloOption[];
+  const loadError = Boolean(setupError || historyQuery.error);
   useEffect(() => {
     let alive = true;
     async function initialize() {
