@@ -23,6 +23,7 @@ import {
 import { formatDate } from '@/lib/date-format';
 import { localDateKey } from '@/lib/milk-entry-list';
 import { getAnalyticsDateRange, type AnalyticsDatePreset } from '@/lib/analytics-date-range';
+import type { BuffaloProductionRecord } from './types';
 import {
   useBuffaloProductionRangeQuery,
   useMilkPoolShiftFatHistoryQuery,
