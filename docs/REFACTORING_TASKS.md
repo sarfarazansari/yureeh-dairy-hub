@@ -23,7 +23,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-002 | P0 | Complete file-by-file inventory of all server/data access, Supabase calls, RPCs, fetches, effects and query/mutation hooks | Completed | REF-001 | Recursive tree (238 tracked files, 141 source files, 60 migrations) and all source files screened; detailed path-level inventory in `docs/REFACTORING_API_INVENTORY.md` |
 | REF-003 | P0 | Audit current query infrastructure and state ownership (TanStack Query, local state, Zustand/store usage) | Completed | REF-002 | `docs/REFACTORING_QUERY_STATE_AUDIT.md`: source-backed query-key, invalidation, auth-cache and server-state findings; static validation limits recorded |
 | REF-004 | P1 | Map module boundaries, dependencies and shared types/schemas/helpers | Completed | REF-002 | `docs/REFACTORING_MODULE_BOUNDARIES_AUDIT.md`: module/dependency map, overlapping types/helpers, canonical ownership candidates and validation limits |
-| REF-005 | P1 | Audit server-state fetching and effects; define migration pattern for ad hoc useEffect fetching | Pending | REF-003, REF-004 | Prioritized findings with regression considerations |
+| REF-005 | P1 | Audit server-state fetching and effects; define migration pattern for ad hoc useEffect fetching | Completed (static audit) | REF-003, REF-004 | `docs/REFACTORING_EFFECTS_AUDIT.md`: prioritized path-level candidates, preserved UI/auth effects, migration pattern, risk ordering and acceptance checklist; runtime limitations recorded |
 | REF-006 | P1 | Audit mutation invalidation, duplicate submission, errors, loading/empty states and pagination | Pending | REF-003, REF-004 | Per-module checklist and confirmed gaps |
 | REF-007 | P1 | Audit finance, milk pool, feed inventory, purchase/payment and consumption transaction integrity | Pending | REF-002 | Trace from UI to service/RPC/migration/RLS/report consumers |
 | REF-008 | P1 | Finalize refactor phases and acceptance criteria based on the full repository audit | Pending | REF-002–REF-007 | Ordered task list with dependencies, files and validation plan |
@@ -163,3 +163,16 @@ Append a dated entry here after each work session:
 - Findings: Duplicate `MilkPoolShiftFatRecord` definitions in production and milk-pool modules; `CustomerOption` overlaps `DashboardCustomer`; shift/pricing literals and aliases have inconsistent ownership; feed services are route-scoped while feed domain types live in `src/lib`; expense shared file mixes UI/helpers/category seeding; date helpers have multiple implementations.
 - Blockers or decisions: No business decision required for the map. Do not consolidate payment method types or date helpers without checking database constraints, all consumers and timezone expectations. Transaction-critical feed/milk boundaries remain pending REF-007.
 - Next task ID: REF-005 — audit server-state fetching and effects; define a safe migration pattern for effect-driven remote reads.
+
+
+### Session log — 2026-10-16 (REF-005)
+
+- Task ID: REF-005
+- Branch: `feature/refactor-engineering-standards`
+- Status: Completed (static audit and migration design; no source implementation changes)
+- Files changed: `docs/REFACTORING_EFFECTS_AUDIT.md`, `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`
+- Checks executed and results: Read project rules, workflow handoff, architecture, task tracker, API inventory, query/state audit and module-boundary audit; verified branch comparison against `master` at `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9` was 10 commits ahead / 0 behind before REF-005; documented effect-driven remote-read candidates, valid effect classes, migration pattern, dependency-aware ordering and acceptance checklist.
+- Checks not run / limitations: No local checkout; build, lint, typecheck, tests, browser/runtime/account-switch checks, Supabase migrations, RLS checks and database operations were not run. Classification builds on the repository-wide static inventory and is not runtime proof.
+- Findings: Dashboard, sales/production analytics, financial reports, expenses and feed inventory/purchase/consumption/diet-plan pages are candidates for query-backed reads. Auth subscriptions, timers, date-picker synchronization, form/dialog synchronization and local pagination correction must not be removed blindly. Transactional feed and financial modules remain gated on REF-007.
+- Blockers or decisions: No business decision required for this audit. Do not begin source migrations until REF-006 through REF-008 are completed.
+- Next task ID: REF-006 — audit mutation invalidation, duplicate submission, errors, loading/empty states and pagination.
