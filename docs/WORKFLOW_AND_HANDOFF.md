@@ -148,7 +148,7 @@ The user's short command `1 refactor karo` means:
 - Do not begin implementation migrations until REF-005 through REF-008 audits and the ordered phase plan are complete.
 
 
-### Latest session handoff — 2026-10-16 (REF-004)
+### Previous session handoff — 2026-10-16 (REF-004)
 
 - Current branch: `feature/refactor-engineering-standards`
 - Latest master base: `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`; before this task branch comparison showed 7 commits ahead and 0 behind.
@@ -158,3 +158,15 @@ The user's short command `1 refactor karo` means:
 - Boundary findings: feed services are under `src/app/(protected)/feeds/*` while their types are in `src/lib/*-types.ts`; milk list/service/schema responsibilities are spread between `src/lib` and the milk feature; expenses `shared.tsx` mixes UI, date/currency helpers and default category seeding.
 - Next task for `1 refactor karo same branch`: `REF-005` — audit effect-driven remote reads and define a migration pattern. Continue on this branch, read the four required docs, and preserve valid auth/UI effects. Do not implement type moves before REF-007 verifies transaction/RPC/RLS/report dependencies.
 - Verification boundary: GitHub source reads and branch comparison only. No local build, lint, typecheck, tests, runtime flows or database operations were run. No PR or merge was created.
+
+
+### Latest session handoff — 2026-10-16 (REF-005)
+
+- Current branch: `feature/refactor-engineering-standards`
+- Latest master base: `6e5c6ae9916a42d61266c80db1c0bcf10a447ba9`; branch comparison before this task was 10 commits ahead and 0 behind. The branch remains the user's requested working branch; no new branch was created.
+- Completed: REF-005, documented in `docs/REFACTORING_EFFECTS_AUDIT.md`; task tracker updated.
+- Audit findings: dashboard, sales/production analytics, financial reports, expenses and feed inventory/purchase/consumption/diet-plan pages contain effect-driven server reads that are candidates for TanStack Query. Preserve auth subscriptions, timers, date-picker and form/dialog synchronization, and local pagination corrections unless an equivalent replacement is proven.
+- Migration design: service → feature query-key/query-options/hook → page; keys include all result-changing inputs; local UI/form state stays local; explicit loading/error/empty states; dependent reads use `enabled`; no blind retries for non-idempotent financial/inventory/scheduler mutations; validate auth cache lifecycle on account changes.
+- No source implementation or database files changed. This remains an audit-first workflow: do not start implementation migrations until REF-006, REF-007 and REF-008 are complete, especially the transaction-integrity audit.
+- Verification boundary: GitHub source/doc inspection and static synthesis only. No local checkout; build, lint, typecheck, tests, runtime/account-switch checks and database/RLS operations were not run. No PR or merge was created.
+- Next task for `1 refactor karo same branch`: REF-006 — mutation invalidation, duplicate-submission, error/loading/empty-state and pagination audit.
