@@ -2,15 +2,13 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
-import { supabase } from '@/lib/supabase';
-import type { DietBuffaloOption, DietPlanFormValues, DietPlanDetails } from '@/lib/diet-plan-types';
+import type { DietPlanFormValues } from '@/lib/diet-plan-types';
 import { DietPlanForm } from '../../components/DietPlanForm';
-import { fetchActiveFeedItems, fetchDietPlanForEdit, fetchEligibleBuffaloes } from '../../services';
-import { useSaveDietPlanMutation } from '../../queries';
+import { useActiveDietFeedItemsQuery, useDietPlanDetailsQuery, useEligibleDietBuffaloesQuery, useSaveDietPlanMutation } from '../../queries';
 
 type FeedOption = { id: string; name: string; base_unit: string; category: string };
 
@@ -19,38 +17,17 @@ export default function EditDietPlanPage() {
   const id = params.id;
   const router = useRouter();
   const saveMutation = useSaveDietPlanMutation();
-  const [feeds, setFeeds] = useState<FeedOption[]>([]);
-  const [buffaloes, setBuffaloes] = useState<DietBuffaloOption[]>([]);
-  const [plan, setPlan] = useState<DietPlanDetails | null>(null);
+  const feedsQuery = useActiveDietFeedItemsQuery();
+  const feeds = (feedsQuery.data ?? []) as FeedOption[];
+  const planQuery = useDietPlanDetailsQuery(id);
+  const plan = planQuery.data;
   const [buffaloDate, setBuffaloDate] = useState('');
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const load = useCallback(async () => {
-    if (!supabase || !id) return;
-    try {
-      const [feedOptions, details] = await Promise.all([fetchActiveFeedItems(supabase), fetchDietPlanForEdit(supabase, id)]);
-      setFeeds(feedOptions as FeedOption[]);
-      setPlan(details);
-      setBuffaloDate(details.start_date);
-    } catch (error) {
-      setToast({ message: error instanceof Error ? error.message : 'Could not load diet plan.', type: 'error' });
-    }
-  }, [id]);
-
-  useEffect(() => { void load(); }, [load]);
-
-  const loadBuffaloes = useCallback(async (date: string) => {
-    if (!supabase || !date) return;
-    try {
-      const eligible = await fetchEligibleBuffaloes(supabase, date);
-      setBuffaloes(eligible);
-    } catch (error) {
-      setToast({ message: error instanceof Error ? error.message : 'Could not load eligible buffaloes.', type: 'error' });
-    }
-  }, []);
-
-  useEffect(() => { if (buffaloDate) void loadBuffaloes(buffaloDate); }, [buffaloDate, loadBuffaloes]);
+  const eligibleDate = buffaloDate || plan?.start_date || '';
+  const buffaloesQuery = useEligibleDietBuffaloesQuery(eligibleDate);
+  const buffaloes = buffaloesQuery.data ?? [];
 
   const initialValues: DietPlanFormValues | undefined = plan ? {
     name: plan.name,
@@ -63,7 +40,6 @@ export default function EditDietPlanPage() {
   } : undefined;
 
   async function save(values: DietPlanFormValues) {
-    if (!supabase) return 'Supabase is not configured.';
     setBusy(true);
     try {
       await saveMutation.mutateAsync({ id, values });
@@ -81,7 +57,7 @@ export default function EditDietPlanPage() {
     <AppShell title="Edit diet plan" subtitle="Update future feeding configuration without changing posted history">
       <div className="management-stack">
         <Button variant="outline" size="sm" asChild><Link href="/feeds/diet-plans">← Back to diet plans</Link></Button>
-        <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
+        <Toast message={toast?.message ?? planQuery.error?.message ?? feedsQuery.error?.message ?? buffaloesQuery.error?.message ?? ''} type={toast?.type ?? (planQuery.isError || feedsQuery.isError || buffaloesQuery.isError ? 'error' : undefined)} onDismiss={() => setToast(null)} />
         {plan && initialValues ? <DietPlanForm key={plan.id} feeds={feeds} buffaloes={buffaloes} onDateChange={setBuffaloDate} onSave={save} busy={busy} initialValues={initialValues} submitLabel="Save changes" /> : <div className="card"><div className="empty">Loading diet plan…</div></div>}
       </div>
     </AppShell>
