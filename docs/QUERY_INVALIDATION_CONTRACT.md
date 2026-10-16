@@ -59,3 +59,9 @@ Static review on `feature/feature-folder-structure-foundation` found and correct
 - The shared QueryProvider now clears its query cache when the authenticated user ID changes, preventing cached farm data from being reused across sign-out/account-switch transitions in the same browser QueryClient.
 
 No mutation uses optimistic ledger writes or automatic retry as part of these changes. These are static source changes; account switching, scheduler posting and mutation workflows still require runtime verification. Query invalidation roots that have no active query-backed consumer are future-facing only and do not substitute for migrating any remaining effect-driven read.
+
+
+### Additional dependency edges found in the same audit
+
+- Feed purchase create/edit/delete also invalidates expense-category summaries and feed-cost analytics, because a purchase creates or corrects a linked expense and changes inventory valuation inputs.
+- Diet-plan create/update now invalidates the scheduler/run-history query as well as plan queries, because run history joins the current plan name and can otherwise display a stale label after a rename.
