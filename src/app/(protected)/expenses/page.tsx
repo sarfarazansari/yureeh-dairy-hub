@@ -16,6 +16,7 @@ import {
   YAxis,
 } from 'recharts';
 import { supabase } from '@/lib/supabase';
+import { useExpenseDashboardQuery } from '@/features/expenses/expense.queries';
 import {
   ExpenseShell,
   ExpenseDateFilters,
@@ -27,55 +28,31 @@ import { KPI } from '@/components/ui/KPI';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import type { ExpenseRow } from '@/lib/expense-types';
 export default function ExpenseDashboard() {
   const today = todayLocal(),
     monthStart = `${today.slice(0, 8)}01`,
     [from, setFrom] = useState(monthStart),
     [to, setTo] = useState(today),
     [range, setRange] = useState('month'),
-    [rows, setRows] = useState<ExpenseRow[]>([]),
-    [outstandingRows, setOutstandingRows] = useState<ExpenseRow[]>([]),
     [feedCategory, setFeedCategory] = useState(''),
-    [loading, setLoading] = useState(true),
-    [error, setError] = useState('');
+    [categoryError, setCategoryError] = useState('');
+  const expenseQuery = useExpenseDashboardQuery(from, to);
+  const rows = expenseQuery.data?.rows ?? [];
+  const outstandingRows = expenseQuery.data?.outstandingRows ?? [];
+  const loading = expenseQuery.isPending;
+  const error = categoryError || expenseQuery.error?.message || '';
+
   useEffect(() => {
     let alive = true;
-    async function load() {
-      if (!supabase) return;
-      setLoading(true);
-      try {
-        await ensureExpenseCategories(supabase);
-      } catch (e) {
-        if (alive) setError(e instanceof Error ? e.message : 'Could not load categories');
-      }
-      const [period, open] = await Promise.all([
-        supabase
-          .from('expenses')
-          .select('*')
-          .gte('business_date', from)
-          .lte('business_date', to)
-          .is('deleted_at', null)
-          .order('business_date', { ascending: false }),
-        supabase
-          .from('expenses')
-          .select('*')
-          .gt('pending_amount', 0)
-          .is('deleted_at', null)
-          .order('due_date', { ascending: true })
-          .limit(500),
-      ]);
-      if (!alive) return;
-      if (period.error || open.error) setError((period.error ?? open.error)!.message);
-      setRows(period.data ?? []);
-      setOutstandingRows(open.data ?? []);
-      setLoading(false);
+    if (!supabase) {
+      setCategoryError('Supabase is not configured.');
+      return () => { alive = false; };
     }
-    load();
-    return () => {
-      alive = false;
-    };
-  }, [from, to]);
+    void ensureExpenseCategories(supabase).catch((loadError) => {
+      if (alive) setCategoryError(loadError instanceof Error ? loadError.message : 'Could not prepare expense categories.');
+    });
+    return () => { alive = false; };
+  }, []);
   const total = rows.reduce((s, r) => s + Number(r.total_amount), 0),
     paid = rows.reduce((s, r) => s + Number(r.paid_amount), 0),
     pending = rows.reduce((s, r) => s + Number(r.pending_amount), 0),
