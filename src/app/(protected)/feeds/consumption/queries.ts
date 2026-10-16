@@ -1,6 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
+import { createFeedConsumption, deleteFeedConsumption, editFeedConsumption } from './services';
+
 import { fetchFeedConsumption, fetchFeedItems } from './services';
 
 const PAGE_SIZE = 20;
@@ -26,5 +28,50 @@ export function useFeedConsumptionArchiveQuery(input: {
       ]);
       return { feedItems, ...consumption };
     },
+  });
+}
+
+
+async function invalidateConsumptionDependents(queryClient: ReturnType<typeof useQueryClient>) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: feedConsumptionQueryKeys.all }),
+    queryClient.invalidateQueries({ queryKey: ['feed-inventory'] }),
+    queryClient.invalidateQueries({ queryKey: ['diet-plans'] }),
+    queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+    queryClient.invalidateQueries({ queryKey: ['feed-cost-analytics'] }),
+  ]);
+}
+
+export function useCreateFeedConsumptionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof createFeedConsumption>[1]) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      return createFeedConsumption(supabase, input);
+    },
+    onSuccess: () => invalidateConsumptionDependents(queryClient),
+  });
+}
+
+export function useEditFeedConsumptionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { movementId: string; values: Parameters<typeof editFeedConsumption>[2] }) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      return editFeedConsumption(supabase, input.movementId, input.values);
+    },
+    onSuccess: () => invalidateConsumptionDependents(queryClient),
+  });
+}
+
+export function useDeleteFeedConsumptionMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (movementId: string) => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      return deleteFeedConsumption(supabase, movementId);
+    },
+    onSuccess: () => invalidateConsumptionDependents(queryClient),
   });
 }
