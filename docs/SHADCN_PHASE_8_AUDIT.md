@@ -5,43 +5,46 @@ Base commit: `1c6033de4f1b9c78596f12d3aff74e023b80903c`
 
 ## Scope and evidence
 
-This audit branch was created from the latest `origin/master` commit above. Findings were based on static inspection of repository files through GitHub. A local checkout could not be created in the available execution environment because direct network access to github.com failed. Therefore, no local package installation, formatting, lint, typecheck, production build, or browser/DB regression test is claimed.
+This branch is based on the latest `master` commit above. The audit used static inspection of the app routes, feature pages, shared UI primitives, and relevant styles through GitHub. Direct network access to github.com is unavailable from the local execution environment, so a local checkout and local test run could not be completed. No package installation, formatting, lint, typecheck, production build, or browser/database regression test is claimed.
 
 ## Changes made on this branch
 
-- Replaced the native Clear filters button in the feed consumption archive with the shared shadcn Button.
-- Replaced the legacy `.btn` link for creating feed consumption with the shared Button using `asChild`.
-- Replaced the native Save feeding times button with the shared shadcn Button.
-- Replaced the legacy expense dashboard Record expense button with the shared Button using `asChild`.
+- Migrated the feed consumption archive's create and clear-filter actions to the shared shadcn Button.
+- Migrated the diet-plan schedule save action and back navigation to the shared Button.
+- Migrated expense dashboard and expense creation navigation to shared Button; corrected the dashboard action to use Tailwind `w-full` rather than a legacy `full` class that did not apply to the shadcn Button.
+- Migrated feed-consumption and diet-plan new/edit back links to shared Button.
+- Migrated settings, dashboard milk-entry, and buffalo production analytics navigation actions to shared Button.
+- Migrated the mobile navigation open/close controls to shared Button and updated the shared Button props type to support refs used by focus restoration.
+- Migrated the single-date and date-range picker trigger/clear/today actions to shared Button variants while retaining the pickers' accessible names and behavior.
+- Migrated dashboard customer and daily sales tables, buffalo acquisition-cost history, buffalo sale-payment history, and buffalo payment/lifecycle history to the shared shadcn Table.
+- Added/maintained this phase audit record. No database migrations, RLS policies, RPC contracts, or financial calculations were intentionally changed.
 
-These changes are presentation-only; they do not intentionally change handlers, data access, RPC calls, validation, or financial calculations.
+## Static review notes
 
-## Remaining review checklist
-
-- [ ] Continue repository-wide scan for native `input`, `select`, `textarea`, checkbox and button elements. Retain semantic HTML where appropriate; prioritize controls that bypass shared primitives.
-- [ ] Inspect remaining native controls in customer management and milk-entry pages and migrate where safe.
-- [ ] Review all uses of legacy `.btn`, `.field`, `.date-chip`, `.table`, `.tag`, `.status-overdue`, `.status-today` and custom dialog classes. Do not remove CSS until every consumer has been checked.
-- [ ] Review remaining custom date-picker implementations and `date-picker.css` imports for duplication and accessibility.
-- [ ] Verify dialog wrapper use. `src/app/dialog.tsx` delegates to the shared shadcn/Radix Dialog primitive; do not treat its compatibility wrapper alone as a custom non-modal dialog.
-- [ ] Check all form labels, accessible names, error associations (`aria-describedby` / `aria-invalid`), keyboard focus, Escape handling, focus restoration, disabled/loading states, and mobile navigation with keyboard and assistive technology.
-- [ ] Check dependencies against lockfile with a clean install.
-- [ ] Run `npm run format:check`, `npm run lint`, `npx tsc --noEmit` (if supported by project configuration), and `npm run build`.
-- [ ] Regression-test milk production and pool reconciliation, customer sales/payments, feed purchases/consumption/inventory, diet-plan schedules/retries, expenses/payments, and buffalo lifecycle transactions.
-- [ ] Confirm no changes to RLS, DB constraints, RPC contracts, ledger semantics, or financial calculations.
+- `src/app/dialog.tsx` delegates to the shared shadcn/Radix Dialog primitive; the wrapper itself is not a custom non-modal dialog.
+- The milk-entry export creates a standalone printable HTML document. Its document-local native print button and table are intentional, rather than interactive controls in the application UI.
+- Legacy CSS selectors such as `.btn`, `.date-chip`, and table classes have not been removed. They are still intertwined with layout/visual styles; deleting them without a complete consumer map risks regressions.
+- The shared date pickers now use Button for their own trigger and secondary actions; their Calendar uses the established react-day-picker integration.
+- The application uses existing shadcn primitives and no dependencies were added.
 
 ## Verification status
 
 | Check | Status |
 | --- | --- |
-| Branch based on latest master | Verified |
-| Targeted shadcn button migrations | Changes committed on audit branch |
-| Full repository control inventory | Incomplete |
-| Legacy CSS consumer audit | Incomplete |
-| Formatting / ESLint / TypeScript / production build | Not run |
+| Branch based on latest master | Verified by GitHub compare; branch was 0 commits behind master at audit start |
+| Targeted shadcn migrations | Committed on the audit branch |
+| Static review of primary module routes, shared controls, and identified legacy consumers | Performed; final repository-wide consumer map still needs runtime/checkout validation |
+| Formatting / ESLint / TypeScript / production build | Not run — local checkout unavailable |
 | Browser accessibility / responsive checks | Not run |
-| Live database and financial regression tests | Not run |
+| Live database and financial regression tests | Not run; no schema or business-logic changes intended |
 | PR or merge | Not created / not performed |
 
-## Limitations
+## Remaining checks before merge
 
-This is an in-progress audit, not a declaration that the migration is complete or production-ready. Remaining checklist items must be resolved and automated/runtime checks must pass before closing Phase 8.
+- Run `npm ci`, `npm run format:check`, `npm run lint`, `npx tsc --noEmit` (if supported by project configuration), and `npm run build` in a network-enabled local checkout.
+- Manually verify date-picker trigger/clear/today sizing, mobile sidebar focus restoration, and table overflow at mobile/tablet widths.
+- Regression-test milk production and pool reconciliation, customer sales/payments, feed purchases/consumption/inventory, diet-plan schedules/retries, expenses/payments, and buffalo lifecycle transactions.
+- Finish the full legacy CSS consumer map before removing any shared legacy CSS.
+- Confirm no RLS, DB constraints, RPC contracts, ledger semantics, or financial calculations changed in the final diff.
+
+This is a code-change branch with static review, not a claim that runtime verification passed. The user retains ownership of PR creation and merge.
