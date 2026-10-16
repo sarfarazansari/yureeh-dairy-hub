@@ -10,8 +10,8 @@ import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
 import type { FeedInventoryMovementType } from '@/lib/feed-inventory-types';
 import { FEED_INVENTORY_MOVEMENT_TYPES } from '@/lib/feed-inventory-types';
-import { FeedInventoryMovementTable } from './components/FeedInventoryMovementTable';
-import { FeedInventoryStockTable } from './components/FeedInventoryStockTable';
+import { FeedInventoryMovementTable } from '@/features/feed-inventory/components/FeedInventoryMovementTable';
+import { FeedInventoryStockTable } from '@/features/feed-inventory/components/FeedInventoryStockTable';
 import { useFeedInventoryMovementsQuery, useFeedInventoryStockQuery } from '@/features/feed-inventory/feed-inventory.queries';
 
 const PAGE_SIZE = 20;
