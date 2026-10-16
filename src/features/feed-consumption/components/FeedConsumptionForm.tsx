@@ -9,8 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useMemo, useRef, useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { todayLocal } from '@/features/expenses/utils/expense-format';
-import type { FeedItem } from '@/lib/feed-types';
-import type { FeedInventoryStock } from '@/lib/feed-inventory-types';
+import type { FeedItem } from '@/features/feed-items/types';
+import type { FeedInventoryStock } from '@/features/feed-inventory/types';
 import { feedConsumptionSchema, type FeedConsumptionFormValues } from '@/features/feed-consumption/feed-consumption.schema';
 
 type Props = {
