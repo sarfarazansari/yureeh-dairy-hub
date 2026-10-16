@@ -15,7 +15,7 @@ import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { type PricingType } from '@/lib/analytics';
+import type { PricingType } from '@/lib/milk-domain';
 import { Dialog } from '@/app/dialog';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import {
