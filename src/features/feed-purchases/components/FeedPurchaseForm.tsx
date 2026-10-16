@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { DatePicker } from '@/components/ui/date-picker';
 import { todayLocal } from '@/features/expenses/utils/expense-format';
-import type { FeedItem } from '@/lib/feed-types';
+import type { FeedItem } from '@/features/feed-items/types';
 import type { ExpenseVendor } from '@/lib/expense-types';
 import { feedPurchaseSchema, type FeedPurchaseFormValues } from '@/features/feed-purchases/feed-purchases.schema';
 import { getPurchasePreview } from '@/features/feed-purchases/feed-purchases.service';
