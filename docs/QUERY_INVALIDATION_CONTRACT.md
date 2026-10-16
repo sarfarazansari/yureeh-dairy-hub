@@ -45,3 +45,17 @@ Invalidation occurs only in mutation `onSuccess`, after the service/RPC resolves
 The rules above describe implemented invalidation hooks for the migrated paths, not proof that every mutation in the repository is covered. Expense history/new/category/vendor reads and writes now have query/mutation boundaries; scheduler run/retry paths are migrated but still need live/disposable database verification. Some of the dependent query roots are placeholders for the corresponding future query-backed modules; invalidating a root does not replace migrating an effect-driven consumer to TanStack Query.
 
 Remote GitHub read-back confirms the intended source edits and shared key usage. No local checkout was available, so TypeScript, lint, format check, build, automated tests, browser regression, account-switch cache isolation, live/disposable Supabase RPC/RLS/concurrency checks were not run. REF-009 remains In Progress until those checks pass.
+
+
+## Cross-domain invalidation audit continuation — 2026-10-16
+
+Static review on `feature/feature-folder-structure-foundation` found and corrected these cache dependency gaps:
+
+- Customer create and profile update now invalidate the `['milk']` query root as well as customer queries, refreshing milk-entry customer selectors and related customer context after a name/record change.
+- Customer payment query keys now use the canonical `customerQueryKeys.payments(customerId)` factory instead of reconstructing the nested key at the call site.
+- Buffalo query keys are now owned by `src/features/buffaloes/buffalo.query-keys.ts`. Buffalo mutations invalidate dependent diet-plan and expense query roots because animal lifecycle/labels affect eligible-animal options and buffalo-linked expense views.
+- Buffalo acquisition-cost reads and the `record_buffalo_acquisition_cost` RPC call now live behind the buffalo service and TanStack Query hooks. Successful capitalization invalidates the acquisition-cost/options, buffalo, expense, financial-report and dashboard roots. The existing atomic RPC and operating-expense exclusion invariant are preserved.
+- Explicit scheduler retry now invalidates the run history plus feed-consumption, inventory, feed-cost analytics, financial-report and dashboard roots after the RPC succeeds. Saving schedule times continues to invalidate only schedule settings/run history.
+- The shared QueryProvider now clears its query cache when the authenticated user ID changes, preventing cached farm data from being reused across sign-out/account-switch transitions in the same browser QueryClient.
+
+No mutation uses optimistic ledger writes or automatic retry as part of these changes. These are static source changes; account switching, scheduler posting and mutation workflows still require runtime verification. Query invalidation roots that have no active query-backed consumer are future-facing only and do not substitute for migrating any remaining effect-driven read.
