@@ -15,7 +15,7 @@ import { calculateExpenseTotal, calculatePending, expensePaymentStatus, UNITS } 
 import { ExpenseShell, money, ensureExpenseCategories, todayLocal } from '../shared';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseCategory } from '@/lib/expense-types';
-import { useNewExpenseOptionsQuery } from '@/features/expenses/expense.queries';
+import { useCreateExpenseMutation, useNewExpenseOptionsQuery } from '@/features/expenses/expense.queries';
 export default function NewExpense() {
   const [ownerId, setOwnerId] = useState(''),
     [optionsReady, setOptionsReady] = useState(false),
@@ -37,6 +37,7 @@ export default function NewExpense() {
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState('');
   const optionsQuery = useNewExpenseOptionsQuery(ownerId, optionsReady);
+  const createExpenseMutation = useCreateExpenseMutation();
   const categories = (optionsQuery.data?.categories ?? []) as ExpenseCategory[];
   const vendors = optionsQuery.data?.vendors ?? [];
   const buffaloes = optionsQuery.data?.buffaloes ?? [];
@@ -133,25 +134,24 @@ export default function NewExpense() {
         error: userError,
       } = await supabase.auth.getUser();
       if (userError || !user) throw new Error('Session expired. Sign in again.');
-      const { error } = await supabase.from('expenses').insert({
-        user_id: user.id,
-        business_date: date,
-        category_id: category.id,
-        vendor_id: vendorId || null,
-        buffalo_id: buffaloId || null,
+      await createExpenseMutation.mutateAsync({
+        userId: user.id,
+        businessDate: date,
+        categoryId: category.id,
+        vendorId: vendorId || null,
+        buffaloId: buffaloId || null,
         description: description || null,
         quantity: useQuantity ? Number(quantity) : null,
         unit: useQuantity ? unit || category.default_unit || null : null,
         rate: useQuantity ? Number(rate) : null,
-        total_amount: amount,
-        payment_status: status,
-        paid_amount: paidNumber,
-        payment_method: status === 'CREDIT' ? 'CREDIT' : method,
-        due_date: due || null,
+        totalAmount: amount,
+        paymentStatus: status,
+        paidAmount: paidNumber,
+        paymentMethod: status === 'CREDIT' ? 'CREDIT' : method,
+        dueDate: due || null,
         notes: notes || null,
-        receipt_reference: receipt || null,
+        receiptReference: receipt || null,
       });
-      if (error) throw error;
       setMessage('Expense saved.');
       setDescription('');
       setQuantity('');
