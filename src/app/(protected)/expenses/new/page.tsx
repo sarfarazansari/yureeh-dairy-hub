@@ -14,11 +14,11 @@ import { supabase } from '@/lib/supabase';
 import { calculateExpenseTotal, calculatePending, expensePaymentStatus, UNITS } from '@/lib/expenses';
 import { ExpenseShell, money, ensureExpenseCategories, todayLocal } from '../shared';
 import { TimedNotice } from '@/components/ui/TimedNotice';
-import type { ExpenseBuffaloOption, ExpenseCategory, ExpenseVendor } from '@/lib/expense-types';
+import type { ExpenseCategory } from '@/lib/expense-types';
+import { useNewExpenseOptionsQuery } from '@/features/expenses/expense.queries';
 export default function NewExpense() {
-  const [categories, setCategories] = useState<ExpenseCategory[]>([]),
-    [vendors, setVendors] = useState<Pick<ExpenseVendor, 'id' | 'name'>[]>([]),
-    [buffaloes, setBuffaloes] = useState<ExpenseBuffaloOption[]>([]),
+  const [ownerId, setOwnerId] = useState(''),
+    [optionsReady, setOptionsReady] = useState(false),
     [date, setDate] = useState(todayLocal()),
     [categoryId, setCategoryId] = useState(''),
     [vendorId, setVendorId] = useState(''),
@@ -36,35 +36,37 @@ export default function NewExpense() {
     [receipt, setReceipt] = useState(''),
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState('');
+  const optionsQuery = useNewExpenseOptionsQuery(ownerId, optionsReady);
+  const categories = (optionsQuery.data?.categories ?? []) as ExpenseCategory[];
+  const vendors = optionsQuery.data?.vendors ?? [];
+  const buffaloes = optionsQuery.data?.buffaloes ?? [];
+
   useEffect(() => {
-    async function load() {
-      if (!supabase) return;
-      try {
-        await ensureExpenseCategories(supabase);
-      } catch (e) {
-        setMessage(e instanceof Error ? e.message : 'Could not prepare categories');
+    let alive = true;
+    async function initialize() {
+      if (!supabase) {
+        setMessage('Supabase is not configured.');
         return;
       }
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      const [c, v, b] = await Promise.all([
-        supabase
-          .from('expense_categories')
-          .select('*')
-          .eq('owner_id', user?.id)
-          .eq('is_active', true)
-          .order('name'),
-        supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
-        supabase.from('buffaloes').select('id,buffalo_code,name').order('buffalo_code'),
-      ]);
-      setCategories(c.data ?? []);
-      setVendors(v.data ?? []);
-      setBuffaloes(b.data ?? []);
+      try {
+        await ensureExpenseCategories(supabase);
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) throw error ?? new Error('Session expired. Sign in again.');
+        if (alive) {
+          setOwnerId(user.id);
+          setOptionsReady(true);
+        }
+      } catch (error) {
+        if (alive) setMessage(error instanceof Error ? error.message : 'Could not load expense form options.');
+      }
     }
-    load();
+    void initialize();
+    return () => { alive = false; };
   }, []);
   const category = categories.find((c) => c.id === categoryId);
+  useEffect(() => {
+    if (optionsQuery.error) setMessage(optionsQuery.error.message);
+  }, [optionsQuery.error]);
   const amount = useMemo(() => {
     if (useQuantity) {
       if (!quantity || !rate) return 0;
