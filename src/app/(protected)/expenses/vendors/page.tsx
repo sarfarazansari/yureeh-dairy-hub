@@ -11,9 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
 import { ExpenseShell, money } from '../shared';
-import { useExpenseVendorDirectoryQuery } from '@/features/expenses/expense.queries';
+import { useExpenseVendorDirectoryQuery, useSaveExpenseVendorMutation, useToggleExpenseVendorMutation } from '@/features/expenses/expense.queries';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseVendor } from '@/lib/expense-types';
 export default function ExpenseVendors() {
@@ -33,34 +32,32 @@ export default function ExpenseVendors() {
     [editCity, setEditCity] = useState(''),
     [editAddress, setEditAddress] = useState('');
   const vendorQuery = useExpenseVendorDirectoryQuery();
+  const saveVendorMutation = useSaveExpenseVendorMutation();
+  const toggleVendorMutation = useToggleExpenseVendorMutation();
   const rows = vendorQuery.data ?? [];
   const loading = vendorQuery.isPending;
   const loadError = vendorQuery.error?.message ?? '';
   const load = async () => { await vendorQuery.refetch(); };
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    if (!supabase) return;
+    if (busy) return;
+    if (!name.trim()) { setMessage('Vendor name is required.'); return; }
     setBusy(true);
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const { error } = await supabase.from('expense_vendors').insert({
-      user_id: user?.id,
-      name: name.trim(),
-      mobile: mobile || null,
-      city: city || null,
-      address: address || null,
-    });
-    if (error) setMessage(error.message);
-    else {
+    try {
+      await saveVendorMutation.mutateAsync({
+        values: { name: name.trim(), mobile: mobile.trim() || null, city: city.trim() || null, address: address.trim() || null },
+      });
       setName('');
       setMobile('');
       setCity('');
       setAddress('');
       setMessage('Vendor added.');
       await load();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not add vendor.');
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   }
   function beginEdit(v: ExpenseVendor) {
     setEditingVendor(v);
@@ -71,34 +68,36 @@ export default function ExpenseVendors() {
   }
   async function saveEdit(event: React.FormEvent) {
     event.preventDefault();
-    if (!supabase || !editingVendor || editBusy) return;
+    if (!editingVendor || editBusy) return;
     if (!editName.trim()) { setMessage('Vendor name is required.'); return; }
     setEditBusy(true);
     try {
-      const { error } = await supabase.from('expense_vendors').update({
-        name: editName.trim(), mobile: editMobile.trim() || null,
-        city: editCity.trim() || null, address: editAddress.trim() || null,
-      }).eq('id', editingVendor.id);
-      if (error) throw error;
+      await saveVendorMutation.mutateAsync({
+        id: editingVendor.id,
+        values: { name: editName.trim(), mobile: editMobile.trim() || null, city: editCity.trim() || null, address: editAddress.trim() || null },
+      });
       setEditingVendor(null);
       setMessage('Vendor updated. Existing expense snapshots remain unchanged.');
       await load();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not update vendor.');
-    } finally { setEditBusy(false); }
+    } finally {
+      setEditBusy(false);
+    }
   }
   async function toggle(v: ExpenseVendor) {
-    if (!supabase || statusBusy) return;
+    if (statusBusy) return;
     setStatusBusy(true);
     try {
-      const { error } = await supabase.from('expense_vendors').update({ is_active: !v.is_active }).eq('id', v.id);
-      if (error) throw error;
+      await toggleVendorMutation.mutateAsync({ id: v.id, isActive: !v.is_active });
       setStatusTarget(null);
       setMessage(v.is_active ? 'Vendor deactivated.' : 'Vendor activated.');
       await load();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Could not update vendor status.');
-    } finally { setStatusBusy(false); }
+    } finally {
+      setStatusBusy(false);
+    }
   }
   return (
     <ExpenseShell title="Expense vendors" subtitle="Suppliers, transporters and service providers">
