@@ -10,7 +10,7 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { FEED_CATEGORIES, FEED_UNITS, type FeedCategory, type FeedItem } from '@/lib/feed-types';
+import { FEED_CATEGORIES, FEED_UNITS, type FeedCategory, type FeedItem } from '../types';
 import type { FeedItemFormValues } from './FeedItemForm';
 
 type Props = {
