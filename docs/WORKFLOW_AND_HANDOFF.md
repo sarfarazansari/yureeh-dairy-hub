@@ -279,3 +279,9 @@ The user's short command `1 refactor karo` means:
 - Updated feed archive/new/edit routes to import feature-owned components, and adjusted moved components' dependencies to feature-owned services/schemas/utilities. Removed old route-owned component duplicates.
 - Remaining routes stay under `src/app/(protected)/feeds` as routing entry points; business logic, query hooks, schemas and reusable module UI now belong under `src/features` for the migrated feed domains.
 - Static checks only. Run local typecheck, lint, build, purchase/consumption/plan scheduler regression flows and browser smoke tests before merge.
+
+
+## Developer check command — 2026-10-16
+
+- Added `npm run typecheck` → `tsc --noEmit` to `package.json`. Use it alongside `npm run lint`, `npm run format:check`, and `npm run build` before merging the structural refactor.
+- These commands were not run remotely by this session.
