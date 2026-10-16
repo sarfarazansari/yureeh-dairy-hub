@@ -1,4 +1,5 @@
-export type DietPlanStatus = 'ACTIVE' | 'PAUSED' | 'STOPPED';
+export const DIET_PLAN_STATUSES = ['ACTIVE', 'PAUSED', 'STOPPED'] as const;
+export type DietPlanStatus = (typeof DIET_PLAN_STATUSES)[number];
 
 export type DietPlanFeedItem = {
   id: string;
