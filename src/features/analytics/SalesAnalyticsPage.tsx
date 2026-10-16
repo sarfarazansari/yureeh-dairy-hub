@@ -8,15 +8,10 @@ import Link from 'next/link';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatDate } from '@/lib/date-format';
-import {
-  getSalesAnalyticsData,
-  type AnalyticsCustomer,
-  type SalesAnalyticsSummary,
-} from './services/sales-analytics.service';
+import { useSalesAnalyticsQuery } from './sales-analytics.queries';
 import { getAnalyticsDateRange, type AnalyticsDatePreset } from '@/lib/analytics-date-range';
 import { useMilkPoolReconciliationQuery, useMilkPoolShiftFatQuery } from '@/features/milk/milk.queries';
 export default function SalesAnalyticsPage() {
@@ -25,50 +20,15 @@ export default function SalesAnalyticsPage() {
   const [from, setFrom] = useState(today),
     [to, setTo] = useState(today),
     [range, setRange] = useState('today'),
-    [customerId, setCustomerId] = useState(''),
-    [summary, setSummary] = useState<SalesAnalyticsSummary | null>(null),
-    [customers, setCustomers] = useState<AnalyticsCustomer[]>([]),
-    [busy, setBusy] = useState(true),
-    [error, setError] = useState('');
-
-  useEffect(() => {
-    let active = true;
-    async function load() {
-      if (!from || !to || from > to) {
-        setSummary(null);
-        setBusy(false);
-        setError('Choose a valid report date range.');
-        return;
-      }
-      if (!supabase) {
-        setSummary(null);
-        setBusy(false);
-        setError('Supabase is not configured.');
-        return;
-      }
-
-      setBusy(true);
-      setSummary(null);
-      setError('');
-      try {
-        const data = await getSalesAnalyticsData(supabase, { from, to, customerId });
-        if (!active) return;
-        setSummary(data.summary);
-        setCustomers(data.customers);
-      } catch (loadError) {
-        if (active) {
-          setSummary(null);
-          setError(loadError instanceof Error ? loadError.message : 'Could not load analytics.');
-        }
-      } finally {
-        if (active) setBusy(false);
-      }
-    }
-    void load();
-    return () => {
-      active = false;
-    };
-  }, [from, to, customerId]);
+    [customerId, setCustomerId] = useState('');
+  const analyticsQuery = useSalesAnalyticsQuery({ from, to, customerId });
+  const summary = analyticsQuery.data?.summary ?? null;
+  const customers = analyticsQuery.data?.customers ?? [];
+  const validRange = Boolean(from && to && from <= to);
+  const busy = validRange && analyticsQuery.isPending;
+  const error = !validRange
+    ? 'Choose a valid report date range.'
+    : analyticsQuery.error?.message ?? '';
   const poolQuery = useMilkPoolReconciliationQuery(from, to);
   const poolFatQuery = useMilkPoolShiftFatQuery(from, to);
   const poolFatByDate = new Map<string, { MORNING?: number; EVENING?: number }>();
