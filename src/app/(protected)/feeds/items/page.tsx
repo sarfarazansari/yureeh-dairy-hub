@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
 import { supabase } from '@/lib/supabase';
 import type { FeedItem } from '@/lib/feed-types';
-import { feedItemsQueryKeys, useFeedItemsPageQuery } from './queries';
+import { useFeedItemsPageQuery, useSaveFeedItemMutation, useToggleFeedItemMutation } from './queries';
 import { FeedItemEditDialog } from './components/FeedItemEditDialog';
 import { FeedItemForm, type FeedItemFormValues } from './components/FeedItemForm';
 import { FeedItemTable } from './components/FeedItemTable';
@@ -18,7 +17,8 @@ export default function FeedItemsPage() {
   const [editingItem, setEditingItem] = useState<FeedItem | null>(null);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
-  const queryClient = useQueryClient();
+  const saveMutation = useSaveFeedItemMutation();
+  const toggleMutation = useToggleFeedItemMutation();
 
   useEffect(() => {
     const timer = window.setTimeout(() => { setDebouncedSearch(search.trim()); setPage(1); }, 300);
@@ -48,52 +48,35 @@ export default function FeedItemsPage() {
     setBusy(true);
     setMessage('');
     try {
-      const payload = {
-        name: cleanName,
-        category: values.category,
-        base_unit: values.baseUnit.trim().toUpperCase(),
-        purchase_unit: values.purchaseUnit.trim().toUpperCase(),
-        purchase_unit_quantity: quantity,
-        low_stock_threshold: lowStockThreshold,
-        notes: values.notes.trim() || null,
-        user_id: userData.user.id,
-      };
-      const result = id
-        ? await supabase.from('feed_items').update(payload).eq('id', id).eq('user_id', userData.user.id).select().single()
-        : await supabase.from('feed_items').insert(payload).select().single();
-
-      if (result.error) return result.error.code === '23505' ? 'A feed item with this name already exists.' : result.error.message;
+      await saveMutation.mutateAsync({
+        userId: userData.user.id,
+        id,
+        values: {
+          name: cleanName,
+          category: values.category,
+          baseUnit: values.baseUnit,
+          purchaseUnit: values.purchaseUnit,
+          conversion: quantity,
+          lowStockThreshold,
+          notes: values.notes.trim() || null,
+        },
+      });
       setMessage(id ? 'Feed item updated.' : 'Feed item created.');
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: feedItemsQueryKeys.all }),
-        queryClient.invalidateQueries({ queryKey: ['feed-inventory'] }),
-        queryClient.invalidateQueries({ queryKey: ['feed-purchases'] }),
-        queryClient.invalidateQueries({ queryKey: ['feed-consumption'] }),
-        queryClient.invalidateQueries({ queryKey: ['diet-plans'] }),
-        queryClient.invalidateQueries({ queryKey: ['feed-cost-analytics'] }),
-        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
-        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
-      ]);
       return null;
+    } catch (error) {
+      return error instanceof Error ? error.message : 'Could not save feed item.';
     } finally {
       setBusy(false);
     }
   }
 
   async function toggle(row: FeedItem) {
-    if (!supabase) return;
-    const { error } = await supabase.from('feed_items').update({ is_active: !row.is_active }).eq('id', row.id);
-    if (error) setMessage(error.message);
-    else await Promise.all([
-      queryClient.invalidateQueries({ queryKey: feedItemsQueryKeys.all }),
-      queryClient.invalidateQueries({ queryKey: ['feed-inventory'] }),
-      queryClient.invalidateQueries({ queryKey: ['feed-purchases'] }),
-      queryClient.invalidateQueries({ queryKey: ['feed-consumption'] }),
-      queryClient.invalidateQueries({ queryKey: ['diet-plans'] }),
-      queryClient.invalidateQueries({ queryKey: ['feed-cost-analytics'] }),
-      queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
-    ]);
+    try {
+      await toggleMutation.mutateAsync({ id: row.id, isActive: !row.is_active });
+      setMessage('');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Could not update feed item status.');
+    }
   }
 
   return (
