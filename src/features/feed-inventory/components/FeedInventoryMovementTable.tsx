@@ -1,6 +1,6 @@
 'use client';
 
-import type { FeedInventoryMovementRow } from '@/features/feed-inventory/feed-inventory.service';
+import type { FeedInventoryMovementRow } from '../types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
