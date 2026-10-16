@@ -78,7 +78,7 @@ export async function getCustomerDirectory(client: SupabaseClient) {
   if (customers.error || summaries.error) {
     throw new Error('Could not load the customer directory. Please try again.');
   }
-  const summaryRows = (summaries.data ?? []) as CustomerDirectorySummary[];
+  const summaryRows = (summaries.data ?? []) as unknown as CustomerDirectorySummary[];
   const byCustomer = new Map(
     summaryRows.map((summary) => [summary.customer_id, summary]),
   );
