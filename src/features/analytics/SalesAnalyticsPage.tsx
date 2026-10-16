@@ -33,6 +33,7 @@ export default function SalesAnalyticsPage() {
   const poolFatQuery = useMilkPoolShiftFatQuery(from, to);
   const poolFatByDate = new Map<string, { MORNING?: number; EVENING?: number }>();
   for (const record of poolFatQuery.data ?? []) {
+    if (record.shift !== 'MORNING' && record.shift !== 'EVENING') continue;
     const shifts = poolFatByDate.get(record.business_date) ?? {};
     shifts[record.shift] = Number(record.fat_percentage);
     poolFatByDate.set(record.business_date, shifts);
