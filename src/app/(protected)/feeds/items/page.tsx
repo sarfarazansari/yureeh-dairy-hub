@@ -64,7 +64,16 @@ export default function FeedItemsPage() {
 
       if (result.error) return result.error.code === '23505' ? 'A feed item with this name already exists.' : result.error.message;
       setMessage(id ? 'Feed item updated.' : 'Feed item created.');
-      await queryClient.invalidateQueries({ queryKey: feedItemsQueryKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: feedItemsQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['feed-inventory'] }),
+        queryClient.invalidateQueries({ queryKey: ['feed-purchases'] }),
+        queryClient.invalidateQueries({ queryKey: ['feed-consumption'] }),
+        queryClient.invalidateQueries({ queryKey: ['diet-plans'] }),
+        queryClient.invalidateQueries({ queryKey: ['feed-cost-analytics'] }),
+        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+      ]);
       return null;
     } finally {
       setBusy(false);
@@ -75,7 +84,16 @@ export default function FeedItemsPage() {
     if (!supabase) return;
     const { error } = await supabase.from('feed_items').update({ is_active: !row.is_active }).eq('id', row.id);
     if (error) setMessage(error.message);
-    else await queryClient.invalidateQueries({ queryKey: feedItemsQueryKeys.all });
+    else await Promise.all([
+      queryClient.invalidateQueries({ queryKey: feedItemsQueryKeys.all }),
+      queryClient.invalidateQueries({ queryKey: ['feed-inventory'] }),
+      queryClient.invalidateQueries({ queryKey: ['feed-purchases'] }),
+      queryClient.invalidateQueries({ queryKey: ['feed-consumption'] }),
+      queryClient.invalidateQueries({ queryKey: ['diet-plans'] }),
+      queryClient.invalidateQueries({ queryKey: ['feed-cost-analytics'] }),
+      queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+    ]);
   }
 
   return (
