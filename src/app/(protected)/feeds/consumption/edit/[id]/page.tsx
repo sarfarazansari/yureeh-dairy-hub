@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useParams, useRouter } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
-import { FeedConsumptionForm } from '../../components/FeedConsumptionForm';
+import { FeedConsumptionForm } from '@/features/feed-consumption/components/FeedConsumptionForm';
 import type { FeedConsumptionFormValues } from '@/features/feed-consumption/feed-consumption.schema';
 import { useEditFeedConsumptionMutation, useFeedConsumptionForEditQuery } from '@/features/feed-consumption/feed-consumption.queries';
 
