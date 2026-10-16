@@ -143,7 +143,14 @@ function useBuffaloMutation<TVariables, TData = void>(
 
   return useMutation<TData, Error, TVariables>({
     mutationFn,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: buffaloKeys.all }),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: buffaloKeys.all }),
+        queryClient.invalidateQueries({ queryKey: buffaloProductionQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+      ]);
+    },
   });
 }
 
