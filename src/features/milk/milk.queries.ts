@@ -119,6 +119,9 @@ export function useCreateMilkEntryMutation() {
         queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: customerQueryKeys.directory() }),
         queryClient.invalidateQueries({ queryKey: customerQueryKeys.details() }),
+        queryClient.invalidateQueries({ queryKey: ['sales-analytics'] }),
+        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
       ]);
     },
   });
@@ -134,6 +137,9 @@ export function useUpdateMilkEntryMutation() {
         queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: customerQueryKeys.directory() }),
         queryClient.invalidateQueries({ queryKey: customerQueryKeys.details() }),
+        queryClient.invalidateQueries({ queryKey: ['sales-analytics'] }),
+        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
       ]);
     },
   });
@@ -148,6 +154,9 @@ export function useDeleteMilkEntryMutation() {
         queryClient.invalidateQueries({ queryKey: milkQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: customerQueryKeys.directory() }),
         queryClient.invalidateQueries({ queryKey: customerQueryKeys.details() }),
+        queryClient.invalidateQueries({ queryKey: ['sales-analytics'] }),
+        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
       ]);
     },
   });
