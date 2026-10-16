@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
+import { dietPlanScheduleQueryKeys } from './diet-plan-schedule.queries';
 import { fetchActiveFeedItems, fetchDietPlanForEdit, fetchDietPlans, fetchEligibleBuffaloes, saveDietPlan } from './diet-plan.service';
 import type { DietPlanFormValues } from './diet-plan.schema';
 
@@ -33,6 +34,7 @@ export function useSaveDietPlanMutation() {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: dietPlanQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: dietPlanScheduleQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: ['feed-items'] }),
       ]);
     },
