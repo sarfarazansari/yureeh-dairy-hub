@@ -1,9 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
-import { createFeedConsumption, deleteFeedConsumption, editFeedConsumption } from './services';
-
-import { fetchFeedConsumption, fetchFeedItems } from './services';
+import { createFeedConsumption, deleteFeedConsumption, editFeedConsumption, fetchFeedConsumption, fetchFeedItems } from './services';
 
 const PAGE_SIZE = 20;
 
