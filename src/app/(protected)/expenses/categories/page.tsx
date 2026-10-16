@@ -13,7 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { EXPENSE_GROUPS, UNITS, type ExpenseGroup } from '@/lib/expenses';
-import { ExpenseShell, ensureExpenseCategories } from '../shared';
+import { ExpenseShell } from '@/features/expenses/components/ExpenseNavigationShell';
+import { ensureExpenseCategories } from '@/features/expenses/services/expense-setup.service';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseCategory } from '@/lib/expense-types';
 import { useExpenseCategoriesQuery, useSaveExpenseCategoryMutation, useToggleExpenseCategoryMutation } from '@/features/expenses/expense.queries';
