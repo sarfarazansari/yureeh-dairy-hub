@@ -98,7 +98,7 @@ export function DatePicker({
             </Button>
           </PopoverTrigger>
           {clearable && value && !disabled && (
-            <Button variant="outline"
+            <Button variant="ghost"
               type="button"
               className="shadcn-date-clear absolute right-2 top-1/2 inline-grid size-6 -translate-y-1/2 place-items-center rounded-md text-[#66756b] hover:bg-[#f1f4f1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--green)]"
               aria-label={`Clear ${ariaLabel.toLowerCase()}`}
@@ -128,7 +128,7 @@ export function DatePicker({
             autoFocus
           />
           <div className="flex justify-end border-t border-[var(--line)] px-2 pt-2">
-            <Button variant="outline"
+            <Button variant="ghost" size="sm"
               type="button"
               className="rounded-md px-2 py-1.5 text-xs font-semibold text-[var(--green)] hover:bg-[#edf5ef] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--green)] disabled:cursor-not-allowed disabled:opacity-50"
               disabled={!isTodayAllowed}
