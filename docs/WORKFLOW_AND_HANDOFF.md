@@ -291,7 +291,7 @@ The user's short command `1 refactor karo` means:
 
 - Active branch: `feature/feature-folder-structure-foundation` (user requested continuing on this same branch).
 - REF-013 now includes feature-owned expense helpers/navigation, feed item/inventory/purchase/consumption/diet-plan components and service/query/schema boundaries, plus canonical customer domain types in `src/features/customers/types.ts`.
-- Customer type consumers updated: `customer.service.ts`, `customer.queries.ts`, `CustomersPage.tsx`, and `CustomerDetailPage.tsx`. The customer directory RPC summary projection remains private to the service. Shared `PricingType` and `Shift` remain canonical in `src/lib/milk-domain.ts`.
+- Customer type consumers updated: `customer.service.ts`, `customer.queries.ts`, `CustomersPage.tsx`, `CustomerDetailPage.tsx`, and `src/features/milk/milk.queries.ts` (the cross-feature `CustomerOption` consumer). The customer directory RPC summary projection remains private to the service. Shared `PricingType` and `Shift` remain canonical in `src/lib/milk-domain.ts`.
 - Store decision: no Zustand store has been introduced. Current inspected shared remote data belongs in TanStack Query; local form/sidebar state remains local. Revisit only if a concrete cross-route client-owned state requirement is identified.
 - Static source updates were written/read through GitHub. Typecheck, lint, formatting, build, tests and browser checks were not run in a local checkout. User should run them before merging.
 - Next structural slice: audit remaining module-owned type/service/component boundaries (especially milk and buffalo sales) and migrate one coherent set with all consumers verified; do not create empty folders or duplicate shared types.
