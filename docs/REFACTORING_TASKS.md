@@ -3,7 +3,7 @@
 Last reviewed: 2026-10-18
 Repository: https://github.com/sarfarazansari/yureeh-dairy-hub
 Base branch: `master`
-Current execution branch: `feature/final-architecture-query-security-audit` (fresh branch from latest master; no PR/merge)
+Current documentation branch: `docs/pending-security-regression-queue` (fresh branch from latest `master`; tracker update only; no PR/merge)
 
 ## Status definitions
 
@@ -377,3 +377,32 @@ Append a dated entry here after each work session:
 
 
 - REF-010A follow-up — 2026-10-16: removed duplicate expense `money` and current-date implementations by re-exporting `farm-format.money` and `date-input.todayDateKey`; milk date-key helpers now delegate to the canonical date-key module; buffalo purchase validation reuses the canonical buffalo payment-type formula. Static read-back only; full typecheck/lint/build and consumer graph verification remain pending.
+
+
+## Pending follow-up queue — 2026-10-18
+
+The user confirmed the application is working after merging the previous audit work. The items below remain open because source review and user smoke-testing do not replace compiler, automated, or database-level evidence. Keep existing REF-009 through REF-013 statuses unchanged until their recorded acceptance checks are met.
+
+| ID | Priority | Task | Status | Depends on | Acceptance evidence |
+|---|---|---|---|---|---|
+| SEC-001 | P1 | Verify database security and financial/stock integrity in a disposable Supabase test environment | Pending | Access to local/disposable Supabase environment and current migrations | Test authenticated-user ownership isolation and RLS; verify locked/posted expense rows cannot bypass ledger protections through direct table writes; test payment concurrency and duplicate submissions; verify feed consumption/reversal stock reconciliation; verify scheduler posting is atomic and duplicate-safe. Record exact commands, fixtures and results. Never use production data or apply unapproved production migrations. |
+| REF-014 | P1 | Complete duplicate helper/type compatibility-facade consumer audit | Pending | Latest master checkout; REF-013 current state | Search every consumer of legacy `src/lib/*` compatibility facades and duplicate helper/type candidates; classify each as active, re-export-only, or removable; remove only proven-unused duplicates; run typecheck, lint, format check and build. |
+| REF-015 | P2 | Verify server-side reporting completeness and pagination limits | Pending | Local runtime and representative test data | Check customer-detail milk history (observed 500-row cap) and expense-dashboard outstanding rows (observed 500-row cap); determine whether caps can silently omit relevant data; replace with server-side pagination/aggregation if required and regression-test totals. |
+| REF-016 | P1 | Close REF-009/REF-012 with executable regression evidence | Blocked until SEC-001 and local checks are available | SEC-001, REF-014, REF-015 findings as applicable | Run typecheck, lint, format check, production build and available automated tests; regression-test milk entry create/update/delete and customer reassignment, buffalo production save → buffalo detail history refresh, expense create/payment → feed cost/inventory/report refresh, account switching/cache isolation, and feed/diet scheduler retries. Update REF-009/REF-012 status only from actual evidence. |
+
+### Recommended execution order
+
+1. **SEC-001 — database security and financial/stock integrity tests.** Use only a disposable/local Supabase database; inspect current migration/test conventions first. If the environment is unavailable, document the exact blocker and prepare runnable tests without claiming execution.
+2. **REF-014 — compatibility-facade and duplicate consumer audit.** Use a complete repository search and compiler evidence before removing any compatibility export.
+3. **REF-015 — reporting limits and pagination.** Confirm whether the 500-row caps affect real results; preserve existing calculations and query semantics.
+4. **REF-016 — final regression and closure.** Run the available local checks and module workflows, then update REF-009/REF-012 based on evidence.
+
+### Session log — 2026-10-18 (pending queue recorded)
+
+- Task: Record the remaining security, architecture and regression tasks after the user confirmed the merged application is working.
+- Branch: `docs/pending-security-regression-queue`, created from the latest `master`.
+- File changed: `docs/REFACTORING_TASKS.md`.
+- Changes: added SEC-001 and REF-014 through REF-016, with priorities, dependencies, acceptance evidence, safe database-testing constraints and recommended order.
+- Checks executed: fetched the tracker from the new branch and prepared a documentation-only update; no application code or database changed.
+- Checks not run: application typecheck, lint, formatting, build, automated tests and Supabase/RLS/concurrency tests; this documentation-only operation does not execute them.
+- Next task: SEC-001 — database security and financial/stock integrity tests in a disposable Supabase environment.
