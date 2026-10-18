@@ -383,7 +383,7 @@ export default function BuffaloAnalyticsPage() {
                   const eveningRecord = animalRecords.find((record) => record.shift === 'EVENING');
                   const dayTotal = [morningRecord, eveningRecord].filter(Boolean).reduce((sum, record) => sum + Number(record?.milk_quantity ?? 0), 0);
                   const hasRecord = Boolean(morningRecord || eveningRecord);
-                  return <TableRow key={businessDate}><TableCell>{formatDate(businessDate)}</TableCell><TableCell>{morningRecord ? milkTxt(morningRecord.milk_quantity) : '—'}</TableCell><TableCell>{eveningRecord ? milkTxt(eveningRecord.milk_quantity) : '—'}</TableCell><TableCell>{hasRecord ? milkTxt(dayTotal) : '—'}</TableCell><TableCell>{hasRecord ? 'Recorded shift(s)' : 'No record in range data'}</TableCell></TableRow>;
+                  return <TableRow key={businessDate}><TableCell>{formatDate(businessDate)}</TableCell><TableCell>{morningRecord ? milkTxt(morningRecord.milk_quantity) : '—'}</TableCell><TableCell>{eveningRecord ? milkTxt(eveningRecord.milk_quantity) : '—'}</TableCell><TableCell>{hasRecord ? milkTxt(dayTotal) : '—'}</TableCell><TableCell>{morningRecord && eveningRecord ? 'Both shifts recorded' : hasRecord ? 'Partial shift data' : 'No production record'}</TableCell></TableRow>;
                 })}
               </TableBody>
             </Table>
