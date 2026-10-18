@@ -1,7 +1,7 @@
 -- SEC-001 transactional security regression tests.
 -- DESTRUCTIVE-GUARD: local Supabase database only. Synthetic fixtures roll back.
 -- Command:
---   SEC001_ALLOW_DESTRUCTIVE_TESTS=YES psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f supabase/tests/sec-001-database-integrity.sql
+--   SEC001_ALLOW_DESTRUCTIVE_TESTS=YES SUPABASE_DB_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -X -v ON_ERROR_STOP=1 -f supabase/tests/sec-001-database-integrity.sql
 \set ON_ERROR_STOP on
 \if :{?SEC001_ALLOW_DESTRUCTIVE_TESTS}
 \else
