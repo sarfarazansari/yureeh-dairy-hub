@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { PricingType } from '@/lib/milk-domain';
-import { dateKeySchema, todayDateKey } from './date-input';
+import { dateKeySchema, todayDateKey } from '@/lib/date-input';
 
 const positiveNumber = (label: string) =>
   z
