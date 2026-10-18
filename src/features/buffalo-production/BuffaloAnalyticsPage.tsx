@@ -113,6 +113,7 @@ export default function BuffaloAnalyticsPage() {
   const error = productionQuery.error?.message ?? previousProductionQuery.error?.message ?? fatQuery.error?.message ?? herdQuery.error?.message ?? '';
   const days = rangeDays(from, to);
   const expectedSlots = days * (shift === 'BOTH' ? 2 : 1);
+  const expectedHerdSlots = expectedSlots * Math.max(1, herdQuery.data?.length ?? 0);
 
   const scopedRecords = useMemo(() => records.filter((record) =>
     (selectedBuffaloId === 'all' || record.buffalo_id === selectedBuffaloId) &&
@@ -188,7 +189,7 @@ export default function BuffaloAnalyticsPage() {
   const priorAvg = priorTrend.filter((d) => d.total !== null).length
     ? sumQuantity(scopedRecords.filter((r) => r.business_date >= (priorTrend[0]?.businessDate ?? from) && r.business_date <= (priorTrend[priorTrend.length - 1]?.businessDate ?? from))) / Math.max(1, new Set(scopedRecords.filter((r) => r.business_date >= (priorTrend[0]?.businessDate ?? from) && r.business_date <= (priorTrend[priorTrend.length - 1]?.businessDate ?? from)).map((r) => r.business_date)).size)
     : null;
-  const missingSlots = Math.max(0, expectedSlots - new Set(scopedRecords.map((r) => `${r.business_date}:${r.shift}`)).size);
+  const missingSlots = Math.max(0, (isSingle ? expectedSlots : expectedHerdSlots) - (isSingle ? new Set(scopedRecords.map((r) => `${r.business_date}:${r.shift}`)).size : new Set(scopedRecords.map((r) => `${r.buffalo_id}:${r.business_date}:${r.shift}`)).size));
   const statusCounts = {
     productive: rows.filter((r) => r.status.key === 'productive').length,
     attention: rows.filter((r) => r.status.key === 'attention').length,
