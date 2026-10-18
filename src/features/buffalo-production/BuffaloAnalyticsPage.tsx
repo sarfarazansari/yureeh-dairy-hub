@@ -93,6 +93,16 @@ export default function BuffaloAnalyticsPage() {
   const previousRecords = previousProductionQuery.data ?? [];
   const herd = herdQuery.data ?? [];
   const fatRecords = (fatQuery.data ?? []).filter((record) => shift === 'BOTH' || record.shift === shift);
+  const fatByDate = useMemo(() => {
+    const byDate = new Map<string, { business_date: string; morning: number | null; evening: number | null }>();
+    for (const record of fatRecords) {
+      const row = byDate.get(record.business_date) ?? { business_date: record.business_date, morning: null, evening: null };
+      if (record.shift === 'MORNING') row.morning = Number(record.fat_percentage);
+      if (record.shift === 'EVENING') row.evening = Number(record.fat_percentage);
+      byDate.set(record.business_date, row);
+    }
+    return [...byDate.values()].sort((a, b) => b.business_date.localeCompare(a.business_date));
+  }, [fatRecords]);
   const isSingle = selectedBuffaloId !== 'all';
   const selectedBuffalo = herd.find((animal) => animal.id === selectedBuffaloId);
   const busy = productionQuery.isPending || previousProductionQuery.isPending || fatQuery.isPending || herdQuery.isPending;
@@ -250,7 +260,7 @@ export default function BuffaloAnalyticsPage() {
       <div className="grid kpis">
         <KPI label={isSingle ? 'BUFFALO MILK PRODUCTION' : 'TOTAL FARM PRODUCTION'} value={busy ? '…' : milkTxt(total)} foot={`${scopeLabel} · ${from} to ${to}`} />
         <KPI label="AVG / RECORDED DAY" value={busy ? '…' : average === null ? '—' : milkTxt(average)} foot={`${recordedDays} recorded production day(s); missing dates excluded`} />
-        <KPI label="CHANGE VS PREVIOUS PERIOD" value={busy ? '…' : change === null ? '—' : `${change > 0 ? '+' : ''}${change.toFixed(1)}%`} foot={`${previousRange.from} to ${previousRange.to}`} />
+        <KPI label="CHANGE VS PREVIOUS PERIOD" value={busy ? '…' : change === null ? '—' : `${change > 0 ? '+' : ''}${change.toFixed(1)}%`} foot={`Current ${from}–${to} · Previous ${previousRange.from}–${previousRange.to}`} />
         <KPI label={isSingle ? 'PRODUCTION RECORDS' : 'ACTIVE BUFFALOES'} value={busy ? '…' : isSingle ? String(scopedRecords.length) : String(herd.length)} foot={isSingle ? 'One record per date and shift' : `${new Set(records.map((record) => record.buffalo_id)).size} recorded in range`} />
       </div>
 
@@ -281,19 +291,24 @@ export default function BuffaloAnalyticsPage() {
         <section className="card">
           <h2 className="section-title">Production insights</h2>
           <div className="space-y-3">
-            <div className="rounded-lg border border-[var(--line)] p-3">
-              <p className="text-sm font-semibold">Period comparison</p>
-              <p className="sub mt-1">{hasEnoughData ? changeInsight : 'Insufficient comparable records to determine a reliable period trend.'}</p>
-              <p className="kpi-foot mt-1">Current: {from}–{to} · Previous: {previousRange.from}–{previousRange.to}</p>
+            <div className="rounded-lg border border-[var(--line)] bg-white p-4">
+              <p className="text-base font-semibold text-slate-900">Period comparison</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">{hasEnoughData ? changeInsight : 'Insufficient comparable records to determine a reliable period trend.'}</p>
+              <div className="mt-3 grid grid-cols-1 gap-2 rounded-md bg-slate-50 p-3 text-sm sm:grid-cols-2">
+                <div><p className="font-semibold text-slate-800">Current period</p><p className="mt-1 text-slate-600">{from} – {to}</p><p className="mt-1 font-semibold text-slate-900">{milkTxt(total)} total</p></div>
+                <div><p className="font-semibold text-slate-800">Previous period</p><p className="mt-1 text-slate-600">{previousRange.from} – {previousRange.to}</p><p className="mt-1 font-semibold text-slate-900">{milkTxt(previousTotal)} total</p></div>
+              </div>
+              <p className="mt-2 text-sm font-medium text-slate-700">{change === null ? 'Absolute difference: unavailable' : `Absolute difference: ${total - previousTotal >= 0 ? '+' : ''}${milkTxt(total - previousTotal)}`}</p>
+              <p className="mt-1 text-xs text-slate-600">Comparison uses the same number of calendar days and the selected buffalo/shift filters.</p>
             </div>
-            <div className="rounded-lg border border-[var(--line)] p-3">
-              <p className="text-sm font-semibold">Consecutive production trend</p>
-              <p className="sub mt-1">{declineInsight}</p>
+            <div className="rounded-lg border border-[var(--line)] bg-white p-4">
+              <p className="text-base font-semibold text-slate-900">Consecutive production trend</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">{declineInsight}</p>
             </div>
-            <div className="rounded-lg border border-[var(--line)] p-3">
-              <p className="text-sm font-semibold">Financial profitability</p>
-              <p className="sub mt-1">Profit/loss is not calculated yet: current production records cannot reliably attribute customer milk-sale revenue to an individual buffalo. Showing a number here would be misleading.</p>
-              <p className="kpi-foot mt-1">Next prerequisite: reconcile animal-level revenue with actual feed consumption cost and buffalo-linked expenses.</p>
+            <div className="rounded-lg border border-[var(--line)] bg-white p-4">
+              <p className="text-base font-semibold text-slate-900">Financial profitability</p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">Profit/loss is not calculated yet: current production records cannot reliably attribute customer milk-sale revenue to an individual buffalo. Showing a number here would be misleading.</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600"><span className="font-semibold">What is needed next:</span> reconcile animal-level revenue with actual feed consumption cost and buffalo-linked expenses.</p>
             </div>
           </div>
           <Button variant="outline" asChild className="mt-3">
@@ -307,13 +322,13 @@ export default function BuffaloAnalyticsPage() {
         <p className="kpi-foot">Farm-level fat for combined milk per date and shift; it is not an individual buffalo fat measurement.</p>
         <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
           <Table className="min-w-[650px]">
-            <TableHeader><TableRow><TableHead>BUSINESS DATE</TableHead><TableHead>SHIFT</TableHead><TableHead>MIXED MILK FAT</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>BUSINESS DATE</TableHead><TableHead>MORNING FAT</TableHead><TableHead>EVENING FAT</TableHead></TableRow></TableHeader>
             <TableBody>
-              {busy ? Array.from({ length: 3 }, (_, index) => <TableRow key={index}><TableCell><Skeleton className="h-4 w-28" /></TableCell><TableCell><Skeleton className="h-4 w-20" /></TableCell><TableCell><Skeleton className="h-4 w-16" /></TableCell></TableRow>) : fatRecords.map((record) => (
-                <TableRow key={record.business_date + record.shift}>
+              {busy ? Array.from({ length: 3 }, (_, index) => <TableRow key={index}><TableCell><Skeleton className="h-4 w-28" /></TableCell><TableCell><Skeleton className="h-4 w-20" /></TableCell><TableCell><Skeleton className="h-4 w-20" /></TableCell></TableRow>) : fatByDate.map((record) => (
+                <TableRow key={record.business_date}>
                   <TableCell>{formatDate(record.business_date)}</TableCell>
-                  <TableCell>{record.shift === 'MORNING' ? 'Morning' : 'Evening'}</TableCell>
-                  <TableCell><b>{Number(record.fat_percentage).toFixed(2)}%</b></TableCell>
+                  <TableCell>{record.morning === null ? <span className="text-slate-500">Not recorded</span> : <b>{record.morning.toFixed(2)}%</b>}</TableCell>
+                  <TableCell>{record.evening === null ? <span className="text-slate-500">Not recorded</span> : <b>{record.evening.toFixed(2)}%</b>}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
