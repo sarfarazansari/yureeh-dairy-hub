@@ -1,6 +1,6 @@
 # Yureeh Dairy Hub — Engineering Rules and Handoff
 
-Last updated: 2026-10-06
+Last updated: 2026-10-18
 
 ## Project context
 
@@ -348,3 +348,14 @@ The user's short command `1 refactor karo` means:
 - Further invalidation review: feed purchase create/edit/delete now refresh expense-category summaries and feed-cost analytics; diet-plan save refreshes scheduler run history (joined plan labels). These still require browser/runtime verification.
 
 - Duplicate helper pass: expense formatting now re-exports shared `money` and canonical date-only `todayDateKey`; milk list date normalization/validation delegates to `src/lib/date-key.ts`; buffalo payment-type validation reuses the feature's canonical formula. Legacy type/schema/list facades remain until the full consumer graph can be verified.
+
+
+## Latest handoff — 2026-10-18 — final architecture/query/security audit
+
+- Fresh branch: `feature/final-architecture-query-security-audit`
+- Starting `master` head: `a7d068ee78c400a21a555c1cadf93d4a572730ab`
+- New commit: `1f5a8d7aadc96934048248bd219913a9e0448ebf`
+- Changed source: `src/features/expenses/expense.queries.ts` now refreshes `feed-cost-analytics` after expense creation and refreshes both `feed-inventory` and `feed-cost-analytics` after expense payment.
+- Audit/validation details: see `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` and `docs/QUERY_INVALIDATION_CONTRACT.md`.
+- This was a GitHub source-level pass, not a local build or runtime execution. Typecheck/lint/format/build/browser/Supabase/RLS/concurrency checks remain unrun. REF-012 remains Blocked until those checks and a full consumer audit are complete.
+- User creates PR and merges. Do not merge this branch or create a PR.
