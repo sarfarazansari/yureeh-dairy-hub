@@ -48,3 +48,15 @@ Then execute the targeted browser and disposable-Supabase scenarios documented i
 ## Branch policy
 
 No PR or merge was created. No database migration or production data was changed by this continuation. The user retains PR and merge ownership.
+
+
+## Targeted fix applied after review
+
+Commit: `739fb35fe7597a1b050333e0edc42d23778d24e7`
+
+- Expense creation now invalidates the buffalo query root because a newly created expense can appear in acquisition-cost eligibility/options.
+- Expense update and soft-delete call the shared invalidation helper with `includeBuffaloes=true`, refreshing acquisition-cost options after an expense is edited or removed.
+- Category/vendor-only changes keep the narrower invalidation path and do not automatically refetch buffalo queries.
+- The updated source file was read back from GitHub and the import/helper/call sites were confirmed present.
+
+This fix is source-verified only. Typecheck, lint, formatting, build, browser checks, and Supabase behavior are still unverified because no local checkout or CI run is available.
