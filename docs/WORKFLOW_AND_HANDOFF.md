@@ -359,3 +359,17 @@ The user's short command `1 refactor karo` means:
 - Audit/validation details: see `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` and `docs/QUERY_INVALIDATION_CONTRACT.md`.
 - This was a GitHub source-level pass, not a local build or runtime execution. Typecheck/lint/format/build/browser/Supabase/RLS/concurrency checks remain unrun. REF-012 remains Blocked until those checks and a full consumer audit are complete.
 - User creates PR and merges. Do not merge this branch or create a PR.
+
+
+## SEC-001 security/integrity handoff — 2026-10-18
+
+- **Branch:** `feature/sec-001-database-integrity-audit`
+- **Exact master base:** `b318e2702838e93a74c566695c6ab63302cd1ab0`
+- **New artifacts:** `supabase/tests/sec-001-database-integrity.sql` (disposable/local-only transactional RLS and schema guard assertions) and `docs/SEC-001_DATABASE_SECURITY_AND_INTEGRITY_TESTS.md` (usage/limits).
+- **Finding — payments:** `record_customer_payment` locks the customer row, which serializes payment submissions for that customer, but has no request idempotency token/table. An uncertain client timeout followed by a deliberate second submission can create a duplicate payment; do not blindly retry.
+- **Finding — expenses:** RLS is owner-scoped; `record_expense_payment` locks the expense, writes a payment ledger record and updates `paid_amount` in one transaction. A trigger prevents direct `paid_amount` edits once dated payment records exist. A separate trigger blocks independent edits/deletes of an active feed-purchase-linked expense. These safeguards were only source-inspected and still require bypass tests against disposable Postgres.
+- **Finding — feed inventory:** create consumption locks the feed item and records weighted-average cost; edit/delete append reversal movements and lock the original movement/feed row. Check reversal totals and two-session create/edit races in a disposable DB.
+- **Finding — scheduler:** occurrence unique key is `(user_id, plan_id, feeding_date, shift)`; the scheduler claims rows with `FOR UPDATE SKIP LOCKED`, stores snapshot rows and posts movements in a per-run exception block, and exposes explicit retry only for FAILED runs without posted movement references. Verify by invoking scheduler concurrently and forcing a later item in a run to fail after an earlier item would otherwise post.
+- **Verification boundary:** GitHub source reads and writes only. Neither the SQL regression file nor npm checks were executed because this connector session has no local checkout/runtime or disposable Supabase DB session. Do not treat SEC-001 as complete until those checks pass.
+- **No production changes:** no migration ran, no production database was accessed, no payment/ledger RPC contract or retry behavior changed, and no PR/merge was created.
+- **Next task:** after SEC-001 is executed successfully, proceed to REF-014 — duplicate helper/type consumer audit.
