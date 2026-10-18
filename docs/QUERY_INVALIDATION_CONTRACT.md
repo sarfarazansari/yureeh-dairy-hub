@@ -65,3 +65,12 @@ No mutation uses optimistic ledger writes or automatic retry as part of these ch
 
 - Feed purchase create/edit/delete also invalidates expense-category summaries and feed-cost analytics, because a purchase creates or corrects a linked expense and changes inventory valuation inputs.
 - Diet-plan create/update now invalidates the scheduler/run-history query as well as plan queries, because run history joins the current plan name and can otherwise display a stale label after a rename.
+
+
+## Final static audit continuation — 2026-10-18
+
+On `feature/final-architecture-query-security-audit`, confirmed two expense-dependent invalidation gaps in the current source paths and fixed them:
+- Expense creation now invalidates `['feed-cost-analytics']` because farm expense/cost-related data can feed financial-cost reporting.
+- Expense payment now invalidates `['feed-inventory']` and `['feed-cost-analytics']` in addition to the existing expense/purchase/report/dashboard keys, keeping ledger-derived inventory/cost consumers from retaining stale data after a successful payment.
+
+The mutation dependency matrix and all static/runtime boundaries are recorded in `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md`. This remains a source-level correction only; `npm run typecheck`, lint, format check, build, browser smoke tests and database/RLS/concurrency tests were not available and have not been run. REF-009 and REF-012 must not be marked Completed yet.
