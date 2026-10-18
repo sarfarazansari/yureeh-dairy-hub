@@ -374,3 +374,11 @@ The user's short command `1 refactor karo` means:
 - **Verification boundary:** GitHub source reads and writes only. Neither the SQL regression file nor npm checks were executed because this connector session has no local checkout/runtime or disposable Supabase DB session. Do not treat SEC-001 as complete until those checks pass.
 - **No production changes:** no migration ran, no production database was accessed, no payment/ledger RPC contract or retry behavior changed, and no PR/merge was created.
 - **Next task:** after SEC-001 is executed successfully, proceed to REF-014 — duplicate helper/type consumer audit.
+
+
+### Session log — 2026-10-18 (mandatory UI date readability standard)
+
+- Added a mandatory project rule requiring every task to scan touched/related UI for readable dates and date ranges, including tables, KPI cards, charts/tooltips, filters, details, insights and exports. ISO values remain appropriate internally; presentation must use a consistent human-readable format and preserve date-only semantics.
+- Added tracker task UI-001 for a repository-wide date-formatting audit and standardization, including regression evidence.
+- Validation: fetched source docs from latest master, created fresh documentation branch from master, and read back each updated file after committing. No application code/build/runtime tests were run because this is a documentation-only change.
+- Next task queue retains SEC-001 as the current highest-priority task; UI-001 is recorded as a tracked follow-up, and date-readability checks are mandatory for all tasks immediately.

@@ -214,6 +214,17 @@ Forms must have:
 - duplicate prevention where applicable
 - success/error feedback
 
+
+
+DATE FORMATTING AND READABILITY (MANDATORY FOR EVERY TASK)
+
+- Before completing any task, inspect every date/date-range value displayed or affected in the UI, including tables, KPI cards, charts/tooltips, filters, detail pages, exports and insight text.
+- Do not expose raw ISO date keys such as `YYYY-MM-DD` to users. Format display values consistently in a human-readable form such as `18 Oct 2026` (or the established project-wide date format if one is already canonical).
+- Keep ISO/date-only values for database queries, comparisons, URLs and machine interfaces where appropriate; format only at the presentation boundary. Avoid timezone-induced date shifts.
+- For ranges, format both endpoints clearly and label comparison periods (for example, Current period and Previous period). Ensure the user can tell which dates each metric compares.
+- For paired date/shift data, group shifts under the same business date when that improves readability, and label each shift column explicitly.
+- Every task picker/implementer must run a date-readability regression scan across the touched UI and any closely related screen before marking a task complete, even when date formatting is not the task's primary objective. Add any pre-existing violations discovered to the task tracker instead of silently ignoring them.
+
 --------------------------------------------------
 
 BEFORE EVERY FEATURE
