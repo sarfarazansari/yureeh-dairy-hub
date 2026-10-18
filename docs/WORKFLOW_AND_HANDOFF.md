@@ -6,7 +6,7 @@ Last updated: 2026-10-18
 
 Repository: https://github.com/sarfarazansari/yureeh-dairy-hub  
 Default branch: `master`  
-Current work branch at handoff: `feature/feature-folder-structure-foundation`
+Current work branch at handoff: `feature/sec-001-database-integrity-audit`
 
 Yureeh Dairy Hub is a practical dairy-farm operations app built with Next.js App Router, TypeScript, React, Supabase/PostgreSQL, RLS, React Hook Form, Zod, and TanStack Query.
 
