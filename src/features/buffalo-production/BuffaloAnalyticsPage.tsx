@@ -92,7 +92,8 @@ export default function BuffaloAnalyticsPage() {
   const records = productionQuery.data ?? [];
   const previousRecords = previousProductionQuery.data ?? [];
   const herd = herdQuery.data ?? [];
-  const fatRecords = (fatQuery.data ?? []).filter((record) => shift === 'BOTH' || record.shift === shift);
+  // Keep both shifts visible side-by-side even when the production chart is filtered to one shift.
+  const fatRecords = fatQuery.data ?? [];
   const fatByDate = useMemo(() => {
     const byDate = new Map<string, { business_date: string; morning: number | null; evening: number | null }>();
     for (const record of fatRecords) {
