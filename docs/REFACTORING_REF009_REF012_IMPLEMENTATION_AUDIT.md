@@ -122,3 +122,65 @@ Additional final-pass fixes: feed purchase mutations now invalidate expense-cate
 - Buffalo purchase validation now reuses `getBuffaloPaymentType` from the buffalo feature rather than maintaining a second payment-type formula.
 - Payment-method string unions remain domain-owned for buffalo/customer until their database constraints and business semantics are compared; identical current literals alone are not enough to merge them.
 - Re-export-only compatibility facades remain in place for old type/schema/list import paths until a branch-wide compiler-backed consumer audit proves safe removal.
+
+
+## Final architecture/query/security regression pass — 2026-10-18
+
+**Branch:** `feature/final-architecture-query-security-audit`  
+**Starting master commit:** `a7d068ee78c400a21a555c1cadf93d4a572730ab`  
+**Method:** GitHub source/migration inspection; the complete recursive tree contained 359 tracked paths, 170 TS/TSX files under `src/`, and 60 SQL migrations. No local repository checkout or live/disposable Supabase connection was available.
+
+### Implemented on this branch
+
+- `src/features/expenses/expense.queries.ts`: expense payment success now invalidates the feed inventory and feed-cost analytics query roots, in addition to existing expense, vendor/category, purchase, finance, and dashboard roots. Expense creation now also invalidates feed-cost analytics. Rationale: payment/category/cost-related expense changes must refresh the inventory-cost-derived/report surfaces rather than leave a prior cache entry displayed.
+
+### Mutation-to-query dependency matrix (static mapping)
+
+| Mutation family | Successful invalidation observed | Status / caveat |
+|---|---|---|
+| Milk entry create/update/delete | milk root; customer directory/detail descendants; sales analytics; financial reports; dashboard | Covered in source; database transaction/RPC behavior not runtime-tested. |
+| Manual milk-pool movement | milk root | Appropriate for pool/reconciliation paths; validate all pool consumers with runtime smoke tests. |
+| Buffalo production save | production root; milk root; dashboard; sales analytics; financial reports | Buffalo detail history now uses the canonical production history key factory, so production-root invalidation covers it. |
+| Customer create/update/pricing/active/payment | customer root or directory/detail; milk root for selector/pricing/master changes; reports/dashboard for financial mutations | Covered for inspected hooks. Customer payment/payment-form retry is not idempotency-keyed; do not blindly retry ambiguous network outcomes. |
+| Buffalo purchase/profile/vendor/status/payment/sale/disposal | buffalo and production roots; diet-plan eligibility; expenses; reports/dashboard | Shared helper covers inspected lifecycle mutation paths. Acquisition cost has targeted buffalo/acquisition/expense/report/dashboard invalidation. |
+| Expense create | expense, vendor/category, feed purchase/inventory, buffalo option, feed-cost analytics, finance/dashboard | Updated in this branch to include feed-cost analytics. Direct table operation remains subject to RLS/database constraints; no RPC/database runtime test. |
+| Expense update/soft-delete | expense, category/vendor, feed-item/purchase/consumption/diet-plan, reports/dashboard; buffalo root | Feed-cost invalidation was not present in the current helper; evaluate whether editable/deleted expense records can influence feed cost in the live domain before broadening further. Existing lock checks are in the UI and need DB bypass/concurrency verification. |
+| Expense payment | expense, vendor/category, feed purchase/inventory, feed-cost analytics, reports/dashboard | Updated in this branch to include feed inventory and feed-cost roots. No automatic retry added. |
+| Expense category/vendor CRUD | expense plus related feed master/purchase/consumption/diet-plan, reports/dashboard | Covered for inspected hooks; category seeding intentionally remains a separate external setup effect and needs concurrent-init validation. |
+| Feed item create/update/activation | feed item, inventory, purchase, consumption, diet plan, feed-cost analytics, reports/dashboard | Covered by mutation helper; write RLS/unique-name behavior not runtime-tested. |
+| Feed purchase create/edit/delete | purchase archive/detail, inventory, expenses, vendor/category summaries, feed-cost analytics, reports/dashboard | Covered; request-key lifecycle and ledger constraints still need disposable database checks. |
+| Feed consumption create/edit/delete | consumption archive/detail, inventory, diet plans, feed-cost analytics, reports/dashboard | Covered; RPC-only ledger writes and reversals preserved; no DB concurrency tests run. |
+| Diet plan create/update | plan root, scheduler/run history, feed-item selectors | Covered in source; no schedule posting implied by plan save. |
+| Schedule setting save | schedule/settings and run history | Covered; schedule save should not change stock. |
+| Explicit failed-run retry | scheduler/run history, consumption/inventory, feed-cost analytics, reports/dashboard | Covered in source; scheduler atomicity, uniqueness and FAILED-only transition remain database/runtime checks. |
+
+The matrix documents source-level paths observed, not proof that every read has an active TanStack Query consumer. Some effect-driven/legacy screens and direct data calls remain part of REF-011B/REF-012's pending consumer audit.
+
+### Confirmed residual findings and severity
+
+- **P1 — Executable verification unavailable:** no local `node_modules`, local checkout, browser session, or Supabase test connection was available through the GitHub source connector. Typecheck, ESLint, Prettier, Next build, browser workflows, auth/account switch and concurrency/RLS tests are therefore not claimed as passed.
+- **P1 — Direct table expense writes require DB-path validation:** create/update/soft-delete use authenticated Supabase table operations, with current RLS and UI lock checks as protections. Static source inspection cannot demonstrate that a malicious/direct client cannot alter ledger-locked rows; review all later expense-locking triggers/policies and test bypass attempts in disposable DB before declaring the security acceptance criterion complete.
+- **P1 — Payment retry/idempotency:** customer, expense and buffalo payment RPC call signatures do not visibly carry request idempotency keys in the inspected clients. Do not configure automatic mutation retries or blindly resubmit after an ambiguous timeout; reconcile server state first. Consider an explicit idempotency policy as a separately designed change, not a casual client-only patch.
+- **P2 — Helper/type consumer audit remains static:** feature-owned types and re-export compatibility facades exist after REF-013. A compiler-backed import/unused-export/circular-dependency audit still needs local TypeScript/lint execution. Legacy compatibility files should not be deleted until all current consumers and external import contracts are confirmed.
+- **P2 — Aggregation/pagination:** expense history uses a server-side ranged query with exact count and server-side filters; customer/vendor directory sums now use aggregation RPCs. Customer detail still returns up to 500 milk entries, and the expense dashboard's open-items query is capped at 500. Verify whether detail pagination and aggregate-backed dashboard summaries are required for actual farm volume; do not silently claim all reporting is fully unbounded.
+- **P2 — Cache identity lifecycle:** QueryProvider clears cache on observed user-ID transitions, but the first session event, same-user multi-farm context (if introduced), and mounted requests resolving across an auth transition still need runtime tests. A query cache clear is not a substitute for database RLS/ownership checks.
+
+### Security/migration source review
+
+Inspected representative customer payment RLS/RPC migrations, expense RLS and reference-snapshot triggers, the diet scheduler RPC migration, feed-consumption cost/reversal hardening, and customer/vendor aggregation RPC migration. The inspected functions generally use authenticated ownership checks/RLS and explicit function grants; aggregation functions use `SECURITY INVOKER`. This is a representative source review, not an exhaustive deployed-schema audit: later migrations can replace earlier function bodies and remote applied migration state was unavailable. No schema or migration was changed/applied in this branch.
+
+### Actual verification
+
+- GitHub recursive tree: executed; not truncated (359 paths).
+- GitHub source file read-back: executed for query/mutation modules, project rules, handoff, tracker, invalidation contract and selected migrations.
+- New branch source read-back: executed after the expense invalidation edit.
+- TypeScript / lint / format check / Next build / tests / browser / RLS / RPC concurrency: **not run** (local runtime/database unavailable).
+- Production DB changes: none.
+- PR/merge: none.
+
+### Next required steps before REF-012 can be Completed
+
+1. Fetch this branch locally and run `npm ci`, `npm run typecheck`, `npm run lint`, `npm run format:check`, and `npm run build`; investigate and fix actual failures.
+2. Run focused browser smoke tests for customer reassignment in milk entries, buffalo detail history refresh, feed purchase replay with a stable request key, expense payment invalidation, feed consumption correction/reversal, scheduler failed-run retry, and auth sign-out/account switch.
+3. Against a disposable Supabase project, verify the latest migration chain, RLS access across two user accounts, direct mutation rejection for ledger-locked expenses, idempotent purchase replay, payment concurrency, feed-stock locking/reversal and scheduler uniqueness/atomic posting.
+4. Finish the consumer scan of legacy re-export facades and remaining direct Supabase access before removing any files or marking REF-012/REF-013 complete.
