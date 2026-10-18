@@ -116,7 +116,7 @@ export default function BuffaloAnalyticsPage() {
   const total = sumQuantity(scopedRecords);
   const recordedDays = new Set(scopedRecords.map((record) => record.business_date)).size;
   const previousTotal = sumQuantity(scopedPreviousRecords);
-  const change = percentChange(total, previousTotal);
+  const change = scopedRecords.length > 0 && scopedPreviousRecords.length > 0 ? percentChange(total, previousTotal) : null;
   const scopeLabel = isSingle ? (selectedBuffalo?.name || selectedBuffalo?.buffalo_code || 'Selected buffalo') : 'Farm';
   const average = recordedDays ? total / recordedDays : null;
 
@@ -130,7 +130,7 @@ export default function BuffaloAnalyticsPage() {
     const previousQuantity = sumQuantity(ownPrevious);
     const morningQuantity = sumQuantity(morning);
     const eveningQuantity = sumQuantity(evening);
-    const ownChange = percentChange(quantity, previousQuantity);
+    const ownChange = own.length > 0 && ownPrevious.length > 0 ? percentChange(quantity, previousQuantity) : null;
     return {
       ...animal,
       total: quantity,
@@ -179,7 +179,7 @@ export default function BuffaloAnalyticsPage() {
   const hasEnoughData = scopedRecords.length > 0 && scopedPreviousRecords.length > 0;
   const changeInsight = describeChange(change);
   const declineInsight = consecutiveDecline
-    ? 'Production decreased on each of the last three consecutive calendar days with complete data. Check feed, shift records, and animal context before drawing a cause.'
+    ? 'Recorded daily total decreased on each of the last three consecutive calendar dates. Shift completeness is not yet verified, so check missing entries and feed/animal context before drawing a cause.'
     : 'No decline across the last three consecutive calendar days is confirmed. Missing days or insufficient records prevent a reliable conclusion.';
   const shiftTotals = {
     morning: sumQuantity(scopedRecords.filter((record) => record.shift === 'MORNING')),
