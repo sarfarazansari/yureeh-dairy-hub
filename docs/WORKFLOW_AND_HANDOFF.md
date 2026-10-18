@@ -382,3 +382,14 @@ The user's short command `1 refactor karo` means:
 - Added tracker task UI-001 for a repository-wide date-formatting audit and standardization, including regression evidence.
 - Validation: fetched source docs from latest master, created fresh documentation branch from master, and read back each updated file after committing. No application code/build/runtime tests were run because this is a documentation-only change.
 - Next task queue retains SEC-001 as the current highest-priority task; UI-001 is recorded as a tracked follow-up, and date-readability checks are mandatory for all tasks immediately.
+
+
+## Buffalo performance decision dashboard — 2026-10-18
+
+- **Branch:** `feature/buffalo-performance-decision-dashboard`, cut from latest master SHA `dcd6da1492b3258b6b81397526f0f78f30877786`.
+- **Implementation:** redesigned `src/features/buffalo-production/BuffaloAnalyticsPage.tsx` with date presets/custom range, all-herd/single-buffalo selection, shift filter, KPI overview, period comparison showing readable dates and totals, sortable buffalo status summary, single-buffalo scorecard, production trend, recent 7-day insight, missing-shift coverage, daily milk history and paired morning/evening mixed-fat history.
+- **Decision safeguards:** status is a rule-based production/data-completeness screening aid, not veterinary diagnosis; it does not claim profitability because per-animal revenue/cost attribution is not yet supported. Status thresholds require validation against real representative records.
+- **Coverage fix:** herd missing-shift counts are calculated per buffalo/date/shift rather than treating a shift as present just because any buffalo has a record.
+- **Commits:** `477e94e8969493d608cd3455349fa0143beac500` (dashboard implementation), `281f0fbf269df8568295b098d2400be760576909` (coverage calculation correction).
+- **Verification:** latest source fetched back from GitHub after commits. Local typecheck, lint, build, tests and browser/manual UI testing were not executable in this GitHub-only session. Keep ANA-001 In Progress until these checks pass and the status thresholds are validated.
+- **No PR/merge created.** User retains PR/merge control.
