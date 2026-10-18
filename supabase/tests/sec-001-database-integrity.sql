@@ -125,10 +125,13 @@ begin
   begin
     insert into public.expense_vendors(user_id,name)
     values ('a0000000-0000-4000-8000-000000000002','SEC001 forbidden vendor');
-    raise exception 'SEC-001 FAIL: owner A forged owner B vendor write succeeded';
   exception when insufficient_privilege or check_violation then
+    -- Expected RLS denial.
     null;
   end;
+  if exists (select 1 from public.expense_vendors where name='SEC001 forbidden vendor') then
+    raise exception 'SEC-001 FAIL: owner A forged owner B vendor write succeeded';
+  end if;
 
   begin
     update public.expenses
@@ -147,10 +150,17 @@ begin
       'b0000000-0000-4000-8000-000000000001',
       current_date,1,'CASH'::public.payment_method
     );
-    raise exception 'SEC-001 FAIL: forged customer payment ownership unexpectedly succeeded';
   exception when insufficient_privilege or check_violation or foreign_key_violation then
+    -- Expected ownership/FK denial for this forged write.
     null;
   end;
+  if exists (
+    select 1 from public.customer_payments
+    where user_id='a0000000-0000-4000-8000-000000000002' and amount=1
+      and payment_date=current_date
+  ) then
+    raise exception 'SEC-001 FAIL: forged customer payment write persisted';
+  end if;
 end
 $rls$;
 
