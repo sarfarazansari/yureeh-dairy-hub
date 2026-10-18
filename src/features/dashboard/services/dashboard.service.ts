@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { MilkEntry } from '@/lib/analytics';
-import type { CustomerOption } from '@/features/customers/services/customer.service';
+import type { CustomerOption } from '@/features/customers/types';
 
 export type DashboardCustomer = CustomerOption;
 export type DashboardBuffalo = { id: string; buffalo_code: string; name: string | null };
