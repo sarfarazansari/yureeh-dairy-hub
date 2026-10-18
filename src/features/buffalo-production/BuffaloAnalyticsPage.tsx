@@ -377,7 +377,7 @@ export default function BuffaloAnalyticsPage() {
             <Table className="min-w-[600px]">
               <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>MORNING</TableHead><TableHead>EVENING</TableHead><TableHead>TOTAL RECORDED</TableHead><TableHead>ENTRY STATUS</TableHead></TableRow></TableHeader>
               <TableBody>
-                {busy ? Array.from({ length: 4 }, (_, index) => <TableRow key={index}>{Array.from({ length: 5 }, (_, cell) => <TableCell key={cell}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : Array.from({ length: Math.max(0, Math.round((new Date(to + 'T12:00:00').getTime() - new Date(from + 'T12:00:00').getTime()) / 86400000) + 1 }, (_, index) => addDays(from, index)).reverse().map((businessDate) => {
+                {busy ? Array.from({ length: 4 }, (_, index) => <TableRow key={index}>{Array.from({ length: 5 }, (_, cell) => <TableCell key={cell}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : Array.from({ length: Math.max(0, Math.round((new Date(to + 'T12:00:00').getTime() - new Date(from + 'T12:00:00').getTime()) / 86400000) + 1) }, (_, index) => addDays(from, index)).reverse().map((businessDate) => {
                   const animalRecords = records.filter((record) => record.buffalo_id === selectedBuffaloId && record.business_date === businessDate);
                   const morningRecord = animalRecords.find((record) => record.shift === 'MORNING');
                   const eveningRecord = animalRecords.find((record) => record.shift === 'EVENING');
