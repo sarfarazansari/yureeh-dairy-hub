@@ -138,14 +138,12 @@ begin
     raise exception 'SEC-001 FAIL: owner A forged owner B vendor write succeeded';
   end if;
 
-  begin
-    update public.expenses
-    set total_amount = 20
-    where id = (select expense_b from sec001_fixture_ids);
-    if found then
-      raise exception 'SEC-001 FAIL: owner A updated owner B expense';
-    end if;
-  end;
+  update public.expenses
+  set total_amount = 20
+  where id = (select expense_b from sec001_fixture_ids);
+  if found then
+    raise exception 'SEC-001 FAIL: owner A updated owner B expense';
+  end if;
 
   begin
     insert into public.customer_payments(
