@@ -1,9 +1,9 @@
 # Refactoring Task Tracker
 
-Last reviewed: 2026-10-16
+Last reviewed: 2026-10-18
 Repository: https://github.com/sarfarazansari/yureeh-dairy-hub
 Base branch: `master`
-Current execution branch: `feature/feature-folder-structure-foundation` (user-requested continuation; no PR/merge)
+Current execution branch: `feature/final-architecture-query-security-audit` (fresh branch from latest master; no PR/merge)
 
 ## Status definitions
 
@@ -37,7 +37,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-010G | P1 | Refactor diet-plan and scheduler query/mutation boundaries | In Progress (plan and scheduler boundaries implemented; validation pending) | REF-009, REF-010C, REF-010E, REF-010F | Plan archive/options/detail/save and scheduler settings/run history/save/explicit failed-run retry use query/mutation boundaries; DB posting/retry regression tests outstanding |
 | REF-011A | P1 | Refactor buffalo lifecycle/acquisition/sale and customer payment boundaries | In Progress (acquisition-cost query boundary and cross-domain invalidation improved; runtime validation pending) | REF-009, REF-010A, REF-010B | Buffalo mutation invalidation and customer payment/report invalidation improved; acquisition-cost UI and common payment retry/idempotency policy remain unverified |
 | REF-011B | P2 | Refactor any remaining modules one task per run | In Progress (expense/feed-item/scheduler boundaries implemented; remaining-module audit pending) | REF-010A–REF-011A | Expense history/new/category/vendor and feed-item writes are now query/mutation-backed; audit remaining direct-access modules and verify all cache dependencies |
-| REF-012 | P2 | Final architecture regression audit and remove obsolete duplicate patterns | Blocked (final static pass recorded; executable validation and compiler-backed consumer audit outstanding) | REF-011A, REF-011B | `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` records current coverage and unresolved paths; final exhaustive audit/build/test evidence still required |
+| REF-012 | P2 | Final architecture regression audit and remove obsolete duplicate patterns | Blocked (2026-10-18 static source pass updated; executable validation and full consumer audit outstanding) | REF-011A, REF-011B | `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` records mutation/query matrix, source-level security review, one confirmed invalidation fix, and explicit unavailable runtime checks |
 | REF-013 | P1 | Implement feature-owned folder boundaries and justified client-state stores, one module at a time | In Progress (feature-owned boundaries extended to buffalo acquisition costs and query keys; local validation pending) | REF-008 | Expense helpers are feature-owned; feed-items, feed-inventory, feed-purchases, feed-consumption and diet-plans services/query hooks/schemas/components now live under `src/features/*`; customer domain types now live in `src/features/customers/types.ts` instead of the service, with milk query consumers updated; diet-plan database/domain types and schedule types now live in `src/features/diet-plans/types.ts`, form values are schema-inferred, and the obsolete `src/lib/diet-plan-types.ts` was removed; feed item, inventory, purchase and consumption types now have feature-owned canonical definitions (legacy `src/lib/feed-*-types.ts` files are re-export-only compatibility facades), and feed components/services import feature-owned types; expense domain/payment types now live in `src/features/expenses/types.ts` and the legacy `src/lib/expense-types.ts` is a re-export facade; milk entry list projections now live in `src/features/milk/milk-entry-list.types.ts`, pure list/date helpers in `src/features/milk/utils/milk-entry-list.ts`, and list reads in `src/features/milk/services/milk-entry-list.service.ts`; legacy `src/lib/milk-entry-list.ts` is a re-export facade; milk entry Zod schema now lives in `src/features/milk/milk-entry.schema.ts` and the old lib path is re-export-only; remaining module boundary/store-candidate audit and local validation outstanding |
 
 ## Source inventory pointer
@@ -98,6 +98,19 @@ The complete static API/query/effect/state inventory is in `docs/REFACTORING_API
 - `src/app/(protected)/feeds/purchases/components/FeedPurchaseForm.tsx` — effect observed.
 - `src/app/(protected)/feeds/diet-plans/components/DietPlanForm.tsx` — effects observed.
 - `src/app/(protected)/buffalo-sales/page.tsx` — effect and query/refetch usage requires tracing.
+
+### Session log — 2026-10-18 (final architecture/query/security regression pass)
+
+- Task: Final audit continuation across REF-009/REF-010/REF-011/REF-012.
+- Branch: `feature/final-architecture-query-security-audit`.
+- Starting `master`: `a7d068ee78c400a21a555c1cadf93d4a572730ab` (current latest remote head at branch creation).
+- Commit: `1f5a8d7aadc96934048248bd219913a9e0448ebf` — `fix(expenses): refresh feed cost dependents after expense writes`.
+- Source tree evidence: recursive tree contained 359 paths, 170 TS/TSX under `src/`, and 60 SQL migrations.
+- Fixed: expense create invalidates feed-cost analytics; expense payment invalidates feed inventory and feed-cost analytics as well as its existing dependencies. Ledger writes/RPCs were not changed.
+- Docs updated: `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`, `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md`, `docs/QUERY_INVALIDATION_CONTRACT.md`.
+- Checks executed: GitHub file read-back and source/migration static review. Not executed: npm install, typecheck, lint, format check, build, automated tests, browser, Supabase/RLS/concurrency tests. No local runtime/database was available.
+- Status: In Progress/Blocked for acceptance; do not mark REF-012 Completed until runtime/compiler/database checks are run.
+- No PR, merge, schema change, or production data change.
 
 ## Per-task handoff record
 
