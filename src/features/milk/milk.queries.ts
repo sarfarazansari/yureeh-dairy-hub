@@ -6,21 +6,16 @@ import {
   getActiveCustomersForMilkEntry,
   getCustomerPricingForDate,
   getMilkEntryCustomers,
-  type CustomerOption,
 } from '@/features/customers/services/customer.service';
+import type { CustomerOption } from '@/features/customers/types';
 import {
   createMilkEntry,
   deleteMilkEntry,
   hasDuplicateMilkEntry,
   updateMilkEntry,
 } from './services/milk-entry.service';
-import {
-  getMilkEntryList,
-  getMilkEntryListAll,
-  type MilkEntryFilters,
-  type MilkEntryListResult,
-  type MilkEntryPagination,
-} from '@/lib/milk-entry-list';
+import { getMilkEntryList, getMilkEntryListAll } from './services/milk-entry-list.service';
+import type { MilkEntryFilters, MilkEntryListResult, MilkEntryPagination } from './milk-entry-list.types';
 import {
   getMilkPoolReconciliation,
   getMilkPoolShiftFatHistory,
@@ -29,7 +24,7 @@ import {
   type RecordMilkPoolMovementInput,
 } from './services/milk-pool.service';
 import type { MilkPoolShiftFatRecord } from './milk.types';
-import type { MilkEntryFormValues } from '@/lib/milk-entry-validation';
+import type { MilkEntryFormValues } from '@/features/milk/milk-entry.schema';
 
 export const milkQueryKeys = {
   all: ['milk'] as const,

@@ -31,7 +31,7 @@ import {
   type MilkEntryShift,
 } from '@/lib/milk-entry-list';
 import { calculateEntryAmount, type PricingType } from '@/lib/analytics';
-import { milkEntrySchema } from '@/lib/milk-entry-validation';
+import { milkEntrySchema } from '@/features/milk/milk-entry.schema';
 
 import {
   useDeleteMilkEntryMutation,

@@ -6,7 +6,7 @@ Last updated: 2026-10-06
 
 Repository: https://github.com/sarfarazansari/yureeh-dairy-hub  
 Default branch: `master`  
-Current work branch at handoff: `feature/buffalo-domain-audit`
+Current work branch at handoff: `feature/feature-folder-structure-foundation`
 
 Yureeh Dairy Hub is a practical dairy-farm operations app built with Next.js App Router, TypeScript, React, Supabase/PostgreSQL, RLS, React Hook Form, Zod, and TanStack Query.
 
@@ -227,3 +227,124 @@ The user's short command `1 refactor karo` means:
 - Feed-item create/update/activation writes use mutation hooks.
 - Feeding schedule settings and recent runs use a query hook; saving times and retrying a FAILED run use mutations. The page does not run a browser timer and retry remains explicit.
 - These changes have been read back from the feature branch. They have not been locally typechecked, linted, built or tested because a local clone could not be obtained in this environment. REF-009 through REF-012 must not be marked complete until those checks and the remaining buffalo/report/ledger regressions are reviewed.
+
+
+## Structural refactor handoff — 2026-10-16
+
+- Latest master base verified: `1f291af036ff737049af3db51936a3d72234da29`.
+- New working branch: `feature/feature-folder-structure-foundation` (created directly from latest master).
+- User clarified that the previous refactoring changes did not visibly deliver the requested feature folder structure and store architecture. Treat that feedback as a scope correction: source-boundary migrations must be implemented, not merely documented.
+- REF-013 was added to `docs/REFACTORING_TASKS.md` for incremental feature-owned folder boundaries and justified client-state stores.
+- First structural slice: expense shell/date filter UI moved to `src/features/expenses/components/ExpenseNavigationShell.tsx`; expense category setup moved to `src/features/expenses/services/expense-setup.service.ts`; `money` and `todayLocal` moved to `src/features/expenses/utils/expense-format.ts`. `src/app/(protected)/expenses/shared.tsx` currently provides temporary compatibility re-exports so existing imports remain valid while routes are migrated incrementally.
+- No Zustand store was added: the reviewed shared state is server-owned or page-local, and the architecture explicitly forbids duplicating server state in a store. Identify an actual cross-route client-owned state candidate before adding Zustand.
+- Validation boundary: static extraction review only. Local typecheck, lint, build, tests and browser flows were not run from this environment. User must run these on the branch before merging.
+- Next step: move expense route imports directly to feature-owned components/services/utils, then remove the compatibility module only when no imports remain; continue module-by-module after that.
+
+
+## REF-013 update — 2026-10-16
+
+- Branch: `feature/feature-folder-structure-foundation`, based directly on latest master `1f291af036ff737049af3db51936a3d72234da29`.
+- Expense module structure is now implemented in source (not just documented):
+  - `src/features/expenses/components/ExpenseNavigationShell.tsx` owns the expense shell and date filters.
+  - `src/features/expenses/services/expense-setup.service.ts` owns the category-seeding Supabase operation.
+  - `src/features/expenses/utils/expense-format.ts` owns currency formatting and local-date helpers.
+  - All seven expense route pages now import these feature-owned modules directly.
+  - Removed `src/app/(protected)/expenses/shared.tsx` after read-back confirmed the seven route pages no longer import it.
+- Store: no Zustand store added in this slice. The app's remote data belongs in TanStack Query; only real cross-route client-owned state should enter a Zustand store. A later store decision must name the exact shared state and consumers, not add a generic store by convention.
+- Verification: GitHub read-back confirmed imports and absence of legacy shared-module references in all seven expense routes. Local build/typecheck/lint/tests/browser checks were not run in this environment. Please run them locally before merge.
+- Next task: continue REF-013 with the next high-value module boundary after this expense extraction, using the same incremental migration approach. Keep user responsible for PR/merge.
+
+
+## REF-013 update — feed feature boundaries — 2026-10-16
+
+- Continued on `feature/feature-folder-structure-foundation` (fresh branch from latest master).
+- Moved feed-items service/query files to `src/features/feed-items` and feed-inventory service/query files to `src/features/feed-inventory`; consuming pages now import feature-owned query hooks. Removed their old route-owned service/query duplicates.
+- Moved feed-purchases service/query/schema to `src/features/feed-purchases`; updated the purchase archive/new/edit routes and form to import those files, then removed old route-owned service/query/schema files.
+- Moved feed-consumption service/query/schema to `src/features/feed-consumption`; updated archive/new/edit routes and form, then removed old route-owned files.
+- Moved diet-plan service/query/schema and scheduler query hooks to `src/features/diet-plans`; updated plan archive/new/edit/schedule routes and form, then removed old route-owned files.
+- Shared domain types in `src/lib/*-types.ts` intentionally remain shared until consumer analysis confirms a safe canonical owner.
+- No Zustand store was introduced because the current candidate state is either server-owned (TanStack Query) or local to the UI component. Adding a store without cross-route client-state requirements would violate project rules. This is a documented decision, not a claim that store architecture work is fully complete.
+- Static verification only: route import edits were checked against source files while migrating. Full repository import scan, typecheck, lint, build, tests and browser regression checks still need to be run locally before merge.
+- Next: audit the remaining feed module component ownership, then buffalo/customer/milk shared types and service boundaries; only then finalize the app-wide folder architecture and remove duplicate types/helpers.
+
+
+## REF-013 update — feed component ownership — 2026-10-16
+
+- Moved all feed module UI components out of `src/app/(protected)/feeds/**/components` and into feature-owned component folders:
+  - `src/features/feed-items/components/*`
+  - `src/features/feed-inventory/components/*`
+  - `src/features/feed-purchases/components/*`
+  - `src/features/feed-consumption/components/*`
+  - `src/features/diet-plans/components/*`
+- Updated feed archive/new/edit routes to import feature-owned components, and adjusted moved components' dependencies to feature-owned services/schemas/utilities. Removed old route-owned component duplicates.
+- Remaining routes stay under `src/app/(protected)/feeds` as routing entry points; business logic, query hooks, schemas and reusable module UI now belong under `src/features` for the migrated feed domains.
+- Static checks only. Run local typecheck, lint, build, purchase/consumption/plan scheduler regression flows and browser smoke tests before merge.
+
+
+## Developer check command — 2026-10-16
+
+- Added `npm run typecheck` → `tsc --noEmit` to `package.json`. Use it alongside `npm run lint`, `npm run format:check`, and `npm run build` before merging the structural refactor.
+- These commands were not run remotely by this session.
+
+
+## Structural refactor handoff — 2026-10-16
+
+- Active branch: `feature/feature-folder-structure-foundation` (user requested continuing on this same branch).
+- REF-013 now includes feature-owned expense helpers/navigation, feed item/inventory/purchase/consumption/diet-plan components and service/query/schema boundaries, plus canonical customer domain types in `src/features/customers/types.ts`.
+- Customer type consumers updated: `customer.service.ts`, `customer.queries.ts`, `CustomersPage.tsx`, `CustomerDetailPage.tsx`, and `src/features/milk/milk.queries.ts` (the cross-feature `CustomerOption` consumer). The customer directory RPC summary projection remains private to the service. Shared `PricingType` and `Shift` remain canonical in `src/lib/milk-domain.ts`.
+- Store decision: no Zustand store has been introduced. Current inspected shared remote data belongs in TanStack Query; local form/sidebar state remains local. Revisit only if a concrete cross-route client-owned state requirement is identified.
+- Static source updates were written/read through GitHub. Typecheck, lint, formatting, build, tests and browser checks were not run in a local checkout. User should run them before merging.
+- Next structural slice: audit remaining module-owned type/service/component boundaries (especially milk and buffalo sales) and migrate one coherent set with all consumers verified; do not create empty folders or duplicate shared types.
+
+
+### REF-013 continuation — 2026-10-16 (diet plans)
+
+- Continued on `feature/feature-folder-structure-foundation` as requested; no branch, PR or merge was created.
+- Diet-plan types moved from `src/lib/diet-plan-types.ts` into `src/features/diet-plans/types.ts`; form values are now inferred from `diet-plan.schema.ts`, and schedule types use canonical `Shift` from `src/lib/milk-domain.ts`. The obsolete shared diet-plan type file was deleted after updating the known service, query, form, new-route and edit-route consumers.
+- No local test/build was run. Before merge, run `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`, then exercise diet-plan create/edit, schedule settings and explicit FAILED-run retry against a disposable/test environment.
+- Next: continue REF-013 with remaining module-owned type boundaries, then run full architecture audit REF-012 only after prerequisite implementation slices and user-side runtime validation are complete.
+
+
+### REF-013 continuation — 2026-10-16 (feed type ownership)
+
+- Canonical feed domain types now live under their owning feature directories: feed items, inventory, purchases and consumption. Services and feature UI import these definitions directly. Inventory movement row projection type is owned by `src/features/feed-inventory/types.ts`, not the service.
+- The old `src/lib/feed-*-types.ts` modules were retained as re-export-only compatibility facades so any other consumers are not broken mid-migration; they contain no competing type definitions. Remove these facades only after a repository-wide consumer search proves they are unused.
+- No database/RPC or business behavior changes were made. Local checks remain unrun.
+
+
+### REF-013 continuation — 2026-10-16 (expense type ownership)
+
+- Expense types now have one canonical feature-owned definition in `src/features/expenses/types.ts`; the old `src/lib/expense-types.ts` is a re-export-only compatibility facade. `ExpensePayment` remains re-exported from the query module to avoid an accidental import API break.
+- No financial transaction logic changed. Local checks and expense/payment workflow tests remain outstanding.
+
+
+### REF-013 / REF-010A continuation — 2026-10-16 (milk list boundaries)
+
+- Split the mixed milk-entry list module into `src/features/milk/milk-entry-list.types.ts`, `src/features/milk/utils/milk-entry-list.ts`, and `src/features/milk/services/milk-entry-list.service.ts`. The milk query hook now consumes those feature-owned boundaries directly.
+- `src/lib/milk-entry-list.ts` remains a re-export-only compatibility facade because some other screens may still import shared date/list helpers. Remove it only after all consumers are migrated and checked.
+- Existing query filters, server-side pagination, row order, date helpers and chunked list loading were preserved by extraction; runtime behavior has not been executed in this environment.
+
+
+### REF-013 / REF-010A continuation — 2026-10-16 (milk schema ownership)
+
+- Milk-entry validation now has one feature-owned definition at `src/features/milk/milk-entry.schema.ts`; the former lib module is re-export-only. The three known feature consumers were switched to the canonical path.
+- The Zod validation and transform behavior were preserved during extraction. Runtime validation and milk/pool reconciliation checks remain pending.
+
+
+- Static review correction during milk-list extraction: `getMilkEntryListUrl` was initially placed in the service module and the facade pointed at the utility module. This was corrected before handoff: the URL helper now lives in `src/features/milk/utils/milk-entry-list.ts`, and the service contains only list reads. The utility file's trailing orphan comment was also removed.
+
+
+### REF-009 / REF-011A / REF-012 continuation — 2026-10-16 (cross-domain audit)
+
+- Continued only on `feature/feature-folder-structure-foundation`; no PR or merge created.
+- Fixed customer create/profile-update invalidation for milk selector/context queries and introduced the canonical customer payments query-key factory.
+- Centralized buffalo query keys in `src/features/buffaloes/buffalo.query-keys.ts`; buffalo mutations now invalidate diet-plan and expense roots. Moved buffalo acquisition-cost Supabase reads and the existing RPC write behind buffalo service/query hooks; the panel now retains local form state and uses the canonical date-only helper.
+- Explicit scheduler retry now invalidates run history and downstream consumption/inventory/feed-cost/report/dashboard queries after success.
+- QueryProvider now clears cached query data when authenticated user identity changes. This requires manual same-tab account-switch verification.
+- Updated `docs/QUERY_INVALIDATION_CONTRACT.md` and `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` with findings, fixes and the remaining validation boundary.
+- Verification remains static read-back only. No local typecheck, lint, format, build, browser tests or Supabase RPC/RLS/concurrency tests ran. Keep REF-012 blocked until these are executed and the legacy compatibility-facade consumer graph is confirmed with a full local search/typecheck.
+- Next: inspect remaining effect-driven read candidates and residual duplicate date/payment helpers; then run the complete validation checklist. User retains PR/merge control.
+
+- Further invalidation review: feed purchase create/edit/delete now refresh expense-category summaries and feed-cost analytics; diet-plan save refreshes scheduler run history (joined plan labels). These still require browser/runtime verification.
+
+- Duplicate helper pass: expense formatting now re-exports shared `money` and canonical date-only `todayDateKey`; milk list date normalization/validation delegates to `src/lib/date-key.ts`; buffalo payment-type validation reuses the feature's canonical formula. Legacy type/schema/list facades remain until the full consumer graph can be verified.

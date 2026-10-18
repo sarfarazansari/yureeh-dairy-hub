@@ -14,6 +14,8 @@ import type {
   BuffaloSalePaymentInput,
   BuffaloDisposal,
   BuffaloDisposalInput,
+  BuffaloAcquisitionCost,
+  BuffaloAcquisitionExpenseOption,
   BuffaloProfileEditInput,
   BuffaloStatus,
   BuffaloStatusHistory,
@@ -403,4 +405,51 @@ export async function getBuffaloSales(
     })),
     count: count ?? 0,
   };
+}
+
+
+export async function getBuffaloAcquisitionCosts(client: SupabaseClient, buffaloId: string) {
+  const { data, error } = await client
+    .from('buffalo_acquisition_costs')
+    .select('id,expense_id,cost_date,description,amount,notes')
+    .eq('buffalo_id', buffaloId)
+    .order('cost_date', { ascending: false });
+
+  if (error) throw new Error('Could not load acquisition costs.');
+  return (data ?? []) as BuffaloAcquisitionCost[];
+}
+
+export async function getBuffaloAcquisitionCostExpenses(client: SupabaseClient, buffaloId: string) {
+  const { data, error } = await client
+    .from('expenses')
+    .select('id,business_date,description,total_amount')
+    .eq('buffalo_id', buffaloId)
+    .is('deleted_at', null)
+    .order('business_date', { ascending: false });
+
+  if (error) throw new Error('Could not load expenses linked to this buffalo.');
+  return (data ?? []) as BuffaloAcquisitionExpenseOption[];
+}
+
+export async function recordBuffaloAcquisitionCost(
+  client: SupabaseClient,
+  input: {
+    buffaloId: string;
+    expenseId: string;
+    costDate: string;
+    description: string;
+    amount: number;
+    notes: string | null;
+  },
+) {
+  const { error } = await client.rpc('record_buffalo_acquisition_cost', {
+    p_buffalo_id: input.buffaloId,
+    p_expense_id: input.expenseId,
+    p_cost_date: input.costDate,
+    p_description: input.description,
+    p_amount: input.amount,
+    p_notes: input.notes,
+  });
+
+  if (error) throw new Error(error.message || 'Could not record acquisition cost.');
 }

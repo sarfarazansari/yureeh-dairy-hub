@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
-import { useDietPlanArchiveQuery } from './queries';
+import { useDietPlanArchiveQuery } from '@/features/diet-plans/diet-plan.queries';
 
 const PAGE_SIZE = 20;
 

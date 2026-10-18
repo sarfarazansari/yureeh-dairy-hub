@@ -31,7 +31,7 @@ import {
   useCustomerPaymentsQuery,
   useRecordCustomerPaymentMutation,
 } from './customer.queries';
-import type { CustomerPaymentMethod } from './services/customer.service';
+import type { CustomerPaymentMethod } from './types';
 export default function CustomerDetailPage({ id }: { id: string }) {
   const detailQuery = useCustomerDetailQuery(id);
   const paymentsQuery = useCustomerPaymentsQuery(id);

@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { useState } from 'react';
-import { ExpenseShell, money } from '../shared';
+import { ExpenseShell } from '@/features/expenses/components/ExpenseNavigationShell';
+import { money } from '@/features/expenses/utils/expense-format';
 import { useExpenseVendorDirectoryQuery, useSaveExpenseVendorMutation, useToggleExpenseVendorMutation } from '@/features/expenses/expense.queries';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseVendor } from '@/lib/expense-types';

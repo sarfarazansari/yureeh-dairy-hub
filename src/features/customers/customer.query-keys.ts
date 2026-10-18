@@ -3,4 +3,5 @@ export const customerQueryKeys = {
   directory: () => [...customerQueryKeys.all, 'directory'] as const,
   details: () => [...customerQueryKeys.all, 'detail'] as const,
   detail: (customerId: string) => [...customerQueryKeys.details(), customerId] as const,
+  payments: (customerId: string) => [...customerQueryKeys.detail(customerId), 'payments'] as const,
 };

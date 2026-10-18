@@ -17,13 +17,9 @@ import {
 } from 'recharts';
 import { supabase } from '@/lib/supabase';
 import { useExpenseDashboardQuery } from '@/features/expenses/expense.queries';
-import {
-  ExpenseShell,
-  ExpenseDateFilters,
-  ensureExpenseCategories,
-  money,
-  todayLocal,
-} from './shared';
+import { ExpenseShell, ExpenseDateFilters } from '@/features/expenses/components/ExpenseNavigationShell';
+import { ensureExpenseCategories } from '@/features/expenses/services/expense-setup.service';
+import { money, todayLocal } from '@/features/expenses/utils/expense-format';
 import { KPI } from '@/components/ui/KPI';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

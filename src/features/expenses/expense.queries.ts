@@ -2,17 +2,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { supabase } from '@/lib/supabase';
-import type { ExpenseRow } from '@/lib/expense-types';
-
-export type ExpensePayment = {
-  id: string;
-  payment_date: string;
-  amount: number | string;
-  payment_method: string;
-  transaction_reference: string | null;
-  notes: string | null;
-  created_at: string;
-};
+import { buffaloQueryKeys } from '@/features/buffaloes/buffalo.query-keys';
+import type { ExpenseRow, ExpensePayment } from './types';
+export type { ExpensePayment } from './types';
 
 export const expenseQueryKeys = {
   all: ['expenses'] as const,
@@ -320,6 +312,7 @@ export function useCreateExpenseMutation() {
         queryClient.invalidateQueries({ queryKey: expenseQueryKeys.categories() }),
         queryClient.invalidateQueries({ queryKey: ['feed-purchases'] }),
         queryClient.invalidateQueries({ queryKey: ['feed-inventory'] }),
+        queryClient.invalidateQueries({ queryKey: buffaloQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
       ]);
@@ -327,7 +320,10 @@ export function useCreateExpenseMutation() {
   });
 }
 
-async function invalidateExpenseDirectories(queryClient: ReturnType<typeof useQueryClient>) {
+async function invalidateExpenseDirectories(
+  queryClient: ReturnType<typeof useQueryClient>,
+  includeBuffaloes = false,
+) {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: expenseQueryKeys.all }),
     queryClient.invalidateQueries({ queryKey: expenseQueryKeys.categories() }),
@@ -336,6 +332,7 @@ async function invalidateExpenseDirectories(queryClient: ReturnType<typeof useQu
     queryClient.invalidateQueries({ queryKey: ['feed-purchases'] }),
     queryClient.invalidateQueries({ queryKey: ['feed-consumption'] }),
     queryClient.invalidateQueries({ queryKey: ['diet-plans'] }),
+    ...(includeBuffaloes ? [queryClient.invalidateQueries({ queryKey: buffaloQueryKeys.all })] : []),
     queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
     queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
   ]);
@@ -433,7 +430,7 @@ export function useUpdateExpenseMutation() {
       const { error } = await supabase.from('expenses').update(input.values).eq('id', input.expenseId);
       if (error) throw new Error(error.message);
     },
-    onSuccess: () => invalidateExpenseDirectories(queryClient),
+    onSuccess: () => invalidateExpenseDirectories(queryClient, true),
   });
 }
 
@@ -445,6 +442,6 @@ export function useSoftDeleteExpenseMutation() {
       const { error } = await supabase.from('expenses').update({ deleted_at: new Date().toISOString() }).eq('id', expenseId);
       if (error) throw new Error(error.message);
     },
-    onSuccess: () => invalidateExpenseDirectories(queryClient),
+    onSuccess: () => invalidateExpenseDirectories(queryClient, true),
   });
 }

@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { dateKeySchema, optionalDateKeySchema, todayDateKey } from '@/lib/date-input';
 
-import { buffaloPaymentTypes, type BuffaloPaymentType } from './types';
+import { buffaloPaymentTypes } from './types';
+import { getBuffaloPaymentType } from './utils';
 export { getBuffaloPaymentType as buffaloPaymentType } from './utils';
 
 const requiredNumber = (label: string) =>
@@ -30,9 +31,7 @@ export const buffaloPurchaseSchema = z.object({
   if (value.advance_paid > value.purchase_price) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['advance_paid'], message: 'Advance paid cannot be greater than purchase price.' });
   }
-  const expectedType: BuffaloPaymentType = value.advance_paid === value.purchase_price
-    ? 'PAID_IN_FULL'
-    : value.advance_paid > 0 ? 'PARTIAL_CREDIT' : 'FULL_CREDIT';
+  const expectedType = getBuffaloPaymentType(value.purchase_price, value.advance_paid);
   if (value.payment_type !== expectedType) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ['payment_type'], message: 'Payment type must match the purchase price and advance paid.' });
   }

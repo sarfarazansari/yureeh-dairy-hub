@@ -3,7 +3,7 @@
 Last reviewed: 2026-10-16
 Repository: https://github.com/sarfarazansari/yureeh-dairy-hub
 Base branch: `master`
-Execution branch for this planning baseline: `feature/refactor-engineering-standards`
+Current execution branch: `feature/feature-folder-structure-foundation` (user-requested continuation; no PR/merge)
 
 ## Status definitions
 
@@ -27,7 +27,7 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-006 | P1 | Audit mutation invalidation, duplicate submission, errors, loading/empty states and pagination | Completed (static audit) | REF-003, REF-004 | `docs/REFACTORING_MUTATION_UX_AUDIT.md`: confirmed cache gaps, per-module safeguards/risks, invalidation matrix, pagination and regression checklists; static limitations recorded |
 | REF-007 | P1 | Audit finance, milk pool, feed inventory, purchase/payment and consumption transaction integrity | Completed (static audit) | REF-002 | `docs/REFACTORING_TRANSACTION_INTEGRITY_AUDIT.md`: operation-to-ledger map, RPC/migration/RLS contracts, confirmed cache gaps, retry/reversal risks and explicit validation limits |
 | REF-008 | P1 | Finalize refactor phases and acceptance criteria based on the full repository audit | Completed (planning artifact) | REF-002–REF-007 | `docs/REFACTORING_IMPLEMENTATION_ROADMAP.md`: ordered phases, dependencies, scope, acceptance criteria, regression plan and cross-domain invalidation contract |
-| REF-009 | P1 | Standardize shared query-key ownership and targeted cross-feature invalidation | In Progress (source changes expanded; local validation pending) | REF-008 | Shared customer/production key factories, milk-entry→customer/report invalidation, production-history key unification, `docs/QUERY_INVALIDATION_CONTRACT.md`; typecheck/lint/build/smoke tests outstanding |
+| REF-009 | P1 | Standardize shared query-key ownership and targeted cross-feature invalidation | In Progress (static invalidation gaps fixed; runtime validation pending) | REF-008 | Shared customer/production key factories, milk-entry→customer/report invalidation, production-history key unification, `docs/QUERY_INVALIDATION_CONTRACT.md`; typecheck/lint/build/smoke tests outstanding |
 | REF-010A | P1 | Consolidate verified canonical types and pure shared helpers | In Progress (source changes committed; validation pending) | REF-009 | Canonical milk shift/pricing types, shared pooled-fat record, identical customer shape reuse; date helper audit and tests outstanding |
 | REF-010B | P1 | Move dashboard, sales/production analytics and financial reports to query-backed read boundaries | In Progress (main read boundaries migrated; validation pending) | REF-009 | Dashboard, sales analytics, buffalo analytics and financial report reads use date/filter-aware query keys; compare output against existing RPCs and run regression |
 | REF-010C | P1 | Move feed inventory and feed-master reads to query-backed boundaries | In Progress (read/write boundaries migrated; validation pending) | REF-009 | Feed master, inventory stock/movement and pagination reads use query boundaries; feed-item create/update/activation writes use mutation hooks; verify RLS and duplicate-name handling |
@@ -35,9 +35,10 @@ Never mark a task Completed based only on a proposed plan or static inspection. 
 | REF-010E | P1 | Refactor feed-purchase reads and mutation hooks | In Progress (archive/forms/mutations migrated; validation pending) | REF-009, REF-010C, REF-010D | Existing idempotency-key lifecycle and RPC writes preserved; local replay, lock and reconciliation tests outstanding |
 | REF-010F | P1 | Refactor feed-consumption reads and mutation hooks | In Progress (archive/forms/mutations migrated; validation pending) | REF-009, REF-010C, REF-010E | Existing RPC-only writes preserved with stock/cost/reversal invalidation; stock/date/concurrency/reversal tests outstanding |
 | REF-010G | P1 | Refactor diet-plan and scheduler query/mutation boundaries | In Progress (plan and scheduler boundaries implemented; validation pending) | REF-009, REF-010C, REF-010E, REF-010F | Plan archive/options/detail/save and scheduler settings/run history/save/explicit failed-run retry use query/mutation boundaries; DB posting/retry regression tests outstanding |
-| REF-011A | P1 | Refactor buffalo lifecycle/acquisition/sale and customer payment boundaries | In Progress (cache dependencies updated; remaining audit/validation pending) | REF-009, REF-010A, REF-010B | Buffalo mutation invalidation and customer payment/report invalidation improved; acquisition-cost UI and common payment retry/idempotency policy remain unverified |
+| REF-011A | P1 | Refactor buffalo lifecycle/acquisition/sale and customer payment boundaries | In Progress (acquisition-cost query boundary and cross-domain invalidation improved; runtime validation pending) | REF-009, REF-010A, REF-010B | Buffalo mutation invalidation and customer payment/report invalidation improved; acquisition-cost UI and common payment retry/idempotency policy remain unverified |
 | REF-011B | P2 | Refactor any remaining modules one task per run | In Progress (expense/feed-item/scheduler boundaries implemented; remaining-module audit pending) | REF-010A–REF-011A | Expense history/new/category/vendor and feed-item writes are now query/mutation-backed; audit remaining direct-access modules and verify all cache dependencies |
-| REF-012 | P2 | Final architecture regression audit and remove obsolete duplicate patterns | Blocked (static audit recorded; prerequisite migrations and runtime validation outstanding) | REF-011A, REF-011B | `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` records current coverage and unresolved paths; final exhaustive audit/build/test evidence still required |
+| REF-012 | P2 | Final architecture regression audit and remove obsolete duplicate patterns | Blocked (final static pass recorded; executable validation and compiler-backed consumer audit outstanding) | REF-011A, REF-011B | `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` records current coverage and unresolved paths; final exhaustive audit/build/test evidence still required |
+| REF-013 | P1 | Implement feature-owned folder boundaries and justified client-state stores, one module at a time | In Progress (feature-owned boundaries extended to buffalo acquisition costs and query keys; local validation pending) | REF-008 | Expense helpers are feature-owned; feed-items, feed-inventory, feed-purchases, feed-consumption and diet-plans services/query hooks/schemas/components now live under `src/features/*`; customer domain types now live in `src/features/customers/types.ts` instead of the service, with milk query consumers updated; diet-plan database/domain types and schedule types now live in `src/features/diet-plans/types.ts`, form values are schema-inferred, and the obsolete `src/lib/diet-plan-types.ts` was removed; feed item, inventory, purchase and consumption types now have feature-owned canonical definitions (legacy `src/lib/feed-*-types.ts` files are re-export-only compatibility facades), and feed components/services import feature-owned types; expense domain/payment types now live in `src/features/expenses/types.ts` and the legacy `src/lib/expense-types.ts` is a re-export facade; milk entry list projections now live in `src/features/milk/milk-entry-list.types.ts`, pure list/date helpers in `src/features/milk/utils/milk-entry-list.ts`, and list reads in `src/features/milk/services/milk-entry-list.service.ts`; legacy `src/lib/milk-entry-list.ts` is a re-export facade; milk entry Zod schema now lives in `src/features/milk/milk-entry.schema.ts` and the old lib path is re-export-only; remaining module boundary/store-candidate audit and local validation outstanding |
 
 ## Source inventory pointer
 
@@ -234,3 +235,132 @@ Append a dated entry here after each work session:
 - Remaining modules are explicitly listed in the implementation audit. REF-012 remains blocked until the remaining expense/scheduler/acquisition-cost paths are migrated and the required validations pass.
 - Branch comparison at this checkpoint reported 101 commits ahead and 2 behind `master`. During this session, one query-key update was briefly written to the default branch because the branch argument was omitted; a subsequent commit restored the file content to its prior state. The default-branch file content was read back and verified restored. The two extra default-branch commits remain in history; no force-reset was attempted.
 - Next: finish remaining REF-010D/010G/011A/011B modules, perform the repository-wide REF-012 audit, then run local validation before the user creates a PR/merges.
+
+
+### Session log — 2026-10-16 (REF-013 initial structural implementation)
+
+- Task ID: REF-013
+- Branch: `feature/feature-folder-structure-foundation`
+- Base: latest `master` at `1f291af036ff737049af3db51936a3d72234da29` (fetched immediately before branch creation).
+- Status: In Progress
+- Files changed: `src/features/expenses/components/ExpenseNavigationShell.tsx`, `src/features/expenses/services/expense-setup.service.ts`, `src/features/expenses/utils/expense-format.ts`, `src/app/(protected)/expenses/shared.tsx`.
+- Changes: moved expense navigation/date-filter UI into feature-owned components, category-seeding data access into an expense service, and currency/local-date helpers into feature utilities. The old route-level `shared.tsx` now temporarily re-exports the new canonical implementations to keep existing route imports compatible during incremental migration.
+- Store decision: no Zustand dependency/store added in this first slice. Existing shared data is server-owned and should remain in TanStack Query; no specific cross-route client-owned state has yet been demonstrated to justify a store. Store candidates must be identified from actual consumers before introducing a global store.
+- Checks executed: read latest master branch SHA and relevant source files; statically compared extracted implementations to previous shared helper behavior.
+- Checks not run: local typecheck, lint, build, tests and browser smoke tests; this session uses remote GitHub file operations without a local checkout.
+- Next: review new files and imports, run local checks on the feature branch, then continue the next structural slice by moving remaining expense-route imports off the compatibility module. Do not merge until local checks pass.
+
+
+### Session log — 2026-10-16 (REF-013 structural slice updated)
+
+- Implemented on `feature/feature-folder-structure-foundation` from latest master `1f291af036ff737049af3db51936a3d72234da29`.
+- Migrated imports in all seven expense routes to feature-owned components, services and utilities; removed `src/app/(protected)/expenses/shared.tsx`.
+- Read-back verification: fetched all seven routes from the feature branch and confirmed none references the removed `shared.tsx`; all show imports from `@/features/expenses/*`.
+- Runtime checks remain not run: local typecheck, lint, build, unit tests and browser smoke tests. The branch is not ready to merge until the user runs checks locally.
+- Store policy unchanged: no Zustand store is justified by this slice. TanStack Query remains the server cache; state should not be duplicated into Zustand. Store candidates are to be evaluated from concrete cross-route client-state requirements.
+
+
+### Session log — 2026-10-16 (REF-013 feed module migrations)
+
+- Branch: `feature/feature-folder-structure-foundation`; base remains latest master `1f291af036ff737049af3db51936a3d72234da29`.
+- Migrated service/query/schema ownership:
+  - Feed items: `src/features/feed-items/feed-items.service.ts`, `feed-items.queries.ts`.
+  - Feed inventory: `src/features/feed-inventory/feed-inventory.service.ts`, `feed-inventory.queries.ts`.
+  - Feed purchases: `src/features/feed-purchases/feed-purchases.service.ts`, `feed-purchases.queries.ts`, `feed-purchases.schema.ts`.
+  - Feed consumption: `src/features/feed-consumption/feed-consumption.service.ts`, `feed-consumption.queries.ts`, `feed-consumption.schema.ts`.
+  - Diet plans/scheduler: `src/features/diet-plans/diet-plan.service.ts`, `diet-plan.queries.ts`, `diet-plan.schema.ts`, `diet-plan-schedule.queries.ts`.
+- Updated consuming routes/forms to import the feature-owned files and deleted the old route-owned service/query/schema files for these modules. Existing shared domain types in `src/lib/*-types.ts` remain shared because multiple feed domains consume them; do not duplicate those types merely to populate feature folders.
+- Store audit: package has no Zustand dependency and current examined shared data is server-owned (TanStack Query), while sidebar mobile-open and page forms are local UI state. No global store was introduced without a demonstrated cross-route client-state requirement. If the user expects a specific store behavior, identify that state/consumer explicitly before choosing the store API.
+- Verification performed: GitHub read-back of source files and targeted route imports during migration. No local typecheck/lint/build/tests/browser checks run in this environment. These migrations are not merge-ready until user runs checks.
+
+
+### Session log — 2026-10-16 (feed UI component ownership)
+
+- Moved feed item, inventory, purchase, consumption and diet-plan UI components from route folders into their respective `src/features/*/components` directories.
+- Updated route pages to import feature-owned components. Updated moved components to reference feature-owned schemas/services and the canonical expense date utility where needed.
+- Removed the old route-owned component files after creating feature-owned replacements.
+- GitHub tree/source read-back and targeted import inspection performed; full local build/typecheck/lint/tests were not run. This is still In Progress until the user confirms local checks.
+
+
+### Session log — 2026-10-16 (developer verification command)
+
+- Added `npm run typecheck` (`tsc --noEmit`) to `package.json` so the documented TypeScript validation has a standard one-command entry point.
+- No dependencies were added and no lockfile change was required for this script-only change.
+- Command has not been executed in this environment; user must run it locally.
+
+
+### Session log — 2026-10-16 (REF-013 customer type ownership)
+
+- Task ID: REF-013
+- Branch: `feature/feature-folder-structure-foundation`
+- Status: In Progress (customer type boundary migrated; full task validation pending)
+- Files changed: `src/features/customers/types.ts`, `src/features/customers/services/customer.service.ts`, `src/features/customers/customer.queries.ts`, `src/features/customers/CustomersPage.tsx`, `src/features/customers/CustomerDetailPage.tsx`, `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`.
+- Changes: created a feature-owned canonical customer types module; services now import domain types rather than defining exported domain shapes; customer query hooks and UI components import those types from the feature boundary. `PricingType` and `Shift` reuse the canonical `src/lib/milk-domain.ts` definitions. The RPC directory-summary row remains service-local because it is an internal database projection, not a UI/domain type.
+- Integrity boundary: no SQL, RPC behavior, RLS, payment mutation, query keys or business calculations changed.
+- Checks performed: GitHub read-back of source before edits and targeted updates on this branch; static review of imports and type ownership.
+- Checks not run: local typecheck, lint, formatting, build, automated tests and browser workflows. No local checkout was available; do not treat this as merge-ready until these checks pass.
+- Next: continue REF-013 with the next safe feature boundary/type ownership slice after inspecting current consumers; keep Zustand deferred until a real cross-route client-owned state requirement is identified.
+
+
+### Session log — 2026-10-16 (REF-013 diet-plan type ownership)
+
+- Task ID: REF-013
+- Branch: `feature/feature-folder-structure-foundation`
+- Status: In Progress (diet-plan type boundary migrated; validation pending)
+- Files changed: `src/features/diet-plans/types.ts` (new), `src/features/diet-plans/diet-plan.service.ts`, `src/features/diet-plans/diet-plan.queries.ts`, `src/features/diet-plans/diet-plan.schema.ts`, `src/features/diet-plans/diet-plan-schedule.queries.ts`, `src/features/diet-plans/components/DietPlanForm.tsx`, `src/app/(protected)/feeds/diet-plans/new/page.tsx`, `src/app/(protected)/feeds/diet-plans/edit/[id]/page.tsx`; removed `src/lib/diet-plan-types.ts`.
+- Changes: moved diet-plan list/detail/buffalo-option and scheduler types into the owning feature; moved form-value ownership to the Zod schema output type; centralized status values and reused the canonical milk `Shift` type for scheduled runs.
+- Integrity boundary: no scheduler RPC, stock-posting, retry, database schema, or diet-plan business behavior intentionally changed.
+- Validation: GitHub read/write succeeded. Local typecheck, lint, format, build, scheduler regression and Supabase posting/retry checks remain unrun.
+
+
+### Session log — 2026-10-16 (REF-013 feed type ownership)
+
+- Task ID: REF-013
+- Branch: `feature/feature-folder-structure-foundation`
+- Status: In Progress (feed type ownership migrated; local validation pending)
+- Changes: added canonical type modules under `src/features/feed-items/types.ts`, `src/features/feed-inventory/types.ts`, `src/features/feed-purchases/types.ts`, and `src/features/feed-consumption/types.ts`. Updated feed services and feature components to import canonical feature-owned types. Moved `FeedInventoryMovementRow` into the inventory feature type module so the movement table no longer imports a type from its service. Legacy `src/lib/feed-*-types.ts` files now only re-export canonical types for any unmigrated consumers; they no longer define competing shapes.
+- Integrity boundary: no stock calculations, purchase/consumption RPCs, transaction semantics, or database schema were changed.
+- Validation: targeted source reads and GitHub write confirmation only. Local typecheck/lint/format/build, purchase replay, stock reconciliation and consumption reversal regression checks remain outstanding.
+
+
+### Session log — 2026-10-16 (REF-013 expense type ownership)
+
+- Task ID: REF-013
+- Branch: `feature/feature-folder-structure-foundation`
+- Status: In Progress (expense type ownership migrated; validation pending)
+- Changes: created `src/features/expenses/types.ts` for expense categories, vendors, buffalo options, expense rows and payment rows; updated the expense query module to consume feature-owned types and retained its `ExpensePayment` type export for compatibility. `src/lib/expense-types.ts` is now re-export-only.
+- Integrity boundary: no expense/payment RPC, ledger, balance, category-seeding or mutation behavior intentionally changed.
+- Validation: source edits confirmed via GitHub. Local typecheck, lint, formatting, build, and payment/linked-purchase regression tests remain unrun.
+
+
+### Session log — 2026-10-16 (REF-013 milk list boundary split)
+
+- Task ID: REF-013 / REF-010A
+- Branch: `feature/feature-folder-structure-foundation`
+- Status: In Progress (milk list boundary split; validation pending)
+- Changes: split the mixed `src/lib/milk-entry-list.ts` into feature-owned types, pure date/filter/URL/pagination utilities, and the paginated list service. Updated `src/features/milk/milk.queries.ts` to import directly from the feature modules. Retained the old lib path as a re-export facade for remaining consumers such as the customer detail view.
+- Behavior preservation: kept the existing dayjs date calculations, business-date validation, URL serialization, query filters/order, server pagination and chunked summary fetch logic unchanged during extraction.
+- Validation: static source extraction and GitHub writes only. Local typecheck/lint/format/build and milk create/edit/delete, customer summary and date-boundary regression checks remain unrun.
+
+
+### Session log — 2026-10-16 (REF-013 milk entry schema ownership)
+
+- Task ID: REF-013 / REF-010A
+- Branch: `feature/feature-folder-structure-foundation`
+- Status: In Progress (milk entry schema ownership migrated; validation pending)
+- Changes: moved the milk-entry Zod schema and inferred form types into `src/features/milk/milk-entry.schema.ts`; new-entry form, milk query hooks and entries page now import from the feature. The old `src/lib/milk-entry-validation.ts` now only re-exports the canonical schema/types. PricingType imports the canonical `src/lib/milk-domain.ts` alias.
+- Integrity boundary: validation rules and transform semantics were copied unchanged; no milk-sale or milk-pool transaction behavior intentionally changed.
+- Validation: GitHub source updates only. Typecheck/lint/format/build and milk-entry create/edit/delete regression checks remain unrun.
+
+
+### Session log — 2026-10-16 (cross-domain invalidation and REF-012 static pass)
+
+- Branch: `feature/feature-folder-structure-foundation`.
+- Customer create/profile update now invalidates milk customer/context queries; customer payment query key is centralized. Buffalo query keys were moved to a feature-owned key factory, and buffalo lifecycle mutations refresh diet-plan and expense roots.
+- Buffalo acquisition-cost table reads and the existing atomic RPC write were moved behind the buffalo service and TanStack Query hooks. The UI keeps form state local; successful writes invalidate buffalo/acquisition-cost, expense and reporting dependents.
+- Scheduler retry invalidation now includes consumption, stock, feed-cost, financial-report and dashboard roots. QueryProvider clears the cache when authenticated user identity changes.
+- Static audit notes and validation checklist are in `docs/REFACTORING_REF009_REF012_IMPLEMENTATION_AUDIT.md` and `docs/QUERY_INVALIDATION_CONTRACT.md`.
+- Status is not Completed: local typecheck/lint/format/build, browser workflows, account-switch testing, full compatibility-facade consumer search, and disposable Supabase RPC/RLS/concurrency/reconciliation tests remain unrun.
+
+
+- REF-010A follow-up — 2026-10-16: removed duplicate expense `money` and current-date implementations by re-exporting `farm-format.money` and `date-input.todayDateKey`; milk date-key helpers now delegate to the canonical date-key module; buffalo purchase validation reuses the canonical buffalo payment-type formula. Static read-back only; full typecheck/lint/build and consumer graph verification remain pending.

@@ -18,6 +18,9 @@ import {
   recordBuffaloDisposal,
   createBuffaloPurchase,
   getBuffaloDetails,
+  getBuffaloAcquisitionCosts,
+  getBuffaloAcquisitionCostExpenses,
+  recordBuffaloAcquisitionCost,
   getBuffaloDirectory,
   recordBuffaloPurchasePayment,
   getBuffaloPurchasePayments,
@@ -39,24 +42,17 @@ import type {
   BuffaloSalePaymentInput,
   BuffaloDisposal,
   BuffaloDisposalInput,
+  BuffaloAcquisitionCost,
+  BuffaloAcquisitionExpenseOption,
   BuffaloVendorEditInput,
 } from '../types';
 import { getBuffaloProductionHistory } from '@/features/buffalo-production/services/buffalo-production.service';
 import type { BuffaloProductionHistoryRecord } from '@/features/buffalo-production/types';
 import type { BuffaloPurchaseFormValues } from '../validation';
 import { buffaloProductionQueryKeys } from '@/features/buffalo-production/buffalo-production.query-keys';
+import { buffaloQueryKeys } from '../buffalo.query-keys';
 
-const buffaloKeys = {
-  all: ['buffaloes'] as const,
-  directory: () => [...buffaloKeys.all, 'directory'] as const,
-  detail: (id: string) => [...buffaloKeys.all, 'detail', id] as const,
-  payments: (buffaloId: string) => [...buffaloKeys.all, 'payments', buffaloId] as const,
-  statusHistory: (buffaloId: string) => [...buffaloKeys.all, 'status-history', buffaloId] as const,
-  sale: (buffaloId: string) => [...buffaloKeys.all, 'sale', buffaloId] as const,
-  salePayments: (buffaloId: string) => [...buffaloKeys.all, 'sale-payments', buffaloId] as const,
-  disposal: (buffaloId: string) => [...buffaloKeys.all, 'disposal', buffaloId] as const,
-  salesArchive: (page: number, pageSize: number, filters: { from?: string; to?: string; search?: string }) => [...buffaloKeys.all, 'sales-archive', page, pageSize, filters] as const,
-};
+
 
 function getClient() {
   if (!supabase) {
@@ -66,10 +62,51 @@ function getClient() {
   return supabase;
 }
 
+/** Fetch capitalized acquisition costs and eligible expense links for a buffalo. */
+export function useBuffaloAcquisitionCostsQuery(buffaloId: string) {
+  return useQuery<BuffaloAcquisitionCost[]>({
+    queryKey: buffaloQueryKeys.acquisitionCosts(buffaloId),
+    queryFn: () => getBuffaloAcquisitionCosts(getClient(), buffaloId),
+    enabled: Boolean(buffaloId),
+  });
+}
+
+export function useBuffaloAcquisitionCostExpensesQuery(buffaloId: string) {
+  return useQuery<BuffaloAcquisitionExpenseOption[]>({
+    queryKey: buffaloQueryKeys.acquisitionCostExpenses(buffaloId),
+    queryFn: () => getBuffaloAcquisitionCostExpenses(getClient(), buffaloId),
+    enabled: Boolean(buffaloId),
+  });
+}
+
+export function useRecordBuffaloAcquisitionCostMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: {
+      buffaloId: string;
+      expenseId: string;
+      costDate: string;
+      description: string;
+      amount: number;
+      notes: string | null;
+    }) => recordBuffaloAcquisitionCost(getClient(), input),
+    onSuccess: async (_data, input) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: buffaloQueryKeys.acquisitionCosts(input.buffaloId) }),
+        queryClient.invalidateQueries({ queryKey: buffaloQueryKeys.acquisitionCostExpenses(input.buffaloId) }),
+        queryClient.invalidateQueries({ queryKey: buffaloQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['expenses'] }),
+        queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+      ]);
+    },
+  });
+}
+
 /** Fetch the herd directory. */
 export function useBuffaloDirectory() {
   return useQuery<BuffaloListItem[]>({
-    queryKey: buffaloKeys.directory(),
+    queryKey: buffaloQueryKeys.directory(),
     queryFn: () => getBuffaloDirectory(getClient()),
   });
 }
@@ -77,7 +114,7 @@ export function useBuffaloDirectory() {
 /** Fetch one buffalo and its purchase information. */
 export function useBuffaloDetail(id: string) {
   return useQuery<BuffaloDetail | null>({
-    queryKey: buffaloKeys.detail(id),
+    queryKey: buffaloQueryKeys.detail(id),
     queryFn: () => getBuffaloDetails(getClient(), id),
     enabled: Boolean(id),
   });
@@ -86,7 +123,7 @@ export function useBuffaloDetail(id: string) {
 /** Fetch production history for a buffalo detail view. */
 export function useBuffaloPurchasePayments(buffaloId: string | undefined) {
   return useQuery<BuffaloPurchasePayment[]>({
-    queryKey: buffaloKeys.payments(buffaloId ?? ''),
+    queryKey: buffaloQueryKeys.payments(buffaloId ?? ''),
     queryFn: () => getBuffaloPurchasePayments(getClient(), buffaloId!),
     enabled: Boolean(buffaloId),
   });
@@ -94,7 +131,7 @@ export function useBuffaloPurchasePayments(buffaloId: string | undefined) {
 
 export function useBuffaloStatusHistory(buffaloId: string | undefined) {
   return useQuery<BuffaloStatusHistory[]>({
-    queryKey: buffaloKeys.statusHistory(buffaloId ?? ''),
+    queryKey: buffaloQueryKeys.statusHistory(buffaloId ?? ''),
     queryFn: () => getBuffaloStatusHistory(getClient(), buffaloId!),
     enabled: Boolean(buffaloId),
   });
@@ -145,8 +182,10 @@ function useBuffaloMutation<TVariables, TData = void>(
     mutationFn,
     onSuccess: async () => {
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: buffaloKeys.all }),
+        queryClient.invalidateQueries({ queryKey: buffaloQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: buffaloProductionQueryKeys.all }),
+        queryClient.invalidateQueries({ queryKey: ['diet-plans'] }),
+        queryClient.invalidateQueries({ queryKey: ['expenses'] }),
         queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
       ]);
@@ -194,7 +233,7 @@ export function useChangeBuffaloStatus() {
 
 export function useBuffaloSale(buffaloId: string | undefined) {
   return useQuery<BuffaloSale | null>({
-    queryKey: buffaloKeys.sale(buffaloId ?? ''),
+    queryKey: buffaloQueryKeys.sale(buffaloId ?? ''),
     queryFn: () => getBuffaloSale(getClient(), buffaloId!),
     enabled: Boolean(buffaloId),
   });
@@ -202,7 +241,7 @@ export function useBuffaloSale(buffaloId: string | undefined) {
 
 export function useBuffaloSalePayments(buffaloId: string | undefined) {
   return useQuery<BuffaloSalePayment[]>({
-    queryKey: buffaloKeys.salePayments(buffaloId ?? ''),
+    queryKey: buffaloQueryKeys.salePayments(buffaloId ?? ''),
     queryFn: () => getBuffaloSalePayments(getClient(), buffaloId!),
     enabled: Boolean(buffaloId),
   });
@@ -210,7 +249,7 @@ export function useBuffaloSalePayments(buffaloId: string | undefined) {
 
 export function useBuffaloDisposal(buffaloId: string | undefined) {
   return useQuery<BuffaloDisposal | null>({
-    queryKey: buffaloKeys.disposal(buffaloId ?? ''),
+    queryKey: buffaloQueryKeys.disposal(buffaloId ?? ''),
     queryFn: () => getBuffaloDisposal(getClient(), buffaloId!),
     enabled: Boolean(buffaloId),
   });
@@ -240,7 +279,7 @@ export function useBuffaloSalesArchive(
   filters: { from?: string; to?: string; search?: string },
 ) {
   return useQuery({
-    queryKey: buffaloKeys.salesArchive(page, pageSize, filters),
+    queryKey: buffaloQueryKeys.salesArchive(page, pageSize, filters),
     queryFn: () => getBuffaloSales(getClient(), page, pageSize, filters),
   });
 }

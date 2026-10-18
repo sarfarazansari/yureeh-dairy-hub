@@ -1,7 +1,8 @@
 'use client';
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 
 const QUERY_STALE_TIME = 30_000;
 
@@ -23,6 +24,25 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
         },
       }),
   );
+
+  const previousUserId = useRef<string | null | undefined>(undefined);
+
+  useEffect(() => {
+    if (!supabase) return;
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const nextUserId = session?.user.id ?? null;
+      if (previousUserId.current !== undefined && previousUserId.current !== nextUserId) {
+        // A browser QueryClient survives auth transitions; never retain one user's cached farm data for another.
+        queryClient.clear();
+      }
+      previousUserId.current = nextUserId;
+    });
+
+    return () => subscription.unsubscribe();
+  }, [queryClient]);
 
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }

@@ -8,78 +8,70 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Toast } from '@/components/ui/Toast';
 import { money } from '@/lib/farm-format';
-import type { BuffaloAcquisitionCost, BuffaloAcquisitionExpenseOption } from '../types';
-import { supabase } from '@/lib/supabase';
-
-function localDate() {
-  const date = new Date();
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-}
+import { todayDateKey } from '@/lib/date-input';
+import {
+  useBuffaloAcquisitionCostsQuery,
+  useBuffaloAcquisitionCostExpensesQuery,
+  useRecordBuffaloAcquisitionCostMutation,
+} from '../hooks/use-buffaloes';
 
 export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }: { buffaloId: string; canAdd: boolean; purchasePrice: number | null }) {
-  const queryClient = useQueryClient();
   const [expenseId, setExpenseId] = useState('');
-  const [costDate, setCostDate] = useState(localDate());
+  const [costDate, setCostDate] = useState(todayDateKey());
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [notes, setNotes] = useState('');
   const [toastState, setToastState] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-  const costsQuery = useQuery({
-    queryKey: ['buffalo-acquisition-costs', buffaloId],
-    enabled: Boolean(supabase && buffaloId),
-    queryFn: async () => {
-      if (!supabase) throw new Error('Supabase is not configured.');
-      const { data, error } = await supabase.from('buffalo_acquisition_costs')
-        .select('id,expense_id,cost_date,description,amount,notes').eq('buffalo_id', buffaloId)
-        .order('cost_date', { ascending: false });
-      if (error) throw new Error('Could not load acquisition costs.');
-      return (data ?? []) as BuffaloAcquisitionCost[];
-    },
-  });
-  const expensesQuery = useQuery({
-    queryKey: ['buffalo-acquisition-cost-expenses', buffaloId],
-    enabled: Boolean(supabase && buffaloId),
-    queryFn: async () => {
-      if (!supabase) throw new Error('Supabase is not configured.');
-      const { data, error } = await supabase.from('expenses').select('id,business_date,description,total_amount')
-        .eq('buffalo_id', buffaloId).is('deleted_at', null).order('business_date', { ascending: false });
-      if (error) throw new Error('Could not load expenses linked to this buffalo.');
-      return (data ?? []) as BuffaloAcquisitionExpenseOption[];
-    },
-  });
+  const costsQuery = useBuffaloAcquisitionCostsQuery(buffaloId);
+  const expensesQuery = useBuffaloAcquisitionCostExpensesQuery(buffaloId);
 
   const usedExpenseIds = useMemo(() => new Set((costsQuery.data ?? []).map((cost) => cost.expense_id)), [costsQuery.data]);
   const availableExpenses = (expensesQuery.data ?? []).filter((expense) => !usedExpenseIds.has(expense.id));
   const totalCapitalized = (costsQuery.data ?? []).reduce((sum, cost) => sum + Number(cost.amount), 0);
   const carryingValue = purchasePrice == null ? null : purchasePrice + totalCapitalized;
 
-  const saveMutation = useMutation({
-    mutationFn: async () => {
-      if (!supabase) throw new Error('Supabase is not configured.');
-      if (!expenseId || !costDate || !description.trim()) throw new Error('Choose a linked expense, date, and description.');
-      const parsedAmount = Number(amount);
-      if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) throw new Error('Enter an acquisition cost greater than zero.');
-      if (costDate > localDate()) throw new Error('Cost date cannot be in the future.');
-      const { error } = await supabase.rpc('record_buffalo_acquisition_cost', {
-        p_buffalo_id: buffaloId, p_expense_id: expenseId, p_cost_date: costDate,
-        p_description: description.trim(), p_amount: parsedAmount, p_notes: notes.trim() || null,
-      });
-      if (error) throw new Error(error.message || 'Could not record acquisition cost.');
-    },
-    onSuccess: async () => {
-      setToastState({ message: 'Acquisition cost capitalized.', type: 'success' });
-      setExpenseId(''); setDescription(''); setAmount(''); setNotes('');
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['buffalo-acquisition-costs', buffaloId] }),
-        queryClient.invalidateQueries({ queryKey: ['buffalo-acquisition-cost-expenses', buffaloId] }),
-      ]);
-    },
-    onError: (error) => setToastState({ message: error instanceof Error ? error.message : 'Could not record acquisition cost.', type: 'error' }),
-  });
+  const saveMutation = useRecordBuffaloAcquisitionCostMutation();
+
+  const submitAcquisitionCost = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!expenseId || !costDate || !description.trim()) {
+      setToastState({ message: 'Choose a linked expense, date, and description.', type: 'error' });
+      return;
+    }
+    const parsedAmount = Number(amount);
+    if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setToastState({ message: 'Enter an acquisition cost greater than zero.', type: 'error' });
+      return;
+    }
+    if (costDate > todayDateKey()) {
+      setToastState({ message: 'Cost date cannot be in the future.', type: 'error' });
+      return;
+    }
+
+    saveMutation.mutate({
+      buffaloId,
+      expenseId,
+      costDate,
+      description: description.trim(),
+      amount: parsedAmount,
+      notes: notes.trim() || null,
+    }, {
+      onSuccess: () => {
+        setToastState({ message: 'Acquisition cost capitalized.', type: 'success' });
+        setExpenseId('');
+        setDescription('');
+        setAmount('');
+        setNotes('');
+      },
+      onError: (error) => setToastState({
+        message: error instanceof Error ? error.message : 'Could not record acquisition cost.',
+        type: 'error',
+      }),
+    });
+  };
 
   return (
     <section className="card space-y-4">
@@ -95,9 +87,9 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }
           <TableBody>{costsQuery.data!.map((cost) => <TableRow key={cost.id}><TableCell>{cost.cost_date}</TableCell><TableCell>{cost.description}</TableCell><TableCell>{money(Number(cost.amount))}</TableCell><TableCell>{cost.notes || '—'}</TableCell></TableRow>)}</TableBody></Table></div> :
         <div className="empty">No acquisition costs capitalized yet.</div>}
 
-      {canAdd && <form className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" onSubmit={(event) => { event.preventDefault(); saveMutation.mutate(); }} noValidate>
+      {canAdd && <form className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" onSubmit={submitAcquisitionCost} noValidate>
         <Field label="Linked buffalo expense"><Select value={expenseId || undefined} onValueChange={setExpenseId}><SelectTrigger><SelectValue placeholder="Choose an expense" /></SelectTrigger><SelectContent>{availableExpenses.map((expense) => <SelectItem key={expense.id} value={expense.id}>{expense.business_date} · {expense.description || 'Expense'} · {money(Number(expense.total_amount))}</SelectItem>)}</SelectContent></Select></Field>
-        <Field label="Cost date"><DatePicker value={costDate} max={localDate()} onChange={setCostDate} ariaLabel="Cost date" /></Field>
+        <Field label="Cost date"><DatePicker value={costDate} max={todayDateKey()} onChange={setCostDate} ariaLabel="Cost date" /></Field>
         <Field label="Capitalized amount (₹)"><Input type="number" inputMode="decimal" min="0.01" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} required /></Field>
         <Field label="Description"><Input value={description} onChange={(event) => setDescription(event.target.value)} maxLength={200} required /></Field>
         <Field label="Notes (optional)"><Textarea value={notes} onChange={(event) => setNotes(event.target.value)} maxLength={500} rows={2} /></Field>
