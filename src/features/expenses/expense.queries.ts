@@ -86,6 +86,8 @@ export function useRecordExpensePaymentMutation() {
         queryClient.invalidateQueries({ queryKey: expenseQueryKeys.vendors() }),
         queryClient.invalidateQueries({ queryKey: expenseQueryKeys.categories() }),
         queryClient.invalidateQueries({ queryKey: ['feed-purchases'] }),
+        queryClient.invalidateQueries({ queryKey: ['feed-inventory'] }),
+        queryClient.invalidateQueries({ queryKey: ['feed-cost-analytics'] }),
         queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
       ]);
@@ -312,6 +314,7 @@ export function useCreateExpenseMutation() {
         queryClient.invalidateQueries({ queryKey: expenseQueryKeys.categories() }),
         queryClient.invalidateQueries({ queryKey: ['feed-purchases'] }),
         queryClient.invalidateQueries({ queryKey: ['feed-inventory'] }),
+        queryClient.invalidateQueries({ queryKey: ['feed-cost-analytics'] }),
         queryClient.invalidateQueries({ queryKey: buffaloQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: ['financial-reports'] }),
         queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
