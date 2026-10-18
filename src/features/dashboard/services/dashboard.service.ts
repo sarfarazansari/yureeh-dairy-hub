@@ -14,6 +14,22 @@ export type DashboardMonthlyTotals = {
   milkSold: number;
 };
 
+export type DashboardMilkMargin = {
+  milkLitresSold: number;
+  milkSalesRevenue: number;
+  feedConsumptionCost: number;
+  feedConsumptionEntries: number;
+  uncostedFeedConsumptionEntries: number;
+};
+
+type DashboardMilkMarginRow = {
+  milk_litres_sold: number | string;
+  milk_sales_revenue: number | string;
+  feed_consumption_cost: number | string;
+  feed_consumption_entries: number | string;
+  uncosted_feed_consumption_entries: number | string;
+};
+
 type DashboardAnalyticsResponse = {
   totals?: {
     expenseTotal?: number | string;
@@ -27,7 +43,7 @@ export async function getDashboardData(
   client: SupabaseClient,
   dates: { startDate: string; today: string; monthStart: string },
 ) {
-  const [entries, customers, buffaloes, todayProduction, monthlySummaryResult] =
+  const [entries, customers, buffaloes, todayProduction, monthlySummaryResult, milkMarginResult] =
     await Promise.all([
       client
         .from('milk_entries')
@@ -48,6 +64,10 @@ export async function getDashboardData(
         p_to: dates.today,
         p_customer_id: null,
       }),
+      client.rpc('get_milk_margin_after_feed', {
+        p_from: dates.monthStart,
+        p_to: dates.today,
+      }),
     ]);
 
   if (
@@ -55,7 +75,8 @@ export async function getDashboardData(
     customers.error ||
     buffaloes.error ||
     todayProduction.error ||
-    monthlySummaryResult.error
+    monthlySummaryResult.error ||
+    milkMarginResult.error
   ) {
     throw new Error('Could not load the farm dashboard. Please try again.');
   }
@@ -65,6 +86,11 @@ export async function getDashboardData(
   )?.totals;
   if (!monthlyTotals) {
     throw new Error('Could not load the farm dashboard summary. Please try again.');
+  }
+
+  const marginRow = (milkMarginResult.data?.[0] ?? null) as DashboardMilkMarginRow | null;
+  if (!marginRow) {
+    throw new Error('Could not load the milk margin summary. Please try again.');
   }
 
   const productionRows = todayProduction.data ?? [];
@@ -93,5 +119,12 @@ export async function getDashboardData(
       milkProduced: Number(monthlyTotals.farmMilkProduced ?? 0),
       milkSold: Number(monthlyTotals.farmMilkSold ?? 0),
     } satisfies DashboardMonthlyTotals,
+    milkMargin: {
+      milkLitresSold: Number(marginRow.milk_litres_sold ?? 0),
+      milkSalesRevenue: Number(marginRow.milk_sales_revenue ?? 0),
+      feedConsumptionCost: Number(marginRow.feed_consumption_cost ?? 0),
+      feedConsumptionEntries: Number(marginRow.feed_consumption_entries ?? 0),
+      uncostedFeedConsumptionEntries: Number(marginRow.uncosted_feed_consumption_entries ?? 0),
+    } satisfies DashboardMilkMargin,
   };
 }

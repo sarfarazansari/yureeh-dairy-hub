@@ -4,6 +4,7 @@ import { money, milkTxt } from '@/lib/farm-format';
 import Link from 'next/link';
 import { AppShell } from '@/components/layout/AppShell';
 import { KPI } from '@/components/ui/KPI';
+import { MilkMarginAfterFeedCard } from './dashboard/components/MilkMarginAfterFeedCard';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useDashboardDataQuery } from './dashboard/dashboard.queries';
@@ -327,6 +328,8 @@ export default function Dashboard() {
           <div className="empty">No milk sales in this range. Start with a new milk entry.</div>
         )}
       </div>
+      <div style={{ height: 15 }} />
+      <MilkMarginAfterFeedCard loading={loading} summary={dashboardQuery.data?.milkMargin ?? null} />
       <div style={{ height: 15 }} />
       <div className="card">
         <div className="row">
