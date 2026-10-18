@@ -259,9 +259,9 @@ export default function BuffaloAnalyticsPage() {
       {error && <p className="auth-message" role="alert">{error}</p>}
 
       <div className="grid kpis">
-        <KPI label={isSingle ? 'BUFFALO MILK PRODUCTION' : 'TOTAL FARM PRODUCTION'} value={busy ? '…' : milkTxt(total)} foot={`${scopeLabel} · ${from} to ${to}`} />
+        <KPI label={isSingle ? 'BUFFALO MILK PRODUCTION' : 'TOTAL FARM PRODUCTION'} value={busy ? '…' : milkTxt(total)} foot={`${scopeLabel} · ${formatDate(from)} to ${formatDate(to)}`} />
         <KPI label="AVG / RECORDED DAY" value={busy ? '…' : average === null ? '—' : milkTxt(average)} foot={`${recordedDays} recorded production day(s); missing dates excluded`} />
-        <KPI label="CHANGE VS PREVIOUS PERIOD" value={busy ? '…' : change === null ? '—' : `${change > 0 ? '+' : ''}${change.toFixed(1)}%`} foot={`Current ${from}–${to} · Previous ${previousRange.from}–${previousRange.to}`} />
+        <KPI label="CHANGE VS PREVIOUS PERIOD" value={busy ? '…' : change === null ? '—' : `${change > 0 ? '+' : ''}${change.toFixed(1)}%`} foot={`Current ${formatDate(from)} – ${formatDate(to)} · Previous ${formatDate(previousRange.from)} – ${formatDate(previousRange.to)}`} />
         <KPI label={isSingle ? 'PRODUCTION RECORDS' : 'ACTIVE BUFFALOES'} value={busy ? '…' : isSingle ? String(scopedRecords.length) : String(herd.length)} foot={isSingle ? 'One record per date and shift' : `${new Set(records.map((record) => record.buffalo_id)).size} recorded in range`} />
       </div>
 
@@ -296,8 +296,8 @@ export default function BuffaloAnalyticsPage() {
               <p className="text-base font-semibold text-slate-900">Period comparison</p>
               <p className="mt-2 text-sm leading-6 text-slate-700">{hasEnoughData ? changeInsight : 'Insufficient comparable records to determine a reliable period trend.'}</p>
               <div className="mt-3 grid grid-cols-1 gap-2 rounded-md bg-slate-50 p-3 text-sm sm:grid-cols-2">
-                <div><p className="font-semibold text-slate-800">Current period</p><p className="mt-1 text-slate-600">{from} – {to}</p><p className="mt-1 font-semibold text-slate-900">{milkTxt(total)} total</p></div>
-                <div><p className="font-semibold text-slate-800">Previous period</p><p className="mt-1 text-slate-600">{previousRange.from} – {previousRange.to}</p><p className="mt-1 font-semibold text-slate-900">{milkTxt(previousTotal)} total</p></div>
+                <div><p className="font-semibold text-slate-800">Current period</p><p className="mt-1 text-slate-600">{formatDate(from)} – {formatDate(to)}</p><p className="mt-1 font-semibold text-slate-900">{milkTxt(total)} total</p></div>
+                <div><p className="font-semibold text-slate-800">Previous period</p><p className="mt-1 text-slate-600">{formatDate(previousRange.from)} – {formatDate(previousRange.to)}</p><p className="mt-1 font-semibold text-slate-900">{milkTxt(previousTotal)} total</p></div>
               </div>
               <p className="mt-2 text-sm font-medium text-slate-700">{change === null ? 'Absolute difference: unavailable' : `Absolute difference: ${total - previousTotal >= 0 ? '+' : ''}${milkTxt(total - previousTotal)}`}</p>
               <p className="mt-1 text-xs text-slate-600">Comparison uses the same number of calendar days and the selected buffalo/shift filters.</p>
