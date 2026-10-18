@@ -377,3 +377,17 @@ Append a dated entry here after each work session:
 
 
 - REF-010A follow-up — 2026-10-16: removed duplicate expense `money` and current-date implementations by re-exporting `farm-format.money` and `date-input.todayDateKey`; milk date-key helpers now delegate to the canonical date-key module; buffalo purchase validation reuses the canonical buffalo payment-type formula. Static read-back only; full typecheck/lint/build and consumer graph verification remain pending.
+
+
+### Session log — 2026-10-18 (SEC-001 database security/integrity audit)
+
+- **Task:** SEC-001 — database security and financial/inventory integrity tests.
+- **Status:** In Progress / Blocked on execution environment; do not mark Completed.
+- **Branch:** `feature/sec-001-database-integrity-audit`, created from exact `master` SHA `b318e2702838e93a74c566695c6ab63302cd1ab0`.
+- **Artifacts added:** `supabase/tests/sec-001-database-integrity.sql`; `docs/SEC-001_DATABASE_SECURITY_AND_INTEGRITY_TESTS.md`.
+- **Static findings:** Expense RLS is owner-scoped; expense payments are writable only through `record_expense_payment`, which locks the expense row and rejects overpayment; the ledger guard blocks direct `paid_amount` changes after dated payments. Active feed-purchase-linked expenses are protected by `expenses_guard_feed_purchase_link`; purchase create uses `feed_purchase_idempotency`, an owner/key primary key and transaction advisory lock; feed consumption locks feed items and appends reversal movements; scheduler uses unique occurrence identity, `FOR UPDATE SKIP LOCKED`, per-run exception handling and explicit FAILED-only retry.
+- **Risks/gaps identified:** customer payment RPC `record_customer_payment` serializes on the customer row but has no request idempotency key, so a client timeout followed by user resubmission can create duplicate payments; do not add automatic retries. Expense direct edit/delete for non-feed-purchase expenses and paid-ledger bypass attempts still require runtime verification. Stock ledger reconciliation, reversal behavior, scheduler duplicate invocation/overlap and rollback-after-mid-run failure require real disposable DB tests.
+- **Checks actually executed:** read GitHub master branch SHA, created fresh feature branch, read required docs and selected source migrations, read back the two added files. Static source review only.
+- **Not executed:** psql/Supabase migrations, RLS assertions, SQL regression file, concurrent payment sessions, purchase idempotency replay, feed stock/reversal reconciliation, scheduler duplicate/concurrency/atomicity, npm install, typecheck, lint, formatting, build or browser smoke tests. The available GitHub connector provides source writes/reads but no local repository runtime or disposable Supabase DB session.
+- **Safety:** no migration applied, no production DB connection/data changes, no business RPC contract changed, no automatic retries added, no PR or merge created.
+- **Next step:** run the documented suite against a local/disposable Supabase instance; complete two-session race tests and fix/extend test fixture assumptions only on evidence. REF-014 (duplicate helper/type consumer audit) must wait until SEC-001 verification is complete.
