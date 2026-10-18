@@ -10,7 +10,7 @@
 After checking out this branch locally and starting a disposable Supabase stack with all repository migrations applied:
 
 ```sh
-SEC001_ALLOW_DESTRUCTIVE_TESTS=YES psql "$SUPABASE_DB_URL" -X -v ON_ERROR_STOP=1 -f supabase/tests/sec-001-database-integrity.sql
+SEC001_ALLOW_DESTRUCTIVE_TESTS=YES SUPABASE_DB_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres psql -h 127.0.0.1 -p 54322 -U postgres -d postgres -X -v ON_ERROR_STOP=1 -f supabase/tests/sec-001-database-integrity.sql
 ```
 
 `SUPABASE_DB_URL` must refer to the local/disposable Postgres database. The script creates temporary auth users and synthetic rows inside a transaction, switches JWT claims to exercise authenticated RLS, runs assertions, and rolls the transaction back. It does not apply migrations or mutate persistent test fixtures.
