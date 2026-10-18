@@ -154,13 +154,14 @@ export default function BuffaloAnalyticsPage() {
   const trend = useMemo(() => {
     const start = new Date(`${from}T12:00:00`);
     const end = new Date(`${to}T12:00:00`);
-    const result: { date: string; morning: number | null; evening: number | null; total: number | null }[] = [];
+    const result: { businessDate: string; date: string; morning: number | null; evening: number | null; total: number | null }[] = [];
     for (const cursor = new Date(start); cursor <= end; cursor.setDate(cursor.getDate() + 1)) {
       const key = dateKey(cursor);
       const daily = scopedRecords.filter((record) => record.business_date === key);
       const morning = daily.filter((record) => record.shift === 'MORNING');
       const evening = daily.filter((record) => record.shift === 'EVENING');
       result.push({
+        businessDate: key,
         date: formatDate(key, 'D MMM'),
         morning: shift !== 'EVENING' && morning.length ? sumQuantity(morning) : shift === 'EVENING' ? null : null,
         evening: shift !== 'MORNING' && evening.length ? sumQuantity(evening) : null,
@@ -170,16 +171,16 @@ export default function BuffaloAnalyticsPage() {
     return result;
   }, [from, to, scopedRecords, shift]);
 
-  const recentRecordedDays = trend.filter((day) => day.total !== null).slice(-3);
-  const precedingRecordedDays = trend.filter((day) => day.total !== null).slice(-6, -3);
-  const consecutiveDecline = recentRecordedDays.length === 3 &&
-    precedingRecordedDays.length === 3 &&
-    recentRecordedDays.every((day, index) => Number(day.total) < Number(precedingRecordedDays[index].total));
+  const lastThreeCalendarDays = trend.slice(-3);
+  const consecutiveDecline = lastThreeCalendarDays.length === 3 &&
+    lastThreeCalendarDays.every((day) => day.total !== null) &&
+    Number(lastThreeCalendarDays[0].total) > Number(lastThreeCalendarDays[1].total) &&
+    Number(lastThreeCalendarDays[1].total) > Number(lastThreeCalendarDays[2].total);
   const hasEnoughData = scopedRecords.length > 0 && scopedPreviousRecords.length > 0;
   const changeInsight = describeChange(change);
   const declineInsight = consecutiveDecline
-    ? 'The last three recorded production days are each lower than the corresponding three preceding recorded days. Check shift entries and feed/health context before drawing a cause.'
-    : 'No three-day consecutive decline pattern is confirmed by the available recorded data.';
+    ? 'Production decreased on each of the last three consecutive calendar days with complete data. Check feed, shift records, and animal context before drawing a cause.'
+    : 'No decline across the last three consecutive calendar days is confirmed. Missing days or insufficient records prevent a reliable conclusion.';
   const shiftTotals = {
     morning: sumQuantity(scopedRecords.filter((record) => record.shift === 'MORNING')),
     evening: sumQuantity(scopedRecords.filter((record) => record.shift === 'EVENING')),
@@ -376,13 +377,13 @@ export default function BuffaloAnalyticsPage() {
             <Table className="min-w-[600px]">
               <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>MORNING</TableHead><TableHead>EVENING</TableHead><TableHead>TOTAL RECORDED</TableHead><TableHead>ENTRY STATUS</TableHead></TableRow></TableHeader>
               <TableBody>
-                {busy ? Array.from({ length: 4 }, (_, index) => <TableRow key={index}>{Array.from({ length: 5 }, (_, cell) => <TableCell key={cell}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : trend.slice().reverse().map((day) => {
-                  const key = addDays(from, 0) && day.date;
-                  const morningRecord = scopedRecords.find((record) => formatDate(record.business_date, 'D MMM') === key && record.shift === 'MORNING');
-                  const eveningRecord = scopedRecords.find((record) => formatDate(record.business_date, 'D MMM') === key && record.shift === 'EVENING');
+                {busy ? Array.from({ length: 4 }, (_, index) => <TableRow key={index}>{Array.from({ length: 5 }, (_, cell) => <TableCell key={cell}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : Array.from({ length: Math.max(0, Math.round((new Date(to + 'T12:00:00').getTime() - new Date(from + 'T12:00:00').getTime()) / 86400000) + 1 }, (_, index) => addDays(from, index)).reverse().map((businessDate) => {
+                  const animalRecords = records.filter((record) => record.buffalo_id === selectedBuffaloId && record.business_date === businessDate);
+                  const morningRecord = animalRecords.find((record) => record.shift === 'MORNING');
+                  const eveningRecord = animalRecords.find((record) => record.shift === 'EVENING');
                   const dayTotal = [morningRecord, eveningRecord].filter(Boolean).reduce((sum, record) => sum + Number(record?.milk_quantity ?? 0), 0);
                   const hasRecord = Boolean(morningRecord || eveningRecord);
-                  return <TableRow key={day.date}><TableCell>{day.date}</TableCell><TableCell>{morningRecord ? milkTxt(morningRecord.milk_quantity) : '—'}</TableCell><TableCell>{eveningRecord ? milkTxt(eveningRecord.milk_quantity) : '—'}</TableCell><TableCell>{hasRecord ? milkTxt(dayTotal) : '—'}</TableCell><TableCell>{hasRecord ? 'Recorded shift(s)' : 'No record in range data'}</TableCell></TableRow>;
+                  return <TableRow key={businessDate}><TableCell>{formatDate(businessDate)}</TableCell><TableCell>{morningRecord ? milkTxt(morningRecord.milk_quantity) : '—'}</TableCell><TableCell>{eveningRecord ? milkTxt(eveningRecord.milk_quantity) : '—'}</TableCell><TableCell>{hasRecord ? milkTxt(dayTotal) : '—'}</TableCell><TableCell>{hasRecord ? 'Recorded shift(s)' : 'No record in range data'}</TableCell></TableRow>;
                 })}
               </TableBody>
             </Table>
