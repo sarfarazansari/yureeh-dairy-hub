@@ -12,6 +12,11 @@
   \echo 'BLOCKED: SEC001_ALLOW_DESTRUCTIVE_TESTS must equal YES.'
   \quit 3
 \endif
+\if :{?SUPABASE_DB_URL}
+\else
+  \echo 'BLOCKED: SUPABASE_DB_URL must point to local Supabase Postgres.'
+  \quit 3
+\endif
 
 begin;
 
