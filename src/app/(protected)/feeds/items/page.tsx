@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import type { FeedItem } from '@/lib/feed-types';
 import { useFeedItemsPageQuery, useSaveFeedItemMutation, useToggleFeedItemMutation } from '@/features/feed-items/feed-items.queries';
@@ -15,7 +17,7 @@ export default function FeedItemsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [search, setSearch] = useState('');
   const [editingItem, setEditingItem] = useState<FeedItem | null>(null);
-  const [message, setMessage] = useState('');
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const saveMutation = useSaveFeedItemMutation();
   const toggleMutation = useToggleFeedItemMutation();
@@ -46,7 +48,6 @@ export default function FeedItemsPage() {
     if (userError || !userData.user) return userError?.message ?? 'You must be signed in to save a feed item.';
 
     setBusy(true);
-    setMessage('');
     try {
       await saveMutation.mutateAsync({
         userId: userData.user.id,
@@ -61,7 +62,6 @@ export default function FeedItemsPage() {
           notes: values.notes.trim() || null,
         },
       });
-      setMessage(id ? 'Feed item updated.' : 'Feed item created.');
       return null;
     } catch (error) {
       return error instanceof Error ? error.message : 'Could not save feed item.';
@@ -73,16 +73,17 @@ export default function FeedItemsPage() {
   async function toggle(row: FeedItem) {
     try {
       await toggleMutation.mutateAsync({ id: row.id, isActive: !row.is_active });
-      setMessage('');
+      toast.success(row.is_active ? 'Feed item deactivated.' : 'Feed item activated.');
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Could not update feed item status.');
+      toast.error(error instanceof Error ? error.message : 'Could not update feed item status.');
     }
   }
 
   return (
     <AppShell title="Feed items" subtitle="Manage the farm's physical feed master">
       <div className="management-stack">
-        <FeedItemForm onSave={save} busy={busy} message={message} />
+        <div className="flex justify-end"><Button type="button" onClick={() => setAddDialogOpen(true)}>Add feed item</Button></div>
+        <FeedItemForm open={addDialogOpen} onOpenChange={setAddDialogOpen} onSave={save} busy={busy} />
         <FeedItemTable rows={rows} activeCount={activeCount} search={search} onSearchChange={setSearch} onEdit={setEditingItem} onToggle={toggle} loading={busy || feedItemsQuery.isPending} error={loadError} onRetry={load} page={page} pageSize={pageSize} totalRows={totalRows} onPageChange={setPage} onPageSizeChange={(value) => { setPageSize(value); setPage(1); }} />
         <FeedItemEditDialog item={editingItem} open={Boolean(editingItem)} onOpenChange={(open) => !open && setEditingItem(null)} onSave={save} busy={busy} />
       </div>

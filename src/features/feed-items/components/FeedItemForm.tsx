@@ -1,14 +1,13 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-
-import { useState } from 'react';
-import { TimedNotice } from '@/components/ui/TimedNotice';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'sonner';
 import { FEED_CATEGORIES, FEED_UNITS, type FeedCategory } from '../types';
 
 export type FeedItemFormValues = {
@@ -22,25 +21,24 @@ export type FeedItemFormValues = {
 };
 
 type Props = {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   onSave: (values: FeedItemFormValues) => Promise<string | null>;
   busy: boolean;
-  message: string;
 };
 
 const label = (value: string) => value.replaceAll('_', ' ');
-
 const initialValues: FeedItemFormValues = {
-  name: '',
-  category: 'CONCENTRATE',
-  baseUnit: 'KG',
-  purchaseUnit: 'KG',
-  conversion: '1',
-  lowStockThreshold: '0',
-  notes: '',
+  name: '', category: 'CONCENTRATE', baseUnit: 'KG', purchaseUnit: 'KG',
+  conversion: '1', lowStockThreshold: '0', notes: '',
 };
 
-export function FeedItemForm({ onSave, busy, message }: Props) {
+export function FeedItemForm({ open, onOpenChange, onSave, busy }: Props) {
   const [values, setValues] = useState(initialValues);
+
+  useEffect(() => {
+    if (!open) setValues(initialValues);
+  }, [open]);
 
   function update<K extends keyof FeedItemFormValues>(key: K, value: FeedItemFormValues[K]) {
     setValues((current) => ({ ...current, [key]: value }));
@@ -48,27 +46,46 @@ export function FeedItemForm({ onSave, busy, message }: Props) {
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    const error = await onSave(values);
-    if (!error) setValues(initialValues);
+    if (busy) return;
+    try {
+      const error = await onSave(values);
+      if (error) {
+        toast.error(error);
+        return;
+      }
+      toast.success('Feed item created.');
+      setValues(initialValues);
+      onOpenChange(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not save feed item.');
+    }
   }
 
   return (
-    <div className="card feed-item-form-card">
-      <div className="feed-item-form-heading"><h2 className="section-title">Add feed item</h2><p className="dialog-description">Set up a feed item for purchase and inventory tracking.</p></div>
-      <form className="feed-item-form" onSubmit={submit}>
-        <div className="feed-item-form-grid">
-          <div className="field"><Label htmlFor="feed-name">Name</Label><Input id="feed-name" required disabled={busy} value={values.name} onChange={(e) => update('name', e.target.value)} placeholder="e.g. Poha Churi" /></div>
-          <div className="field"><Label htmlFor="feed-category">Category</Label><Select value={values.category} disabled={busy} onValueChange={(value) => update('category', value as FeedCategory)}><SelectTrigger id="feed-category"><SelectValue /></SelectTrigger><SelectContent>{FEED_CATEGORIES.map((item) => <SelectItem key={item} value={item}>{label(item)}</SelectItem>)}</SelectContent></Select></div>
-          <div className="field"><Label htmlFor="feed-base-unit">Base unit</Label><Input id="feed-base-unit" list="feed-unit-list" disabled={busy} value={values.baseUnit} onChange={(e) => update('baseUnit', e.target.value)} placeholder="KG" /></div>
-          <div className="field"><Label htmlFor="feed-purchase-unit">Purchase unit</Label><Input id="feed-purchase-unit" list="feed-unit-list" disabled={busy} value={values.purchaseUnit} onChange={(e) => update('purchaseUnit', e.target.value)} placeholder="BAG" /></div>
-          <div className="field"><Label htmlFor="feed-conversion">Base quantity per purchase unit</Label><Input id="feed-conversion" required type="number" min="0.001" step="0.001" inputMode="decimal" disabled={busy} value={values.conversion} onChange={(e) => update('conversion', e.target.value)} /><span className="feed-item-form-hint">Example: 1 BAG = 50 KG</span></div>
-          <div className="field"><Label htmlFor="feed-threshold">Low-stock threshold ({values.baseUnit || 'base unit'})</Label><Input id="feed-threshold" type="number" min="0" step="0.001" inputMode="decimal" disabled={busy} value={values.lowStockThreshold} onChange={(e) => update('lowStockThreshold', e.target.value)} /><span className="feed-item-form-hint">0 disables alerts</span></div>
-          <div className="field feed-item-notes"><Label htmlFor="feed-notes">Notes (optional)</Label><Textarea id="feed-notes" rows={1} disabled={busy} value={values.notes} onChange={(e) => update('notes', e.target.value)} placeholder="Add a note if needed" /></div>
-        </div>
-        <datalist id="feed-unit-list">{FEED_UNITS.map((unit) => <option key={unit} value={unit} />)}</datalist>
-        {message && <TimedNotice message={message} onDismiss={() => undefined} />}
-        <Button className="feed-item-submit text-white" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Add feed item'}</Button>
-      </form>
-    </div>
+    <Dialog open={open} onOpenChange={(nextOpen) => { if (!busy) onOpenChange(nextOpen); }}>
+      <DialogContent className="app-dialog max-h-[min(90dvh,48rem)] overflow-y-auto feed-item-add-dialog">
+        <form onSubmit={submit}>
+          <DialogHeader className="mb-5">
+            <p className="eyebrow">FEED MASTER</p>
+            <DialogTitle>Add feed item</DialogTitle>
+            <DialogDescription>Create a physical feed master for purchase, inventory and consumption tracking.</DialogDescription>
+          </DialogHeader>
+          <fieldset disabled={busy} className="dialog-form-grid min-w-0 border-0 p-0">
+            <div className="field"><Label htmlFor="feed-add-name">Name</Label><Input id="feed-add-name" required value={values.name} onChange={(e) => update('name', e.target.value)} placeholder="e.g. Poha Churi" autoComplete="off" /></div>
+            <div className="field"><Label htmlFor="feed-add-category">Category</Label><Select value={values.category} onValueChange={(value) => update('category', value as FeedCategory)}><SelectTrigger id="feed-add-category"><SelectValue /></SelectTrigger><SelectContent>{FEED_CATEGORIES.map((item) => <SelectItem key={item} value={item}>{label(item)}</SelectItem>)}</SelectContent></Select></div>
+            <div className="field"><Label htmlFor="feed-add-base-unit">Base unit</Label><Input id="feed-add-base-unit" list="feed-add-unit-list" value={values.baseUnit} onChange={(e) => update('baseUnit', e.target.value)} placeholder="KG" required /></div>
+            <div className="field"><Label htmlFor="feed-add-purchase-unit">Purchase unit</Label><Input id="feed-add-purchase-unit" list="feed-add-unit-list" value={values.purchaseUnit} onChange={(e) => update('purchaseUnit', e.target.value)} placeholder="BAG" required /></div>
+            <div className="field"><Label htmlFor="feed-add-conversion">Base quantity per purchase unit</Label><Input id="feed-add-conversion" required type="number" min="0.001" step="0.001" inputMode="decimal" value={values.conversion} onChange={(e) => update('conversion', e.target.value)} /><span className="kpi-foot">Example: 1 BAG = 50 KG → enter 50.</span></div>
+            <div className="field"><Label htmlFor="feed-add-threshold">Low-stock threshold ({values.baseUnit || 'base unit'})</Label><Input id="feed-add-threshold" type="number" min="0" step="0.001" inputMode="decimal" value={values.lowStockThreshold} onChange={(e) => update('lowStockThreshold', e.target.value)} /><span className="kpi-foot">Set 0 to disable low-stock alerts.</span></div>
+            <div className="field wide-field"><Label htmlFor="feed-add-notes">Notes (optional)</Label><Textarea id="feed-add-notes" rows={2} value={values.notes} onChange={(e) => update('notes', e.target.value)} placeholder="Add a note if needed" /></div>
+          </fieldset>
+          <datalist id="feed-add-unit-list">{FEED_UNITS.map((unit) => <option key={unit} value={unit} />)}</datalist>
+          <DialogFooter className="mt-5">
+            <Button type="button" variant="secondary" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
+            <Button type="submit" disabled={busy}>{busy ? <><span className="spinner" aria-hidden="true" />Saving…</> : 'Add feed item'}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
