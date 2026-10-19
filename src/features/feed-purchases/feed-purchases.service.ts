@@ -86,6 +86,15 @@ export async function fetchFeedPurchases(
   const purchaseIds = rows.map((row) => row.id);
   const feedIds = [...new Set(rows.map((row) => row.feed_item_id))];
 
+  const { data: activePurchases, error: activePurchaseError } = await client
+    .from('feed_purchases')
+    .select('id, feed_item_id')
+    .eq('status', 'ACTIVE')
+    .in('feed_item_id', feedIds);
+
+  if (activePurchaseError) throw activePurchaseError;
+  const activePurchaseIds = new Set((activePurchases ?? []).map((purchase) => purchase.id));
+
   const { data: movements, error: movementError } = await client
     .from('feed_inventory_movements')
     .select('id, feed_item_id, movement_type, quantity, source_type, source_id, occurred_at, created_at, reversal_of_movement_id')
@@ -109,6 +118,14 @@ export async function fetchFeedPurchases(
   );
 
   const activeMovements = allMovements.filter((movement) => {
+    // Deleted/corrected purchases remain in the append-only ledger, but their
+    // original stock-in must not be counted as an available FIFO lot.
+    if (
+      movement.movement_type === 'PURCHASE' &&
+      movement.source_type === 'FEED_PURCHASE' &&
+      !activePurchaseIds.has(movement.source_id)
+    ) return false;
+
     if (
       movement.movement_type === 'CONSUMPTION' &&
       movement.source_type === 'FEED_CONSUMPTION' &&
