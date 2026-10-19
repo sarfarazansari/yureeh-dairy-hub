@@ -1922,3 +1922,47 @@ button {
   .feed-item-add-dialog .dialog-form-grid { grid-template-columns: minmax(0, 1fr); }
   .feed-item-add-dialog .wide-field { grid-column: auto; }
 }
+
+
+/* Application-wide form guidance and placeholder contrast.
+   Keep supporting text readable on white surfaces without competing with labels. */
+:root {
+  --muted: #64756d;
+  --form-placeholder: #7b8981;
+  --form-helper: #64756d;
+}
+input::placeholder,
+textarea::placeholder,
+[data-slot="input"]::placeholder,
+[data-slot="textarea"]::placeholder {
+  color: var(--form-placeholder) !important;
+  opacity: 1 !important;
+}
+.field-hint,
+.kpi-foot,
+.sub,
+.dialog-description,
+.dialog-form-description,
+.helper-text,
+.form-hint,
+.form-helper,
+small.helper-text,
+[data-slot="form-description"],
+[data-slot="description"] {
+  color: var(--form-helper);
+}
+.field-hint,
+.kpi-foot,
+.dialog-description,
+.dialog-form-description,
+.helper-text,
+.form-hint,
+.form-helper,
+[data-slot="form-description"],
+[data-slot="description"] {
+  opacity: 1;
+}
+::selection {
+  background: #d7f17b;
+  color: #183b32;
+}
