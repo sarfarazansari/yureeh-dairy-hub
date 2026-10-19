@@ -98,7 +98,7 @@ export async function fetchFeedConsumption(
   const feedIds = [...new Set(rows.map((row) => row.feed_item_id))];
   const { data: later, error: laterError } = await client
     .from('feed_inventory_movements')
-    .select('feed_item_id, created_at')
+    .select('feed_item_id, movement_type, source_type, created_at, reversal_of_movement_id')
     .in('feed_item_id', feedIds)
     .gt('created_at', new Date(0).toISOString());
 
@@ -109,7 +109,11 @@ export async function fetchFeedConsumption(
     can_edit_delete: !(later ?? []).some(
       (movement) =>
         movement.feed_item_id === row.feed_item_id &&
-        movement.created_at > row.created_at,
+        movement.created_at > row.created_at &&
+        !(
+          movement.movement_type === 'ADJUSTMENT_OUT' &&
+          ['FEED_PURCHASE_EDIT', 'FEED_PURCHASE_DELETE', 'FEED_PURCHASE_CORRECTION'].includes(movement.source_type)
+        ),
     ),
   }));
 
