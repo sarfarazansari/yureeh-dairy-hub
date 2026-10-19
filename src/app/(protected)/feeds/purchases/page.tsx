@@ -61,14 +61,14 @@ export default function FeedPurchasesPage() {
       <div className="management-stack">
         <Toast message={toast?.message ?? ''} type={toast?.type} onDismiss={() => setToast(null)} />
 
-        <div className="card">
-          <div className="row">
+        <div className="card feed-purchase-filter-card">
+          <div className="row feed-purchase-filter-heading">
             <h2 className="section-title">Purchase archive</h2>
-            <Button className="text-white" asChild><Link href="/feeds/purchases/new">New purchase</Link></Button>
+            <Button className="!text-white" asChild><Link href="/feeds/purchases/new">New purchase</Link></Button>
           </div>
 
-          <div className="mb-3 max-w-sm"><Label className="mb-1 block">Date range</Label><DateRangePicker from={from} to={to} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); setPage(0); }} /></div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="feed-purchase-filter-grid">
+            <div className="field feed-purchase-date-filter"><Label className="mb-1 block">Date range</Label><DateRangePicker from={from} to={to} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); setPage(0); }} /></div>
             <div className="field">
               <Label>Feed</Label>
               <Select value={feedFilter || 'all'} onValueChange={(value) => { setFeedFilter(value === 'all' ? '' : value); setPage(0); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All feeds</SelectItem>{feedItems.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>
@@ -81,10 +81,11 @@ export default function FeedPurchasesPage() {
               <Label>Payment status</Label>
               <Select value={paymentFilter || 'all'} onValueChange={(value) => { setPaymentFilter(value === 'all' ? '' : value); setPage(0); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All statuses</SelectItem><SelectItem value="PAID">Paid</SelectItem><SelectItem value="PARTIAL">Partial</SelectItem><SelectItem value="CREDIT">Credit</SelectItem></SelectContent></Select>
             </div>
-            <div className="field" style={{ alignSelf: 'end' }}>
-              <Button type="button" variant="outline" onClick={clearFilters}>Clear filters</Button>
+            <div className="field feed-purchase-clear-filter">
+              <Button className="!text-[var(--ink)]" type="button" variant="outline" onClick={clearFilters}>Clear filters</Button>
             </div>
           </div>
+        </div>
         </div>
 
         <FeedPurchaseTable
