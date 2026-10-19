@@ -86,7 +86,6 @@ export default function FeedPurchasesPage() {
             </div>
           </div>
         </div>
-        </div>
 
         <FeedPurchaseTable
           rows={rows}
