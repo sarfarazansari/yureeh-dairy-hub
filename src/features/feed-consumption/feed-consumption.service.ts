@@ -98,18 +98,39 @@ export async function fetchFeedConsumption(
   const feedIds = [...new Set(rows.map((row) => row.feed_item_id))];
   const { data: later, error: laterError } = await client
     .from('feed_inventory_movements')
-    .select('feed_item_id, created_at')
+    .select('feed_item_id, movement_type, source_type, created_at, reversal_of_movement_id')
     .in('feed_item_id', feedIds)
     .gt('created_at', new Date(0).toISOString());
 
   if (laterError) throw laterError;
 
+  const laterMovements = later ?? [];
+  const laterReversedIds = new Set(
+    laterMovements
+      .filter((movement) =>
+        ['FEED_CONSUMPTION_REVERSAL', 'FEED_CONSUMPTION_EDIT_REVERSAL'].includes(movement.source_type),
+      )
+      .map((movement) => movement.reversal_of_movement_id)
+      .filter((id): id is string => Boolean(id)),
+  );
+
   const enriched = rows.map((row) => ({
     ...row,
-    can_edit_delete: !(later ?? []).some(
+    can_edit_delete: !laterMovements.some(
       (movement) =>
         movement.feed_item_id === row.feed_item_id &&
-        movement.created_at > row.created_at,
+        movement.created_at > row.created_at &&
+        (
+          (
+            movement.movement_type === 'CONSUMPTION' &&
+            movement.source_type === 'FEED_CONSUMPTION' &&
+            !laterReversedIds.has(movement.id)
+          ) ||
+          (
+            movement.movement_type === 'ADJUSTMENT_OUT' &&
+            !['FEED_PURCHASE_EDIT', 'FEED_PURCHASE_DELETE', 'FEED_PURCHASE_CORRECTION'].includes(movement.source_type)
+          )
+        ),
     ),
   }));
 

@@ -83,73 +83,128 @@ export async function fetchFeedPurchases(
     return { rows, count: count ?? 0 };
   }
 
-  const purchaseIds = rows.map((row) => row.id);
   const feedIds = [...new Set(rows.map((row) => row.feed_item_id))];
+
+  const { data: activePurchases, error: activePurchaseError } = await client
+    .from('feed_purchases')
+    .select('id, feed_item_id')
+    .eq('status', 'ACTIVE')
+    .in('feed_item_id', feedIds);
+
+  if (activePurchaseError) throw activePurchaseError;
+  const activePurchaseIds = new Set((activePurchases ?? []).map((purchase) => purchase.id));
 
   const { data: movements, error: movementError } = await client
     .from('feed_inventory_movements')
-    .select('source_id, feed_item_id, created_at')
-    .eq('source_type', 'FEED_PURCHASE')
-    .in('source_id', purchaseIds);
+    .select('id, feed_item_id, movement_type, quantity, source_type, source_id, occurred_at, created_at, reversal_of_movement_id')
+    .in('feed_item_id', feedIds)
+    .order('occurred_at', { ascending: true })
+    .order('created_at', { ascending: true });
 
   if (movementError) throw movementError;
 
-  const originalMovementByPurchase = new Map(
-    (movements ?? []).map((movement) => [
-      movement.source_id,
-      { feedItemId: movement.feed_item_id, createdAt: movement.created_at },
-    ]),
-  );
-
-  const minCreatedAt = [...originalMovementByPurchase.values()]
-    .map((movement) => movement.createdAt)
-    .sort()[0];
-
-  if (!minCreatedAt) return { rows, count: count ?? 0 };
-
-  // Load reversals as well as outbound movements. A consumption row that
-  // has a matching reversal is a test/voided consumption and must not keep
-  // purchases permanently locked. Genuine consumptions and stock-outs still lock.
-  const { data: inventoryMovements, error: movementHistoryError } = await client
-    .from('feed_inventory_movements')
-    .select('id, feed_item_id, movement_type, source_type, created_at, reversal_of_movement_id')
-    .in('feed_item_id', feedIds)
-    .gte('created_at', minCreatedAt);
-
-  if (movementHistoryError) throw movementHistoryError;
-
-  const reversedConsumptionIds = new Set(
-    (inventoryMovements ?? [])
-      .filter(
-        (movement) =>
-          movement.source_type === 'FEED_CONSUMPTION_REVERSAL' ||
-          movement.source_type === 'FEED_CONSUMPTION_EDIT_REVERSAL',
+  // A purchase is locked only when FIFO allocation says its lot has actually
+  // been consumed/adjusted out. A later outbound movement for the same feed
+  // item must not blanket-lock every older purchase.
+  const allMovements = movements ?? [];
+  const reversedMovementIds = new Set(
+    allMovements
+      .filter((movement) =>
+        ['FEED_CONSUMPTION_REVERSAL', 'FEED_CONSUMPTION_EDIT_REVERSAL'].includes(movement.source_type),
       )
       .map((movement) => movement.reversal_of_movement_id)
       .filter((id): id is string => Boolean(id)),
   );
 
-  const outboundMovements = (inventoryMovements ?? []).filter(
-    (movement) =>
-      movement.movement_type === 'ADJUSTMENT_OUT' ||
-      (movement.movement_type === 'CONSUMPTION' && !reversedConsumptionIds.has(movement.id)),
-  );
+  const activeMovements = allMovements.filter((movement) => {
+    // Deleted/corrected purchases remain in the append-only ledger, but their
+    // original stock-in must not be counted as an available FIFO lot.
+    if (
+      movement.movement_type === 'PURCHASE' &&
+      movement.source_type === 'FEED_PURCHASE' &&
+      !activePurchaseIds.has(movement.source_id)
+    ) return false;
 
-  const enrichedRows = rows.map((row) => {
-    const original = originalMovementByPurchase.get(row.id);
-    const locked = original
-      ? outboundMovements.some(
-          (movement) =>
-            movement.feed_item_id === original.feedItemId &&
-            movement.created_at > original.createdAt,
-        )
-      : true;
+    if (
+      movement.movement_type === 'CONSUMPTION' &&
+      movement.source_type === 'FEED_CONSUMPTION' &&
+      reversedMovementIds.has(movement.id)
+    ) return false;
 
-    return {
-      ...row,
-      can_edit_delete: !locked,
-    };
+    // The matching reversal is represented by the original movement being
+    // excluded above; do not count the reversal as a new stock lot.
+    if (
+      ['FEED_CONSUMPTION_REVERSAL', 'FEED_CONSUMPTION_EDIT_REVERSAL'].includes(movement.source_type)
+    ) return false;
+
+    // Purchase corrections reverse a specific purchase and are not generic
+    // consumption. The corrected/deleted purchase is already absent from rows.
+    if (
+      movement.movement_type === 'ADJUSTMENT_OUT' &&
+      ['FEED_PURCHASE_EDIT', 'FEED_PURCHASE_DELETE', 'FEED_PURCHASE_CORRECTION'].includes(movement.source_type)
+    ) return false;
+
+    return true;
   });
+
+  const consumedPurchaseIds = new Set<string>();
+  const movementsByFeed = new Map<string, typeof activeMovements>();
+  for (const movement of activeMovements) {
+    const current = movementsByFeed.get(movement.feed_item_id) ?? [];
+    current.push(movement);
+    movementsByFeed.set(movement.feed_item_id, current);
+  }
+
+  for (const feedId of feedIds) {
+    const feedMovements = [...(movementsByFeed.get(feedId) ?? [])].sort((a, b) => {
+      const occurred = String(a.occurred_at ?? '').localeCompare(String(b.occurred_at ?? ''));
+      if (occurred !== 0) return occurred;
+      // For same-day entries, make stock-in available before that day's
+      // consumption so the allocation is deterministic and matches business dates.
+      const aIn = a.movement_type === 'PURCHASE' || a.movement_type === 'ADJUSTMENT_IN';
+      const bIn = b.movement_type === 'PURCHASE' || b.movement_type === 'ADJUSTMENT_IN';
+      if (aIn !== bIn) return aIn ? -1 : 1;
+      return String(a.created_at ?? '').localeCompare(String(b.created_at ?? ''));
+    });
+
+    const lots: Array<{ purchaseId: string | null; remaining: number }> = [];
+    for (const movement of feedMovements) {
+      const quantity = Number(movement.quantity ?? 0);
+      if (!Number.isFinite(quantity) || quantity <= 0) continue;
+
+      if (movement.movement_type === 'PURCHASE' && movement.source_type === 'FEED_PURCHASE') {
+        lots.push({ purchaseId: movement.source_id, remaining: quantity });
+        continue;
+      }
+
+      if (movement.movement_type === 'ADJUSTMENT_IN') {
+        // Unlinked inventory additions form their own lot; they do not
+        // make an earlier purchase appear consumed.
+        lots.push({ purchaseId: null, remaining: quantity });
+        continue;
+      }
+
+      const isOutbound =
+        movement.movement_type === 'CONSUMPTION' ||
+        movement.movement_type === 'ADJUSTMENT_OUT';
+      if (!isOutbound) continue;
+
+      let remainingOutflow = quantity;
+      for (const lot of lots) {
+        if (remainingOutflow <= 0) break;
+        if (lot.remaining <= 0) continue;
+        const used = Math.min(lot.remaining, remainingOutflow);
+        lot.remaining -= used;
+        remainingOutflow -= used;
+        if (used > 0 && lot.purchaseId) consumedPurchaseIds.add(lot.purchaseId);
+      }
+    }
+  }
+
+  const enrichedRows = rows.map((row) => ({
+    ...row,
+    can_edit_delete: !consumedPurchaseIds.has(row.id),
+  }));
 
   return {
     rows: enrichedRows,
