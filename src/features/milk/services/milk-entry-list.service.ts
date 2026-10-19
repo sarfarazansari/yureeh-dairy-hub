@@ -18,6 +18,8 @@ export async function getMilkEntryList(
     .gte('business_date', filters.from)
     .lte('business_date', filters.to)
     .order('business_date', { ascending: false })
+    // Shift values sort alphabetically as EVENING before MORNING; descending gives the farm's desired Morning → Evening order.
+    .order('shift', { ascending: false })
     .order('created_at', { ascending: false })
     .order('id', { ascending: false })
     .range(from, to);
