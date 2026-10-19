@@ -83,7 +83,6 @@ export async function fetchFeedPurchases(
     return { rows, count: count ?? 0 };
   }
 
-  const purchaseIds = rows.map((row) => row.id);
   const feedIds = [...new Set(rows.map((row) => row.feed_item_id))];
 
   const { data: activePurchases, error: activePurchaseError } = await client
