@@ -62,12 +62,12 @@ begin
       m.created_at asc,
       m.id asc
   loop
-    if v_movement.movement_type = 'PURCHASE' and m.source_type = 'FEED_PURCHASE' then
-      v_lot_ids := array_append(v_lot_ids, m.source_id);
-      v_lot_remaining := array_append(v_lot_remaining, m.quantity);
+    if v_movement.movement_type = 'PURCHASE' and v_movement.source_type = 'FEED_PURCHASE' then
+      v_lot_ids := array_append(v_lot_ids, v_movement.source_id);
+      v_lot_remaining := array_append(v_lot_remaining, v_movement.quantity);
     elsif v_movement.movement_type = 'ADJUSTMENT_IN' then
       v_lot_ids := array_append(v_lot_ids, null::uuid);
-      v_lot_remaining := array_append(v_lot_remaining, m.quantity);
+      v_lot_remaining := array_append(v_lot_remaining, v_movement.quantity);
     elsif v_movement.movement_type in ('CONSUMPTION', 'ADJUSTMENT_OUT') then
       v_outflow := v_movement.quantity;
       for v_i in 1..coalesce(array_length(v_lot_remaining, 1), 0) loop
@@ -372,9 +372,17 @@ begin
     where user_id = v_user_id
       and feed_item_id = v_old.feed_item_id
       and created_at > v_old.created_at
+      and movement_type in ('CONSUMPTION', 'ADJUSTMENT_OUT')
+      and source_type not in ('FEED_PURCHASE_EDIT', 'FEED_PURCHASE_DELETE', 'FEED_PURCHASE_CORRECTION')
       and not (
-        movement_type = 'ADJUSTMENT_OUT'
-        and source_type in ('FEED_PURCHASE_EDIT', 'FEED_PURCHASE_DELETE', 'FEED_PURCHASE_CORRECTION')
+        movement_type = 'CONSUMPTION'
+        and source_type = 'FEED_CONSUMPTION'
+        and exists (
+          select 1 from public.feed_inventory_movements reversal
+          where reversal.user_id = v_user_id
+            and reversal.reversal_of_movement_id = public.feed_inventory_movements.id
+            and reversal.source_type in ('FEED_CONSUMPTION_REVERSAL', 'FEED_CONSUMPTION_EDIT_REVERSAL')
+        )
       )
   ) into v_later_exists;
 
@@ -482,9 +490,17 @@ begin
     where user_id = v_user_id
       and feed_item_id = v_movement.feed_item_id
       and created_at > v_movement.created_at
+      and movement_type in ('CONSUMPTION', 'ADJUSTMENT_OUT')
+      and source_type not in ('FEED_PURCHASE_EDIT', 'FEED_PURCHASE_DELETE', 'FEED_PURCHASE_CORRECTION')
       and not (
-        movement_type = 'ADJUSTMENT_OUT'
-        and source_type in ('FEED_PURCHASE_EDIT', 'FEED_PURCHASE_DELETE', 'FEED_PURCHASE_CORRECTION')
+        movement_type = 'CONSUMPTION'
+        and source_type = 'FEED_CONSUMPTION'
+        and exists (
+          select 1 from public.feed_inventory_movements reversal
+          where reversal.user_id = v_user_id
+            and reversal.reversal_of_movement_id = public.feed_inventory_movements.id
+            and reversal.source_type in ('FEED_CONSUMPTION_REVERSAL', 'FEED_CONSUMPTION_EDIT_REVERSAL')
+        )
       )
   ) into v_later_exists;
 
