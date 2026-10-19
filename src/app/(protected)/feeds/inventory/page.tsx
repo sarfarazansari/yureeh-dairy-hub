@@ -14,19 +14,20 @@ import { FeedInventoryMovementTable } from '@/features/feed-inventory/components
 import { FeedInventoryStockTable } from '@/features/feed-inventory/components/FeedInventoryStockTable';
 import { useFeedInventoryMovementsQuery, useFeedInventoryStockQuery } from '@/features/feed-inventory/feed-inventory.queries';
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 const money = (value: number) => `₹${value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const movementLabel = (value: string) => value.replaceAll('_', ' ');
 
 export default function FeedInventoryPage() {
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [feedItemId, setFeedItemId] = useState('');
   const [movementType, setMovementType] = useState<'' | FeedInventoryMovementType>('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const stockQuery = useFeedInventoryStockQuery();
-  const movementQuery = useFeedInventoryMovementsQuery({ page, from, to, feedItemId, movementType });
+  const movementQuery = useFeedInventoryMovementsQuery({ page, pageSize, from, to, feedItemId, movementType });
   const stock = stockQuery.data ?? [];
   const movements = movementQuery.data?.rows ?? [];
   const movementCount = movementQuery.data?.count ?? 0;
@@ -40,7 +41,7 @@ export default function FeedInventoryPage() {
   const totalValue = stock.reduce((sum, row) => sum + Number(row.stock_value), 0);
   const lowStockCount = stock.filter((row) => row.is_active && Number(row.quantity_on_hand) > 0 && Number(row.low_stock_threshold) > 0 && Number(row.quantity_on_hand) <= Number(row.low_stock_threshold)).length;
   const outOfStockCount = stock.filter((row) => row.is_active && Number(row.quantity_on_hand) <= 0).length;
-  const pages = Math.max(1, Math.ceil(movementCount / PAGE_SIZE));
+  const pages = Math.max(1, Math.ceil(movementCount / pageSize));
 
   function clearFilters() {
     setFrom(''); setTo(''); setFeedItemId(''); setMovementType(''); setPage(0);
@@ -69,7 +70,7 @@ export default function FeedInventoryPage() {
             <div className="field min-w-0"><Label htmlFor="inventory-movement-filter">Movement type</Label><Select value={movementType || 'all'} onValueChange={(value) => { setMovementType(value === 'all' ? '' : value as FeedInventoryMovementType); setPage(0); }}><SelectTrigger id="inventory-movement-filter"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All movement types</SelectItem>{FEED_INVENTORY_MOVEMENT_TYPES.map((type) => <SelectItem key={type} value={type}>{movementLabel(type)}</SelectItem>)}</SelectContent></Select></div>
           </div>
         </div>
-        <FeedInventoryMovementTable rows={movements} count={movementCount} page={page} pageSize={PAGE_SIZE} onPageChange={setPage} loading={loadingMovements} error={movementError} onRetry={() => void loadMovements()} />
+        <FeedInventoryMovementTable rows={movements} count={movementCount} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(value) => { setPageSize(value); setPage(0); }} loading={loadingMovements} error={movementError} onRetry={() => void loadMovements()} />
       </div>
     </AppShell>
   );
