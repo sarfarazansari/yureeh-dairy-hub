@@ -422,3 +422,12 @@ The user confirmed the application is working after merging the previous audit w
 - **Not executed:** psql/Supabase migrations, RLS assertions, SQL regression file, concurrent payment sessions, purchase idempotency replay, feed stock/reversal reconciliation, scheduler duplicate/concurrency/atomicity, npm install, typecheck, lint, formatting, build or browser smoke tests. The available GitHub connector provides source writes/reads but no local repository runtime or disposable Supabase DB session.
 - **Safety:** no migration applied, no production DB connection/data changes, no business RPC contract changed, no automatic retries added, no PR or merge created.
 - **Next step:** run the documented suite against a local/disposable Supabase instance; complete two-session race tests and fix/extend test fixture assumptions only on evidence. REF-014 (duplicate helper/type consumer audit) must wait until SEC-001 verification is complete.
+
+
+### UI-002 — Milk entries date and shift readability — 2026-10-19
+
+- **Status:** Implemented; local verification pending.
+- **Branch:** `feature/milk-entries-date-shift-ux`, created from latest `master`.
+- **Changes:** Milk entry dates now use full month names on the table and related edit/delete views; PDF date range uses the same human-readable format. Database ordering is date descending, then Morning before Evening, then newest record within a shift. Morning and Evening rows/chips use distinct emerald and blue tones.
+- **Code-of-conduct/project rule:** `YUREEH_PROJECT_RULES.md` now explicitly prefers full month names for user-facing dates where space allows and requires consistency across related views/exports.
+- **Validation:** GitHub source read/write only. Typecheck, lint, format check, build and browser verification were not run in this session.
