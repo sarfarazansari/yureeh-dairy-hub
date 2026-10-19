@@ -39,7 +39,7 @@ begin
           ))
         or m.movement_type in ('CONSUMPTION', 'ADJUSTMENT_OUT', 'ADJUSTMENT_IN')
       )
-      and m.source_type not in (
+      and coalesce(m.source_type, '') not in (
         'FEED_CONSUMPTION_REVERSAL',
         'FEED_CONSUMPTION_EDIT_REVERSAL',
         'FEED_PURCHASE_EDIT',
@@ -62,14 +62,14 @@ begin
       m.created_at asc,
       m.id asc
   loop
-    if m.movement_type = 'PURCHASE' and m.source_type = 'FEED_PURCHASE' then
+    if v_movement.movement_type = 'PURCHASE' and m.source_type = 'FEED_PURCHASE' then
       v_lot_ids := array_append(v_lot_ids, m.source_id);
       v_lot_remaining := array_append(v_lot_remaining, m.quantity);
-    elsif m.movement_type = 'ADJUSTMENT_IN' then
+    elsif v_movement.movement_type = 'ADJUSTMENT_IN' then
       v_lot_ids := array_append(v_lot_ids, null::uuid);
       v_lot_remaining := array_append(v_lot_remaining, m.quantity);
-    elsif m.movement_type in ('CONSUMPTION', 'ADJUSTMENT_OUT') then
-      v_outflow := m.quantity;
+    elsif v_movement.movement_type in ('CONSUMPTION', 'ADJUSTMENT_OUT') then
+      v_outflow := v_movement.quantity;
       for v_i in 1..coalesce(array_length(v_lot_remaining, 1), 0) loop
         exit when v_outflow <= 0;
         if v_lot_remaining[v_i] <= 0 then continue; end if;
