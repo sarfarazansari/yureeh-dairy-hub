@@ -13,16 +13,17 @@ import { useDeleteFeedConsumptionMutation, useFeedConsumptionArchiveQuery } from
 import { FeedConsumptionTable } from '@/features/feed-consumption/components/FeedConsumptionTable';
 
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 
 export default function FeedConsumptionPage() {
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [feedFilter, setFeedFilter] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const deleteMutation = useDeleteFeedConsumptionMutation();
-  const archiveQuery = useFeedConsumptionArchiveQuery({ page, from, to, feedFilter });
+  const archiveQuery = useFeedConsumptionArchiveQuery({ page, pageSize, from, to, feedFilter });
   const feedItems = archiveQuery.data?.feedItems ?? [];
   const rows = archiveQuery.data?.rows ?? [];
   const count = archiveQuery.data?.count ?? 0;
@@ -52,16 +53,16 @@ export default function FeedConsumptionPage() {
         <div className="card">
           <div className="row">
             <h2 className="section-title">Consumption archive</h2>
-            <Button asChild><Link href="/feeds/consumption/new">New consumption</Link></Button>
+            <Button className="text-white" asChild><Link href="/feeds/consumption/new">New consumption</Link></Button>
           </div>
-          <div className="expense-form-grid">
-            <div className="field max-w-md"><Label className="mb-2 block">Date range</Label><DateRangePicker from={from} to={to} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); setPage(0); }} /></div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="field max-w-sm"><Label className="mb-1 block">Date range</Label><DateRangePicker from={from} to={to} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); setPage(0); }} /></div>
             <div className="field"><Label>Feed</Label><Select value={feedFilter || 'all'} onValueChange={(value) => { setFeedFilter(value === 'all' ? '' : value); setPage(0); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All feeds</SelectItem>{feedItems.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select></div>
             <div className="field" style={{ alignSelf: 'end' }}><Button type="button" variant="outline" size="sm" onClick={clearFilters}>Clear filters</Button></div>
           </div>
         </div>
 
-        <FeedConsumptionTable rows={rows} count={count} page={page} pageSize={PAGE_SIZE} onPageChange={setPage} onDelete={handleDelete} loading={loading} error={loadError} onRetry={() => void load()} />
+        <FeedConsumptionTable rows={rows} count={count} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(value) => { setPageSize(value); setPage(0); }} onDelete={handleDelete} loading={loading} error={loadError} onRetry={() => void load()} />
       </div>
     </AppShell>
   );

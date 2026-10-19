@@ -5,20 +5,18 @@ import { dietPlanScheduleQueryKeys } from './diet-plan-schedule.queries';
 import { fetchActiveFeedItems, fetchDietPlanForEdit, fetchDietPlans, fetchEligibleBuffaloes, saveDietPlan } from './diet-plan.service';
 import type { DietPlanFormValues } from './diet-plan.schema';
 
-const PAGE_SIZE = 20;
-
 export const dietPlanQueryKeys = {
   all: ['diet-plans'] as const,
-  list: (input: { page: number; search: string; status: string }) =>
-    [...dietPlanQueryKeys.all, 'list', input.page, PAGE_SIZE, input.search, input.status] as const,
+  list: (input: { page: number; pageSize: number; search: string; status: string }) =>
+    [...dietPlanQueryKeys.all, 'list', input.page, input.pageSize, input.search, input.status] as const,
 };
 
-export function useDietPlanArchiveQuery(input: { page: number; search: string; status: string }) {
+export function useDietPlanArchiveQuery(input: { page: number; pageSize: number; search: string; status: string }) {
   return useQuery({
     queryKey: dietPlanQueryKeys.list(input),
     queryFn: () => {
       if (!supabase) throw new Error('Supabase is not configured.');
-      return fetchDietPlans(supabase, input.page, PAGE_SIZE, { search: input.search, status: input.status });
+      return fetchDietPlans(supabase, input.page, input.pageSize, { search: input.search, status: input.status });
     },
   });
 }

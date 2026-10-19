@@ -404,3 +404,13 @@ The user's short command `1 refactor karo` means:
 - Changed files: `src/features/dashboard.tsx`, `src/features/dashboard/services/dashboard.service.ts`, new `src/features/dashboard/components/MilkMarginAfterFeedCard.tsx`, new migration `supabase/migrations/20261018130000_milk_margin_after_feed.sql`.
 - Verification: source and migration reviewed statically through GitHub. Local build, lint, typecheck, UI/runtime checks, and applying the migration to Supabase were not run in this environment. Apply the migration before testing the branch locally.
 - User owns local testing and PR/merge; no PR or merge was created.
+
+
+## Feed module UX consistency pass — 2026-10-19
+
+- Continued on `feature/dashboard-milk-margin-after-feed` as requested; no new branch, PR, or merge.
+- Added page-size controls (20, 50, 100) for Feed Purchases, Feed Consumption, Feed Items, Feed Inventory movement history, and Diet Plans. Page size is included in query keys and passed to server-side pagination services.
+- Tightened purchase/consumption filter layouts and Feed Items form grid; explicitly sets white text on primary actions.
+- Visible purchase, consumption, inventory movement, and diet-plan dates now use human-readable formats.
+- Feed Inventory stock search/filter remains in-memory over the aggregate stock query.
+- Verification boundary: source-level changes only; local typecheck, lint, build, browser and Supabase runtime checks were not run. Validate before merge.
