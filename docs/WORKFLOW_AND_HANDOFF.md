@@ -414,3 +414,12 @@ The user's short command `1 refactor karo` means:
 - Visible purchase, consumption, inventory movement, and diet-plan dates now use human-readable formats.
 - Feed Inventory stock search/filter remains in-memory over the aggregate stock query.
 - Verification boundary: source-level changes only; local typecheck, lint, build, browser and Supabase runtime checks were not run. Validate before merge.
+
+
+## Feed inventory page separation — 2026-10-19
+
+- Continued on `feature/dashboard-milk-margin-after-feed`; no new branch, PR, or merge.
+- `/feeds/inventory` now focuses on current stock, stock value, low-stock/out-of-stock indicators, and stock search/status filters.
+- Added `/feeds/inventory/movements` for movement history with date range, feed item and movement type filters, plus 20/50/100 server-side pagination.
+- Added `Movement History` to the FARM COSTS sidebar navigation. Existing inventory query/service contracts and ledger logic are unchanged.
+- Verification boundary: source-level changes only; run typecheck, lint, build and browser smoke tests locally before merging.
