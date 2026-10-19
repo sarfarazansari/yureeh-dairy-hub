@@ -160,7 +160,7 @@ export default function EntriesPage() {
       th,td{padding:9px 6px;border-bottom:1px solid #e2e8e4;text-align:left}th{font-size:10px;color:#64756d}
       .num{text-align:right;white-space:nowrap}.total{font-weight:bold}@media print{body{padding:0}.no-print{display:none}}
     </style></head><body><h1>Yureeh Farm — Milk Sales Report</h1>
-    <div class="muted">${safe(customerName)} · ${safe(from)} to ${safe(to)} · Generated ${safe(new Date().toLocaleDateString('en-IN'))}</div>
+    <div class="muted">${safe(customerName)} · ${safe(formatDate(from, 'D MMMM YYYY'))} to ${safe(formatDate(to, 'D MMMM YYYY'))} · Generated ${safe(new Date().toLocaleDateString('en-IN'))}</div>
     <div class="summary"><div class="tile">Total milk<strong>${safe(milkTxt(totalMilkLitres))}</strong></div>
     <div class="tile">Total sales<strong>${safe(money(totalSalesAmount))}</strong></div>
     <div class="tile">Entries<strong>${allFilteredRows.length}</strong></div></div>
@@ -421,7 +421,7 @@ export default function EntriesPage() {
         </div>
         {exportQuery.isError && <p className="field-error">Summary and PDF data could not be loaded: {exportQuery.error.message}</p>}
         <div className="table-wrap" aria-busy={listQuery.isFetching}>
-          <Table className="[&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
+          <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>DATE</TableHead><TableHead>SHIFT</TableHead><TableHead>CUSTOMER</TableHead><TableHead>MILK</TableHead><TableHead>FAT</TableHead>
@@ -434,9 +434,9 @@ export default function EntriesPage() {
                     <TableRow key={`skeleton-${index}`}><TableCell colSpan={9}><Skeleton className="h-5 w-full" /></TableCell></TableRow>
                   ))
                 : rows.map((row) => (
-                    <TableRow key={row.id}>
-                      <TableCell>{formatDate(row.business_date)}</TableCell>
-                      <TableCell><Badge variant="outline">{row.shift === 'MORNING' ? 'Morning' : 'Evening'}</Badge></TableCell>
+                    <TableRow key={row.id} className={row.shift === 'MORNING' ? 'bg-emerald-50/70 hover:bg-emerald-100/70' : 'bg-sky-50/70 hover:bg-sky-100/70'}>
+                      <TableCell className="whitespace-nowrap font-medium">{formatDate(row.business_date, 'D MMMM YYYY')}</TableCell>
+                      <TableCell><Badge variant="outline" className={row.shift === 'MORNING' ? 'border-emerald-300 bg-emerald-100 text-emerald-900' : 'border-sky-300 bg-sky-100 text-sky-900'}>{row.shift === 'MORNING' ? 'Morning' : 'Evening'}</Badge></TableCell>
                       <TableCell>{row.customers?.name ?? '—'}</TableCell>
                       <TableCell>{milkTxt(Number(row.milk_quantity))}</TableCell>
                       <TableCell>{row.fat === null ? '—' : `${row.fat}%`}</TableCell>
@@ -502,7 +502,7 @@ export default function EntriesPage() {
               <div>
                 <p className="eyebrow">MILK ENTRY</p>
                 <h2 className="dialog-title" id="edit-entry-title">Edit entry</h2>
-                <p className="dialog-description">{formatDate(editing.business_date)} · {editing.customers?.name ?? 'Customer'}</p>
+                <p className="dialog-description">{formatDate(editing.business_date, 'D MMMM YYYY')} · {editing.customers?.name ?? 'Customer'}</p>
               </div>
               <Button variant="ghost" size="icon" type="button" onClick={() => setEditing(null)} disabled={updateMutation.isPending} aria-label="Close edit milk entry">×</Button>
             </div>
@@ -520,7 +520,7 @@ export default function EntriesPage() {
             <div className="field"><Label htmlFor="edit-entry-notes">Notes (optional)</Label><Textarea id="edit-entry-notes" value={editing.notes} onChange={(event) => setEditing({ ...editing, notes: event.target.value })} rows={2} /></div>
             {editDeliveryContextQuery.isError && <p className="field-error">{editDeliveryContextQuery.error.message}</p>}
             {!editDeliveryContextQuery.isError && !editDeliveryContextQuery.isPending && !editDeliveryContextQuery.data?.herdEntryExists && (
-              <p className="auth-message" role="alert">Herd entry is required for {editing.business_date} · {editing.shift === 'MORNING' ? 'Morning' : 'Evening'} before this delivery can be saved.</p>
+              <p className="auth-message" role="alert">Herd entry is required for {formatDate(editing.business_date, 'D MMMM YYYY')} · {editing.shift === 'MORNING' ? 'Morning' : 'Evening'} before this delivery can be saved.</p>
             )}
             {!editDeliveryContextQuery.isError && !editDeliveryContextQuery.isPending && editDeliveryContextQuery.data?.herdEntryExists && (
               <p className="kpi-foot">
@@ -545,7 +545,7 @@ export default function EntriesPage() {
               <div><h2 className="dialog-title" id="delete-entry-title">Cancel milk delivery?</h2><p className="dialog-description">The delivery will be cancelled, kept in audit history, and its active pool movement will be reversed.</p></div>
               <Button variant="ghost" size="icon" type="button" onClick={() => setPendingDelete(null)} disabled={deleteMutation.isPending} aria-label="Close cancel delivery dialog">×</Button>
             </div>
-            <div className="delete-summary"><b>{pendingDelete.customers?.name ?? 'Customer'}</b><span>{formatDate(pendingDelete.business_date)} · {pendingDelete.shift}</span><span>{milkTxt(Number(pendingDelete.milk_quantity))} · {money(Number(pendingDelete.calculated_amount))}</span></div>
+            <div className="delete-summary"><b>{pendingDelete.customers?.name ?? 'Customer'}</b><span>{formatDate(pendingDelete.business_date, 'D MMMM YYYY')} · {pendingDelete.shift === 'MORNING' ? 'Morning' : 'Evening'}</span><span>{milkTxt(Number(pendingDelete.milk_quantity))} · {money(Number(pendingDelete.calculated_amount))}</span></div>
             <div className="dialog-footer"><Button type="button" variant="secondary" onClick={() => setPendingDelete(null)} disabled={deleteMutation.isPending}>Keep entry</Button><Button type="button" variant="destructive" onClick={() => void confirmDelete()} disabled={deleteMutation.isPending}>{deleteMutation.isPending ? 'Cancelling…' : 'Cancel delivery'}</Button></div>
           </>
         )}

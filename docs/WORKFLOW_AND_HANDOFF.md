@@ -423,3 +423,12 @@ The user's short command `1 refactor karo` means:
 - Added `/feeds/inventory/movements` for movement history with date range, feed item and movement type filters, plus 20/50/100 server-side pagination.
 - Added `Movement History` to the FARM COSTS sidebar navigation. Existing inventory query/service contracts and ledger logic are unchanged.
 - Verification boundary: source-level changes only; run typecheck, lint, build and browser smoke tests locally before merging.
+
+
+## Milk entries date and shift UX — 2026-10-19
+
+- **Branch:** `feature/milk-entries-date-shift-ux`, created from latest `master`.
+- **Changed files:** `src/features/milk/EntriesPage.tsx`, `src/features/milk/services/milk-entry-list.service.ts`, `YUREEH_PROJECT_RULES.md`, `docs/REFACTORING_TASKS.md`.
+- **Implemented:** Full month names for dates on the milk entries table and edit/delete dialogs; readable PDF report date range; explicit descending business date + Morning-before-Evening ordering; shift-specific row and badge colors (emerald for Morning, blue for Evening). Added the reusable date-readability rule to project rules.
+- **Validation boundary:** Changes were written through GitHub and reviewed statically. Local typecheck, lint, format check, build, browser test and actual pagination/order verification were not run in this session.
+- **PR/merge:** Not created. User owns PR and merge.

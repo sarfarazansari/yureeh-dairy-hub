@@ -218,6 +218,8 @@ Forms must have:
 
 DATE FORMATTING AND READABILITY (MANDATORY FOR EVERY TASK)
 
+- For user-facing date labels in tables, summaries, dialogs and reports, prefer the fully readable `D MMMM YYYY` format (for example, `30 September 2026`) where space allows. Do not use compact numeric/ISO strings as the primary visible date. Existing shared `formatDate` defaults may remain where a screen has an established compact format, but if a user reports readability issues, use the full month name consistently on that screen and its exports.
+
 - Before completing any task, inspect every date/date-range value displayed or affected in the UI, including tables, KPI cards, charts/tooltips, filters, detail pages, exports and insight text.
 - Do not expose raw ISO date keys such as `YYYY-MM-DD` to users. Format display values consistently in a human-readable form such as `18 Oct 2026` (or the established project-wide date format if one is already canonical).
 - Keep ISO/date-only values for database queries, comparisons, URLs and machine interfaces where appropriate; format only at the presentation boundary. Avoid timezone-induced date shifts.

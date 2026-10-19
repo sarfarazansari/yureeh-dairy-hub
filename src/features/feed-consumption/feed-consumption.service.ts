@@ -98,7 +98,7 @@ export async function fetchFeedConsumption(
   const feedIds = [...new Set(rows.map((row) => row.feed_item_id))];
   const { data: later, error: laterError } = await client
     .from('feed_inventory_movements')
-    .select('feed_item_id, movement_type, source_type, created_at, reversal_of_movement_id')
+    .select('id, feed_item_id, movement_type, source_type, created_at, reversal_of_movement_id')
     .in('feed_item_id', feedIds)
     .gt('created_at', new Date(0).toISOString());
 
