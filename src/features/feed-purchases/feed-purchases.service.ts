@@ -131,8 +131,11 @@ export async function fetchFeedPurchases(
 
   const outboundMovements = (inventoryMovements ?? []).filter(
     (movement) =>
-      movement.movement_type === 'ADJUSTMENT_OUT' ||
-      (movement.movement_type === 'CONSUMPTION' && !reversedConsumptionIds.has(movement.id)),
+      (movement.movement_type === 'ADJUSTMENT_OUT' &&
+        !['FEED_PURCHASE_EDIT', 'FEED_PURCHASE_DELETE', 'FEED_PURCHASE_CORRECTION'].includes(movement.source_type)) ||
+      (movement.movement_type === 'CONSUMPTION' &&
+        movement.source_type === 'FEED_CONSUMPTION' &&
+        !reversedConsumptionIds.has(movement.id)),
   );
 
   const enrichedRows = rows.map((row) => {
