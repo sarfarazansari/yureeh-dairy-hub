@@ -13,10 +13,11 @@ import { useDeleteFeedPurchaseMutation, useFeedPurchaseArchiveQuery } from '@/fe
 import { FeedPurchaseTable } from '@/features/feed-purchases/components/FeedPurchaseTable';
 
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 
 export default function FeedPurchasesPage() {
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
   const [feedFilter, setFeedFilter] = useState('');
@@ -24,7 +25,7 @@ export default function FeedPurchasesPage() {
   const [paymentFilter, setPaymentFilter] = useState('');
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const deleteMutation = useDeleteFeedPurchaseMutation();
-  const archiveQuery = useFeedPurchaseArchiveQuery({ page, from, to, feedFilter, vendorFilter, paymentFilter });
+  const archiveQuery = useFeedPurchaseArchiveQuery({ page, pageSize, from, to, feedFilter, vendorFilter, paymentFilter });
   const feedItems = archiveQuery.data?.feedItems ?? [];
   const vendors = archiveQuery.data?.vendors ?? [];
   const rows = archiveQuery.data?.rows ?? [];
@@ -63,11 +64,11 @@ export default function FeedPurchasesPage() {
         <div className="card">
           <div className="row">
             <h2 className="section-title">Purchase archive</h2>
-            <Button asChild><Link href="/feeds/purchases/new">New purchase</Link></Button>
+            <Button className="text-white" asChild><Link href="/feeds/purchases/new">New purchase</Link></Button>
           </div>
 
-          <div className="mb-4 max-w-md"><Label className="mb-2 block">Date range</Label><DateRangePicker from={from} to={to} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); setPage(0); }} /></div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mb-3 max-w-sm"><Label className="mb-1 block">Date range</Label><DateRangePicker from={from} to={to} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); setPage(0); }} /></div>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div className="field">
               <Label>Feed</Label>
               <Select value={feedFilter || 'all'} onValueChange={(value) => { setFeedFilter(value === 'all' ? '' : value); setPage(0); }}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">All feeds</SelectItem>{feedItems.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent></Select>
@@ -90,8 +91,9 @@ export default function FeedPurchasesPage() {
           rows={rows}
           count={count}
           page={page}
-          pageSize={PAGE_SIZE}
+          pageSize={pageSize}
           onPageChange={setPage}
+          onPageSizeChange={(value) => { setPageSize(value); setPage(0); }}
           onDelete={handleDelete}
           loading={loading}
           error={loadError}
