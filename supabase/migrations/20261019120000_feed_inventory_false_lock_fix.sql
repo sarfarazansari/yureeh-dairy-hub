@@ -1,3 +1,96 @@
+-- FIFO-based purchase lock check. Returns true only when a genuine outbound
+-- movement has consumed any part of this active purchase lot.
+create or replace function public.feed_purchase_lot_has_outbound_usage(p_purchase_id uuid)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_user_id uuid := auth.uid();
+  v_purchase public.feed_purchases;
+  v_movement record;
+  v_lot_ids uuid[] := array[]::uuid[];
+  v_lot_remaining numeric[] := array[]::numeric[];
+  v_outflow numeric;
+  v_used numeric;
+  v_i integer;
+  v_used_target boolean := false;
+begin
+  if v_user_id is null then raise exception 'Authentication required.'; end if;
+
+  select * into v_purchase
+  from public.feed_purchases
+  where id = p_purchase_id and user_id = v_user_id and status = 'ACTIVE';
+
+  if not found then raise exception 'Active feed purchase not found.'; end if;
+
+  for v_movement in
+    select m.*
+    from public.feed_inventory_movements m
+    where m.user_id = v_user_id
+      and m.feed_item_id = v_purchase.feed_item_id
+      and (
+        (m.movement_type = 'PURCHASE'
+          and m.source_type = 'FEED_PURCHASE'
+          and exists (
+            select 1 from public.feed_purchases p
+            where p.id = m.source_id and p.user_id = v_user_id and p.status = 'ACTIVE'
+          ))
+        or m.movement_type in ('CONSUMPTION', 'ADJUSTMENT_OUT', 'ADJUSTMENT_IN')
+      )
+      and m.source_type not in (
+        'FEED_CONSUMPTION_REVERSAL',
+        'FEED_CONSUMPTION_EDIT_REVERSAL',
+        'FEED_PURCHASE_EDIT',
+        'FEED_PURCHASE_DELETE',
+        'FEED_PURCHASE_CORRECTION'
+      )
+      and not (
+        m.movement_type = 'CONSUMPTION'
+        and m.source_type = 'FEED_CONSUMPTION'
+        and exists (
+          select 1
+          from public.feed_inventory_movements rev
+          where rev.user_id = v_user_id
+            and rev.reversal_of_movement_id = m.id
+            and rev.source_type in ('FEED_CONSUMPTION_REVERSAL', 'FEED_CONSUMPTION_EDIT_REVERSAL')
+        )
+      )
+    order by m.occurred_at asc,
+      case when m.movement_type in ('PURCHASE', 'ADJUSTMENT_IN') then 0 else 1 end,
+      m.created_at asc,
+      m.id asc
+  loop
+    if m.movement_type = 'PURCHASE' and m.source_type = 'FEED_PURCHASE' then
+      v_lot_ids := array_append(v_lot_ids, m.source_id);
+      v_lot_remaining := array_append(v_lot_remaining, m.quantity);
+    elsif m.movement_type = 'ADJUSTMENT_IN' then
+      v_lot_ids := array_append(v_lot_ids, null::uuid);
+      v_lot_remaining := array_append(v_lot_remaining, m.quantity);
+    elsif m.movement_type in ('CONSUMPTION', 'ADJUSTMENT_OUT') then
+      v_outflow := m.quantity;
+      for v_i in 1..coalesce(array_length(v_lot_remaining, 1), 0) loop
+        exit when v_outflow <= 0;
+        if v_lot_remaining[v_i] <= 0 then continue; end if;
+        v_used := least(v_lot_remaining[v_i], v_outflow);
+        v_lot_remaining[v_i] := v_lot_remaining[v_i] - v_used;
+        v_outflow := v_outflow - v_used;
+        if v_used > 0 and v_lot_ids[v_i] = p_purchase_id then
+          v_used_target := true;
+        end if;
+      end loop;
+      if v_used_target then return true; end if;
+    end if;
+  end loop;
+
+  return false;
+end;
+$$;
+
+revoke all on function public.feed_purchase_lot_has_outbound_usage(uuid) from public, anon;
+grant execute on function public.feed_purchase_lot_has_outbound_usage(uuid) to authenticated;
+
 -- Correct false inventory locks caused by compensating movements from purchase edits/deletes.
 -- These are audit-ledger reversals, not evidence that stock was consumed.
 -- Keep all other outbound movements protected by the existing edit/delete guards.
@@ -58,28 +151,8 @@ begin
     raise exception 'Original inventory movement was not found.';
   end if;
 
-  select count(*) into v_outbound_count
-  from public.feed_inventory_movements
-  where user_id = v_user_id
-    and feed_item_id = v_purchase.feed_item_id
-    and created_at > v_movement.created_at
-    and (
-      movement_type = 'ADJUSTMENT_OUT'
-        and source_type not in ('FEED_PURCHASE_EDIT', 'FEED_PURCHASE_DELETE', 'FEED_PURCHASE_CORRECTION')
-      or (
-        movement_type = 'CONSUMPTION'
-        and not exists (
-          select 1
-          from public.feed_inventory_movements reversal
-          where reversal.user_id = v_user_id
-            and reversal.reversal_of_movement_id = feed_inventory_movements.id
-            and reversal.source_type in ('FEED_CONSUMPTION_REVERSAL', 'FEED_CONSUMPTION_EDIT_REVERSAL')
-        )
-      )
-    );
-
-  if v_outbound_count > 0 then
-    raise exception 'This feed purchase cannot be deleted because stock from this purchase has already been consumed or adjusted out.';
+  if public.feed_purchase_lot_has_outbound_usage(v_purchase.id) then
+    raise exception 'This feed purchase cannot be deleted because FIFO allocation shows that stock from this purchase has already been used.';
   end if;
 
   update public.feed_purchases
@@ -186,28 +259,8 @@ begin
     raise exception 'Original inventory movement was not found.';
   end if;
 
-  select count(*) into v_outbound_count
-  from public.feed_inventory_movements
-  where user_id = v_user_id
-    and feed_item_id = v_purchase.feed_item_id
-    and created_at > v_movement.created_at
-    and (
-      movement_type = 'ADJUSTMENT_OUT'
-        and source_type not in ('FEED_PURCHASE_EDIT', 'FEED_PURCHASE_DELETE', 'FEED_PURCHASE_CORRECTION')
-      or (
-        movement_type = 'CONSUMPTION'
-        and not exists (
-          select 1
-          from public.feed_inventory_movements reversal
-          where reversal.user_id = v_user_id
-            and reversal.reversal_of_movement_id = feed_inventory_movements.id
-            and reversal.source_type in ('FEED_CONSUMPTION_REVERSAL', 'FEED_CONSUMPTION_EDIT_REVERSAL')
-        )
-      )
-    );
-
-  if v_outbound_count > 0 then
-    raise exception 'This feed purchase cannot be edited because stock from this purchase has already been consumed or adjusted out.';
+  if public.feed_purchase_lot_has_outbound_usage(v_purchase.id) then
+    raise exception 'This feed purchase cannot be edited because FIFO allocation shows that stock from this purchase has already been used.';
   end if;
 
   -- Replace the old stock-in with a compensating outbound movement. The
