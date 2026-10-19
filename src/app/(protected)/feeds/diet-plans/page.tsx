@@ -13,15 +13,16 @@ import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
 import { useDietPlanArchiveQuery } from '@/features/diet-plans/diet-plan.queries';
 
-const PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 20;
 
 export default function DietPlansPage() {
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
-  const archiveQuery = useDietPlanArchiveQuery({ page, search: searchQuery, status });
+  const archiveQuery = useDietPlanArchiveQuery({ page, pageSize, search: searchQuery, status });
   const rows = archiveQuery.data?.rows ?? [];
   const count = archiveQuery.data?.count ?? 0;
   const loading = archiveQuery.isPending;
@@ -33,7 +34,7 @@ export default function DietPlansPage() {
     return () => window.clearTimeout(timer);
   }, [search]);
 
-  const pages = Math.max(1, Math.ceil(count / PAGE_SIZE));
+  const pages = Math.max(1, Math.ceil(count / pageSize));
   function resetFilters() {
     setSearch('');
     setSearchQuery('');
@@ -64,7 +65,7 @@ export default function DietPlansPage() {
                 <TableBody>
                   {loading ? Array.from({ length: 4 }, (_, i) => <TableRow key={i}>{Array.from({ length: 6 }, (_, j) => <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : rows.map((row) => <TableRow key={row.id}>
                     <TableCell><b>{row.name}</b>{row.notes && <div className="text-xs text-muted-foreground">{row.notes}</div>}</TableCell>
-                    <TableCell className="whitespace-nowrap">{row.start_date} – {row.end_date ?? 'No end date'}</TableCell>
+                    <TableCell className="whitespace-nowrap">{new Date(`${row.start_date}T12:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} – {row.end_date ? new Date(`${row.end_date}T12:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'No end date'}</TableCell>
                     <TableCell>{row.buffalo_count}</TableCell><TableCell>{row.feed_count}</TableCell>
                     <TableCell><Badge variant={row.status === 'ACTIVE' ? 'secondary' : 'outline'}>{row.status}</Badge></TableCell>
                     <TableCell><Button size="sm" variant="outline" asChild><Link href={`/feeds/diet-plans/edit/${row.id}`}>Edit</Link></Button></TableCell>
@@ -74,8 +75,8 @@ export default function DietPlansPage() {
             </div>
             {!loading && !rows.length && <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">{search.trim() || status ? 'No diet plans match these filters.' : 'No diet plans found.'}</div>}
             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-3">
-              <p className="text-sm text-muted-foreground">Showing {count ? page * PAGE_SIZE + 1 : 0}–{Math.min((page + 1) * PAGE_SIZE, count)} of {count} plans</p>
-              <div className="flex items-center gap-2"><Button type="button" size="sm" variant="outline" disabled={loading || page <= 0} onClick={() => setPage(page - 1)}>Previous</Button><span className="min-w-24 text-center text-sm text-muted-foreground">Page {page + 1} of {pages}</span><Button type="button" size="sm" variant="outline" disabled={loading || page >= pages - 1} onClick={() => setPage(page + 1)}>Next</Button></div>
+              <p className="text-sm text-muted-foreground">Showing {count ? page * pageSize + 1 : 0}–{Math.min((page + 1) * pageSize, count)} of {count} plans</p>
+              <div className="flex flex-wrap items-center gap-2"><label className="text-sm text-muted-foreground" htmlFor="diet-plan-page-size">Rows</label><Select value={String(pageSize)} onValueChange={(value) => { setPageSize(Number(value)); setPage(0); }}><SelectTrigger id="diet-plan-page-size" className="h-8 w-36"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="20">20 per page</SelectItem><SelectItem value="50">50 per page</SelectItem><SelectItem value="100">100 per page</SelectItem></SelectContent><Button type="button" size="sm" variant="outline" disabled={loading || page <= 0} onClick={() => setPage(page - 1)}>Previous</Button><span className="min-w-24 text-center text-sm text-muted-foreground">Page {page + 1} of {pages}</span><Button type="button" size="sm" variant="outline" disabled={loading || page >= pages - 1} onClick={() => setPage(page + 1)}>Next</Button></div>
             </div>
           </>}
         </div>

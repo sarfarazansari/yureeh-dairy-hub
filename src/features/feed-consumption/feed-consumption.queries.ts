@@ -3,16 +3,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { createFeedConsumption, deleteFeedConsumption, editFeedConsumption, fetchFeedConsumption, fetchFeedConsumptionForEdit, fetchFeedItems, fetchFeedStock } from './feed-consumption.service';
 
-const PAGE_SIZE = 20;
-
 export const feedConsumptionQueryKeys = {
   all: ['feed-consumption'] as const,
-  list: (input: { page: number; from: string; to: string; feedFilter: string }) =>
-    [...feedConsumptionQueryKeys.all, 'list', input.page, PAGE_SIZE, input.from, input.to, input.feedFilter] as const,
+  list: (input: { page: number; pageSize: number; from: string; to: string; feedFilter: string }) =>
+    [...feedConsumptionQueryKeys.all, 'list', input.page, input.pageSize, input.from, input.to, input.feedFilter] as const,
 };
 
 export function useFeedConsumptionArchiveQuery(input: {
-  page: number; from: string; to: string; feedFilter: string;
+  page: number; pageSize: number; from: string; to: string; feedFilter: string;
 }) {
   return useQuery({
     queryKey: feedConsumptionQueryKeys.list(input),
@@ -20,7 +18,7 @@ export function useFeedConsumptionArchiveQuery(input: {
       if (!supabase) throw new Error('Supabase is not configured.');
       const [feedItems, consumption] = await Promise.all([
         fetchFeedItems(supabase, false),
-        fetchFeedConsumption(supabase, input.page, PAGE_SIZE, {
+        fetchFeedConsumption(supabase, input.page, input.pageSize, {
           from: input.from, to: input.to, feedItemId: input.feedFilter,
         }),
       ]);

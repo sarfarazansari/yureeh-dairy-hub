@@ -46,14 +46,33 @@ export async function fetchFeedConsumption(
   const from = page * pageSize;
   const to = from + pageSize - 1;
 
+  // Reversed consumptions remain in the append-only inventory ledger for audit,
+  // but they must not appear as active rows in the consumption archive.
+  const { data: reversalRows, error: reversalError } = await client
+    .from('feed_inventory_movements')
+    .select('reversal_of_movement_id')
+    .in('source_type', ['FEED_CONSUMPTION_REVERSAL', 'FEED_CONSUMPTION_EDIT_REVERSAL'])
+    .not('reversal_of_movement_id', 'is', null);
+
+  if (reversalError) throw reversalError;
+
+  const reversedIds = [...new Set(
+    (reversalRows ?? [])
+      .map((row) => row.reversal_of_movement_id)
+      .filter((id): id is string => Boolean(id)),
+  )];
+
   let query = client
     .from('feed_inventory_movements')
     .select('*, feed_items!inner(name,base_unit)', { count: 'exact' })
     .eq('movement_type', 'CONSUMPTION')
     .eq('source_type', 'FEED_CONSUMPTION')
     .order('occurred_at', { ascending: false })
-    .order('created_at', { ascending: false })
-    .range(from, to);
+    .order('created_at', { ascending: false });
+
+  if (reversedIds.length) query = query.not('id', 'in', `(${reversedIds.join(',')})`);
+
+  query = query.range(from, to);
 
   if (filters.from) query = query.gte('occurred_at', `${filters.from}T00:00:00`);
   if (filters.to) {

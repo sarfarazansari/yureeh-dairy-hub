@@ -1761,3 +1761,208 @@ button {
   .production-save-bar { align-items: stretch; flex-direction: column; }
   .production-save-button { width: 100%; }
 }
+
+
+/* Compact feed-item master form: keep the create section short and readable. */
+.feed-item-form-card {
+  padding: 14px 16px;
+}
+.feed-item-form-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.feed-item-form-heading .section-title {
+  margin: 0;
+  font-size: 17px;
+}
+.feed-item-form-heading .dialog-description {
+  margin: 0;
+  color: #68776f;
+  font-size: 12px;
+}
+.feed-item-form-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0 12px;
+  align-items: end;
+}
+.feed-item-form-grid .field {
+  min-width: 0;
+  gap: 5px;
+  margin: 5px 0;
+}
+.feed-item-form-grid .field label {
+  font-size: 12px;
+  line-height: 1.3;
+  color: #52645a;
+}
+.feed-item-form-grid input,
+.feed-item-form-grid [data-slot="select-trigger"] {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 14px;
+}
+.feed-item-form-grid input::placeholder,
+.feed-item-form-grid textarea::placeholder {
+  color: #7b8981;
+  opacity: 1;
+}
+.feed-item-form-hint {
+  color: #68776f;
+  font-size: 11px;
+  line-height: 1.25;
+}
+.feed-item-form-grid .feed-item-notes {
+  grid-column: span 4;
+}
+.feed-item-form-grid .feed-item-notes textarea {
+  min-height: 36px;
+  height: 36px;
+  resize: vertical;
+  padding: 8px 10px;
+  color: #23392e;
+}
+.feed-item-submit {
+  grid-column: span 2;
+  justify-self: start;
+  align-self: end;
+  height: 36px;
+  margin: 5px 0;
+}
+@media (max-width: 1100px) {
+  .feed-item-form-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .feed-item-form-grid .feed-item-notes {
+    grid-column: span 2;
+  }
+  .feed-item-submit {
+    grid-column: span 1;
+  }
+}
+@media (max-width: 700px) {
+  .feed-item-form-card {
+    padding: 12px;
+  }
+  .feed-item-form-heading {
+    display: block;
+  }
+  .feed-item-form-heading .dialog-description {
+    margin-top: 4px;
+  }
+  .feed-item-form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 9px;
+  }
+  .feed-item-form-grid .feed-item-notes {
+    grid-column: 1 / -1;
+  }
+  .feed-item-submit {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-top: 8px;
+  }
+}
+@media (max-width: 420px) {
+  .feed-item-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .feed-item-form-grid .feed-item-notes,
+  .feed-item-submit {
+    grid-column: 1;
+  }
+}
+
+
+/* Feed purchase archive: compact filters, readable actions, and clear stock-used state. */
+.feed-purchase-filter-card { padding: 14px 16px; }
+.feed-purchase-filter-heading { align-items: center; margin-bottom: 10px; }
+.feed-purchase-filter-heading .section-title { margin: 0; font-size: 17px; }
+.feed-purchase-filter-grid {
+  display: grid;
+  grid-template-columns: minmax(190px, 1.15fr) repeat(3, minmax(140px, 1fr)) minmax(125px, .8fr);
+  align-items: end;
+  gap: 10px;
+}
+.feed-purchase-filter-grid .field { min-width: 0; margin: 0; gap: 5px; }
+.feed-purchase-filter-grid .field label { margin: 0; font-size: 12px; line-height: 1.3; }
+.feed-purchase-filter-grid [data-slot="select-trigger"] { min-width: 0; height: 36px; padding-inline: 10px; font-size: 13px; }
+.feed-purchase-date-filter > *:last-child { min-width: 0; }
+.feed-purchase-date-filter button { width: 100%; min-width: 0; min-height: 36px; height: 36px; justify-content: flex-start; padding-inline: 10px; font-size: 13px; color: #46574e !important; }
+.feed-purchase-clear-filter button { width: 100%; min-height: 36px; height: 36px; white-space: nowrap; font-size: 13px; }
+.feed-purchase-filter-heading [data-slot="button"] { color: #fff !important; }
+.feed-purchase-history-table tbody tr.feed-purchase-row-locked { background-color: #fff4df !important; }
+.feed-purchase-history-table tbody tr.feed-purchase-row-locked td { color: #5f4b2b; border-bottom-color: #f0dfbd; }
+.feed-purchase-history-table tbody tr.feed-purchase-row-locked:hover { background-color: #ffedc8 !important; }
+.feed-purchase-locked-badge { max-width: 150px; white-space: normal; text-align: center; border-color: #d5a44d !important; background: #ffe7b3 !important; color: #68450a !important; line-height: 1.25; }
+.feed-purchase-history-table [data-slot="button"] { color: #183b32; }
+.feed-purchase-history-table [data-slot="button"]:disabled { color: #68776f; opacity: .7; }
+@media (max-width: 1150px) { .feed-purchase-filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 700px) {
+  .feed-purchase-filter-card { padding: 12px; }
+  .feed-purchase-filter-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .feed-purchase-filter-heading { align-items: flex-start; }
+  .feed-purchase-filter-heading [data-slot="button"] { white-space: nowrap; }
+}
+@media (max-width: 420px) { .feed-purchase-filter-grid { grid-template-columns: minmax(0, 1fr); } }
+
+
+/* Feed item creation dialog layout */
+.feed-item-add-dialog { width: min(42rem, calc(100vw - 2rem)); }
+.feed-item-add-dialog .dialog-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.feed-item-add-dialog .field { min-width: 0; }
+.feed-item-add-dialog .wide-field { grid-column: 1 / -1; }
+@media (max-width: 560px) {
+  .feed-item-add-dialog .dialog-form-grid { grid-template-columns: minmax(0, 1fr); }
+  .feed-item-add-dialog .wide-field { grid-column: auto; }
+}
+
+
+/* Application-wide form guidance and placeholder contrast.
+   Keep supporting text readable on white surfaces without competing with labels. */
+:root {
+  --muted: #64756d;
+  --form-placeholder: #7b8981;
+  --form-helper: #64756d;
+}
+input::placeholder,
+textarea::placeholder,
+[data-slot="input"]::placeholder,
+[data-slot="textarea"]::placeholder {
+  color: var(--form-placeholder) !important;
+  opacity: 1 !important;
+}
+.field-hint,
+.kpi-foot,
+.sub,
+.dialog-description,
+.dialog-form-description,
+.helper-text,
+.form-hint,
+.form-helper,
+small.helper-text,
+[data-slot="form-description"],
+[data-slot="description"] {
+  color: var(--form-helper);
+}
+.field-hint,
+.kpi-foot,
+.dialog-description,
+.dialog-form-description,
+.helper-text,
+.form-hint,
+.form-helper,
+[data-slot="form-description"],
+[data-slot="description"] {
+  opacity: 1;
+}
+::selection {
+  background: #d7f17b;
+  color: #183b32;
+}

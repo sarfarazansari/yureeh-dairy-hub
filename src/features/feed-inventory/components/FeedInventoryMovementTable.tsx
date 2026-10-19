@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Props = {
   rows: FeedInventoryMovementRow[];
@@ -12,6 +13,7 @@ type Props = {
   page: number;
   pageSize: number;
   onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
   loading?: boolean;
   error?: string;
   onRetry?: () => void;
@@ -28,7 +30,7 @@ function sourceLabel(value: string | null) {
   return value.replaceAll('_', ' ');
 }
 
-export function FeedInventoryMovementTable({ rows, count, page, pageSize, onPageChange, loading = false, error, onRetry }: Props) {
+export function FeedInventoryMovementTable({ rows, count, page, pageSize, onPageChange, onPageSizeChange, loading = false, error, onRetry }: Props) {
   const pages = Math.max(1, Math.ceil(count / pageSize));
   const start = count ? page * pageSize + 1 : 0;
   const end = Math.min((page + 1) * pageSize, count);
@@ -52,7 +54,7 @@ export function FeedInventoryMovementTable({ rows, count, page, pageSize, onPage
                 {loading ? Array.from({ length: 5 }, (_, index) => <TableRow key={index}>{Array.from({ length: 8 }, (_, cell) => <TableCell key={cell}><Skeleton className="h-4 w-24" /></TableCell>)}</TableRow>) : rows.map((row) => {
                   const incoming = movementSign(row.movement_type) === '+';
                   return <TableRow key={row.id}>
-                    <TableCell className="whitespace-nowrap">{new Date(row.occurred_at).toLocaleDateString('en-IN')}</TableCell>
+                    <TableCell className="whitespace-nowrap">{new Date(row.occurred_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</TableCell>
                     <TableCell><b>{row.feed_item_name}</b><div className="text-xs text-muted-foreground">{row.base_unit}</div></TableCell>
                     <TableCell><Badge variant={incoming ? 'secondary' : 'outline'}>{movementLabel(row.movement_type)}</Badge></TableCell>
                     <TableCell className="whitespace-nowrap"><b>{movementSign(row.movement_type)}{Number(row.quantity).toLocaleString('en-IN', { maximumFractionDigits: 3 })} {row.base_unit}</b></TableCell>
@@ -68,7 +70,7 @@ export function FeedInventoryMovementTable({ rows, count, page, pageSize, onPage
           {!loading && !rows.length && <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">No inventory movements match these filters.</div>}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-3">
             <p className="text-sm text-muted-foreground">Showing {start}–{end} of {count}</p>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2"><label className="text-sm text-muted-foreground" htmlFor="feed-movement-page-size">Rows</label><Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}><SelectTrigger id="feed-movement-page-size" className="h-8 w-36"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="20">20 per page</SelectItem><SelectItem value="50">50 per page</SelectItem><SelectItem value="100">100 per page</SelectItem></SelectContent></Select>
               <Button type="button" variant="outline" size="sm" disabled={loading || page <= 0} onClick={() => onPageChange(page - 1)}>Previous</Button>
               <span className="min-w-24 text-center text-sm text-muted-foreground">Page {page + 1} of {pages}</span>
               <Button type="button" variant="outline" size="sm" disabled={loading || page >= pages - 1} onClick={() => onPageChange(page + 1)}>Next</Button>

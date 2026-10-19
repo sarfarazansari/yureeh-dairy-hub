@@ -393,3 +393,33 @@ The user's short command `1 refactor karo` means:
 - **Commits:** `477e94e8969493d608cd3455349fa0143beac500` (dashboard implementation), `281f0fbf269df8568295b098d2400be760576909` (coverage calculation correction).
 - **Verification:** latest source fetched back from GitHub after commits. Local typecheck, lint, build, tests and browser/manual UI testing were not executable in this GitHub-only session. Keep ANA-001 In Progress until these checks pass and the status thresholds are validated.
 - **No PR/merge created.** User retains PR/merge control.
+
+
+## Latest handoff — 2026-10-18 (Milk Margin After Feed dashboard card)
+
+- Working branch: `feature/dashboard-milk-margin-after-feed`, created from latest `master` at `cb3197ef4c2f84c7fbdf04b0c7a64ef7ca6d6504`.
+- Added a separate monthly Milk Margin After Feed card; existing Farm Finances card remains unchanged.
+- Margin formula: milk sales revenue minus feed consumption cost from `feed_inventory_movements` rows with `movement_type = CONSUMPTION` and `source_type = FEED_CONSUMPTION`, using each row's recorded `unit_cost`. Feed purchase expenses and one-time setup expenses are excluded.
+- Added a database RPC that aggregates monthly milk sales and actual feed consumption server-side, counts consumption entries without cost snapshots, and returns a cost-completeness signal. The UI does not display a misleading margin when any monthly consumption row has no cost.
+- Changed files: `src/features/dashboard.tsx`, `src/features/dashboard/services/dashboard.service.ts`, new `src/features/dashboard/components/MilkMarginAfterFeedCard.tsx`, new migration `supabase/migrations/20261018130000_milk_margin_after_feed.sql`.
+- Verification: source and migration reviewed statically through GitHub. Local build, lint, typecheck, UI/runtime checks, and applying the migration to Supabase were not run in this environment. Apply the migration before testing the branch locally.
+- User owns local testing and PR/merge; no PR or merge was created.
+
+
+## Feed module UX consistency pass — 2026-10-19
+
+- Continued on `feature/dashboard-milk-margin-after-feed` as requested; no new branch, PR, or merge.
+- Added page-size controls (20, 50, 100) for Feed Purchases, Feed Consumption, Feed Items, Feed Inventory movement history, and Diet Plans. Page size is included in query keys and passed to server-side pagination services.
+- Tightened purchase/consumption filter layouts and Feed Items form grid; explicitly sets white text on primary actions.
+- Visible purchase, consumption, inventory movement, and diet-plan dates now use human-readable formats.
+- Feed Inventory stock search/filter remains in-memory over the aggregate stock query.
+- Verification boundary: source-level changes only; local typecheck, lint, build, browser and Supabase runtime checks were not run. Validate before merge.
+
+
+## Feed inventory page separation — 2026-10-19
+
+- Continued on `feature/dashboard-milk-margin-after-feed`; no new branch, PR, or merge.
+- `/feeds/inventory` now focuses on current stock, stock value, low-stock/out-of-stock indicators, and stock search/status filters.
+- Added `/feeds/inventory/movements` for movement history with date range, feed item and movement type filters, plus 20/50/100 server-side pagination.
+- Added `Movement History` to the FARM COSTS sidebar navigation. Existing inventory query/service contracts and ledger logic are unchanged.
+- Verification boundary: source-level changes only; run typecheck, lint, build and browser smoke tests locally before merging.

@@ -3,17 +3,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { createFeedPurchase, deleteFeedPurchase, editFeedPurchase, fetchFeedPurchaseForEdit, fetchFeedPurchases } from './feed-purchases.service';
 
-const PAGE_SIZE = 20;
-
 export const feedPurchaseQueryKeys = {
   all: ['feed-purchases'] as const,
-  list: (input: { page: number; from: string; to: string; feedFilter: string; vendorFilter: string; paymentFilter: string }) =>
-    [...feedPurchaseQueryKeys.all, 'list', input.page, PAGE_SIZE, input.from, input.to, input.feedFilter, input.vendorFilter, input.paymentFilter] as const,
+  list: (input: { page: number; pageSize: number; from: string; to: string; feedFilter: string; vendorFilter: string; paymentFilter: string }) =>
+    [...feedPurchaseQueryKeys.all, 'list', input.page, input.pageSize, input.from, input.to, input.feedFilter, input.vendorFilter, input.paymentFilter] as const,
   formOptions: () => [...feedPurchaseQueryKeys.all, 'form-options'] as const,
 };
 
 export function useFeedPurchaseArchiveQuery(input: {
-  page: number; from: string; to: string; feedFilter: string; vendorFilter: string; paymentFilter: string;
+  page: number; pageSize: number; from: string; to: string; feedFilter: string; vendorFilter: string; paymentFilter: string;
 }) {
   return useQuery({
     queryKey: feedPurchaseQueryKeys.list(input),
@@ -22,7 +20,7 @@ export function useFeedPurchaseArchiveQuery(input: {
       const [feeds, vendorResult, purchases] = await Promise.all([
         supabase.from('feed_items').select('*').eq('is_active', true).order('name'),
         supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
-        fetchFeedPurchases(supabase, input.page, PAGE_SIZE, {
+        fetchFeedPurchases(supabase, input.page, input.pageSize, {
           from: input.from, to: input.to, feedItemId: input.feedFilter,
           vendorId: input.vendorFilter, paymentStatus: input.paymentFilter,
         }),

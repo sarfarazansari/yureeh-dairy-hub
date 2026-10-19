@@ -107,19 +107,38 @@ export async function fetchFeedPurchases(
 
   if (!minCreatedAt) return { rows, count: count ?? 0 };
 
-  const { data: outboundMovements, error: outboundError } = await client
+  // Load reversals as well as outbound movements. A consumption row that
+  // has a matching reversal is a test/voided consumption and must not keep
+  // purchases permanently locked. Genuine consumptions and stock-outs still lock.
+  const { data: inventoryMovements, error: movementHistoryError } = await client
     .from('feed_inventory_movements')
-    .select('feed_item_id, created_at')
+    .select('id, feed_item_id, movement_type, source_type, created_at, reversal_of_movement_id')
     .in('feed_item_id', feedIds)
-    .in('movement_type', ['CONSUMPTION', 'ADJUSTMENT_OUT'])
     .gte('created_at', minCreatedAt);
 
-  if (outboundError) throw outboundError;
+  if (movementHistoryError) throw movementHistoryError;
+
+  const reversedConsumptionIds = new Set(
+    (inventoryMovements ?? [])
+      .filter(
+        (movement) =>
+          movement.source_type === 'FEED_CONSUMPTION_REVERSAL' ||
+          movement.source_type === 'FEED_CONSUMPTION_EDIT_REVERSAL',
+      )
+      .map((movement) => movement.reversal_of_movement_id)
+      .filter((id): id is string => Boolean(id)),
+  );
+
+  const outboundMovements = (inventoryMovements ?? []).filter(
+    (movement) =>
+      movement.movement_type === 'ADJUSTMENT_OUT' ||
+      (movement.movement_type === 'CONSUMPTION' && !reversedConsumptionIds.has(movement.id)),
+  );
 
   const enrichedRows = rows.map((row) => {
     const original = originalMovementByPurchase.get(row.id);
     const locked = original
-      ? (outboundMovements ?? []).some(
+      ? outboundMovements.some(
           (movement) =>
             movement.feed_item_id === original.feedItemId &&
             movement.created_at > original.createdAt,
