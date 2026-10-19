@@ -11,8 +11,8 @@ import { FeedItemTable } from '@/features/feed-items/components/FeedItemTable';
 
 export default function FeedItemsPage() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const pageSize = 20;
   const [search, setSearch] = useState('');
   const [editingItem, setEditingItem] = useState<FeedItem | null>(null);
   const [message, setMessage] = useState('');
@@ -83,7 +83,7 @@ export default function FeedItemsPage() {
     <AppShell title="Feed items" subtitle="Manage the farm's physical feed master">
       <div className="management-stack">
         <FeedItemForm onSave={save} busy={busy} message={message} />
-        <FeedItemTable rows={rows} activeCount={activeCount} search={search} onSearchChange={setSearch} onEdit={setEditingItem} onToggle={toggle} loading={busy || feedItemsQuery.isPending} error={loadError} onRetry={load} page={page} pageSize={pageSize} totalRows={totalRows} onPageChange={setPage} />
+        <FeedItemTable rows={rows} activeCount={activeCount} search={search} onSearchChange={setSearch} onEdit={setEditingItem} onToggle={toggle} loading={busy || feedItemsQuery.isPending} error={loadError} onRetry={load} page={page} pageSize={pageSize} totalRows={totalRows} onPageChange={setPage} onPageSizeChange={(value) => { setPageSize(value); setPage(1); }} />
         <FeedItemEditDialog item={editingItem} open={Boolean(editingItem)} onOpenChange={(open) => !open && setEditingItem(null)} onSave={save} busy={busy} />
       </div>
     </AppShell>

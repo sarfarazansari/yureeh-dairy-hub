@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 type Props = {
   rows: FeedItem[];
@@ -20,13 +21,14 @@ type Props = {
   pageSize: number;
   totalRows: number;
   onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
   error?: string;
   onRetry?: () => void;
 };
 
 const label = (value: string) => value.replaceAll('_', ' ');
 
-export function FeedItemTable({ rows, activeCount, search, onSearchChange, onEdit, onToggle, loading, page, pageSize, totalRows, onPageChange, error, onRetry }: Props) {
+export function FeedItemTable({ rows, activeCount, search, onSearchChange, onEdit, onToggle, loading, page, pageSize, totalRows, onPageChange, onPageSizeChange, error, onRetry }: Props) {
   const pageCount = Math.max(1, Math.ceil(totalRows / pageSize));
   const start = totalRows ? (page - 1) * pageSize + 1 : 0;
   const end = Math.min(page * pageSize, totalRows);
@@ -58,7 +60,7 @@ export function FeedItemTable({ rows, activeCount, search, onSearchChange, onEdi
       {!error && !loading && !rows.length && <div className="empty">{search.trim() ? 'No feed items match your search.' : 'No feed items found.'}</div>}
       {!error && <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--line)] pt-3">
         <p className="text-sm text-[var(--muted)]">Showing {start}–{end} of {totalRows} feed items</p>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2"><label className="text-sm text-muted-foreground" htmlFor="feed-items-page-size">Rows</label><Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}><SelectTrigger id="feed-items-page-size" className="h-8 w-36"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="20">20 per page</SelectItem><SelectItem value="50">50 per page</SelectItem><SelectItem value="100">100 per page</SelectItem></Select>
           <Button variant="outline" size="sm" type="button" disabled={loading || page <= 1} onClick={() => onPageChange(page - 1)}>Previous</Button>
           <span className="min-w-20 text-center text-sm text-[var(--muted)]">Page {page} of {pageCount}</span>
           <Button variant="outline" size="sm" type="button" disabled={loading || page >= pageCount} onClick={() => onPageChange(page + 1)}>Next</Button>

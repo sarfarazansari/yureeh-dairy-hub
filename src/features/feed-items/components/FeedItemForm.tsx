@@ -53,11 +53,11 @@ export function FeedItemForm({ onSave, busy, message }: Props) {
   }
 
   return (
-    <div className="card">
+    <div className="card space-y-3">
       <h2 className="section-title">Add feed item</h2>
       <p className="dialog-description">Create a physical feed master for inventory tracking.</p>
       <form onSubmit={submit}>
-        <div className="expense-form-grid">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <div className="field"><Label htmlFor="feed-name">Name</Label><Input id="feed-name" required disabled={busy} value={values.name} onChange={(e) => update('name', e.target.value)} placeholder="e.g. Poha Churi" /></div>
           <div className="field"><Label htmlFor="feed-category">Category</Label><Select value={values.category} disabled={busy} onValueChange={(value) => update('category', value as FeedCategory)}><SelectTrigger id="feed-category"><SelectValue /></SelectTrigger><SelectContent>{FEED_CATEGORIES.map((item) => <SelectItem key={item} value={item}>{label(item)}</SelectItem>)}</SelectContent></Select></div>
           <div className="field"><Label htmlFor="feed-base-unit">Base unit</Label><Input id="feed-base-unit" list="feed-unit-list" disabled={busy} value={values.baseUnit} onChange={(e) => update('baseUnit', e.target.value)} placeholder="KG" /></div>
@@ -68,7 +68,7 @@ export function FeedItemForm({ onSave, busy, message }: Props) {
         </div>
         <datalist id="feed-unit-list">{FEED_UNITS.map((unit) => <option key={unit} value={unit} />)}</datalist>
         {message && <TimedNotice message={message} onDismiss={() => undefined} />}
-        <Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Add feed item'}</Button>
+        <Button className="text-white" type="submit" disabled={busy}>{busy ? 'Saving…' : 'Add feed item'}</Button>
       </form>
     </div>
   );
