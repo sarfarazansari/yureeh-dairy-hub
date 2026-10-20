@@ -30,7 +30,7 @@ export function MixedMilkFatHistoryTable({ rows, className }: MixedMilkFatHistor
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.businessDate}>
-              <TableCell className="whitespace-nowrap">{formatDate(row.businessDate, 'D MMMM YYYY')}</TableCell>
+              <TableCell className="whitespace-nowrap">{formatDate(row.businessDate)}</TableCell>
               <TableCell>{row.morningFat == null ? '—' : `${row.morningFat.toFixed(2)}%`}</TableCell>
               <TableCell>{row.eveningFat == null ? '—' : `${row.eveningFat.toFixed(2)}%`}</TableCell>
             </TableRow>
