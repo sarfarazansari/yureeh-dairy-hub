@@ -1,4 +1,5 @@
 'use client';
+import { formatDate } from '@/lib/date-format';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -52,7 +53,7 @@ export default function BuffaloSalesPage() {
                   {query.isPending ? Array.from({ length: 5 }, (_, index) => <TableRow key={index}>{Array.from({ length: 8 }, (_, cell) => <TableCell key={cell}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : rows.map((row) => {
                     const buffalo = row.buffaloes as { buffalo_code: string; name: string | null } | null;
                     return <TableRow key={row.id}>
-                      <TableCell className="whitespace-nowrap">{row.sale_date}</TableCell>
+                      <TableCell className="whitespace-nowrap">{formatDate(row.sale_date)}</TableCell>
                       <TableCell><b>{buffalo?.name || buffalo?.buffalo_code || 'Buffalo'}</b><div className="text-xs text-muted-foreground">{buffalo?.buffalo_code}</div></TableCell>
                       <TableCell>{row.buyer_name}</TableCell><TableCell>{money(Number(row.sale_price))}</TableCell><TableCell>{money(Number(row.amount_received))}</TableCell><TableCell>{money(Number(row.amount_pending))}</TableCell>
                       <TableCell><Badge variant={row.payment_status === 'PAID' ? 'secondary' : 'outline'}>{row.payment_status}</Badge></TableCell>
