@@ -179,15 +179,38 @@ begin
     return null;
   end if;
 
-  update public.farm_memberships
-  set member_user_id = v_user_id,
-      status = 'active',
-      invited_email = null,
-      updated_at = now()
-  where owner_user_id = v_owner_id
-    and lower(invited_email) = v_email
-    and status = 'invited'
-    and role = 'viewer';
+  -- Reuse a previously revoked membership rather than colliding with the
+  -- permanent (owner_user_id, member_user_id) identity constraint.
+  if exists (
+    select 1 from public.farm_memberships
+    where owner_user_id = v_owner_id
+      and member_user_id = v_user_id
+      and role = 'viewer'
+      and status = 'revoked'
+  ) then
+    update public.farm_memberships
+    set status = 'active', invited_email = v_email, updated_at = now()
+    where owner_user_id = v_owner_id
+      and member_user_id = v_user_id
+      and role = 'viewer'
+      and status = 'revoked';
+
+    delete from public.farm_memberships
+    where owner_user_id = v_owner_id
+      and member_user_id is null
+      and lower(invited_email) = v_email
+      and status = 'invited'
+      and role = 'viewer';
+  else
+    update public.farm_memberships
+    set member_user_id = v_user_id,
+        status = 'active',
+        updated_at = now()
+    where owner_user_id = v_owner_id
+      and lower(invited_email) = v_email
+      and status = 'invited'
+      and role = 'viewer';
+  end if;
 
   return 'viewer';
 end
