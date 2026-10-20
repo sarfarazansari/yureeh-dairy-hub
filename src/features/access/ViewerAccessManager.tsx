@@ -102,7 +102,7 @@ export function ViewerAccessManager() {
       <h2 className="section-title">Read-only access</h2>
       <p className="sub">
         Invite someone to view farm operations and reports without changing records. The invitation
-        is tied to the exact email address entered here.
+        is tied to the exact email address entered here. This creates access in the app but does not send an email automatically; share the sign-in URL separately.
       </p>
       <form className="row" onSubmit={invite} style={{ alignItems: 'end', gap: 12 }}>
         <label className="field" style={{ flex: 1, minWidth: 220 }}>
