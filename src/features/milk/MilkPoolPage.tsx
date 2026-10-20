@@ -1,4 +1,5 @@
 'use client';
+import { formatDate } from '@/lib/date-format';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -285,7 +286,7 @@ export default function MilkPoolPage() {
               <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>OPENING</TableHead><TableHead>PRODUCED</TableHead><TableHead>DELIVERED</TableHead><TableHead>HOUSEHOLD</TableHead><TableHead>WASTAGE</TableHead><TableHead>OTHER</TableHead><TableHead>ADJUSTMENT</TableHead><TableHead>CLOSING</TableHead></TableRow></TableHeader>
               <TableBody>{rows.map((row) => {
                 const adjustment = Number(row.adjustment_in_litres) - Number(row.adjustment_out_litres);
-                return <TableRow key={row.business_date}><TableCell className="whitespace-nowrap">{row.business_date}</TableCell><TableCell>{formatLitres(Number(row.opening_balance_litres))}</TableCell><TableCell>{formatLitres(Number(row.production_litres))}</TableCell><TableCell>{formatLitres(Number(row.customer_delivery_litres))}</TableCell><TableCell>{formatLitres(Number(row.household_use_litres))}</TableCell><TableCell>{formatLitres(Number(row.wastage_litres))}</TableCell><TableCell>{formatLitres(Number(row.other_use_litres))}</TableCell><TableCell>{formatLitres(adjustment)}</TableCell><TableCell>{formatLitres(Number(row.closing_balance_litres))}</TableCell></TableRow>;
+                return <TableRow key={formatDate(row.business_date)}><TableCell className="whitespace-nowrap">{formatDate(row.business_date)}</TableCell><TableCell>{formatLitres(Number(row.opening_balance_litres))}</TableCell><TableCell>{formatLitres(Number(row.production_litres))}</TableCell><TableCell>{formatLitres(Number(row.customer_delivery_litres))}</TableCell><TableCell>{formatLitres(Number(row.household_use_litres))}</TableCell><TableCell>{formatLitres(Number(row.wastage_litres))}</TableCell><TableCell>{formatLitres(Number(row.other_use_litres))}</TableCell><TableCell>{formatLitres(adjustment)}</TableCell><TableCell>{formatLitres(Number(row.closing_balance_litres))}</TableCell></TableRow>;
               })}</TableBody>
             </Table>
           </div>
