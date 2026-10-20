@@ -3,8 +3,8 @@ import { formatDate } from '@/lib/date-format';
 
 export type MixedMilkFatHistoryRow = {
   businessDate: string;
-  morningFat?: number;
-  eveningFat?: number;
+  morningFat?: number | null;
+  eveningFat?: number | null;
 };
 
 type MixedMilkFatHistoryTableProps = {
@@ -13,7 +13,7 @@ type MixedMilkFatHistoryTableProps = {
 };
 
 /**
- * Canonical farm-pool fat history table shared by Milk Pool and Sales Analytics.
+ * Canonical farm-pool fat history table shared by Milk Pool, Sales Analytics, and Buffalo Analytics.
  * Keep date formatting and table structure identical across both routes.
  */
 export function MixedMilkFatHistoryTable({ rows, className }: MixedMilkFatHistoryTableProps) {
@@ -31,8 +31,8 @@ export function MixedMilkFatHistoryTable({ rows, className }: MixedMilkFatHistor
           {rows.map((row) => (
             <TableRow key={row.businessDate}>
               <TableCell className="whitespace-nowrap">{formatDate(row.businessDate, 'D MMMM YYYY')}</TableCell>
-              <TableCell>{row.morningFat === undefined ? '—' : `${row.morningFat.toFixed(2)}%`}</TableCell>
-              <TableCell>{row.eveningFat === undefined ? '—' : `${row.eveningFat.toFixed(2)}%`}</TableCell>
+              <TableCell>{row.morningFat == null ? '—' : `${row.morningFat.toFixed(2)}%`}</TableCell>
+              <TableCell>{row.eveningFat == null ? '—' : `${row.eveningFat.toFixed(2)}%`}</TableCell>
             </TableRow>
           ))}
         </TableBody>
