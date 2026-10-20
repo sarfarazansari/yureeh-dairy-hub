@@ -21,6 +21,7 @@ import { formatDate } from '@/lib/date-format';
 import { getAnalyticsDateRange, type AnalyticsDatePreset } from '@/lib/analytics-date-range';
 import { money, milkTxt } from '@/lib/farm-format';
 import { useMilkPoolReconciliationQuery, useMilkPoolShiftFatQuery } from '@/features/milk/milk.queries';
+import { MixedMilkFatHistoryTable } from '@/features/milk/components/MixedMilkFatHistoryTable';
 import {
   useMilkMarginAfterFeedQuery,
   useMilkPoolAdjustmentsQuery,
@@ -370,16 +371,11 @@ export default function SalesAnalyticsPage() {
         {poolFatQuery.isPending ? <div className="empty">Loading mixed milk fat…</div>
           : poolFatQuery.isError ? <p className="auth-message">{poolFatQuery.error.message}</p>
             : !poolFatRows.length ? <div className="empty">No mixed milk fat recorded for this date range.</div>
-              : <div className="mt-3 w-full overflow-x-auto rounded-md border border-[var(--line)]">
-                <Table className="min-w-[420px]">
-                  <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>MORNING FAT</TableHead><TableHead>EVENING FAT</TableHead></TableRow></TableHeader>
-                  <TableBody>{poolFatRows.map(([dateKey, fatByShift]) => <TableRow key={dateKey}>
-                    <TableCell>{formatDate(dateKey, 'D MMMM YYYY')}</TableCell>
-                    <TableCell>{fatByShift.MORNING === undefined ? '—' : `${fatByShift.MORNING.toFixed(2)}%`}</TableCell>
-                    <TableCell>{fatByShift.EVENING === undefined ? '—' : `${fatByShift.EVENING.toFixed(2)}%`}</TableCell>
-                  </TableRow>)}</TableBody>
-                </Table>
-              </div>}
+              : <MixedMilkFatHistoryTable rows={poolFatRows.map(([businessDate, fatByShift]) => ({
+                businessDate,
+                morningFat: fatByShift.MORNING,
+                eveningFat: fatByShift.EVENING,
+              }))} />}
       </section>
     </AppShell>
   );
