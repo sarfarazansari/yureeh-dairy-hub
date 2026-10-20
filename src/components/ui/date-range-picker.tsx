@@ -9,6 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { normalizeDateKey } from '@/lib/date-key';
 import { formatDate } from '@/lib/date-format';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 type DateRangePickerProps = {
   from: string;
