@@ -466,6 +466,6 @@ The user's short command `1 refactor karo` means:
 - Critical issue: current owner-scoped `user_id = auth.uid()` policies will not automatically let a second account read farm records. A shared farm membership/tenant model is needed and must be designed after full dependency inventory.
 - Signup is currently available from the login gate; do not let open signup grant farm membership or any role.
 - Some data mutations use SQL RPCs and `SECURITY DEFINER` functions. UI-only protection is unacceptable.
-- Phase 1 inventory is still outstanding. No application source, RLS, RPC, or database migrations have been changed as part of this initial documentation setup.
+- Phase 1 is in progress. Initial route/data inventory is recorded in `docs/RBAC_ROUTE_AND_DATA_INVENTORY.md`; the complete SQL-level table/view/function/policy/grant inventory is still pending. No application source, RLS, RPC, or database migrations have been changed as part of this initial documentation setup.
 - Verification: GitHub source inspection only; no local build, lint, typecheck, automated tests, live database checks, or migration application were run.
 - User owns PR creation and merging. Do not create a PR or merge without explicit instruction.
