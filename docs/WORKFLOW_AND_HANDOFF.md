@@ -452,3 +452,20 @@ The user's short command `1 refactor karo` means:
 - **Files changed:** `src/features/milk/components/MixedMilkFatHistoryTable.tsx`, `src/features/milk/MilkPoolPage.tsx`, `src/features/analytics/SalesAnalyticsPage.tsx`, `YUREEH_PROJECT_RULES.md`, `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`.
 - **Validation:** Source changes written on the existing branch; read-back, typecheck, lint, build, and browser comparison are still required. Do not claim runtime verified until executed.
 - **PR/merge:** Not created; user retains PR/merge control.
+
+
+---
+
+## Current work — RBAC Viewer access (2026-10-20)
+
+- Working branch: `feature/rbac-viewer-access`
+- Base commit from latest observed `master`: `81763e3e872b4ca1216237729d4437e397dd58a7`
+- Scope: complete Super Admin + read-only Viewer access across the whole application on this one branch; do not branch between phases.
+- Plan: `docs/RBAC_IMPLEMENTATION_PLAN.md`
+- Initial static review confirmed Supabase email/password auth in `src/app/auth-gate.tsx`, protected layout in `src/app/(protected)/layout.tsx`, centralized navigation in `src/components/layout/Sidebar.tsx`, and owner-scoped RLS patterns in existing migrations.
+- Critical issue: current owner-scoped `user_id = auth.uid()` policies will not automatically let a second account read farm records. A shared farm membership/tenant model is needed and must be designed after full dependency inventory.
+- Signup is currently available from the login gate; do not let open signup grant farm membership or any role.
+- Some data mutations use SQL RPCs and `SECURITY DEFINER` functions. UI-only protection is unacceptable.
+- Phase 1 inventory is still outstanding. No application source, RLS, RPC, or database migrations have been changed as part of this initial documentation setup.
+- Verification: GitHub source inspection only; no local build, lint, typecheck, automated tests, live database checks, or migration application were run.
+- User owns PR creation and merging. Do not create a PR or merge without explicit instruction.
