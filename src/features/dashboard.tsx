@@ -59,7 +59,7 @@ export default function Dashboard() {
     const key = asDate(d),
       rows = entries.filter((e) => e.business_date === key);
     return {
-      d: formatDate(d, 'D MMM'),
+      d: formatDate(d),
       m: milk(rows.filter((e) => e.shift === 'MORNING')),
       e: milk(rows.filter((e) => e.shift === 'EVENING')),
       r: revenue(rows),
@@ -93,7 +93,7 @@ export default function Dashboard() {
     fat = weighted(todayEntries),
     morning = todayEntries.filter((e) => e.shift === 'MORNING'),
     evening = todayEntries.filter((e) => e.shift === 'EVENING');
-  const dayName = formatDate(today, 'dddd, D MMM');
+  const dayName = formatDate(today);
   return (
     <AppShell title="Farm overview" subtitle="Your milk business at a glance">
       <div className="row">
