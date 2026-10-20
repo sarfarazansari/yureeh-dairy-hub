@@ -52,13 +52,13 @@ The complete table/view/function/policy/grant list still needs to be extracted f
 - `expense_categories` also uses `owner_id`; some category rows may be global (`owner_id IS NULL`).
 - Existing SELECT policies commonly compare ownership with `auth.uid()`. Some business logic is in `SECURITY DEFINER` functions, while reporting functions such as `get_sales_analytics_summary`, `get_farm_financial_summary`, `get_customer_financial_summary`, `get_buffalo_sale_financial_summary`, and `get_milk_margin_after_feed` use `SECURITY INVOKER` but filter explicitly by `auth.uid()`.
 - Mutating RPCs include milk-pool-aware milk-entry create/update/delete, customer payments, expense payments, buffalo production saves, feed purchase/consumption operations, and diet-plan scheduling. Viewer safety cannot depend on a page-level guard.
-- The current `get_buffalo_production_sheet` RPC is called by `src/features/buffalo-production/services/buffalo-production.service.ts` but was not found in the migration files inspected. Its deployed definition and authorization behavior remain an explicit verification blocker.
+- The client previously called `get_buffalo_production_sheet`, but that function was not found in the migration files inspected. Both production-sheet and diet-plan buffalo option reads now query `buffaloes` directly through RLS, avoiding dependence on that undocumented read RPC.
 - Initial Super Admin bootstrap is derived from existing persisted `user_id`/`owner_id` values. The migration has not been applied to a database, so the actual backfill cardinality and any multiple-owner edge cases remain unverified.
 
 ## RBAC implementation currently present on this branch
 
 - `supabase/migrations/20261020150000_rbac_viewer_access.sql`: membership table, trusted role/owner helpers, invitation claim function, farm-aware SELECT policies, RLS enablement for ownership tables, and a database trigger that rejects Viewer writes across public base tables (including writes attempted through ordinary `SECURITY DEFINER` RPCs).
-- `supabase/migrations/20261020160000_rbac_read_rpc_owner_scope.sql`: updates six read-only reporting/pricing RPCs to resolve the farm owner through trusted membership instead of the caller's auth UID.
+- `supabase/migrations/20261020160000_rbac_read_rpc_owner_scope.sql`: updates eight read-only reporting/pricing/milk-pool RPCs to resolve the farm owner through trusted membership instead of the caller's auth UID.
 - `src/lib/farm-access.tsx`, `src/app/auth-gate.tsx`: centralized role context and access denial for accounts without an active farm membership; pending Viewer invitation is claimed only after the invited auth email is confirmed.
 - `src/features/access/ViewerAccessManager.tsx`, `/settings`: Super Admin can create Viewer invitations and revoke active/pending access.
 - `FarmRoleRouteGuard` and the sidebar/AppShell: first-pass protection for known write routes, role-aware navigation, and a read-only banner.
