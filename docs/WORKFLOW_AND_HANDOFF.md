@@ -442,3 +442,13 @@ The user's short command `1 refactor karo` means:
 - **Changed files:** `src/features/analytics/SalesAnalyticsPage.tsx`, `src/features/analytics/sales-analytics.queries.ts`.
 - **Verification boundary:** Source fetched back from GitHub and statically reviewed. This connector session has no local checkout/runtime, so `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`, browser tests, and live customer/date-range tests were not run. No migration was added or applied.
 - **PR/merge:** None created; user retains PR/merge control.
+
+
+### Session log — 2026-10-20 (shared mixed-milk fat table and date consistency)
+
+- **Task:** Fix the duplicated mixed-milk fat history tables on `/milk-pool` and `/analytics`, including the raw ISO date display.
+- **Branch:** `feature/analytics-filter-ux-charts` (continued from the same branch; no new branch created).
+- **Changes:** Added `src/features/milk/components/MixedMilkFatHistoryTable.tsx` as the single canonical table. Both routes now render this component with the same headers, column structure, zebra row styling, and `D MMMM YYYY` display dates. `/milk-pool` no longer prints raw `YYYY-MM-DD` keys. Added project rules prohibiting duplicate route-level implementations of repeated tables and raw ISO dates in user-facing tables.
+- **Files changed:** `src/features/milk/components/MixedMilkFatHistoryTable.tsx`, `src/features/milk/MilkPoolPage.tsx`, `src/features/analytics/SalesAnalyticsPage.tsx`, `YUREEH_PROJECT_RULES.md`, `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`.
+- **Validation:** Source changes written on the existing branch; read-back, typecheck, lint, build, and browser comparison are still required. Do not claim runtime verified until executed.
+- **PR/merge:** Not created; user retains PR/merge control.
