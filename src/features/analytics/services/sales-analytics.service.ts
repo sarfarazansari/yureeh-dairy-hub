@@ -77,3 +77,27 @@ export async function getSalesAnalyticsData(
     customers: (customersResult.data ?? []) as AnalyticsCustomer[],
   };
 }
+
+
+export type MilkMarginAfterFeedRow = {
+  milk_litres_sold: number | string;
+  milk_sales_revenue: number | string;
+  feed_consumption_cost: number | string;
+  feed_consumption_entries: number | string;
+  uncosted_feed_consumption_entries: number | string;
+};
+
+export async function getMilkMarginAfterFeed(
+  client: SupabaseClient,
+  filters: { from: string; to: string },
+): Promise<MilkMarginAfterFeedRow[]> {
+  if (!filters.from || !filters.to || filters.from > filters.to) {
+    throw new Error('Choose a valid report date range.');
+  }
+  const { data, error } = await client.rpc('get_milk_margin_after_feed', {
+    p_from: filters.from,
+    p_to: filters.to,
+  });
+  if (error) throw new Error(error.message || 'Could not load milk margin after feed.');
+  return (data ?? []) as unknown as MilkMarginAfterFeedRow[];
+}
