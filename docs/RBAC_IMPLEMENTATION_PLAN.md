@@ -1,6 +1,6 @@
 # Role-Based Access Control (RBAC) — Implementation Plan
 
-Status: Phase 1 — application and security audit / implementation plan
+Status: Phase 1 — in progress; initial route/data inventory started
 Working branch: `feature/rbac-viewer-access`
 Base: `master` at `81763e3e872b4ca1216237729d4437e397dd58a7`
 Scope: Complete farm-level Super Admin + read-only Viewer access on this single feature branch. Do not create a second feature branch for later phases.
@@ -110,3 +110,6 @@ All phases must be completed on `feature/rbac-viewer-access`; do not create a ne
 
 - 2026-10-20: Branch created from latest observed `master` commit `81763e3e872b4ca1216237729d4437e397dd58a7`.
 - 2026-10-20: Initial static inspection confirmed Supabase AuthGate, public signup toggle, centralized sidebar, and owner-scoped RLS patterns. Complete Phase 1 inventory is still required; no code or database security changes have been implemented yet.
+
+
+Phase 1 inventory: see `docs/RBAC_ROUTE_AND_DATA_INVENTORY.md` (initial pass; SQL-level inventory remains pending).
