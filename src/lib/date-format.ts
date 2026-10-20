@@ -1,7 +1,10 @@
 import dayjs from 'dayjs';
 
+/** Single source of truth for every human-facing date in the application. */
+export const DATE_DISPLAY_FORMAT = 'D MMMM YYYY';
+
 /** Format database date values consistently for human-facing UI. */
-export function formatDate(value: string | Date | null | undefined, pattern = 'D MMM YYYY') {
+export function formatDate(value: string | Date | null | undefined, pattern = DATE_DISPLAY_FORMAT) {
   if (!value) return '—';
   // Treat SQL DATE values as calendar dates in local time to avoid UTC shifts.
   const normalized =
@@ -11,5 +14,5 @@ export function formatDate(value: string | Date | null | undefined, pattern = 'D
 }
 
 export function formatDateTime(value: string | Date | null | undefined) {
-  return formatDate(value, 'D MMM YYYY, h:mm A');
+  return formatDate(value, `${DATE_DISPLAY_FORMAT}, h:mm A`);
 }
