@@ -446,4 +446,150 @@ begin
 end;
 $$;
 
+
+-- Viewer-safe read path: resolve farm ownership from trusted membership.
+create function public.get_milk_pool_reconciliation(
+  p_start_date date,
+  p_end_date date
+)
+returns table (
+  business_date date,
+  opening_balance_litres numeric,
+  production_litres numeric,
+  customer_delivery_litres numeric,
+  household_use_litres numeric,
+  wastage_litres numeric,
+  other_use_litres numeric,
+  adjustment_in_litres numeric,
+  adjustment_out_litres numeric,
+  net_movement_litres numeric,
+  closing_balance_litres numeric
+)
+language sql
+security invoker
+set search_path = ''
+as $$
+  with opening as (
+    select coalesce(sum(
+      case
+        when m.movement_direction = 'IN' then m.quantity
+        else -m.quantity
+      end
+    ), 0) as litres
+    from public.milk_pool_movements m
+    where m.user_id = (select public.current_farm_owner_id())
+      and m.business_date < p_start_date
+  ),
+  daily as (
+    select
+      m.business_date,
+      coalesce(sum(m.quantity) filter (where m.movement_type = 'PRODUCTION_RECEIPT'), 0) as production_litres,
+      coalesce(sum(m.quantity) filter (where m.movement_type = 'CUSTOMER_DELIVERY'), 0) as customer_delivery_litres,
+      coalesce(sum(m.quantity) filter (where m.movement_type = 'HOUSEHOLD_USE'), 0) as household_use_litres,
+      coalesce(sum(m.quantity) filter (where m.movement_type = 'WASTAGE'), 0) as wastage_litres,
+      coalesce(sum(m.quantity) filter (where m.movement_type = 'OTHER_USE'), 0) as other_use_litres,
+      coalesce(sum(m.quantity) filter (where m.movement_type = 'ADJUSTMENT' and m.movement_direction = 'IN'), 0) as adjustment_in_litres,
+      coalesce(sum(m.quantity) filter (where m.movement_type = 'ADJUSTMENT' and m.movement_direction = 'OUT'), 0) as adjustment_out_litres
+    from public.milk_pool_movements m
+    where m.user_id = (select public.current_farm_owner_id())
+      and m.business_date between p_start_date and p_end_date
+    group by m.business_date
+  ),
+  calculated as (
+    select
+      d.*,
+      d.production_litres
+        + d.adjustment_in_litres
+        - d.customer_delivery_litres
+        - d.household_use_litres
+        - d.wastage_litres
+        - d.other_use_litres
+        - d.adjustment_out_litres as net_movement_litres
+    from daily d
+  )
+  select
+    c.business_date,
+    o.litres
+      + coalesce(sum(c.net_movement_litres) over (
+          order by c.business_date rows between unbounded preceding and 1 preceding
+        ), 0) as opening_balance_litres,
+    c.production_litres,
+    c.customer_delivery_litres,
+    c.household_use_litres,
+    c.wastage_litres,
+    c.other_use_litres,
+    c.adjustment_in_litres,
+    c.adjustment_out_litres,
+    c.net_movement_litres,
+    o.litres
+      + sum(c.net_movement_litres) over (
+          order by c.business_date rows between unbounded preceding and current row
+        ) as closing_balance_litres
+  from calculated c
+  cross join opening o
+  order by c.business_date;
+$$;
+
+-- Viewer-safe read path: resolve farm ownership from trusted membership.
+create or replace function public.get_milk_pool_shift_context(
+  p_business_date date,
+  p_shift public.milk_shift
+)
+returns table (
+  production_litres numeric,
+  customer_delivery_litres numeric,
+  available_pool_litres numeric
+)
+language plpgsql
+stable
+security invoker
+set search_path = ''
+as $shift_context$
+declare
+  owner_id uuid := public.current_farm_owner_id();
+begin
+  if owner_id is null then
+    raise exception using errcode = '42501', message = 'Sign in again.';
+  end if;
+
+  if p_business_date is null or p_shift is null then
+    raise exception using errcode = '23514', message = 'Choose a business date and shift.';
+  end if;
+
+  return query
+  select
+    coalesce((
+      select sum(p.milk_quantity)
+      from public.buffalo_milk_production p
+      where p.user_id = owner_id
+        and p.business_date = p_business_date
+        and p.shift = p_shift
+    ), 0),
+    coalesce((
+      select sum(me.milk_quantity)
+      from public.milk_entries me
+      where me.user_id = owner_id
+        and me.business_date = p_business_date
+        and me.shift = p_shift
+        and me.deleted_at is null
+    ), 0),
+    coalesce((
+      select sum(
+        case
+          when m.movement_direction = 'IN' then m.quantity
+          when m.movement_direction = 'OUT' then -m.quantity
+          when m.movement_type = 'PRODUCTION_RECEIPT' then m.quantity
+          when m.movement_type = 'CUSTOMER_DELIVERY' then -m.quantity
+          when m.movement_type = 'ADJUSTMENT' then m.quantity
+          else -m.quantity
+        end
+      )
+      from public.milk_pool_movements m
+      where m.user_id = owner_id
+        and m.business_date = p_business_date
+        and m.shift = p_shift
+    ), 0);
+end;
+$shift_context$;
+
 commit;
