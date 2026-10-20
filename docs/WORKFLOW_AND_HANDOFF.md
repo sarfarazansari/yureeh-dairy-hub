@@ -432,3 +432,13 @@ The user's short command `1 refactor karo` means:
 - **Implemented:** Full month names for dates on the milk entries table and edit/delete dialogs; readable PDF report date range; explicit descending business date + Morning-before-Evening ordering; shift-specific row and badge colors (emerald for Morning, blue for Evening). Added the reusable date-readability rule to project rules.
 - **Validation boundary:** Changes were written through GitHub and reviewed statically. Local typecheck, lint, format check, build, browser test and actual pagination/order verification were not run in this session.
 - **PR/merge:** Not created. User owns PR and merge.
+
+
+## Sales analytics filter and UX pass — 2026-10-20
+
+- **Branch:** `feature/analytics-filter-ux-charts`, based on latest master SHA `1369862d6bfca08a5d11a486b4016bb994670b78`.
+- **UI:** Milk Margin After Feed is now the first, decision-focused card. It is explicitly farm-wide; it does not falsely imply feed costs have been allocated to an individual customer. Sales KPIs follow it, then two separate daily charts (litres and rupees use their own scales), sales breakdown/customer contribution, and finally farm-pool reconciliation and mixed-fat history.
+- **Filter hardening:** Sales analytics query inputs and query keys normalize the customer ID, include date range + customer, refetch on mount, and avoid rendering prior-filter data as placeholder data. The current `get_sales_analytics_summary` migration already has a customer/date-filtered `sales_filtered` CTE; farm-wide totals are intentionally not customer-scoped. Verify this behavior against the actual Supabase migration state, not source alone.
+- **Changed files:** `src/features/analytics/SalesAnalyticsPage.tsx`, `src/features/analytics/sales-analytics.queries.ts`.
+- **Verification boundary:** Source fetched back from GitHub and statically reviewed. This connector session has no local checkout/runtime, so `npm run typecheck`, `npm run lint`, `npm run format:check`, `npm run build`, browser tests, and live customer/date-range tests were not run. No migration was added or applied.
+- **PR/merge:** None created; user retains PR/merge control.
