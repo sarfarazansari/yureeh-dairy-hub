@@ -466,6 +466,13 @@ The user's short command `1 refactor karo` means:
 - Critical issue: current owner-scoped `user_id = auth.uid()` policies will not automatically let a second account read farm records. A shared farm membership/tenant model is needed and must be designed after full dependency inventory.
 - Signup is currently available from the login gate; do not let open signup grant farm membership or any role.
 - Some data mutations use SQL RPCs and `SECURITY DEFINER` functions. UI-only protection is unacceptable.
-- Phase 1 is in progress. Initial route/data inventory is recorded in `docs/RBAC_ROUTE_AND_DATA_INVENTORY.md`; the complete SQL-level table/view/function/policy/grant inventory is still pending. No application source, RLS, RPC, or database migrations have been changed as part of this initial documentation setup.
-- Verification: GitHub source inspection only; no local build, lint, typecheck, automated tests, live database checks, or migration application were run.
+- Implemented on this branch (not yet runtime-validated):
+  - `supabase/migrations/20261020150000_rbac_viewer_access.sql` — farm memberships, owner backfill, trusted role helpers, confirmed-email invitation claim, farm-aware SELECT policies, and a database trigger blocking Viewer writes across public base tables.
+  - `supabase/migrations/20261020160000_rbac_read_rpc_owner_scope.sql` — six read-only pricing/reporting RPCs now resolve the farm owner through membership.
+  - `src/lib/farm-access.tsx`, `src/app/auth-gate.tsx` — role context and farm membership verification; authenticated accounts without membership are denied.
+  - `src/features/access/ViewerAccessManager.tsx` and `/settings` — Super Admin invitation/revocation UI.
+  - `src/components/layout/FarmRoleRouteGuard.tsx`, `Sidebar.tsx`, `AppShell.tsx` — initial write-route blocking, role-aware navigation, and a Viewer read-only banner.
+- Inventory and current phase status: `docs/RBAC_ROUTE_AND_DATA_INVENTORY.md` and `docs/RBAC_IMPLEMENTATION_PLAN.md`.
+- Important remaining work: complete the page-by-page mutation-control audit; inspect all views, policies, grants, RPCs and scheduled paths; resolve the deployed `get_buffalo_production_sheet` function that is referenced in source but was not found in inspected migrations; verify migration backfill against actual database contents; and test invite/revoke, cross-farm reads, direct API/RPC writes, and Super Admin regression.
+- Verification boundary: GitHub source was fetched back for static review. This session cannot run a local checkout or access the live Supabase database, so typecheck, lint, build, browser tests, SQL parse/apply, and live security tests have not been run. Do not apply to production or merge until these checks pass.
 - User owns PR creation and merging. Do not create a PR or merge without explicit instruction.
