@@ -11,7 +11,7 @@ import { KPI } from '@/components/ui/KPI';
 import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatDate } from '@/lib/date-format';
-import { useSalesAnalyticsQuery } from './sales-analytics.queries';
+import { useMilkMarginAfterFeedQuery, useSalesAnalyticsQuery } from './sales-analytics.queries';
 import { getAnalyticsDateRange, type AnalyticsDatePreset } from '@/lib/analytics-date-range';
 import { useMilkPoolReconciliationQuery, useMilkPoolShiftFatQuery } from '@/features/milk/milk.queries';
 export default function SalesAnalyticsPage() {
@@ -31,6 +31,7 @@ export default function SalesAnalyticsPage() {
     : analyticsQuery.error?.message ?? '';
   const poolQuery = useMilkPoolReconciliationQuery(from, to);
   const poolFatQuery = useMilkPoolShiftFatQuery(from, to);
+  const milkMarginQuery = useMilkMarginAfterFeedQuery(from, to);
   const poolFatByDate = new Map<string, { MORNING?: number; EVENING?: number }>();
   for (const record of poolFatQuery.data ?? []) {
     if (record.shift !== 'MORNING' && record.shift !== 'EVENING') continue;
@@ -43,7 +44,12 @@ export default function SalesAnalyticsPage() {
   const poolProduced = poolRows.reduce((sum, row) => sum + Number(row.production_litres), 0);
   const poolDelivered = poolRows.reduce((sum, row) => sum + Number(row.customer_delivery_litres), 0);
   const poolOtherUse = poolRows.reduce((sum, row) => sum + Number(row.household_use_litres) + Number(row.wastage_litres) + Number(row.other_use_litres), 0);
+  const poolOpening = poolRows.length ? Number(poolRows[0].opening_balance_litres) : 0;
+  const poolAdjustmentsIn = poolRows.reduce((sum, row) => sum + Number(row.adjustment_in_litres), 0);
+  const poolAdjustmentsOut = poolRows.reduce((sum, row) => sum + Number(row.adjustment_out_litres), 0);
   const poolClosing = poolRows.length ? Number(poolRows[poolRows.length - 1].closing_balance_litres) : null;
+  const poolVariance = poolClosing === null ? null : poolOpening + poolProduced + poolAdjustmentsIn - poolDelivered - poolOtherUse - poolAdjustmentsOut - poolClosing;
+  const milkMargin = milkMarginQuery.data?.[0] ?? null;
   const totals = summary?.totals;
   const total = totals?.milkSold ?? 0;
   const rev = totals?.revenue ?? 0;
@@ -93,10 +99,14 @@ export default function SalesAnalyticsPage() {
           <p className="auth-message">{poolQuery.error.message}</p>
         ) : (
           <div className="grid four">
+            <div><div className="kpi-label">OPENING POOL</div><b>{milkTxt(poolOpening)}</b></div>
             <div><div className="kpi-label">PRODUCED</div><b>{milkTxt(poolProduced)}</b></div>
+            <div><div className="kpi-label">ADJUSTMENTS IN</div><b>{milkTxt(poolAdjustmentsIn)}</b></div>
             <div><div className="kpi-label">DELIVERED</div><b>{milkTxt(poolDelivered)}</b></div>
             <div><div className="kpi-label">OTHER USE / WASTAGE</div><b>{milkTxt(poolOtherUse)}</b></div>
+            <div><div className="kpi-label">ADJUSTMENTS OUT</div><b>{milkTxt(poolAdjustmentsOut)}</b></div>
             <div><div className="kpi-label">CLOSING POOL</div><b>{poolClosing === null ? '—' : milkTxt(poolClosing)}</b></div>
+            <div><div className="kpi-label">RECONCILIATION VARIANCE</div><b>{poolVariance === null ? '—' : milkTxt(poolVariance)}</b></div>
           </div>
         )}
       </div>
@@ -198,38 +208,33 @@ export default function SalesAnalyticsPage() {
       <div style={{ height: 14 }} />
       <div className="card">
         <div className="row">
-          <h2 className="section-title">Farm operating summary</h2>
-          <Link href="/expenses" style={{ fontSize: 10, color: '#277452' }}>
-            Expense analytics →
-          </Link>
+          <div>
+            <h2 className="section-title">Milk margin after feed · {range === 'month' ? 'This month' : `${formatDate(from)} – ${formatDate(to)}`}</h2>
+            <p className="kpi-foot">Milk sales revenue minus valued feed consumption for the selected dates. This is a contribution margin, not net farm profit.</p>
+          </div>
+          <Link href="/feeds/consumption" style={{ fontSize: 10, color: '#277452' }}>Feed consumption →</Link>
         </div>
-        <div className="grid four">
-          <div>
-            <div className="kpi-label">REVENUE</div>
-            <b>{busy ? '…' : money(farmRevenue)}</b>
-          </div>
-          <div>
-            <div className="kpi-label">EXPENSES</div>
-            <b>{busy ? '…' : money(expenseTotal)}</b>
-          </div>
-          <div>
-            <div className="kpi-label">OPERATING SURPLUS</div>
-            <b>{busy ? '…' : money(farmRevenue - expenseTotal)}</b>
-          </div>
-          <div>
-            <div className="kpi-label">OPERATING EXPENSE / LITRE PRODUCED</div>
-            <b>{busy ? '…' : farmMilkProduced ? money(expenseTotal / farmMilkProduced) : '—'}</b>
-            <div className="kpi-foot">
-              Sold denominator: {busy ? '…' : farmMilkSold ? money(expenseTotal / farmMilkSold) : '—'} / L
+        {milkMarginQuery.isPending ? (
+          <div className="empty">Loading milk margin…</div>
+        ) : milkMarginQuery.isError ? (
+          <p className="auth-message">{milkMarginQuery.error.message}</p>
+        ) : !milkMargin ? (
+          <div className="empty">No milk margin summary returned for this range.</div>
+        ) : (
+          <>
+            <div className="grid four">
+              <div><div className="kpi-label">MILK SOLD</div><b>{milkTxt(Number(milkMargin.milk_litres_sold ?? 0))}</b></div>
+              <div><div className="kpi-label">MILK SALES REVENUE</div><b>{money(Number(milkMargin.milk_sales_revenue ?? 0))}</b></div>
+              <div><div className="kpi-label">FEED CONSUMPTION COST</div><b>{money(Number(milkMargin.feed_consumption_cost ?? 0))}</b></div>
+              <div><div className="kpi-label">MARGIN AFTER FEED</div><b>{money(Number(milkMargin.milk_sales_revenue ?? 0) - Number(milkMargin.feed_consumption_cost ?? 0))}</b></div>
             </div>
-          </div>
-        </div>
-        <p className="kpi-foot">
-          Expense per litre uses buffalo production records; expense per litre sold uses milk sales.
-          Farm operating figures remain farm-wide when a customer filter is selected. Expenses follow expense
-          entry dates and exclude costs capitalized to buffalo assets. Feed inventory consumption valuation
-          is not used in this recorded-expense view, so this is not net profit.
-        </p>
+            {Number(milkMargin.uncosted_feed_consumption_entries ?? 0) > 0 && (
+              <p className="kpi-foot" style={{ marginTop: 10 }}>
+                {Number(milkMargin.uncosted_feed_consumption_entries)} feed consumption entries are not costed yet; margin may be overstated.
+              </p>
+            )}
+          </>
+        )}
       </div>
     </AppShell>
   );
