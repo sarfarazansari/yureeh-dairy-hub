@@ -441,3 +441,13 @@ The user confirmed the application is working after merging the previous audit w
 - **Changed files:** `src/features/analytics/SalesAnalyticsPage.tsx`, `src/features/analytics/sales-analytics.queries.ts`.
 - **Validation:** GitHub source read-back/static review only. Local typecheck, lint, format, build, browser tests, and live Supabase range/customer regression checks have not been executed in this environment. Do not mark runtime validation complete until these checks pass.
 - **PR/merge:** Not created. User owns PR and merge.
+
+
+### Session log — 2026-10-20 (shared mixed-milk fat table and date consistency)
+
+- **Task:** Fix the duplicated mixed-milk fat history tables on `/milk-pool` and `/analytics`, including the raw ISO date display.
+- **Branch:** `feature/analytics-filter-ux-charts` (continued from the same branch; no new branch created).
+- **Changes:** Added `src/features/milk/components/MixedMilkFatHistoryTable.tsx` as the single canonical table. Both routes now render this component with the same headers, column structure, zebra row styling, and `D MMMM YYYY` display dates. `/milk-pool` no longer prints raw `YYYY-MM-DD` keys. Added project rules prohibiting duplicate route-level implementations of repeated tables and raw ISO dates in user-facing tables.
+- **Files changed:** `src/features/milk/components/MixedMilkFatHistoryTable.tsx`, `src/features/milk/MilkPoolPage.tsx`, `src/features/analytics/SalesAnalyticsPage.tsx`, `YUREEH_PROJECT_RULES.md`, `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`.
+- **Validation:** Source changes written on the existing branch; read-back, typecheck, lint, build, and browser comparison are still required. Do not claim runtime verified until executed.
+- **PR/merge:** Not created; user retains PR/merge control.
