@@ -1,4 +1,5 @@
 'use client';
+import { formatDate } from '@/lib/date-format';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -65,7 +66,7 @@ export default function DietPlansPage() {
                 <TableBody>
                   {loading ? Array.from({ length: 4 }, (_, i) => <TableRow key={i}>{Array.from({ length: 6 }, (_, j) => <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : rows.map((row) => <TableRow key={row.id}>
                     <TableCell><b>{row.name}</b>{row.notes && <div className="text-xs text-muted-foreground">{row.notes}</div>}</TableCell>
-                    <TableCell className="whitespace-nowrap">{new Date(`${row.start_date}T12:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} – {row.end_date ? new Date(`${row.end_date}T12:00:00`).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'No end date'}</TableCell>
+                    <TableCell className="whitespace-nowrap">{formatDate(row.start_date)} – {row.end_date ? formatDate(row.end_date) : 'No end date'}</TableCell>
                     <TableCell>{row.buffalo_count}</TableCell><TableCell>{row.feed_count}</TableCell>
                     <TableCell><Badge variant={row.status === 'ACTIVE' ? 'secondary' : 'outline'}>{row.status}</Badge></TableCell>
                     <TableCell><Button size="sm" variant="outline" asChild><Link href={`/feeds/diet-plans/edit/${row.id}`}>Edit</Link></Button></TableCell>

@@ -121,7 +121,7 @@ export default function ExpenseDashboard() {
     }
     return [...m.entries()]
       .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([date, x]) => ({ date: formatDate(date, 'D MMM'), rate: x.sum / x.count }));
+      .map(([date, x]) => ({ date: formatDate(date), rate: x.sum / x.count }));
   })();
   const outstanding = outstandingRows;
   const isMonthRange = days > 60;
@@ -134,7 +134,7 @@ export default function ExpenseDashboard() {
     return [...m.entries()]
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([date, amount]) => ({
-        date: formatDate(isMonthRange ? `${date}-01` : date, isMonthRange ? 'MMM YYYY' : 'D MMM'),
+        date: isMonthRange ? formatDate(`${date}-01`, 'MMM YYYY') : formatDate(date),
         amount,
       }));
   }, [rows, isMonthRange]);

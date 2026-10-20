@@ -57,7 +57,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
       .map((date) => {
         const d = rows.filter((r) => r.business_date === date);
         return {
-          date: formatDate(date, 'D MMM'),
+          date: formatDate(date),
           milk: d.reduce((s, r) => s + Number(r.milk_quantity), 0),
           revenue: d.reduce((s, r) => s + Number(r.calculated_amount), 0),
         };

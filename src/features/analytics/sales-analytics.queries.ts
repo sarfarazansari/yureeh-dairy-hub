@@ -1,30 +1,60 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
-import { getMilkMarginAfterFeed, getMilkPoolAdjustmentAudit, getSalesAnalyticsData } from './services/sales-analytics.service';
+import {
+  getMilkMarginAfterFeed,
+  getMilkPoolAdjustmentAudit,
+  getSalesAnalyticsData,
+} from './services/sales-analytics.service';
 
-export const salesAnalyticsQueryKeys = {
-  all: ['sales-analytics'] as const,
-  summary: (filters: { from: string; to: string; customerId: string }) =>
-    [...salesAnalyticsQueryKeys.all, 'summary', filters.from, filters.to, filters.customerId] as const,
-};
-
-export function useSalesAnalyticsQuery(filters: {
+export type SalesAnalyticsFilters = {
   from: string;
   to: string;
   customerId: string;
-}) {
-  const validRange = Boolean(filters.from && filters.to && filters.from <= filters.to);
+};
+
+const normalizeFilters = (filters: SalesAnalyticsFilters): SalesAnalyticsFilters => ({
+  from: filters.from,
+  to: filters.to,
+  customerId: filters.customerId.trim(),
+});
+
+export const salesAnalyticsQueryKeys = {
+  all: ['sales-analytics'] as const,
+  summary: (filters: SalesAnalyticsFilters) => {
+    const normalized = normalizeFilters(filters);
+    return [
+      ...salesAnalyticsQueryKeys.all,
+      'summary',
+      normalized.from,
+      normalized.to,
+      normalized.customerId || 'all-customers',
+    ] as const;
+  },
+};
+
+export function useSalesAnalyticsQuery(filters: SalesAnalyticsFilters) {
+  const normalized = normalizeFilters(filters);
+  const validRange = Boolean(
+    normalized.from &&
+    normalized.to &&
+    normalized.from <= normalized.to
+  );
+
   return useQuery({
-    queryKey: salesAnalyticsQueryKeys.summary(filters),
+    queryKey: salesAnalyticsQueryKeys.summary(normalized),
     enabled: validRange,
+    // Analytics filters must resolve to a fresh result rather than a previous
+    // customer/date combination left in the shared 30-second cache.
+    staleTime: 0,
+    refetchOnMount: 'always',
+    placeholderData: undefined,
     queryFn: () => {
       if (!supabase) throw new Error('Supabase is not configured.');
-      return getSalesAnalyticsData(supabase, filters);
+      return getSalesAnalyticsData(supabase, normalized);
     },
   });
 }
-
 
 export const milkMarginAfterFeedQueryKeys = {
   all: ['milk-margin-after-feed'] as const,
@@ -42,7 +72,6 @@ export function useMilkMarginAfterFeedQuery(from: string, to: string) {
     },
   });
 }
-
 
 export const milkPoolAdjustmentQueryKeys = {
   all: ['milk-pool-adjustment-audit'] as const,

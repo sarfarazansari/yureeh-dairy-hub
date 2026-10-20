@@ -286,3 +286,10 @@ Refactoring execution:
 
 Automation command:
 When the user says `1 refactor karo` or an unambiguous equivalent, read all four documents above, inspect the latest remote master and current task state, create a fresh branch from latest master, then execute the next unblocked task from the tracker without asking the user to repeat the prompt. Update the tracker and handoff before reporting a concise summary. Ask only for a genuine blocker or a decision that materially affects business correctness.
+
+
+Shared UI consistency rules:
+- A repeated data table used on multiple routes must use one feature-owned shared component; do not maintain near-identical JSX implementations per page.
+- Shared tables must own their column labels, row styling, empty-state conventions where applicable, and user-facing date formatting.
+- Never display raw ISO business-date keys (YYYY-MM-DD) in user-facing tables. Use the canonical `formatDate` helper and the established full-month format `D MMMM YYYY` where space allows.
+- When fixing a repeated UI issue, search all affected routes and migrate them to the same shared component in the same task; do not patch only one screen.

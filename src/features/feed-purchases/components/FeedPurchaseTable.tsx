@@ -1,4 +1,5 @@
 'use client';
+import { formatDate } from '@/lib/date-format';
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -47,7 +48,7 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
             <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>FEED</TableHead><TableHead>VENDOR</TableHead><TableHead>PURCHASE</TableHead><TableHead>INVENTORY</TableHead><TableHead>RATE</TableHead><TableHead>TOTAL</TableHead><TableHead>PAYMENT</TableHead><TableHead>ACTION</TableHead></TableRow></TableHeader>
             <TableBody>
               {loading ? Array.from({ length: 5 }, (_, i) => <TableRow key={i}>{Array.from({ length: 9 }, (_, j) => <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : rows.map((row) => <TableRow key={row.id} className={!row.can_edit_delete ? "feed-purchase-row-locked" : undefined}>
-                <TableCell className="whitespace-nowrap">{new Date(`${row.business_date}T12:00:00`).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</TableCell><TableCell><b>{row.feed_item_name}</b></TableCell><TableCell>{row.vendor_name ?? '—'}</TableCell>
+                <TableCell className="whitespace-nowrap">{formatDate(row.business_date)}</TableCell><TableCell><b>{row.feed_item_name}</b></TableCell><TableCell>{row.vendor_name ?? '—'}</TableCell>
                 <TableCell>{Number(row.purchase_quantity).toLocaleString('en-IN')} {row.purchase_unit}</TableCell><TableCell>{Number(row.base_quantity).toLocaleString('en-IN')} {row.base_unit}</TableCell><TableCell>{money(row.rate_per_purchase_unit)} / {row.purchase_unit}</TableCell><TableCell>{money(row.total_amount)}</TableCell>
                 <TableCell><Badge variant={row.payment_status === 'PAID' ? 'secondary' : 'outline'}>{row.payment_status}</Badge></TableCell>
                 <TableCell>{row.can_edit_delete ? <div className="flex gap-2"><Button className="!text-[var(--ink)]" asChild variant="outline" size="sm"><Link href={`/feeds/purchases/edit/${row.id}`}>Edit</Link></Button><Button className="!text-[var(--ink)]" type="button" variant="outline" size="sm" disabled={deletingId === row.id} onClick={() => setDeleteTarget(row)}>{deletingId === row.id ? 'Deleting…' : 'Delete'}</Button></div> : <Badge variant="outline" className="feed-purchase-locked-badge" title="Later stock-out movements exist for this feed item, so editing or deleting this purchase is disabled.">Stock used · locked</Badge>}</TableCell>

@@ -1,14 +1,15 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { format } from 'date-fns';
 import { CalendarDays, X } from 'lucide-react';
 import type { DateRange } from 'react-day-picker';
 import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { normalizeDateKey } from '@/lib/date-key';
+import { formatDate } from '@/lib/date-format';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 type DateRangePickerProps = {
   from: string;
@@ -32,7 +33,7 @@ function toDateKey(date: Date) {
 
 function dateLabel(value: string) {
   const date = parseDateKey(value);
-  return date ? format(date, 'd MMM yyyy') : '';
+  return date ? formatDate(date) : '';
 }
 
 export function DateRangePicker({ from, to, onChange, max, className = '', ariaLabel = 'Choose date range' }: DateRangePickerProps) {

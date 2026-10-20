@@ -6,6 +6,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { normalizeDateKey } from '@/lib/date-key';
+import { formatDate } from '@/lib/date-format';
 import { cn } from '@/lib/utils';
 
 export type DatePickerProps = {
@@ -93,7 +94,7 @@ export function DatePicker({
             >
               <CalendarDays size={16} aria-hidden="true" className="shrink-0 text-[#66756b]" />
               <span className={cn('min-w-0 flex-1 truncate', selectedDate ? 'shadcn-date-value' : 'shadcn-date-placeholder')}>
-                {selectedDate ? new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(selectedDate) : placeholder}
+                {selectedDate ? formatDate(selectedDate) : placeholder}
               </span>
             </Button>
           </PopoverTrigger>

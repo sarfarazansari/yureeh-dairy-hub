@@ -1,365 +1,103 @@
+
+
 'use client';
 
-import { money, milkTxt } from '@/lib/farm-format';
-import Link from 'next/link';
-import { AppShell } from '@/components/layout/AppShell';
-import { KPI } from '@/components/ui/KPI';
-import { MilkMarginAfterFeedCard } from './dashboard/components/MilkMarginAfterFeedCard';
+import { useEffect, useState } from 'react';
+import { CalendarDays, X } from 'lucide-react';
+import type { DateRange } from 'react-day-picker';
+import { Calendar } from '@/components/ui/calendar';
 import { Button } from '@/components/ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { useDashboardDataQuery } from './dashboard/dashboard.queries';
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { normalizeDateKey } from '@/lib/date-key';
 import { formatDate } from '@/lib/date-format';
-export default function Dashboard() {
-  const today = new Date();
-  const asDate = (d: Date) =>
-    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  const todayKey = asDate(today);
-  const start = new Date(today);
-  start.setDate(start.getDate() - 6);
-  const startKey = asDate(start);
-  const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-  const monthKey = asDate(monthStart);
-  const dashboardQuery = useDashboardDataQuery({
-    startDate: startKey,
-    today: todayKey,
-    monthStart: monthKey,
-  });
-  const entries = dashboardQuery.data?.entries ?? [];
-  const customersLive = dashboardQuery.data?.customers ?? [];
-  const herd = dashboardQuery.data?.herd ?? [];
-  const monthSummary = dashboardQuery.data?.monthSummary;
-  const loading = dashboardQuery.isPending;
-  const error = dashboardQuery.error?.message ?? '';
-  const monthExpenseTotal = monthSummary?.expenseTotal ?? 0,
-    monthRevenue = monthSummary?.revenue ?? 0,
-    monthProduced = monthSummary?.milkProduced ?? 0,
-    monthSold = monthSummary?.milkSold ?? 0;
-  type MilkEntry = (typeof entries)[number];
-  const todayEntries = entries.filter((e) => e.business_date === todayKey),
-    milk = (rows: MilkEntry[]) => rows.reduce((s, e) => s + Number(e.milk_quantity), 0),
-    revenue = (rows: MilkEntry[]) => rows.reduce((s, e) => s + Number(e.calculated_amount), 0),
-    weighted = (rows: MilkEntry[]) => {
-      const den = rows.reduce((s, e) => s + (e.fat == null ? 0 : Number(e.milk_quantity)), 0);
-      return den
-        ? rows.reduce((s, e) => s + Number(e.milk_quantity) * Number(e.fat ?? 0), 0) / den
-        : null;
-    };
-  const daily = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
-    const key = asDate(d),
-      rows = entries.filter((e) => e.business_date === key);
-    return {
-      d: formatDate(d, 'D MMM'),
-      m: milk(rows.filter((e) => e.shift === 'MORNING')),
-      e: milk(rows.filter((e) => e.shift === 'EVENING')),
-      r: revenue(rows),
-      f: weighted(rows),
-    };
-  });
-  const customerRows = customersLive
-    .map((c) => {
-      const rows = entries.filter((e) => e.customer_id === c.id);
-      return {
-        id: c.id,
-        name: c.name,
-        type:
-          c.pricing_type === 'FIXED_PER_LITRE'
-            ? `Fixed · ₹${c.default_rate}/L`
-            : `Fat · ₹${c.default_rate}`,
-        milk: milk(rows),
-        revenue: revenue(rows),
-      };
-    })
-    .filter((x) => x.milk || x.revenue)
-    .sort((a, b) => b.milk - a.milk)
-    .slice(0, 4);
-  const production = herd.map((b) => ({
-    ...b,
-    total: b.performance ? Number(b.performance.milk_quantity) : null,
-  }));
-  const prodMilk = production.reduce((s, b) => s + (b.total ?? 0), 0);
-  const sold = milk(todayEntries),
-    rev = revenue(todayEntries),
-    fat = weighted(todayEntries),
-    morning = todayEntries.filter((e) => e.shift === 'MORNING'),
-    evening = todayEntries.filter((e) => e.shift === 'EVENING');
-  const dayName = formatDate(today, 'dddd, D MMM');
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+
+type DateRangePickerProps = {
+  from: string;
+  to: string;
+  onChange: (range: { from: string; to: string }) => void;
+  max?: string;
+  className?: string;
+  ariaLabel?: string;
+};
+
+function parseDateKey(value: string) {
+  const normalized = normalizeDateKey(value);
+  if (!normalized) return undefined;
+  const [year, month, day] = normalized.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function toDateKey(date: Date) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+
+function dateLabel(value: string) {
+  const date = parseDateKey(value);
+  return date ? formatDate(date) : '';
+}
+
+export function DateRangePicker({ from, to, onChange, max, className = '', ariaLabel = 'Choose date range' }: DateRangePickerProps) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<DateRange | undefined>();
+  const selectedFrom = parseDateKey(from);
+  const selectedTo = parseDateKey(to);
+  const maxDate = parseDateKey(max ?? '');
+
+  useEffect(() => {
+    if (!open) return;
+    setDraft(selectedFrom ? { from: selectedFrom, to: selectedTo } : undefined);
+  }, [open, from, to]);
+
+  function selectRange(nextRange: DateRange | undefined) {
+    setDraft(nextRange);
+    if (nextRange?.from && nextRange.to) {
+      const start = nextRange.from <= nextRange.to ? nextRange.from : nextRange.to;
+      const end = nextRange.from <= nextRange.to ? nextRange.to : nextRange.from;
+      onChange({ from: toDateKey(start), to: toDateKey(end) });
+      setOpen(false);
+    }
+  }
+
+  const label = selectedFrom && selectedTo
+    ? `${dateLabel(from)} – ${dateLabel(to)}`
+    : selectedFrom
+      ? `${dateLabel(from)} – Choose end date`
+      : 'Choose date range';
+
   return (
-    <AppShell title="Farm overview" subtitle="Your milk business at a glance">
-      <div className="row">
-        <div>
-          <span className="tag">TODAY · {dayName.toUpperCase()}</span>
-        </div>
-        <span className="date-chip">Last 7 days</span>
-      </div>
-      {error && <p className="auth-message">Couldn’t load farm data: {error}</p>}
-      <div className="grid kpis">
-        <KPI
-          label="MILK SOLD TODAY"
-          value={loading ? '…' : milkTxt(sold)}
-          foot={`Morning ${milkTxt(milk(morning))} · Evening ${evening.length ? 'Recorded' : 'pending'}`}
-        />
-        <KPI
-          label="FARM PRODUCTION"
-          value={loading ? '…' : milkTxt(prodMilk)}
-          foot={`${production.filter((b) => b.performance).length} of ${herd.length} active buffaloes recorded`}
-        />
-        <KPI
-          label="REVENUE TODAY"
-          value={loading ? '…' : money(rev)}
-          foot={sold ? `${money(rev / sold)} average per litre` : 'No sales recorded today'}
-        />
-        <KPI
-          label="WEIGHTED AVG FAT"
-          value={loading ? '…' : fat === null ? '—' : `${fat.toFixed(2)}%`}
-          foot={fat === null ? 'No milk fat data today' : `Quantity-weighted · ${milkTxt(sold)}`}
-          accent
-        />
-      </div>
-      <div className="grid two">
-        <div className="card">
-          <div className="row">
-            <h2 className="section-title">Milk sold · last 7 days</h2>
-            <span className="tag">Live data</span>
-          </div>
-          <div className="legend">
-            <span>
-              <i className="dot" />
-              Morning
-            </span>
-            <span>
-              <i className="dot gold" />
-              Evening
-            </span>
-          </div>
-          <div className="chart">
-            {daily.some((d) => d.m || d.e) ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={daily}>
-                  <defs>
-                    <linearGradient id="fillMilk" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#458465" stopOpacity={0.19} />
-                      <stop offset="100%" stopColor="#458465" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid vertical={false} stroke="#eef1ed" />
-                  <XAxis
-                    dataKey="d"
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fontSize: 9, fill: '#9ba69f' }}
-                  />
-                  <YAxis hide />
-                  <Tooltip />
-                  <Area
-                    type="monotone"
-                    dataKey="m"
-                    name="Morning milk"
-                    stroke="#267052"
-                    fill="url(#fillMilk)"
-                    strokeWidth={2}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="e"
-                    name="Evening milk"
-                    stroke="#d7a85e"
-                    fill="transparent"
-                    strokeWidth={2}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="empty">No milk entries in this date range yet.</div>
-            )}
-          </div>
-        </div>
-        <div className="card">
-          <div className="row">
-            <h2 className="section-title">Today’s shifts</h2>
-            <span style={{ fontSize: 10, color: '#91a097' }}>ENTRY STATUS</span>
-          </div>
-          {(['MORNING', 'EVENING'] as const).map((shift, i) => {
-            const rows = todayEntries.filter((e) => e.shift === shift);
-            return (
-              <div
-                className="row"
-                key={shift}
-                style={{
-                  padding: '12px 0',
-                  borderBottom: i === 0 ? '1px solid #eff1ee' : undefined,
-                }}
-              >
-                <div>
-                  <b style={{ fontSize: 12 }}>{i ? 'Evening' : 'Morning'}</b>
-                  <div className="kpi-foot">
-                    {rows.length} entr{rows.length === 1 ? 'y' : 'ies'} · {milkTxt(milk(rows))}
-                  </div>
-                </div>
-                <span className={`tag ${rows.length ? '' : 'gold'}`}>
-                  {rows.length ? 'Completed' : 'Pending'}
-                </span>
-              </div>
-            );
-          })}
-          <Button asChild className="w-full">
-            <Link href="/new-entry">＋ &nbsp;Record milk entry</Link>
-          </Button>
-          <div style={{ height: 22 }} />
-          <div className="row">
-            <h2 className="section-title">Farm production today</h2>
-            <Link href="/buffalo-analytics" style={{ fontSize: 10, color: '#277452' }}>
-              View analytics →
-            </Link>
-          </div>
-          <div className="row">
-            <span className="kpi-foot">Buffaloes recorded</span>
-            <b style={{ fontSize: 12 }}>
-              {production.filter((b) => b.performance).length} / {herd.length}
-            </b>
-          </div>
-          <div className="progress">
-            <i
-              style={{
-                width: `${herd.length ? (100 * production.filter((b) => b.performance).length) / herd.length : 0}%`,
-              }}
-            />
-          </div>
-          <div className="row">
-            <span className="kpi-foot">Shift-wise records</span>
-            <b style={{ fontSize: 12 }}>
-              {production.reduce((sum, b) => sum + (b.performance?.record_count ?? 0), 0)}
-            </b>
-          </div>
-        </div>
-      </div>
-      <div className="grid two" style={{ marginTop: 15 }}>
-        <div className="card">
-          <div className="row">
-            <h2 className="section-title">Customer contribution · 7 days</h2>
-            <Link href="/customers" style={{ fontSize: 10, color: '#277452' }}>
-              All customers →
-            </Link>
-          </div>
-          {customerRows.length ? (
-            <div className="table-wrap">
-              <Table className="min-w-[520px]">
-                <TableHeader><TableRow><TableHead>CUSTOMER</TableHead><TableHead>PRICING</TableHead><TableHead>MILK</TableHead><TableHead>REVENUE</TableHead></TableRow></TableHeader>
-                <TableBody>
-                  {customerRows.map((c) => (
-                    <TableRow key={c.id}>
-                      <TableCell><Link href={`/customers/${c.id}`}><b>{c.name}</b></Link></TableCell>
-                      <TableCell><span className="tag">{c.type}</span></TableCell>
-                      <TableCell>{milkTxt(c.milk)}</TableCell>
-                      <TableCell>{money(c.revenue)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="empty">Customer totals appear after milk entries are recorded.</div>
+    <div className={cn('shadcn-date-picker shadcn-date-range-picker min-w-0', className)}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <div className="relative flex min-w-0 items-center">
+          <PopoverTrigger asChild>
+            <Button variant="outline" type="button" aria-label={ariaLabel} aria-haspopup="dialog" aria-expanded={open} className={cn("shadcn-date-trigger min-w-0 w-full", (from || to) && "pr-10")}>
+              <CalendarDays size={16} aria-hidden="true" />
+              <span className={cn('min-w-0 flex-1 truncate text-left', selectedFrom ? 'shadcn-date-value' : 'shadcn-date-placeholder')}>{label}</span>
+            </Button>
+          </PopoverTrigger>
+          {(from || to) && (
+            <Button variant="ghost" size="icon" type="button" className="shadcn-date-clear absolute right-2 top-1/2 -translate-y-1/2 p-0" aria-label="Clear date range" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>
+              <X size={14} aria-hidden="true" />
+            </Button>
           )}
         </div>
-        <div className="card">
-          <div className="row">
-            <h2 className="section-title">Buffalo production</h2>
-            <Link href="/daily-performance" style={{ fontSize: 10, color: '#277452' }}>
-              Enter performance →
-            </Link>
+        <PopoverContent align="start" sideOffset={6} className="w-[340px] max-w-[calc(100vw-2rem)] p-2">
+          <Calendar
+            mode="range"
+            selected={draft}
+            onSelect={selectRange}
+            defaultMonth={draft?.from ?? selectedFrom}
+            disabled={maxDate ? { after: maxDate } : undefined}
+            numberOfMonths={1}
+            autoFocus
+          />
+          <div className="flex items-center justify-between gap-3 border-t border-[var(--line)] pt-2">
+            <span className="text-xs text-[var(--muted)]">{draft?.from && !draft.to ? `Start: ${format(draft.from, 'd MMM yyyy')}. Choose end date.` : 'Select start and end dates'}</span>
+            <Button variant="ghost" size="sm" type="button" className="shadcn-calendar-today" onClick={() => { onChange({ from: '', to: '' }); setDraft(undefined); setOpen(false); }}>Clear</Button>
           </div>
-          {production.length ? (
-            production.slice(0, 3).map((b) => (
-              <div
-                className="row"
-                key={b.id}
-                style={{ padding: '9px 0', borderBottom: '1px solid #eff1ee' }}
-              >
-                <div>
-                  <b style={{ fontSize: 11 }}>{b.name || b.buffalo_code}</b>
-                  <div className="kpi-foot">{b.buffalo_code} · Milk production</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <b style={{ fontSize: 13 }}>
-                    {b.total === null ? 'No record' : milkTxt(b.total)}
-                  </b>
-                  <div className="kpi-foot">
-                    {b.performance ? 'Recorded today' : 'No record today'}
-                  </div>
-                </div>
-              </div>
-            ))
-          ) : (
-            <div className="empty">Add buffaloes to track farm production.</div>
-          )}
-        </div>
-      </div>
-      <div style={{ height: 15 }} />
-      <div className="card">
-        <h2 className="section-title">Daily sales summary · last 7 days</h2>
-        <div className="table-wrap">
-          <Table className="min-w-[650px]">
-            <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>MORNING</TableHead><TableHead>EVENING</TableHead><TableHead>TOTAL MILK</TableHead><TableHead>AVG FAT</TableHead><TableHead>REVENUE</TableHead></TableRow></TableHeader>
-            <TableBody>
-              {daily.slice().reverse().map((d) => (
-                <TableRow key={d.d}>
-                  <TableCell><b>{d.d}</b></TableCell>
-                  <TableCell>{milkTxt(d.m)}</TableCell>
-                  <TableCell>{milkTxt(d.e)}</TableCell>
-                  <TableCell>{milkTxt(d.m + d.e)}</TableCell>
-                  <TableCell>{d.f === null ? '—' : `${d.f.toFixed(2)}%`}</TableCell>
-                  <TableCell>{money(d.r)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-        {!entries.length && !loading && (
-          <div className="empty">No milk sales in this range. Start with a new milk entry.</div>
-        )}
-      </div>
-      <div style={{ height: 15 }} />
-      <MilkMarginAfterFeedCard loading={loading} summary={dashboardQuery.data?.milkMargin ?? null} />
-      <div style={{ height: 15 }} />
-      <div className="card">
-        <div className="row">
-          <h2 className="section-title">This month · farm finances</h2>
-          <Link href="/expenses" style={{ fontSize: 10, color: '#277452' }}>
-            View financial analytics →
-          </Link>
-        </div>
-        <div className="grid four">
-          <div>
-            <div className="kpi-label">MILK REVENUE</div>
-            <b>{money(monthRevenue)}</b>
-          </div>
-          <div>
-            <div className="kpi-label">OPERATING EXPENSES</div>
-            <b>{money(monthExpenseTotal)}</b>
-          </div>
-          <div>
-            <div className="kpi-label">OPERATING SURPLUS</div>
-            <b>{money(monthRevenue - monthExpenseTotal)}</b>
-          </div>
-          <div>
-            <div className="kpi-label">EXPENSE / LITRE PRODUCED</div>
-            <b>{monthProduced ? money(monthExpenseTotal / monthProduced) : '—'}</b>
-            <div className="kpi-foot">
-              {milkTxt(monthProduced)} produced · {milkTxt(monthSold)} sold
-            </div>
-          </div>
-        </div>
-      </div>
-    </AppShell>
+        </PopoverContent>
+      </Popover>
+    </div>
   );
 }
