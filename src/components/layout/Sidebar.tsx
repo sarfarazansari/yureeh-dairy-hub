@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
+import { useFarmRole } from '@/lib/farm-access';
 
 const navigationGroups = [
   { label: 'MILK SALES', items: [
@@ -71,7 +72,7 @@ function SidebarAccount({ mobileOpen }: { mobileOpen: boolean }) {
         <DropdownMenuTrigger asChild>
           <Button type="button" variant="ghost" className="account-trigger" aria-label="Open farm account menu">
             <span className="account-avatar" aria-hidden="true">Y</span>
-            <span className="account-label"><b>Farm workspace</b><small>Account · Active</small></span>
+            <span className="account-label"><b>Farm workspace</b><small>{role === 'viewer' ? 'Viewer · Read-only' : role === 'super_admin' ? 'Super Admin' : 'Account · Active'}</small></span>
             <span className="account-chevron" aria-hidden="true">⋮</span>
           </Button>
         </DropdownMenuTrigger>
@@ -93,6 +94,7 @@ function SidebarAccount({ mobileOpen }: { mobileOpen: boolean }) {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const role = useFarmRole();
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const triggerButtonRef = useRef<HTMLButtonElement>(null);
@@ -153,7 +155,7 @@ export function Sidebar() {
           {navigationGroups.map((group) => (
             <div key={group.label}>
               <div className="nav-label">{group.label}</div>
-              {group.items.map(({ label, href, icon: Icon }) => {
+              {group.items.filter(({ href }) => role !== 'viewer' || !['/new-entry', '/feeds/items'].includes(href)).map(({ label, href, icon: Icon }) => {
                 const active = isActivePath(pathname, href);
                 return (
                   <Link key={href} href={href} className={active ? 'active' : ''}
@@ -164,11 +166,15 @@ export function Sidebar() {
               })}
             </div>
           ))}
-          <div className="nav-label">PREFERENCES</div>
-          <Link href="/settings" className={isActivePath(pathname, '/settings') ? 'active' : ''}
-            aria-current={isActivePath(pathname, '/settings') ? 'page' : undefined} onClick={closeMobileMenu}>
-            <span className="icon" aria-hidden="true"><Settings size={18} /></span>Settings
-          </Link>
+          {role !== 'viewer' && (
+            <>
+              <div className="nav-label">PREFERENCES</div>
+              <Link href="/settings" className={isActivePath(pathname, '/settings') ? 'active' : ''}
+                aria-current={isActivePath(pathname, '/settings') ? 'page' : undefined} onClick={closeMobileMenu}>
+                <span className="icon" aria-hidden="true"><Settings size={18} /></span>Settings
+              </Link>
+            </>
+          )}
         </nav>
         <SidebarAccount mobileOpen={mobileOpen} />
       </aside>
