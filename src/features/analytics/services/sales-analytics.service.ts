@@ -101,3 +101,33 @@ export async function getMilkMarginAfterFeed(
   if (error) throw new Error(error.message || 'Could not load milk margin after feed.');
   return (data ?? []) as unknown as MilkMarginAfterFeedRow[];
 }
+
+
+export type MilkPoolAdjustmentAuditRow = {
+  id: string;
+  business_date: string;
+  movement_direction: 'IN' | 'OUT';
+  quantity: number | string;
+  source_type: string | null;
+  source_id: string | null;
+  notes: string | null;
+};
+
+export async function getMilkPoolAdjustmentAudit(
+  client: SupabaseClient,
+  filters: { from: string; to: string },
+): Promise<MilkPoolAdjustmentAuditRow[]> {
+  if (!filters.from || !filters.to || filters.from > filters.to) {
+    throw new Error('Choose a valid report date range.');
+  }
+  const { data, error } = await client
+    .from('milk_pool_movements')
+    .select('id,business_date,movement_direction,quantity,source_type,source_id,notes')
+    .eq('movement_type', 'ADJUSTMENT')
+    .gte('business_date', filters.from)
+    .lte('business_date', filters.to)
+    .order('business_date', { ascending: false })
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message || 'Could not load milk pool adjustment details.');
+  return (data ?? []) as MilkPoolAdjustmentAuditRow[];
+}
