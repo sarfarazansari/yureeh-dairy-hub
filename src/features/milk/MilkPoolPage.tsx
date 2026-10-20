@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { MixedMilkFatHistoryTable } from './components/MixedMilkFatHistoryTable';
 
 import { useMemo, useState } from 'react';
 
@@ -202,11 +203,11 @@ export default function MilkPoolPage() {
         ) : !fatByDate.length ? (
           <div className="empty">No fat records in this date range. Enter mixed milk fat from Daily performance for each shift.</div>
         ) : (
-          <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
-            <Table className="min-w-[420px]"><TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>MORNING FAT</TableHead><TableHead>EVENING FAT</TableHead></TableRow></TableHeader>
-              <TableBody>{fatByDate.map(([dateKey, shifts]) => <TableRow key={dateKey}><TableCell>{dateKey}</TableCell><TableCell>{shifts.MORNING === undefined ? '—' : `${shifts.MORNING.toFixed(2)}%`}</TableCell><TableCell>{shifts.EVENING === undefined ? '—' : `${shifts.EVENING.toFixed(2)}%`}</TableCell></TableRow>)}</TableBody>
-            </Table>
-          </div>
+          <MixedMilkFatHistoryTable rows={fatByDate.map(([businessDate, shifts]) => ({
+            businessDate,
+            morningFat: shifts.MORNING,
+            eveningFat: shifts.EVENING,
+          }))} />
         )}
       </div>
 
