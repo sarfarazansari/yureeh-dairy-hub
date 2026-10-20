@@ -22,6 +22,7 @@ import { getAnalyticsDateRange, type AnalyticsDatePreset } from '@/lib/analytics
 import { money, milkTxt } from '@/lib/farm-format';
 import { useMilkPoolReconciliationQuery, useMilkPoolShiftFatQuery } from '@/features/milk/milk.queries';
 import { MixedMilkFatHistoryTable } from '@/features/milk/components/MixedMilkFatHistoryTable';
+import { MilkMarginAfterFeedCard } from '@/features/dashboard/components/MilkMarginAfterFeedCard';
 import {
   useMilkMarginAfterFeedQuery,
   useMilkPoolAdjustmentsQuery,
@@ -166,53 +167,18 @@ export default function SalesAnalyticsPage() {
       </div>
       {error && <p className="auth-message mb-3">{error}</p>}
 
-      {/* Decision-first summary: this card always represents the farm, not a customer allocation. */}
-      <section className="card mb-4 border-l-4" style={{ borderLeftColor: '#267653' }}>
-        <div className="row mb-3">
-          <div>
-            <p className="eyebrow mb-1">Farm profitability indicator</p>
-            <h2 className="section-title mb-1">Milk margin after feed</h2>
-            <p className="kpi-foot">
-              {range === 'month' ? 'This month' : `${formatDate(from)} – ${formatDate(to)}`}
-              {' · '}Farm-wide, independent of the customer filter
-            </p>
-          </div>
-          <Link href="/feeds/consumption" className="text-sm font-medium text-[var(--green)]">Feed consumption →</Link>
-        </div>
-        {milkMarginQuery.isPending ? <div className="empty">Calculating farm milk margin…</div>
-          : milkMarginQuery.isError ? <p className="auth-message">{milkMarginQuery.error.message}</p>
-            : !milkMargin ? <div className="empty">No milk margin summary returned for this range.</div>
-              : <>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  <div className="rounded-lg bg-[var(--paper)] p-4">
-                    <div className="kpi-label">MARGIN AFTER FEED</div>
-                    <div className="kpi-value">{uncostedEntries > 0 ? '—' : money(Number(milkMargin.milk_sales_revenue ?? 0) - Number(milkMargin.feed_consumption_cost ?? 0))}</div>
-                    <div className="kpi-foot">{uncostedEntries > 0 ? 'Incomplete: some feed costs are missing' : 'Revenue minus feed consumed'}</div>
-                  </div>
-                  <div className="rounded-lg bg-[var(--paper)] p-4">
-                    <div className="kpi-label">MILK SALES REVENUE</div>
-                    <div className="kpi-value">{money(Number(milkMargin.milk_sales_revenue ?? 0))}</div>
-                    <div className="kpi-foot">{milkTxt(Number(milkMargin.milk_litres_sold ?? 0))} sold farm-wide</div>
-                  </div>
-                  <div className="rounded-lg bg-[var(--paper)] p-4">
-                    <div className="kpi-label">FEED CONSUMPTION COST</div>
-                    <div className="kpi-value">{uncostedEntries > 0 ? '—' : money(Number(milkMargin.feed_consumption_cost ?? 0))}</div>
-                    <div className="kpi-foot">{Number(milkMargin.feed_consumption_entries ?? 0)} consumption entries</div>
-                  </div>
-                  <div className="rounded-lg bg-[var(--paper)] p-4">
-                    <div className="kpi-label">MARGIN PER LITRE</div>
-                    <div className="kpi-value">
-                      {uncostedEntries > 0 || Number(milkMargin.milk_litres_sold ?? 0) <= 0
-                        ? '—'
-                        : money((Number(milkMargin.milk_sales_revenue ?? 0) - Number(milkMargin.feed_consumption_cost ?? 0)) / Number(milkMargin.milk_litres_sold))}
-                    </div>
-                    <div className="kpi-foot">After feed cost only</div>
-                  </div>
-                </div>
-                {uncostedEntries > 0 && <p className="auth-message mt-3">Margin hidden because {uncostedEntries} feed consumption entries have no recorded cost.</p>}
-                <p className="kpi-foot mt-3">Feed cost uses inventory movement cost snapshots. This is not net farm profit; other operating costs are excluded.</p>
-              </>}
-      </section>
+      <MilkMarginAfterFeedCard
+        loading={milkMarginQuery.isPending}
+        error={milkMarginQuery.error?.message}
+        periodLabel={range === 'month' ? 'This month' : `${formatDate(from)} – ${formatDate(to)}`}
+        summary={milkMargin ? {
+          milkLitresSold: Number(milkMargin.milk_litres_sold ?? 0),
+          milkSalesRevenue: Number(milkMargin.milk_sales_revenue ?? 0),
+          feedConsumptionCost: Number(milkMargin.feed_consumption_cost ?? 0),
+          feedConsumptionEntries: Number(milkMargin.feed_consumption_entries ?? 0),
+          uncostedFeedConsumptionEntries: uncostedEntries,
+        } : null}
+      />
 
       <section className="grid kpis mb-4">
         <KPI label={selectedCustomerName ? 'CUSTOMER MILK SOLD' : 'TOTAL MILK SOLD'}
