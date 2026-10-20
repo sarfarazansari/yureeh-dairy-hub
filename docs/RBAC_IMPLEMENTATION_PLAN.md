@@ -111,7 +111,7 @@ All phases must be completed on `feature/rbac-viewer-access`; do not create a ne
 - 2026-10-20: Branch created from latest observed `master` commit `81763e3e872b4ca1216237729d4437e397dd58a7`.
 - 2026-10-20: Initial static inspection confirmed Supabase AuthGate, public signup toggle, centralized sidebar, owner-scoped RLS patterns, and multiple reporting/mutation RPCs.
 - 2026-10-20: Added `20261020150000_rbac_viewer_access.sql`: membership model, data-owner backfill, trusted role helpers, email-confirmed invitation claim, farm-aware SELECT policies, and a database trigger that rejects Viewer writes on public base tables.
-- 2026-10-20: Added `20261020160000_rbac_read_rpc_owner_scope.sql` for six read-only pricing/reporting RPCs whose bodies explicitly filtered on `auth.uid()`.
+- 2026-10-20: Added `20261020160000_rbac_read_rpc_owner_scope.sql` for eight read-only pricing/reporting/milk-pool RPCs whose bodies explicitly filtered on `auth.uid()`.
 - 2026-10-20: Added role context, membership-aware auth gate, Super Admin Viewer invitation/revocation UI, initial write-route guard, role-aware sidebar, and read-only banner.
 - 2026-10-20: Static review only. No local checkout is available in this session; neither migrations nor app changes have been typechecked, built, linted, browser-tested, or applied to Supabase.
 
@@ -119,7 +119,7 @@ All phases must be completed on `feature/rbac-viewer-access`; do not create a ne
 
 - Phase 1: **Partial.** Core routes and representative table/RPC patterns identified. Exhaustive inventory of every table/view/function/grant/trigger/scheduler and deployed-only RPC remains open.
 - Phase 2: **Implemented in source, not validated.** Membership schema/backfill migration added. Must validate backfill against actual database contents before applying.
-- Phase 3: **Partial.** Farm-aware SELECT policies and write-guard trigger added; six read-only RPCs updated. Need inspect every policy/view/RPC, including deployed `get_buffalo_production_sheet`, and verify all privilege paths.
+- Phase 3: **Partial.** Farm-aware SELECT policies and write-guard trigger added; six read-only RPCs updated. Need inspect every policy/view/RPC, and verify all privilege paths. The former `get_buffalo_production_sheet` client dependency was replaced by direct RLS-scoped queries because no corresponding migration definition was found.
 - Phase 4: **Initial implementation.** Invitation create/revoke and email-confirmed claim flow added. Must test existing users, confirmed/unconfirmed email, duplicate invites, revocation/re-invitation, and account switching.
 - Phase 5: **Partial.** Central role context, route guard, sidebar filtering, and read-only banner added. Every mixed list/detail page still needs a page-by-page mutation-control pass.
 - Phase 6: **Not run.** Typecheck, lint, build, tests, migration parse/apply, direct API/RPC write denial, cross-farm isolation, and Super Admin regression all require execution.
