@@ -113,8 +113,8 @@ export default function SalesAnalyticsPage() {
     ? Math.max(1, Math.floor((new Date(`${to}T00:00:00`).getTime() - new Date(`${from}T00:00:00`).getTime()) / 86400000) + 1)
     : 1;
   const daily = (summary?.daily ?? []).map((row) => ({
-    date: formatDate(row.businessDate, 'D MMM'),
-    fullDate: formatDate(row.businessDate, 'D MMMM YYYY'),
+    date: formatDate(row.businessDate),
+    fullDate: formatDate(row.businessDate),
     milk: Number(row.milk),
     revenue: Number(row.revenue),
   }));
@@ -161,7 +161,7 @@ export default function SalesAnalyticsPage() {
         </Select>
         <span className="text-xs text-[var(--muted)]">
           {selectedCustomerName ? `Sales for ${selectedCustomerName}` : 'Sales for all customers'}
-          {validRange ? ` · ${formatDate(from, 'D MMMM YYYY')} – ${formatDate(to, 'D MMMM YYYY')}` : ''}
+          {validRange ? ` · ${formatDate(from)} – ${formatDate(to)}` : ''}
         </span>
       </div>
       {error && <p className="auth-message mb-3">{error}</p>}
@@ -173,7 +173,7 @@ export default function SalesAnalyticsPage() {
             <p className="eyebrow mb-1">Farm profitability indicator</p>
             <h2 className="section-title mb-1">Milk margin after feed</h2>
             <p className="kpi-foot">
-              {range === 'month' ? 'This month' : `${formatDate(from, 'D MMMM YYYY')} – ${formatDate(to, 'D MMMM YYYY')}`}
+              {range === 'month' ? 'This month' : `${formatDate(from)} – ${formatDate(to)}`}
               {' · '}Farm-wide, independent of the customer filter
             </p>
           </div>
@@ -348,7 +348,7 @@ export default function SalesAnalyticsPage() {
                     <Table className="min-w-[700px]">
                       <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>DIRECTION</TableHead><TableHead>QUANTITY</TableHead><TableHead>SOURCE</TableHead><TableHead>NOTES</TableHead></TableRow></TableHeader>
                       <TableBody>{poolAdjustmentsQuery.data.map((movement) => <TableRow key={movement.id}>
-                        <TableCell>{formatDate(movement.business_date, 'D MMMM YYYY')}</TableCell>
+                        <TableCell>{formatDate(movement.business_date)}</TableCell>
                         <TableCell>{movement.movement_direction === 'IN' ? 'Increase pool' : 'Decrease pool'}</TableCell>
                         <TableCell>{milkTxt(Number(movement.quantity))}</TableCell>
                         <TableCell>{movement.reverses_customer_delivery ? 'Delivery reversal' : movement.source_type || 'Manual / unspecified'}{movement.source_id ? ` · ${movement.source_id.slice(0, 8)}` : ''}</TableCell>
