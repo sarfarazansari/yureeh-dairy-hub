@@ -30,7 +30,13 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     });
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (nextSession?.user.id !== session?.user.id) {
+        setRole(null);
+        setRoleLoading(Boolean(nextSession));
+      }
+      setSession(nextSession);
+    });
     return () => {
       mounted = false;
       subscription.unsubscribe();
