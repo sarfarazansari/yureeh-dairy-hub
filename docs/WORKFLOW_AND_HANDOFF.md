@@ -468,11 +468,11 @@ The user's short command `1 refactor karo` means:
 - Some data mutations use SQL RPCs and `SECURITY DEFINER` functions. UI-only protection is unacceptable.
 - Implemented on this branch (not yet runtime-validated):
   - `supabase/migrations/20261020150000_rbac_viewer_access.sql` — farm memberships, owner backfill, trusted role helpers, confirmed-email invitation claim, farm-aware SELECT policies, and a database trigger blocking Viewer writes across public base tables.
-  - `supabase/migrations/20261020160000_rbac_read_rpc_owner_scope.sql` — six read-only pricing/reporting RPCs now resolve the farm owner through membership.
+  - `supabase/migrations/20261020160000_rbac_read_rpc_owner_scope.sql` — eight read-only pricing/reporting/milk-pool RPCs now resolve the farm owner through membership.
   - `src/lib/farm-access.tsx`, `src/app/auth-gate.tsx` — role context and farm membership verification; authenticated accounts without membership are denied.
   - `src/features/access/ViewerAccessManager.tsx` and `/settings` — Super Admin invitation/revocation UI.
   - `src/components/layout/FarmRoleRouteGuard.tsx`, `Sidebar.tsx`, `AppShell.tsx` — initial write-route blocking, role-aware navigation, and a Viewer read-only banner.
 - Inventory and current phase status: `docs/RBAC_ROUTE_AND_DATA_INVENTORY.md` and `docs/RBAC_IMPLEMENTATION_PLAN.md`.
-- Important remaining work: complete the page-by-page mutation-control audit; inspect all views, policies, grants, RPCs and scheduled paths; resolve the deployed `get_buffalo_production_sheet` function that is referenced in source but was not found in inspected migrations; verify migration backfill against actual database contents; and test invite/revoke, cross-farm reads, direct API/RPC writes, and Super Admin regression.
+- Important remaining work: complete the page-by-page mutation-control audit; inspect all views, policies, grants, RPCs and scheduled paths; the old `get_buffalo_production_sheet` client dependency has been replaced with direct RLS-scoped table reads because no migration definition was found; verify migration backfill against actual database contents; and test invite/revoke, cross-farm reads, direct API/RPC writes, and Super Admin regression.
 - Verification boundary: GitHub source was fetched back for static review. This session cannot run a local checkout or access the live Supabase database, so typecheck, lint, build, browser tests, SQL parse/apply, and live security tests have not been run. Do not apply to production or merge until these checks pass.
 - User owns PR creation and merging. Do not create a PR or merge without explicit instruction.
