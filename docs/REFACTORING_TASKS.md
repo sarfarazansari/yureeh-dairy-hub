@@ -431,3 +431,13 @@ The user confirmed the application is working after merging the previous audit w
 - **Changes:** Milk entry dates now use full month names on the table and related edit/delete views; PDF date range uses the same human-readable format. Database ordering is date descending, then Morning before Evening, then newest record within a shift. Morning and Evening rows/chips use distinct emerald and blue tones.
 - **Code-of-conduct/project rule:** `YUREEH_PROJECT_RULES.md` now explicitly prefers full month names for user-facing dates where space allows and requires consistency across related views/exports.
 - **Validation:** GitHub source read/write only. Typecheck, lint, format check, build and browser verification were not run in this session.
+
+
+## ANA-002 — Sales analytics filter and UX pass — 2026-10-20
+
+- **Branch:** `feature/analytics-filter-ux-charts`, created from latest master `1369862d6bfca08a5d11a486b4016bb994670b78`.
+- **Implemented:** Moved Milk Margin After Feed to the first analytics card; clarified that it is farm-wide and independent of the customer filter; added margin-per-litre; reordered sales KPIs before secondary operational summaries; replaced the shared-scale milk/revenue chart with two independent, correctly scaled daily charts; improved tooltip/date readability, filter context labels, responsive layout, and empty/loading states.
+- **Filter hardening:** Normalized customer IDs in query inputs and keys; date range and customer remain part of the key; analytics queries refetch on mount and do not use prior filter results as placeholder data. PostgreSQL RPC source already applies customer + date filters to sales KPIs and grouped sales while intentionally keeping farm totals farm-wide.
+- **Changed files:** `src/features/analytics/SalesAnalyticsPage.tsx`, `src/features/analytics/sales-analytics.queries.ts`.
+- **Validation:** GitHub source read-back/static review only. Local typecheck, lint, format, build, browser tests, and live Supabase range/customer regression checks have not been executed in this environment. Do not mark runtime validation complete until these checks pass.
+- **PR/merge:** Not created. User owns PR and merge.
