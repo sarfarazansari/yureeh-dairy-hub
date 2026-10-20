@@ -1,4 +1,5 @@
 'use client';
+import { formatDate } from '@/lib/date-format';
 
 import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -88,7 +89,7 @@ export function BuffaloAcquisitionCostPanel({ buffaloId, canAdd, purchasePrice }
         <div className="empty">No acquisition costs capitalized yet.</div>}
 
       {canAdd && <form className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" onSubmit={submitAcquisitionCost} noValidate>
-        <Field label="Linked buffalo expense"><Select value={expenseId || undefined} onValueChange={setExpenseId}><SelectTrigger><SelectValue placeholder="Choose an expense" /></SelectTrigger><SelectContent>{availableExpenses.map((expense) => <SelectItem key={expense.id} value={expense.id}>{expense.business_date} · {expense.description || 'Expense'} · {money(Number(expense.total_amount))}</SelectItem>)}</SelectContent></Select></Field>
+        <Field label="Linked buffalo expense"><Select value={expenseId || undefined} onValueChange={setExpenseId}><SelectTrigger><SelectValue placeholder="Choose an expense" /></SelectTrigger><SelectContent>{availableExpenses.map((expense) => <SelectItem key={expense.id} value={expense.id}>{formatDate(expense.business_date)} · {expense.description || 'Expense'} · {money(Number(expense.total_amount))}</SelectItem>)}</SelectContent></Select></Field>
         <Field label="Cost date"><DatePicker value={costDate} max={todayDateKey()} onChange={setCostDate} ariaLabel="Cost date" /></Field>
         <Field label="Capitalized amount (₹)"><Input type="number" inputMode="decimal" min="0.01" step="0.01" value={amount} onChange={(event) => setAmount(event.target.value)} required /></Field>
         <Field label="Description"><Input value={description} onChange={(event) => setDescription(event.target.value)} maxLength={200} required /></Field>
