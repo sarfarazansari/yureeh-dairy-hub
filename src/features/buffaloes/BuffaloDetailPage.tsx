@@ -40,7 +40,7 @@ export default function BuffaloDetailPage({ id }: { id: string }) {
       const records = production.filter((row) => row.business_date === date);
       const morning = records.filter((row) => row.shift === 'MORNING').reduce((sum, row) => sum + Number(row.milk_quantity), 0);
       const evening = records.filter((row) => row.shift === 'EVENING').reduce((sum, row) => sum + Number(row.milk_quantity), 0);
-      return { date: formatDate(date, 'D MMM'), morning, evening, milk: morning + evening };
+      return { date: formatDate(date), morning, evening, milk: morning + evening };
     });
     return { total, days, daily };
   }, [production]);
