@@ -173,7 +173,7 @@ export default function BuffaloAnalyticsPage() {
       const morning = daily.filter((record) => record.shift === 'MORNING');
       const evening = daily.filter((record) => record.shift === 'EVENING');
       result.push({
-        businessDate: key, date: formatDate(key, 'D MMM'),
+        businessDate: key, date: formatDate(key),
         morning: shift !== 'EVENING' && morning.length ? sumQuantity(morning) : null,
         evening: shift !== 'MORNING' && evening.length ? sumQuantity(evening) : null,
         total: daily.length ? sumQuantity(daily) : null,
@@ -190,7 +190,7 @@ export default function BuffaloAnalyticsPage() {
   const priorAvg = priorTrend.filter((d) => d.total !== null).length
     ? sumQuantity(scopedRecords.filter((r) => r.business_date >= (priorTrend[0]?.businessDate ?? from) && r.business_date <= (priorTrend[priorTrend.length - 1]?.businessDate ?? from))) / Math.max(1, new Set(scopedRecords.filter((r) => r.business_date >= (priorTrend[0]?.businessDate ?? from) && r.business_date <= (priorTrend[priorTrend.length - 1]?.businessDate ?? from)).map((r) => r.business_date)).size)
     : null;
-  const missingSlots = Math.max(0, (isSingle ? expectedSlots : expectedHerdSlots) - (isSingle ? new Set(scopedRecords.map((r) => `${r.business_date}:${r.shift}`)).size : new Set(scopedRecords.map((r) => `${r.buffalo_id}:${r.business_date}:${r.shift}`)).size));
+  const missingSlots = Math.max(0, (isSingle ? expectedSlots : expectedHerdSlots) - (isSingle ? new Set(scopedRecords.map((r) => `${formatDate(r.business_date)}:${r.shift}`)).size : new Set(scopedRecords.map((r) => `${r.buffalo_id}:${formatDate(r.business_date)}:${r.shift}`)).size));
   const statusCounts = {
     productive: rows.filter((r) => r.status.key === 'productive').length,
     attention: rows.filter((r) => r.status.key === 'attention').length,
@@ -244,7 +244,7 @@ export default function BuffaloAnalyticsPage() {
             { label: 'Total milk production', value: busy ? '…' : milkTxt(total), foot: 'Litres in selected period' },
             { label: 'Daily average', value: busy ? '…' : `${milkTxt(average ?? 0)} L/day`, foot: `${recordedDays} recorded production days` },
             { label: 'Change vs previous period', value: busy ? '…' : fmtChange(change), foot: `Current: ${formatDate(from)} – ${formatDate(to)} · Previous: ${formatDate(previousRange.from)} – ${formatDate(previousRange.to)}` },
-            { label: 'Missing shift entries', value: busy ? '…' : String(isSingle ? Math.max(0, expectedSlots - new Set(scopedRecords.map((r) => `${r.business_date}:${r.shift}`)).size) : missingSlots), foot: `Expected ${expectedSlots} shift entries in this view` },
+            { label: 'Missing shift entries', value: busy ? '…' : String(isSingle ? Math.max(0, expectedSlots - new Set(scopedRecords.map((r) => `${formatDate(r.business_date)}:${r.shift}`)).size) : missingSlots), foot: `Expected ${expectedSlots} shift entries in this view` },
           ].map((kpi) => <div key={kpi.label} className="rounded-xl border border-[var(--line)] bg-white p-4"><p className="text-sm font-medium text-slate-600">{kpi.label}</p><p className="mt-2 break-words text-2xl font-bold text-slate-950">{kpi.value}</p><p className="mt-2 text-xs leading-5 text-slate-600">{kpi.foot}</p></div>)}
         </div>
       </section>
