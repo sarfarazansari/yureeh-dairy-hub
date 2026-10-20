@@ -128,7 +128,10 @@ begin
     raise exception 'Read-only access: viewers cannot change farm data.'
       using errcode = '42501';
   end if;
-  return case when tg_op = 'DELETE' then old else new end;
+  if tg_op = 'DELETE' then
+    return old;
+  end if;
+  return new;
 end
 $$;
 
@@ -145,6 +148,15 @@ declare
 begin
   if v_user_id is null or v_email = '' then
     raise exception 'Sign in with the invited email address to accept access.';
+  end if;
+
+  if not exists (
+    select 1 from auth.users u
+    where u.id = v_user_id
+      and u.email_confirmed_at is not null
+      and lower(u.email) = v_email
+  ) then
+    raise exception 'Confirm the invited email address before accepting farm access.';
   end if;
 
   if exists (
@@ -203,6 +215,8 @@ drop policy if exists farm_memberships_select_related on public.farm_memberships
 create policy farm_memberships_select_related
 on public.farm_memberships for select to authenticated
 using (owner_user_id = (select auth.uid()) or member_user_id = (select auth.uid()));
+grant select, insert, update on table public.farm_memberships to authenticated;
+revoke delete on table public.farm_memberships from authenticated;
 
 drop policy if exists farm_memberships_invite_viewer on public.farm_memberships;
 create policy farm_memberships_invite_viewer
