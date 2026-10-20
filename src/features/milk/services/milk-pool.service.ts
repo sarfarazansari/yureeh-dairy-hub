@@ -39,7 +39,70 @@ export async function getMilkPoolReconciliation(
     p_end_date: to,
   });
   if (error) throw new Error(error.message || 'Could not load milk pool reconciliation.');
-  return (data ?? []) as unknown as MilkPoolReconciliationRow[];
+
+  const rows = ((data ?? []) as unknown as MilkPoolReconciliationRow[]).map((row) => ({ ...row }));
+  if (!rows.length) return rows;
+
+  // Customer-entry edits/deletes append an ADJUSTMENT IN linked to the old
+  // CUSTOMER_DELIVERY. The SQL reconciliation's gross delivery total still
+  // includes that reversed movement, so normalize the report by removing the
+  // old delivery and its matching reversal from the same business date.
+  const { data: reversals, error: reversalsError } = await client
+    .from('milk_pool_movements')
+    .select('business_date,quantity,reversal_of_id,movement_direction')
+    .eq('movement_type', 'ADJUSTMENT')
+    .eq('movement_direction', 'IN')
+    .not('reversal_of_id', 'is', null)
+    .gte('business_date', from)
+    .lte('business_date', to);
+
+  if (reversalsError) {
+    throw new Error(reversalsError.message || 'Could not reconcile reversed customer deliveries.');
+  }
+
+  const reversalRows = (reversals ?? []) as Array<{
+    business_date: string;
+    quantity: number | string;
+    reversal_of_id: string;
+    movement_direction: 'IN';
+  }>;
+  const originalIds = [...new Set(reversalRows.map((movement) => movement.reversal_of_id))];
+  if (!originalIds.length) return rows;
+
+  const { data: originals, error: originalsError } = await client
+    .from('milk_pool_movements')
+    .select('id,business_date,movement_type')
+    .in('id', originalIds);
+
+  if (originalsError) {
+    throw new Error(originalsError.message || 'Could not resolve reversed customer deliveries.');
+  }
+
+  const originalById = new Map((originals ?? []).map((movement) => [
+    movement.id,
+    { business_date: String(movement.business_date), movement_type: String(movement.movement_type) },
+  ]));
+
+  const reversalsByDate = new Map<string, number>();
+  for (const reversal of reversalRows) {
+    const original = originalById.get(reversal.reversal_of_id);
+    if (!original || original.movement_type !== 'CUSTOMER_DELIVERY') continue;
+    if (original.business_date !== reversal.business_date) continue;
+    reversalsByDate.set(
+      reversal.business_date,
+      (reversalsByDate.get(reversal.business_date) ?? 0) + Number(reversal.quantity),
+    );
+  }
+
+  return rows.map((row) => {
+    const reversedDelivery = reversalsByDate.get(row.business_date) ?? 0;
+    if (!reversedDelivery) return row;
+    return {
+      ...row,
+      customer_delivery_litres: Math.max(0, Number(row.customer_delivery_litres) - reversedDelivery),
+      adjustment_in_litres: Math.max(0, Number(row.adjustment_in_litres) - reversedDelivery),
+    };
+  });
 }
 
 export async function recordMilkPoolMovement(
