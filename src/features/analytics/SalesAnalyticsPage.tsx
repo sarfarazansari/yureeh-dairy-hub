@@ -42,24 +42,11 @@ export default function SalesAnalyticsPage() {
   }
   const poolFatRows = Array.from(poolFatByDate.entries()).sort(([a], [b]) => b.localeCompare(a));
   const poolRows = poolQuery.data ?? [];
-  const adjustmentRows = poolAdjustmentsQuery.data ?? [];
-  // A delivery correction is stored as an ADJUSTMENT IN linked to the original
-  // CUSTOMER_DELIVERY movement. Net it against delivered milk instead of treating
-  // the reversal as new production/stock; otherwise the same delivery is counted twice.
-  const reversedDeliveryLitres = adjustmentRows.reduce((sum, movement) => {
-    const originalDate = movement.original_business_date;
-    const originalIsInRange = Boolean(originalDate && originalDate >= from && originalDate <= to);
-    return sum + (movement.reverses_customer_delivery && movement.movement_direction === 'IN' && originalIsInRange
-      ? Number(movement.quantity)
-      : 0);
-  }, 0);
   const poolProduced = poolRows.reduce((sum, row) => sum + Number(row.production_litres), 0);
-  const poolDeliveredGross = poolRows.reduce((sum, row) => sum + Number(row.customer_delivery_litres), 0);
-  const poolDelivered = Math.max(0, poolDeliveredGross - reversedDeliveryLitres);
+  const poolDelivered = poolRows.reduce((sum, row) => sum + Number(row.customer_delivery_litres), 0);
   const poolOtherUse = poolRows.reduce((sum, row) => sum + Number(row.household_use_litres) + Number(row.wastage_litres) + Number(row.other_use_litres), 0);
   const poolOpening = poolRows.length ? Number(poolRows[0].opening_balance_litres) : null;
-  const poolAdjustmentsInGross = poolRows.reduce((sum, row) => sum + Number(row.adjustment_in_litres), 0);
-  const poolAdjustmentsIn = Math.max(0, poolAdjustmentsInGross - reversedDeliveryLitres);
+  const poolAdjustmentsIn = poolRows.reduce((sum, row) => sum + Number(row.adjustment_in_litres), 0);
   const poolAdjustmentsOut = poolRows.reduce((sum, row) => sum + Number(row.adjustment_out_litres), 0);
   const poolClosing = poolRows.length ? Number(poolRows[poolRows.length - 1].closing_balance_litres) : null;
   const poolVariance = poolOpening === null || poolClosing === null ? null : poolOpening + poolProduced + poolAdjustmentsIn - poolDelivered - poolOtherUse - poolAdjustmentsOut - poolClosing;
@@ -117,7 +104,7 @@ export default function SalesAnalyticsPage() {
             <div><div className="kpi-label">OPENING POOL</div><b>{poolOpening === null ? '—' : milkTxt(poolOpening)}</b></div>
             <div><div className="kpi-label">PRODUCED</div><b>{milkTxt(poolProduced)}</b></div>
             <div><div className="kpi-label">ADJUSTMENTS IN (NET)</div><b>{milkTxt(poolAdjustmentsIn)}</b></div>
-            <div><div className="kpi-label">DELIVERED (NET OF REVERSALS)</div><b>{milkTxt(poolDelivered)}</b></div>
+            <div><div className="kpi-label">DELIVERED (NET OF CORRECTIONS)</div><b>{milkTxt(poolDelivered)}</b></div>
             <div><div className="kpi-label">OTHER USE / WASTAGE</div><b>{milkTxt(poolOtherUse)}</b></div>
             <div><div className="kpi-label">ADJUSTMENTS OUT</div><b>{milkTxt(poolAdjustmentsOut)}</b></div>
             <div><div className="kpi-label">CLOSING POOL</div><b>{poolClosing === null ? '—' : milkTxt(poolClosing)}</b></div>
