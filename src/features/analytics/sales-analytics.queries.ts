@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 
 import { supabase } from '@/lib/supabase';
-import { getMilkMarginAfterFeed, getSalesAnalyticsData } from './services/sales-analytics.service';
+import { getMilkMarginAfterFeed, getMilkPoolAdjustmentAudit, getSalesAnalyticsData } from './services/sales-analytics.service';
 
 export const salesAnalyticsQueryKeys = {
   all: ['sales-analytics'] as const,
@@ -39,6 +39,24 @@ export function useMilkMarginAfterFeedQuery(from: string, to: string) {
     queryFn: () => {
       if (!supabase) throw new Error('Supabase is not configured.');
       return getMilkMarginAfterFeed(supabase, { from, to });
+    },
+  });
+}
+
+
+export const milkPoolAdjustmentQueryKeys = {
+  all: ['milk-pool-adjustment-audit'] as const,
+  range: (from: string, to: string) => ['milk-pool-adjustment-audit', from, to] as const,
+};
+
+export function useMilkPoolAdjustmentsQuery(from: string, to: string) {
+  const validRange = Boolean(from && to && from <= to);
+  return useQuery({
+    queryKey: milkPoolAdjustmentQueryKeys.range(from, to),
+    enabled: validRange,
+    queryFn: () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      return getMilkPoolAdjustmentAudit(supabase, { from, to });
     },
   });
 }
