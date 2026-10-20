@@ -103,8 +103,8 @@ export default function SalesAnalyticsPage() {
           <div className="grid four">
             <div><div className="kpi-label">OPENING POOL</div><b>{poolOpening === null ? '—' : milkTxt(poolOpening)}</b></div>
             <div><div className="kpi-label">PRODUCED</div><b>{milkTxt(poolProduced)}</b></div>
-            <div><div className="kpi-label">ADJUSTMENTS IN</div><b>{milkTxt(poolAdjustmentsIn)}</b></div>
-            <div><div className="kpi-label">DELIVERED</div><b>{milkTxt(poolDelivered)}</b></div>
+            <div><div className="kpi-label">ADJUSTMENTS IN (NET)</div><b>{milkTxt(poolAdjustmentsIn)}</b></div>
+            <div><div className="kpi-label">DELIVERED (NET OF CORRECTIONS)</div><b>{milkTxt(poolDelivered)}</b></div>
             <div><div className="kpi-label">OTHER USE / WASTAGE</div><b>{milkTxt(poolOtherUse)}</b></div>
             <div><div className="kpi-label">ADJUSTMENTS OUT</div><b>{milkTxt(poolAdjustmentsOut)}</b></div>
             <div><div className="kpi-label">CLOSING POOL</div><b>{poolClosing === null ? '—' : milkTxt(poolClosing)}</b></div>
@@ -128,7 +128,7 @@ export default function SalesAnalyticsPage() {
                         <TableCell>{formatDate(movement.business_date)}</TableCell>
                         <TableCell>{movement.movement_direction === 'IN' ? 'Increase pool' : 'Decrease pool'}</TableCell>
                         <TableCell>{milkTxt(Number(movement.quantity))}</TableCell>
-                        <TableCell>{movement.source_type || 'Manual / unspecified'}{movement.source_id ? ` · ${movement.source_id.slice(0, 8)}` : ''}</TableCell>
+                        <TableCell>{movement.reverses_customer_delivery ? 'Delivery reversal' : movement.source_type || 'Manual / unspecified'}{movement.source_id ? ` · ${movement.source_id.slice(0, 8)}` : ''}</TableCell>
                         <TableCell>{movement.notes || 'No note recorded'}</TableCell>
                       </TableRow>
                     ))}</TableBody>
