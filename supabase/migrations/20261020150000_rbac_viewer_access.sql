@@ -245,6 +245,7 @@ begin
     group by c.table_schema, c.table_name
   loop
     v_owner_column := case when r.has_user_id then 'user_id' else 'owner_id' end;
+    execute format('alter table %I.%I enable row level security', r.table_schema, r.table_name);
     v_policy_name := 'rbac_farm_select_' || r.table_name;
     if not exists (
       select 1 from pg_policies
