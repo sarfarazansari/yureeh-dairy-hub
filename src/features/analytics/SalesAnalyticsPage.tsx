@@ -11,7 +11,7 @@ import { KPI } from '@/components/ui/KPI';
 import { useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { formatDate } from '@/lib/date-format';
-import { useMilkMarginAfterFeedQuery, useSalesAnalyticsQuery } from './sales-analytics.queries';
+import { useMilkMarginAfterFeedQuery, useMilkPoolAdjustmentsQuery, useSalesAnalyticsQuery } from './sales-analytics.queries';
 import { getAnalyticsDateRange, type AnalyticsDatePreset } from '@/lib/analytics-date-range';
 import { useMilkPoolReconciliationQuery, useMilkPoolShiftFatQuery } from '@/features/milk/milk.queries';
 export default function SalesAnalyticsPage() {
@@ -32,6 +32,7 @@ export default function SalesAnalyticsPage() {
   const poolQuery = useMilkPoolReconciliationQuery(from, to);
   const poolFatQuery = useMilkPoolShiftFatQuery(from, to);
   const milkMarginQuery = useMilkMarginAfterFeedQuery(from, to);
+  const poolAdjustmentsQuery = useMilkPoolAdjustmentsQuery(from, to);
   const poolFatByDate = new Map<string, { MORNING?: number; EVENING?: number }>();
   for (const record of poolFatQuery.data ?? []) {
     if (record.shift !== 'MORNING' && record.shift !== 'EVENING') continue;
@@ -108,7 +109,33 @@ export default function SalesAnalyticsPage() {
             <div><div className="kpi-label">CLOSING POOL</div><b>{poolClosing === null ? '—' : milkTxt(poolClosing)}</b></div>
             <div><div className="kpi-label">RECONCILIATION VARIANCE</div><b>{poolVariance === null ? '—' : milkTxt(poolVariance)}</b></div>
           </div>
-          {(poolAdjustmentsIn > 0 || poolAdjustmentsOut > 0) && <p className="kpi-foot" style={{ marginTop: 10 }}>Adjustments are recorded ledger movements, not automatically proof of an error. Open the milk pool movement history and inspect their notes/source before treating them as valid stock.</p>}
+          {(poolAdjustmentsIn > 0 || poolAdjustmentsOut > 0) && (
+            <div style={{ marginTop: 12 }}>
+              <p className="kpi-foot">Adjustments are ledger movements, including system-generated reversals. Review their source and notes; a balanced total alone does not prove the stock history is correct.</p>
+              {poolAdjustmentsQuery.isPending ? (
+                <div className="empty">Loading adjustment audit…</div>
+              ) : poolAdjustmentsQuery.isError ? (
+                <p className="auth-message">{poolAdjustmentsQuery.error.message}</p>
+              ) : !(poolAdjustmentsQuery.data ?? []).length ? (
+                <p className="kpi-foot">No adjustment details returned for this range.</p>
+              ) : (
+                <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
+                  <Table className="min-w-[700px]">
+                    <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>DIRECTION</TableHead><TableHead>QUANTITY</TableHead><TableHead>SOURCE</TableHead><TableHead>NOTES</TableHead></TableRow></TableHeader>
+                    <TableBody>{(poolAdjustmentsQuery.data ?? []).map((movement) => (
+                      <TableRow key={movement.id}>
+                        <TableCell>{formatDate(movement.business_date)}</TableCell>
+                        <TableCell>{movement.movement_direction === 'IN' ? 'Increase pool' : 'Decrease pool'}</TableCell>
+                        <TableCell>{milkTxt(Number(movement.quantity))}</TableCell>
+                        <TableCell>{movement.source_type || 'Manual / unspecified'}{movement.source_id ? ` · ${movement.source_id.slice(0, 8)}` : ''}</TableCell>
+                        <TableCell>{movement.notes || 'No note recorded'}</TableCell>
+                      </TableRow>
+                    ))}</TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          )}
         )}
       </div>
       <div className="card" style={{ marginBottom: 14 }}>
