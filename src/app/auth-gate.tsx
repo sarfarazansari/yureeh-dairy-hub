@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { FarmRoleProvider, type FarmRole } from '@/lib/farm-access';
@@ -18,6 +18,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
+  const activeUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!supabase) return;
@@ -25,13 +26,16 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     void supabase.auth.getSession().then(({ data, error }) => {
       if (!mounted) return;
       if (error) setMessage(error.message);
+      activeUserIdRef.current = data.session?.user.id ?? null;
       setSession(data.session);
       setReady(true);
     });
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      if (nextSession?.user.id !== session?.user.id) {
+      const nextUserId = nextSession?.user.id ?? null;
+      if (nextUserId !== activeUserIdRef.current) {
+        activeUserIdRef.current = nextUserId;
         setRole(null);
         setRoleLoading(Boolean(nextSession));
       }
