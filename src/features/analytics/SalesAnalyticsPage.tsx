@@ -99,6 +99,7 @@ export default function SalesAnalyticsPage() {
         ) : poolQuery.isError ? (
           <p className="auth-message">{poolQuery.error.message}</p>
         ) : (
+          <>
           <div className="grid four">
             <div><div className="kpi-label">OPENING POOL</div><b>{poolOpening === null ? '—' : milkTxt(poolOpening)}</b></div>
             <div><div className="kpi-label">PRODUCED</div><b>{milkTxt(poolProduced)}</b></div>
@@ -136,6 +137,7 @@ export default function SalesAnalyticsPage() {
               )}
             </div>
           )}
+          </>
         )}
       </div>
       <div className="card" style={{ marginBottom: 14 }}>
