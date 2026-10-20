@@ -1,4 +1,5 @@
 'use client';
+import { formatDate } from '@/lib/date-format';
 
 import type { FeedInventoryMovementRow } from '../types';
 import { Badge } from '@/components/ui/badge';
@@ -54,7 +55,7 @@ export function FeedInventoryMovementTable({ rows, count, page, pageSize, onPage
                 {loading ? Array.from({ length: 5 }, (_, index) => <TableRow key={index}>{Array.from({ length: 8 }, (_, cell) => <TableCell key={cell}><Skeleton className="h-4 w-24" /></TableCell>)}</TableRow>) : rows.map((row) => {
                   const incoming = movementSign(row.movement_type) === '+';
                   return <TableRow key={row.id}>
-                    <TableCell className="whitespace-nowrap">{new Date(row.occurred_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</TableCell>
+                    <TableCell className="whitespace-nowrap">{formatDate(row.occurred_at)}</TableCell>
                     <TableCell><b>{row.feed_item_name}</b><div className="text-xs text-muted-foreground">{row.base_unit}</div></TableCell>
                     <TableCell><Badge variant={incoming ? 'secondary' : 'outline'}>{movementLabel(row.movement_type)}</Badge></TableCell>
                     <TableCell className="whitespace-nowrap"><b>{movementSign(row.movement_type)}{Number(row.quantity).toLocaleString('en-IN', { maximumFractionDigits: 3 })} {row.base_unit}</b></TableCell>
