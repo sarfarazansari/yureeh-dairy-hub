@@ -49,6 +49,7 @@ function isActivePath(pathname: string, href: string) {
 }
 
 function SidebarAccount({ mobileOpen }: { mobileOpen: boolean }) {
+  const role = useFarmRole();
   const [signingOut, setSigningOut] = useState(false);
   const signingOutRef = useRef(false);
 
