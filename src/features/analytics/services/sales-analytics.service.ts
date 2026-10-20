@@ -111,6 +111,10 @@ export type MilkPoolAdjustmentAuditRow = {
   source_type: string | null;
   source_id: string | null;
   notes: string | null;
+  reversal_of_id: string | null;
+  original_movement_type: string | null;
+  original_business_date: string | null;
+  reverses_customer_delivery: boolean;
 };
 
 export async function getMilkPoolAdjustmentAudit(
@@ -122,12 +126,42 @@ export async function getMilkPoolAdjustmentAudit(
   }
   const { data, error } = await client
     .from('milk_pool_movements')
-    .select('id,business_date,movement_direction,quantity,source_type,source_id,notes')
+    .select('id,business_date,movement_direction,quantity,source_type,source_id,notes,reversal_of_id')
     .eq('movement_type', 'ADJUSTMENT')
     .gte('business_date', filters.from)
     .lte('business_date', filters.to)
     .order('business_date', { ascending: false })
     .order('created_at', { ascending: false });
   if (error) throw new Error(error.message || 'Could not load milk pool adjustment details.');
-  return (data ?? []) as MilkPoolAdjustmentAuditRow[];
+
+  const movements = (data ?? []) as Array<Omit<MilkPoolAdjustmentAuditRow,
+    'original_movement_type' | 'original_business_date' | 'reverses_customer_delivery'>>;
+  const originalIds = [...new Set(movements.map((row) => row.reversal_of_id).filter((id): id is string => Boolean(id)))];
+  const originalsById = new Map<string, { movement_type: string; business_date: string }>();
+
+  if (originalIds.length) {
+    const originalsResult = await client
+      .from('milk_pool_movements')
+      .select('id,movement_type,business_date')
+      .in('id', originalIds);
+    if (originalsResult.error) {
+      throw new Error(originalsResult.error.message || 'Could not resolve reversed milk pool movements.');
+    }
+    for (const original of originalsResult.data ?? []) {
+      originalsById.set(original.id, {
+        movement_type: String(original.movement_type),
+        business_date: String(original.business_date),
+      });
+    }
+  }
+
+  return movements.map((movement) => {
+    const original = movement.reversal_of_id ? originalsById.get(movement.reversal_of_id) : undefined;
+    return {
+      ...movement,
+      original_movement_type: original?.movement_type ?? null,
+      original_business_date: original?.business_date ?? null,
+      reverses_customer_delivery: original?.movement_type === 'CUSTOMER_DELIVERY',
+    };
+  });
 }
