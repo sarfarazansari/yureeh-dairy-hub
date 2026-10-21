@@ -115,7 +115,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
           <Button
             type="button"
             className="w-full"
-            onClick={() => void supabase.auth.signOut()}
+            onClick={() => void supabase?.auth.signOut()}
           >
             Sign out
           </Button>
