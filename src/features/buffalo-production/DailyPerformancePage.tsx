@@ -96,7 +96,7 @@ export default function DailyPerformancePage() {
           </div>
           <div className="field production-date">
             <Label htmlFor="production-business-date">Business date</Label>
-            <DatePicker id="production-business-date" value={date} max={localDateKey()} disabled={saveMutation.isPending} onChange={(value) => { setDate(value); setValues({}); setFatValue(null); setMessage(''); setError(''); }} ariaLabel="Business date" />
+            <DatePicker id="production-business-date" value={date} max={localDateKey()} disabled={isViewer || saveMutation.isPending} onChange={(value) => { setDate(value); setValues({}); setFatValue(null); setMessage(''); setError(''); }} ariaLabel="Business date" />
           </div>
         </div>
 
@@ -146,7 +146,7 @@ export default function DailyPerformancePage() {
                   <div className="field production-mobile-quantity">
                     <Label htmlFor={`milk-${animal.id}`}>Milk quantity (L)</Label>
                     <Input id={`milk-${animal.id}`} type="number" min="0" step="0.001" inputMode="decimal" placeholder="No record"
-                      disabled={saveMutation.isPending || sheetQuery.isFetching} value={getValue(animal.id)}
+                      disabled={isViewer || saveMutation.isPending || sheetQuery.isFetching} value={getValue(animal.id)}
                       onChange={(event) => updateQuantity(animal.id, event.target.value)} />
                   </div>
                 </article>;
@@ -158,9 +158,9 @@ export default function DailyPerformancePage() {
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
         <div className="production-save-bar">
           <div className="production-save-context"><span>{entered} of {rows.length} filled</span><strong>{milkTxt(total)}</strong></div>
-          <Button className="production-save-button" type="button" disabled={saveMutation.isPending || sheetQuery.isPending || !rows.length || sheetQuery.isFetching} onClick={() => void save()}>
+          {!isViewer && <Button className="production-save-button" type="button" disabled={saveMutation.isPending || sheetQuery.isPending || !rows.length || sheetQuery.isFetching} onClick={() => void save()}>
             {saveMutation.isPending ? 'Saving production…' : 'Save production'}
-          </Button>}}
+          </Button>}
         </div>
       </section>
     </AppShell>
