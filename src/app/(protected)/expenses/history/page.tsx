@@ -75,6 +75,11 @@ export default function ExpenseHistory() {
   useEffect(() => {
     let alive = true;
     async function initialize() {
+      // Category setup may write defaults; a Viewer only needs the existing read data.
+      if (isViewer) {
+        setSetupReady(true);
+        return;
+      }
       if (!supabase) {
         setSetupError('Supabase is not configured.');
         return;
@@ -91,7 +96,7 @@ export default function ExpenseHistory() {
     }
     void initialize();
     return () => { alive = false; };
-  }, []);
+  }, [isViewer]);
 
   const load = async () => { await historyQuery.refetch(); };
   const visible = rows;
