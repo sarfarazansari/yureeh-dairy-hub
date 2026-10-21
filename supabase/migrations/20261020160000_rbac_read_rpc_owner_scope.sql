@@ -345,8 +345,12 @@ begin
 end;
 $sales_analytics$;
 
+-- PostgreSQL cannot replace a table-returning function when its OUT-row shape differs.
+-- This app RPC is recreated with the intended Viewer-safe return shape.
+drop function if exists public.get_buffalo_sale_financial_summary(date, date);
+
 -- Read-only RPC scoped through the trusted farm membership rather than the caller's auth UID.
-create or replace function public.get_buffalo_sale_financial_summary(p_from date, p_to date)
+create function public.get_buffalo_sale_financial_summary(p_from date, p_to date)
 returns table (
   buffalo_sale_revenue numeric,
   buffalo_sale_collections numeric,
@@ -380,6 +384,9 @@ begin
       where s.user_id = owner_id and s.sale_date between p_from and p_to), 0);
 end;
 $sale_summary$;
+
+revoke all on function public.get_buffalo_sale_financial_summary(date, date) from public, anon;
+grant execute on function public.get_buffalo_sale_financial_summary(date, date) to authenticated;
 
 -- Read-only RPC scoped through the trusted farm membership rather than the caller's auth UID.
 create or replace function public.get_milk_margin_after_feed(
