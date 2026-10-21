@@ -19,6 +19,7 @@ import { Dialog } from '@/app/dialog';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { money, milkTxt } from '@/lib/farm-format';
 import { formatDate } from '@/lib/date-format';
+import { useIsViewer } from '@/lib/farm-access';
 import {
   compactMilkEntryPages,
   getMilkEntryListUrl,
@@ -69,6 +70,7 @@ const isMilkEntryPreset = (value: string | null): value is MilkEntryDatePreset =
   value === 'custom';
 
 export default function EntriesPage() {
+  const isViewer = useIsViewer();
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -425,7 +427,7 @@ export default function EntriesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>DATE</TableHead><TableHead>SHIFT</TableHead><TableHead>CUSTOMER</TableHead><TableHead>MILK</TableHead><TableHead>FAT</TableHead>
-                <TableHead>PRICING</TableHead><TableHead>RATE</TableHead><TableHead>AMOUNT</TableHead><TableHead>ACTIONS</TableHead>
+                <TableHead>PRICING</TableHead><TableHead>RATE</TableHead><TableHead>AMOUNT</TableHead>{!isViewer && <TableHead>ACTIONS</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -443,10 +445,10 @@ export default function EntriesPage() {
                       <TableCell><Badge variant="secondary">{row.pricing_type === 'FIXED_PER_LITRE' ? 'Fixed/L' : 'Fat'}</Badge></TableCell>
                       <TableCell>{money(Number(row.applied_rate))}</TableCell>
                       <TableCell>{money(Number(row.calculated_amount))}</TableCell>
-                      <TableCell>
+                      {!isViewer && <TableCell>
                         <Button variant="outline" size="sm" type="button" onClick={() => openEdit(row)}>Edit</Button>{' '}
                         <Button variant="outline" size="sm" type="button" onClick={() => setPendingDelete(row)}>Cancel</Button>
-                      </TableCell>
+                      </TableCell>}
                     </TableRow>
                   ))}
             </TableBody>
@@ -495,7 +497,7 @@ export default function EntriesPage() {
         <p className="kpi-foot">Entries are database-paginated. Deleted rows remain in audit history and their pool movement is reversed.</p>
       </div>
 
-      <Dialog open={!!editing} onOpenChange={(open) => { if (!open && !updateMutation.isPending) setEditing(null); }} labelledBy="edit-entry-title" className="entry-edit-dialog">
+      {!isViewer && <Dialog open={!!editing} onOpenChange={(open) => { if (!open && !updateMutation.isPending) setEditing(null); }} labelledBy="edit-entry-title" className="entry-edit-dialog">
         {editing && (
           <form onSubmit={saveEdit} noValidate>
             <div className="dialog-header">
@@ -536,9 +538,9 @@ export default function EntriesPage() {
             <div className="dialog-footer"><Button type="button" variant="secondary" onClick={() => setEditing(null)} disabled={updateMutation.isPending}>Cancel</Button><Button type="submit" disabled={updateMutation.isPending}>{updateMutation.isPending ? 'Saving…' : 'Save changes'}</Button></div>
           </form>
         )}
-      </Dialog>
+      </Dialog>}
 
-      <Dialog open={!!pendingDelete} onOpenChange={(open) => { if (!open && !deleteMutation.isPending) setPendingDelete(null); }} labelledBy="delete-entry-title" className="delete-dialog">
+      {!isViewer && <Dialog open={!!pendingDelete} onOpenChange={(open) => { if (!open && !deleteMutation.isPending) setPendingDelete(null); }} labelledBy="delete-entry-title" className="delete-dialog">
         {pendingDelete && (
           <>
             <div className="dialog-header">
@@ -549,7 +551,7 @@ export default function EntriesPage() {
             <div className="dialog-footer"><Button type="button" variant="secondary" onClick={() => setPendingDelete(null)} disabled={deleteMutation.isPending}>Keep entry</Button><Button type="button" variant="destructive" onClick={() => void confirmDelete()} disabled={deleteMutation.isPending}>{deleteMutation.isPending ? 'Cancelling…' : 'Cancel delivery'}</Button></div>
           </>
         )}
-      </Dialog>
+      </Dialog>}
     </AppShell>
   );
 }

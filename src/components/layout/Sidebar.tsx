@@ -6,8 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
 import {
-  Activity, Beef, IndianRupee, LayoutDashboard, ListOrdered, LogOut,
-  Milk, PlusCircle, Settings, TrendingUp, Users, Wheat, X,
+  LogOut, X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -16,33 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { useFarmRole } from '@/lib/farm-access';
-
-const navigationGroups = [
-  { label: 'MILK SALES', items: [
-    { label: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { label: 'New Milk Entry', href: '/new-entry', icon: PlusCircle },
-    { label: 'Milk Entries', href: '/entries', icon: ListOrdered },
-    { label: 'Farm Milk Pool', href: '/milk-pool', icon: Milk },
-    { label: 'Customers', href: '/customers', icon: Users },
-    { label: 'Analytics', href: '/analytics', icon: TrendingUp },
-  ]},
-  { label: 'FARM COSTS', items: [
-    { label: 'Expenses', href: '/expenses', icon: IndianRupee },
-    { label: 'Financial Reports', href: '/financial-reports', icon: TrendingUp },
-    { label: 'Feed Items', href: '/feeds/items', icon: Wheat },
-    { label: 'Feed Inventory', href: '/feeds/inventory', icon: Wheat },
-    { label: 'Movement History', href: '/feeds/inventory/movements', icon: ListOrdered },
-    { label: 'Feed Purchases', href: '/feeds/purchases', icon: Wheat },
-    { label: 'Feed Consumption', href: '/feeds/consumption', icon: Wheat },
-    { label: 'Diet Plans', href: '/feeds/diet-plans', icon: Wheat },
-  ]},
-  { label: 'PRODUCTION', items: [
-    { label: 'Buffaloes', href: '/buffaloes', icon: Beef },
-    { label: 'Buffalo Sales', href: '/buffalo-sales', icon: IndianRupee },
-    { label: 'Daily Performance', href: '/daily-performance', icon: Activity },
-    { label: 'Buffalo Analytics', href: '/buffalo-analytics', icon: TrendingUp },
-  ]},
-];
+import { navigationGroups } from '@/config/navigation';
 
 function isActivePath(pathname: string, href: string) {
   return pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
@@ -153,29 +126,24 @@ export function Sidebar() {
           <Button type="button" variant="ghost" size="icon" ref={closeButtonRef} className="mobile-menu-close" aria-label="Close navigation menu" onClick={closeMobileMenu}><X size={20} /></Button>
         </div>
         <nav className="nav" aria-label="Primary">
-          {navigationGroups.map((group) => (
-            <div key={group.label}>
-              <div className="nav-label">{group.label}</div>
-              {group.items.filter(({ href }) => role !== 'viewer' || !['/new-entry', '/feeds/items'].includes(href)).map(({ label, href, icon: Icon }) => {
-                const active = isActivePath(pathname, href);
-                return (
-                  <Link key={href} href={href} className={active ? 'active' : ''}
-                    aria-current={active ? 'page' : undefined} onClick={() => setMobileOpen(false)}>
-                    <span className="icon" aria-hidden="true"><Icon size={18} /></span>{label}
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
-          {role !== 'viewer' && (
-            <>
-              <div className="nav-label">PREFERENCES</div>
-              <Link href="/settings" className={isActivePath(pathname, '/settings') ? 'active' : ''}
-                aria-current={isActivePath(pathname, '/settings') ? 'page' : undefined} onClick={closeMobileMenu}>
-                <span className="icon" aria-hidden="true"><Settings size={18} /></span>Settings
-              </Link>
-            </>
-          )}
+          {navigationGroups.map((group) => {
+            const visibleItems = group.items.filter(({ permission }) => role !== null && permission.includes(role));
+            if (visibleItems.length === 0) return null;
+            return (
+              <div key={group.label}>
+                <div className="nav-label">{group.label}</div>
+                {visibleItems.map(({ label, href, icon: Icon }) => {
+                  const active = isActivePath(pathname, href);
+                  return (
+                    <Link key={href} href={href} className={active ? 'active' : ''}
+                      aria-current={active ? 'page' : undefined} onClick={() => setMobileOpen(false)}>
+                      <span className="icon" aria-hidden="true"><Icon size={18} /></span>{label}
+                    </Link>
+                  );
+                })}
+              </div>
+            );
+          })}
         </nav>
         <SidebarAccount mobileOpen={mobileOpen} />
       </aside>

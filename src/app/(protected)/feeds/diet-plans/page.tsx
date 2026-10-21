@@ -12,11 +12,13 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toast } from '@/components/ui/Toast';
+import { useIsViewer } from '@/lib/farm-access';
 import { useDietPlanArchiveQuery } from '@/features/diet-plans/diet-plan.queries';
 
 const DEFAULT_PAGE_SIZE = 20;
 
 export default function DietPlansPage() {
+  const isViewer = useIsViewer();
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [status, setStatus] = useState('');
@@ -50,7 +52,7 @@ export default function DietPlansPage() {
         <div className="card space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="section-title mb-0">Diet plan archive</h2>
-            <div className="flex flex-wrap gap-2"><Button variant="outline" asChild><Link href="/feeds/diet-plans/schedule">Feeding schedule</Link></Button><Button asChild><Link href="/feeds/diet-plans/new">New diet plan</Link></Button></div>
+            <div className="flex flex-wrap gap-2">{!isViewer && <><Button variant="outline" asChild><Link href="/feeds/diet-plans/schedule">Feeding schedule</Link></Button><Button asChild><Link href="/feeds/diet-plans/new">New diet plan</Link></Button></>}</div>
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(12rem,0.45fr)_auto] sm:items-end">
             <div className="field min-w-0"><Label htmlFor="diet-plan-search">Search plan</Label><Input id="diet-plan-search" value={search} placeholder="Plan name" onChange={(event) => setSearch(event.target.value)} /></div>
@@ -62,14 +64,14 @@ export default function DietPlansPage() {
           {loadError ? <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{loadError}</p><Button className="mt-3" type="button" size="sm" variant="outline" onClick={() => void load()}>Retry</Button></div> : <>
             <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]" aria-busy={loading}>
               <Table className="min-w-[700px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
-                <TableHeader><TableRow><TableHead>PLAN</TableHead><TableHead>PERIOD</TableHead><TableHead>BUFFALOES</TableHead><TableHead>FEEDS</TableHead><TableHead>STATUS</TableHead><TableHead>ACTION</TableHead></TableRow></TableHeader>
+                <TableHeader><TableRow><TableHead>PLAN</TableHead><TableHead>PERIOD</TableHead><TableHead>BUFFALOES</TableHead><TableHead>FEEDS</TableHead><TableHead>STATUS</TableHead>{!isViewer && <TableHead>ACTION</TableHead>}</TableRow></TableHeader>
                 <TableBody>
                   {loading ? Array.from({ length: 4 }, (_, i) => <TableRow key={i}>{Array.from({ length: 6 }, (_, j) => <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : rows.map((row) => <TableRow key={row.id}>
                     <TableCell><b>{row.name}</b>{row.notes && <div className="text-xs text-muted-foreground">{row.notes}</div>}</TableCell>
                     <TableCell className="whitespace-nowrap">{formatDate(row.start_date)} – {row.end_date ? formatDate(row.end_date) : 'No end date'}</TableCell>
                     <TableCell>{row.buffalo_count}</TableCell><TableCell>{row.feed_count}</TableCell>
                     <TableCell><Badge variant={row.status === 'ACTIVE' ? 'secondary' : 'outline'}>{row.status}</Badge></TableCell>
-                    <TableCell><Button size="sm" variant="outline" asChild><Link href={`/feeds/diet-plans/edit/${row.id}`}>Edit</Link></Button></TableCell>
+                    {!isViewer && <TableCell><Button size="sm" variant="outline" asChild><Link href={`/feeds/diet-plans/edit/${row.id}`}>Edit</Link></Button></TableCell>}
                   </TableRow>)}
                 </TableBody>
               </Table>

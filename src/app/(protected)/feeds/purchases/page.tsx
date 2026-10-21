@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
+import { useIsViewer } from '@/lib/farm-access';
 import { Toast } from '@/components/ui/Toast';
 import { useDeleteFeedPurchaseMutation, useFeedPurchaseArchiveQuery } from '@/features/feed-purchases/feed-purchases.queries';
 import { FeedPurchaseTable } from '@/features/feed-purchases/components/FeedPurchaseTable';
@@ -16,6 +17,7 @@ import { FeedPurchaseTable } from '@/features/feed-purchases/components/FeedPurc
 const DEFAULT_PAGE_SIZE = 20;
 
 export default function FeedPurchasesPage() {
+  const isViewer = useIsViewer();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [from, setFrom] = useState('');
@@ -64,7 +66,7 @@ export default function FeedPurchasesPage() {
         <div className="card feed-purchase-filter-card">
           <div className="row feed-purchase-filter-heading">
             <h2 className="section-title">Purchase archive</h2>
-            <Button className="!text-white" asChild><Link href="/feeds/purchases/new">New purchase</Link></Button>
+            {!isViewer && <Button className="!text-white" asChild><Link href="/feeds/purchases/new">New purchase</Link></Button>}
           </div>
 
           <div className="feed-purchase-filter-grid">
@@ -95,6 +97,7 @@ export default function FeedPurchasesPage() {
           onPageChange={setPage}
           onPageSizeChange={(value) => { setPageSize(value); setPage(0); }}
           onDelete={handleDelete}
+          readOnly={isViewer}
           loading={loading}
           error={loadError}
           onRetry={() => void load()}

@@ -18,7 +18,9 @@ import {
   YAxis,
 } from 'recharts';
 import { formatDate } from '@/lib/date-format';
+import { useIsViewer } from '@/lib/farm-access';
 export default function Dashboard() {
+  const isViewer = useIsViewer();
   const today = new Date();
   const asDate = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -217,9 +219,9 @@ export default function Dashboard() {
               </div>
             );
           })}
-          <Button asChild className="w-full !text-white">
+          {!isViewer && <Button asChild className="w-full !text-white">
             <Link href="/new-entry">＋ &nbsp;Record milk entry</Link>
-          </Button>
+          </Button>}
           <div style={{ height: 22 }} />
           <div className="row">
             <h2 className="section-title">Farm production today</h2>
@@ -279,9 +281,9 @@ export default function Dashboard() {
         <div className="card">
           <div className="row">
             <h2 className="section-title">Buffalo production</h2>
-            <Link href="/daily-performance" style={{ fontSize: 10, color: '#277452' }}>
+            {!isViewer && <Link href="/daily-performance" style={{ fontSize: 10, color: '#277452' }}>
               Enter performance →
-            </Link>
+            </Link>}
           </div>
           {production.length ? (
             production.slice(0, 3).map((b) => (
