@@ -46,7 +46,7 @@ export function FeedConsumptionTable({ rows, count, page, pageSize, onPageChange
             <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>FEED</TableHead><TableHead>QUANTITY</TableHead><TableHead>COST / UNIT</TableHead><TableHead>TOTAL COST</TableHead>{!readOnly && <TableHead>ACTION</TableHead>}</TableRow></TableHeader>
             <TableBody>{loading ? Array.from({ length: 5 }, (_, i) => <TableRow key={i}>{Array.from({ length: 6 }, (_, j) => <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : rows.map((row) => <TableRow key={row.id}>
               <TableCell className="whitespace-nowrap">{formatDate(row.occurred_at)}</TableCell><TableCell><b>{row.feed_item_name}</b></TableCell><TableCell>{Number(row.quantity).toLocaleString('en-IN')} {row.base_unit}</TableCell><TableCell>{money(row.unit_cost)} / {row.base_unit}</TableCell><TableCell>{money(Number(row.quantity) * Number(row.unit_cost ?? 0))}</TableCell>
-              <TableCell>{row.can_edit_delete ? <Link className="inline-flex rounded-md border px-3 py-1.5 text-sm" href={`/feeds/consumption/edit/${row.id}`}>Edit</Link> : <Badge variant="muted">Locked</Badge>}</TableCell>}
+              {!readOnly && <TableCell>{row.can_edit_delete ? <Link className="inline-flex rounded-md border px-3 py-1.5 text-sm" href={`/feeds/consumption/edit/${row.id}`}>Edit</Link> : <Badge variant="muted">Locked</Badge>}</TableCell>}
             </TableRow>)}</TableBody>
           </Table>
         </div>
@@ -58,7 +58,7 @@ export function FeedConsumptionTable({ rows, count, page, pageSize, onPageChange
           {deleteTarget && <div className="delete-summary"><span>Feed item</span><b>{deleteTarget.feed_item_name}</b><span>{Number(deleteTarget.quantity).toLocaleString('en-IN')} {deleteTarget.base_unit} · {money(Number(deleteTarget.quantity) * Number(deleteTarget.unit_cost ?? 0))}</span></div>}
           <AlertDialogFooter><AlertDialogCancel disabled={Boolean(deletingId)} onClick={() => setDeleteTarget(null)}>Cancel</AlertDialogCancel><Button type="button" variant="destructive" onClick={() => void confirmDelete()} disabled={Boolean(deletingId)}>{deletingId ? 'Deleting…' : 'Delete feed consumption'}</Button></AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </AlertDialog>}
     </div>
   );
 }
