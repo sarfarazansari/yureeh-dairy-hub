@@ -538,9 +538,9 @@ export default function EntriesPage() {
             <div className="dialog-footer"><Button type="button" variant="secondary" onClick={() => setEditing(null)} disabled={updateMutation.isPending}>Cancel</Button><Button type="submit" disabled={updateMutation.isPending}>{updateMutation.isPending ? 'Saving…' : 'Save changes'}</Button></div>
           </form>
         )}
-      </Dialog>
+      </Dialog>}
 
-      <Dialog open={!!pendingDelete} onOpenChange={(open) => { if (!open && !deleteMutation.isPending) setPendingDelete(null); }} labelledBy="delete-entry-title" className="delete-dialog">
+      {!isViewer && <Dialog open={!!pendingDelete} onOpenChange={(open) => { if (!open && !deleteMutation.isPending) setPendingDelete(null); }} labelledBy="delete-entry-title" className="delete-dialog">
         {pendingDelete && (
           <>
             <div className="dialog-header">
@@ -551,7 +551,7 @@ export default function EntriesPage() {
             <div className="dialog-footer"><Button type="button" variant="secondary" onClick={() => setPendingDelete(null)} disabled={deleteMutation.isPending}>Keep entry</Button><Button type="button" variant="destructive" onClick={() => void confirmDelete()} disabled={deleteMutation.isPending}>{deleteMutation.isPending ? 'Cancelling…' : 'Cancel delivery'}</Button></div>
           </>
         )}
-      </Dialog>
+      </Dialog>}
     </AppShell>
   );
 }
