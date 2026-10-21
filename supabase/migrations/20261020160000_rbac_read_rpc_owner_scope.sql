@@ -78,8 +78,13 @@ as $$
   );
 $$;
 
+-- The deployed function's OUT-row shape differs from this definition in some environments.
+-- DROP is required because PostgreSQL cannot change a table-returning function's OUT row type
+-- with CREATE OR REPLACE. This RPC is called by the app, not by database objects.
+drop function if exists public.get_farm_financial_summary(date, date);
+
 -- Read-only RPC scoped through the trusted farm membership rather than the caller's auth UID.
-create or replace function public.get_farm_financial_summary(p_from date, p_to date)
+create function public.get_farm_financial_summary(p_from date, p_to date)
 returns table (
   milk_quantity_sold numeric,
   milk_sales_revenue numeric,
@@ -163,7 +168,10 @@ begin
       ) payments on true
       where e.user_id = owner_id and e.deleted_at is null), 0);
 end;
-$$;
+$;
+
+revoke all on function public.get_farm_financial_summary(date, date) from public, anon;
+grant execute on function public.get_farm_financial_summary(date, date) to authenticated;
 
 -- Read-only RPC scoped through the trusted farm membership rather than the caller's auth UID.
 create or replace function public.get_sales_analytics_summary(
