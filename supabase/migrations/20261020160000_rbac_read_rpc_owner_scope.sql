@@ -462,6 +462,10 @@ end;
 $$;
 
 
+-- PostgreSQL cannot create a function when the same signature already exists.
+-- Recreate this app-facing read RPC with its Viewer-safe owner scope.
+drop function if exists public.get_milk_pool_reconciliation(date, date);
+
 -- Viewer-safe read path: resolve farm ownership from trusted membership.
 create function public.get_milk_pool_reconciliation(
   p_start_date date,
