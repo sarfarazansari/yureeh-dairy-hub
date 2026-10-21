@@ -65,7 +65,7 @@ export function FeedPurchaseTable({ rows, count, page, pageSize, onPageChange, o
           {deleteTarget && <div className="delete-summary"><span>Feed item</span><b>{deleteTarget.feed_item_name}</b><span>{Number(deleteTarget.purchase_quantity).toLocaleString('en-IN')} {deleteTarget.purchase_unit} · {money(deleteTarget.total_amount)}</span></div>}
           <AlertDialogFooter><AlertDialogCancel disabled={Boolean(deletingId)} onClick={() => setDeleteTarget(null)}>Cancel</AlertDialogCancel><AlertDialogAction asChild><Button type="button" variant="destructive" onClick={(event) => { event.preventDefault(); void confirmDelete(); }} disabled={Boolean(deletingId)}>{deletingId ? 'Deleting…' : 'Delete feed purchase'}</Button></AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </AlertDialog>}
     </div>
   );
 }
