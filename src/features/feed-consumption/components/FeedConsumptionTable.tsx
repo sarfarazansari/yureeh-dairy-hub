@@ -19,13 +19,14 @@ type Props = {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   onDelete: (id: string) => Promise<void>;
+  readOnly?: boolean;
   loading?: boolean;
   error?: string;
   onRetry?: () => void;
 };
 const money = (value: number | string | null) => `₹${Number(value ?? 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-export function FeedConsumptionTable({ rows, count, page, pageSize, onPageChange, onPageSizeChange, onDelete, loading = false, error, onRetry }: Props) {
+export function FeedConsumptionTable({ rows, count, page, pageSize, onPageChange, onPageSizeChange, onDelete, readOnly = false, loading = false, error, onRetry }: Props) {
   const pages = Math.max(1, Math.ceil(count / pageSize));
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<FeedConsumptionListRow | null>(null);
@@ -42,10 +43,10 @@ export function FeedConsumptionTable({ rows, count, page, pageSize, onPageChange
       {error ? <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{error}</p>{onRetry && <Button className="mt-3" type="button" variant="outline" size="sm" onClick={onRetry}>Retry</Button>}</div> : <>
         <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]" aria-busy={loading}>
           <Table className="min-w-[700px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
-            <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>FEED</TableHead><TableHead>QUANTITY</TableHead><TableHead>COST / UNIT</TableHead><TableHead>TOTAL COST</TableHead><TableHead>ACTION</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>FEED</TableHead><TableHead>QUANTITY</TableHead><TableHead>COST / UNIT</TableHead><TableHead>TOTAL COST</TableHead>{!readOnly && <TableHead>ACTION</TableHead>}</TableRow></TableHeader>
             <TableBody>{loading ? Array.from({ length: 5 }, (_, i) => <TableRow key={i}>{Array.from({ length: 6 }, (_, j) => <TableCell key={j}><Skeleton className="h-4 w-20" /></TableCell>)}</TableRow>) : rows.map((row) => <TableRow key={row.id}>
               <TableCell className="whitespace-nowrap">{formatDate(row.occurred_at)}</TableCell><TableCell><b>{row.feed_item_name}</b></TableCell><TableCell>{Number(row.quantity).toLocaleString('en-IN')} {row.base_unit}</TableCell><TableCell>{money(row.unit_cost)} / {row.base_unit}</TableCell><TableCell>{money(Number(row.quantity) * Number(row.unit_cost ?? 0))}</TableCell>
-              <TableCell>{row.can_edit_delete ? <Link className="inline-flex rounded-md border px-3 py-1.5 text-sm" href={`/feeds/consumption/edit/${row.id}`}>Edit</Link> : <Badge variant="muted">Locked</Badge>}</TableCell>
+              <TableCell>{row.can_edit_delete ? <Link className="inline-flex rounded-md border px-3 py-1.5 text-sm" href={`/feeds/consumption/edit/${row.id}`}>Edit</Link> : <Badge variant="muted">Locked</Badge>}</TableCell>}
             </TableRow>)}</TableBody>
           </Table>
         </div>
