@@ -13,6 +13,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useBuffaloSalesArchive } from '@/features/buffaloes/hooks/use-buffaloes';
 import { money } from '@/lib/farm-format';
+import { useIsViewer } from '@/lib/farm-access';
 
 const PAGE_SIZE = 20;
 function todayKey() {
@@ -20,6 +21,7 @@ function todayKey() {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 export default function BuffaloSalesPage() {
+  const isViewer = useIsViewer();
   const [page, setPage] = useState(0);
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -38,7 +40,7 @@ export default function BuffaloSalesPage() {
     <AppShell title="Buffalo sales" subtitle="Sale transactions, buyer details and outstanding proceeds">
       <div className="management-stack">
         <div className="card space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="section-title">Sale archive</h2><div className="flex flex-wrap gap-2"><Button variant="outline" asChild><Link href="/buffaloes">Open herd overview</Link></Button><Button asChild><Link href="/buffalo-sales/new">New sale</Link></Button></div></div>
+          <div className="flex flex-wrap items-center justify-between gap-3"><h2 className="section-title">Sale archive</h2><div className="flex flex-wrap gap-2"><Button variant="outline" asChild><Link href="/buffaloes">Open herd overview</Link></Button>{!isViewer && <Button asChild><Link href="/buffalo-sales/new">New sale</Link></Button>}</div></div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="field"><Label htmlFor="buffalo-sales-search">Search buyer</Label><Input id="buffalo-sales-search" value={search} placeholder="Buyer name or mobile" onChange={(event) => setSearch(event.target.value)} /></div>
             <div className="field"><Label>Date range</Label><DateRangePicker from={from} to={to} max={todayKey()} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); setPage(0); }} /></div>
