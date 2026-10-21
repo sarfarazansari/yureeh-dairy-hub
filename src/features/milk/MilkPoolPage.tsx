@@ -1,5 +1,6 @@
 'use client';
 import { formatDate } from '@/lib/date-format';
+import { useIsViewer } from '@/lib/farm-access';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -34,6 +35,7 @@ import {
 const formatLitres = (value: number) => milkTxt(Number(value || 0));
 
 export default function MilkPoolPage() {
+  const isViewer = useIsViewer();
   const defaultRange = getMilkEntryPresetRange('current-month');
   const [from, setFrom] = useState(defaultRange.from);
   const [to, setTo] = useState(defaultRange.to);
@@ -218,7 +220,7 @@ export default function MilkPoolPage() {
           Do not use this form for buffalo production or customer delivery; those are generated from
           their source transactions.
         </p>
-        <form className="grid three" onSubmit={recordMovement}>
+        {!isViewer && <form className="grid three" onSubmit={recordMovement}>
           <div className="field">
             <Label htmlFor="pool-movement-date">Business date</Label>
             <DatePicker id="pool-movement-date" value={businessDate} max={localDateKey()} onChange={setBusinessDate} ariaLabel="Business date" />
@@ -259,7 +261,7 @@ export default function MilkPoolPage() {
               {recordMutation.isPending ? 'Saving…' : 'Record movement'}
             </Button>
           </div>
-        </form>
+        </form>}
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
       </div>
 
