@@ -24,7 +24,9 @@ import { money, todayLocal } from '@/features/expenses/utils/expense-format';
 import type { ExpenseBuffaloOption, ExpenseRow } from '@/lib/expense-types';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import { useExpenseHistoryQuery, useSoftDeleteExpenseMutation, useUpdateExpenseMutation } from '@/features/expenses/expense.queries';
+import { useIsViewer } from '@/lib/farm-access';
 export default function ExpenseHistory() {
+  const isViewer = useIsViewer();
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -73,6 +75,11 @@ export default function ExpenseHistory() {
   useEffect(() => {
     let alive = true;
     async function initialize() {
+      // Category setup may write defaults; a Viewer only needs the existing read data.
+      if (isViewer) {
+        setSetupReady(true);
+        return;
+      }
       if (!supabase) {
         setSetupError('Supabase is not configured.');
         return;
@@ -89,7 +96,7 @@ export default function ExpenseHistory() {
     }
     void initialize();
     return () => { alive = false; };
-  }, []);
+  }, [isViewer]);
 
   const load = async () => { await historyQuery.refetch(); };
   const visible = rows;
@@ -269,7 +276,7 @@ export default function ExpenseHistory() {
         )}
       </div>
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-        <ShadcnDialog open={!!editing} onOpenChange={(open) => { if (!open && !busy) setEditing(null); }}>
+        {!isViewer && <ShadcnDialog open={!!editing} onOpenChange={(open) => { if (!open && !busy) setEditing(null); }}>
           <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
           {editing && (
             <form className="expense-edit-form" onSubmit={save}>
@@ -394,7 +401,7 @@ export default function ExpenseHistory() {
             </form>
           )}
           </DialogContent>
-        </ShadcnDialog>
+        </ShadcnDialog>}
         {loadError ? <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{loadErrorMessage || message || 'Could not load expense history.'}</p><Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => void load()}>Retry</Button></div> : <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]">
           <Table className="min-w-[1200px] [&_tbody_tr:nth-child(even)]:bg-[#f7f9f6]">
             <TableHeader><TableRow>
@@ -409,8 +416,10 @@ export default function ExpenseHistory() {
                 <TableCell><Badge variant={r.payment_status === 'PAID' ? 'secondary' : 'outline'}>{r.payment_status}</Badge></TableCell><TableCell>{r.payment_method ?? '—'}</TableCell>
                 <TableCell><div className="flex items-center gap-2">
                   <Button variant="outline" size="sm" asChild><Link href={`/expenses/history/${r.id}`}>View</Link></Button>
-                  <Button type="button" variant="outline" size="sm" disabled={ledgerExpenseIds.has(r.id) || feedPurchaseExpenseIds.has(r.id)} title={feedPurchaseExpenseIds.has(r.id) ? 'Managed by Feed Purchases. Use the Feed Purchases module.' : ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and is locked to preserve its ledger.' : undefined} onClick={() => setEditing({ ...r })}>Edit</Button>
-                  <Button type="button" variant="outline" size="sm" disabled={ledgerExpenseIds.has(r.id) || feedPurchaseExpenseIds.has(r.id)} title={feedPurchaseExpenseIds.has(r.id) ? 'Managed by Feed Purchases. Use the Feed Purchases module.' : ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and cannot be deleted.' : undefined} onClick={() => setPendingDelete(r)}>Delete</Button>
+                  {!isViewer && <>
+                    <Button type="button" variant="outline" size="sm" disabled={ledgerExpenseIds.has(r.id) || feedPurchaseExpenseIds.has(r.id)} title={feedPurchaseExpenseIds.has(r.id) ? 'Managed by Feed Purchases. Use the Feed Purchases module.' : ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and is locked to preserve its ledger.' : undefined} onClick={() => setEditing({ ...r })}>Edit</Button>
+                    <Button type="button" variant="outline" size="sm" disabled={ledgerExpenseIds.has(r.id) || feedPurchaseExpenseIds.has(r.id)} title={feedPurchaseExpenseIds.has(r.id) ? 'Managed by Feed Purchases. Use the Feed Purchases module.' : ledgerExpenseIds.has(r.id) ? 'This expense has dated payments and cannot be deleted.' : undefined} onClick={() => setPendingDelete(r)}>Delete</Button>
+                  </>}
                 </div></TableCell>
               </TableRow>)}
             </TableBody>
@@ -419,7 +428,7 @@ export default function ExpenseHistory() {
         {!loadError && !visible.length && <div className="empty">No expenses match these filters.</div>}
         <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4"><p className="text-sm text-muted-foreground">Showing {firstResult}–{lastResult} of {visible.length}</p><div className="flex flex-wrap items-center gap-2"><Label htmlFor="expense-page-size">Rows per page</Label><Select value={String(pageSize)} onValueChange={(value) => setPagination(1, Number(value))}><SelectTrigger id="expense-page-size" className="w-24"><SelectValue /></SelectTrigger><SelectContent>{[10, 20, 50, 100].map((size) => <SelectItem key={size} value={String(size)}>{size}</SelectItem>)}</SelectContent></Select><Button type="button" variant="outline" size="sm" disabled={safePage <= 1} onClick={() => setPagination(safePage - 1)}>Previous</Button><span className="px-2 text-sm">Page {safePage} of {pageCount}</span><Button type="button" variant="outline" size="sm" disabled={safePage >= pageCount} onClick={() => setPagination(safePage + 1)}>Next</Button></div></div>
         <p className="kpi-foot">Feed-purchase expenses are managed in Feed Purchases; expenses with dated payment-ledger entries are locked to preserve reconciliation. Linked purchase expenses are counted once.</p>
-        <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open && !deleteBusy) setPendingDelete(null); }}>
+        {!isViewer && <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open && !deleteBusy) setPendingDelete(null); }}>
           <AlertDialogContent>
           {pendingDelete && (
             <>
@@ -448,7 +457,7 @@ export default function ExpenseHistory() {
             </>
           )}
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog>}
     </ExpenseShell>
   );
 }

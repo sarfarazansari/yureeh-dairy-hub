@@ -15,10 +15,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 
 import { useExpenseDetailQuery, useRecordExpensePaymentMutation } from '@/features/expenses/expense.queries';
+import { useIsViewer } from '@/lib/farm-access';
 
 const PAYMENT_METHODS = ['CASH', 'UPI', 'BANK_TRANSFER', 'CARD', 'OTHER'] as const;
 
 export default function ExpenseDetail({ params }: { params: Promise<{ id: string }> }) {
+  const isViewer = useIsViewer();
   const [id, setId] = useState(''),
     [paymentDate, setPaymentDate] = useState(todayLocal()),
     [amount, setAmount] = useState(''),
@@ -121,7 +123,7 @@ export default function ExpenseDetail({ params }: { params: Promise<{ id: string
             ))}
           </div>
           <div className="grid two" style={{ marginTop: 15 }}>
-            <section className="card">
+            {!isViewer && <section className="card">
               <h2 className="section-title">Record supplier payment</h2>
               {Number(row.pending_amount) > 0 ? (
                 <form className="expense-form-grid" onSubmit={recordPayment}>
@@ -165,7 +167,7 @@ export default function ExpenseDetail({ params }: { params: Promise<{ id: string
               <p className="kpi-foot" style={{ marginTop: 12 }}>
                 Payments recorded after this feature is enabled have dated ledger entries. Earlier paid amounts remain as undated historical totals.
               </p>
-            </section>
+            </section>}
             <section className="card">
               <h2 className="section-title">Payment history</h2>
               {payments.length ? (

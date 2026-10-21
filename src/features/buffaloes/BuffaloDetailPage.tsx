@@ -22,8 +22,10 @@ import { BuffaloDispositionPanel } from './components/BuffaloDispositionPanel';
 import { BuffaloAcquisitionCostPanel } from './components/BuffaloAcquisitionCostPanel';
 import { BuffaloPaymentHistory, BuffaloStatusHistory } from './components/BuffaloHistory';
 import type { BuffaloDetail } from './types';
+import { useIsViewer } from '@/lib/farm-access';
 
 export default function BuffaloDetailPage({ id }: { id: string }) {
+  const isViewer = useIsViewer();
   const [editing, setEditing] = useState<'profile' | 'purchase' | 'vendor' | null>(null);
   const buffaloQuery = useBuffaloDetail(id);
   const buffalo = buffaloQuery.data;
@@ -53,15 +55,15 @@ export default function BuffaloDetailPage({ id }: { id: string }) {
     <AppShell title={buffalo.name ? `${buffalo.buffalo_code} — ${buffalo.name}` : buffalo.buffalo_code} subtitle={`${buffalo.breed ?? 'Breed not entered'} · ${buffalo.current_status}`}>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <Link href="/buffaloes" className="text-sm text-[var(--green)] hover:underline">← All buffaloes</Link>
-        <div className="flex flex-wrap gap-2">
+        {!isViewer && <div className="flex flex-wrap gap-2">
           <Button type="button" variant={editing === 'profile' ? 'secondary' : 'outline'} onClick={() => setEditing((value) => value === 'profile' ? null : 'profile')}>Edit profile</Button>
           <Button type="button" variant={editing === 'purchase' ? 'secondary' : 'outline'} onClick={() => setEditing((value) => value === 'purchase' ? null : 'purchase')}>Edit purchase</Button>
           <Button type="button" variant={editing === 'vendor' ? 'secondary' : 'outline'} onClick={() => setEditing((value) => value === 'vendor' ? null : 'vendor')}>Edit vendor</Button>
-        </div>
+        </div>}
       </div>
-      {editing === 'profile' && <BuffaloProfileForm buffalo={buffalo} onCancel={() => setEditing(null)} />}
-      {editing === 'purchase' && <BuffaloPurchaseForm buffalo={buffalo} onCancel={() => setEditing(null)} />}
-      {editing === 'vendor' && <BuffaloVendorForm buffalo={buffalo} onCancel={() => setEditing(null)} />}
+      {!isViewer && editing === 'profile' && <BuffaloProfileForm buffalo={buffalo} onCancel={() => setEditing(null)} />}
+      {!isViewer && editing === 'purchase' && <BuffaloPurchaseForm buffalo={buffalo} onCancel={() => setEditing(null)} />}
+      {!isViewer && editing === 'vendor' && <BuffaloVendorForm buffalo={buffalo} onCancel={() => setEditing(null)} />}
 
       <div className="grid kpis">
         <KPI label="TOTAL MILK PRODUCED" value={milkTxt(summary.total)} foot={`${summary.days} days with records`} />
@@ -80,12 +82,14 @@ export default function BuffaloDetailPage({ id }: { id: string }) {
         <PurchaseSummary buffalo={buffalo} />
       </div>
 
-      <BuffaloAcquisitionCostPanel buffaloId={buffalo.id} canAdd={['ACTIVE', 'DRY'].includes(buffalo.current_status)} purchasePrice={purchase ? Number(purchase.purchase_price) : null} />
-      <BuffaloDispositionPanel buffalo={buffalo} />
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <BuffaloPurchasePaymentForm buffalo={buffalo} />
-        <BuffaloStatusForm buffalo={buffalo} />
-      </div>
+      {!isViewer && <>
+        <BuffaloAcquisitionCostPanel buffaloId={buffalo.id} canAdd={['ACTIVE', 'DRY'].includes(buffalo.current_status)} purchasePrice={purchase ? Number(purchase.purchase_price) : null} />
+        <BuffaloDispositionPanel buffalo={buffalo} />
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+          <BuffaloPurchasePaymentForm buffalo={buffalo} />
+          <BuffaloStatusForm buffalo={buffalo} />
+        </div>
+      </>}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         <BuffaloPaymentHistory payments={paymentsQuery.data ?? []} />
         <BuffaloStatusHistory history={statusHistoryQuery.data ?? []} />

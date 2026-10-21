@@ -83,8 +83,12 @@ export async function fetchActiveFeedItems(client: SupabaseClient) {
   return data ?? [];
 }
 
-export async function fetchEligibleBuffaloes(client: SupabaseClient, date: string): Promise<DietBuffaloOption[]> {
-  const { data, error } = await client.rpc('get_buffalo_production_sheet', { p_business_date: date });
+export async function fetchEligibleBuffaloes(client: SupabaseClient, _date: string): Promise<DietBuffaloOption[]> {
+  const { data, error } = await client
+    .from('buffaloes')
+    .select('id,buffalo_code,name,current_status')
+    .in('current_status', ['ACTIVE', 'DRY'])
+    .order('buffalo_code');
   if (error) throw error;
   return (data ?? []) as DietBuffaloOption[];
 }
