@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
 import { AppShell } from '@/components/layout/AppShell';
+import { useIsViewer } from '@/lib/farm-access';
 import { Toast } from '@/components/ui/Toast';
 import { useDeleteFeedConsumptionMutation, useFeedConsumptionArchiveQuery } from '@/features/feed-consumption/feed-consumption.queries';
 import { FeedConsumptionTable } from '@/features/feed-consumption/components/FeedConsumptionTable';
@@ -16,6 +17,7 @@ import { FeedConsumptionTable } from '@/features/feed-consumption/components/Fee
 const DEFAULT_PAGE_SIZE = 20;
 
 export default function FeedConsumptionPage() {
+  const isViewer = useIsViewer();
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [from, setFrom] = useState('');
@@ -53,7 +55,7 @@ export default function FeedConsumptionPage() {
         <div className="card">
           <div className="row">
             <h2 className="section-title">Consumption archive</h2>
-            <Button className="text-white" asChild><Link href="/feeds/consumption/new">New consumption</Link></Button>
+            {!isViewer && <Button className="text-white" asChild><Link href="/feeds/consumption/new">New consumption</Link></Button>}
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             <div className="field max-w-sm"><Label className="mb-1 block">Date range</Label><DateRangePicker from={from} to={to} max={new Date(Date.now() - new Date().getTimezoneOffset() * 60_000).toISOString().slice(0, 10)} onChange={({ from: nextFrom, to: nextTo }) => { setFrom(nextFrom); setTo(nextTo); setPage(0); }} /></div>
@@ -62,7 +64,7 @@ export default function FeedConsumptionPage() {
           </div>
         </div>
 
-        <FeedConsumptionTable rows={rows} count={count} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(value) => { setPageSize(value); setPage(0); }} onDelete={handleDelete} loading={loading} error={loadError} onRetry={() => void load()} />
+        <FeedConsumptionTable rows={rows} count={count} page={page} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={(value) => { setPageSize(value); setPage(0); }} onDelete={handleDelete} readOnly={isViewer} loading={loading} error={loadError} onRetry={() => void load()} />
       </div>
     </AppShell>
   );

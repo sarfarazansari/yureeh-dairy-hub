@@ -23,8 +23,10 @@ import { money, todayLocal } from '@/features/expenses/utils/expense-format';
 import { KPI } from '@/components/ui/KPI';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useIsViewer } from '@/lib/farm-access';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 export default function ExpenseDashboard() {
+  const isViewer = useIsViewer();
   const today = todayLocal(),
     monthStart = `${today.slice(0, 8)}01`,
     [from, setFrom] = useState(monthStart),
@@ -177,23 +179,21 @@ export default function ExpenseDashboard() {
           value={money(animal.reduce((s, r) => s + Number(r.total_amount), 0))}
           foot="Veterinary, medicines and other animal costs"
         />
-        <div className="card">
-          <div className="kpi-label">QUICK ACTION</div>
-          <Button asChild className="w-full">
-            <Link href="/expenses/new">＋ &nbsp;Record expense</Link>
-          </Button>
-        </div>
-        <div className="card">
-          <div className="kpi-label">MANAGE</div>
-          <div className="row" style={{ marginTop: 12 }}>
-            <Link href="/expenses/categories" className="sub">
-              Categories →
-            </Link>
-            <Link href="/expenses/vendors" className="sub">
-              Vendors →
-            </Link>
+        {!isViewer && <>
+          <div className="card">
+            <div className="kpi-label">QUICK ACTION</div>
+            <Button asChild className="w-full">
+              <Link href="/expenses/new">＋ &nbsp;Record expense</Link>
+            </Button>
           </div>
-        </div>
+          <div className="card">
+            <div className="kpi-label">MANAGE</div>
+            <div className="row" style={{ marginTop: 12 }}>
+              <Link href="/expenses/categories" className="sub">Categories →</Link>
+              <Link href="/expenses/vendors" className="sub">Vendors →</Link>
+            </div>
+          </div>
+        </>}
       </div>
       <div className="grid two">
         <div className="card">
