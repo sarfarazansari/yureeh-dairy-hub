@@ -168,7 +168,7 @@ begin
       ) payments on true
       where e.user_id = owner_id and e.deleted_at is null), 0);
 end;
-$;
+$$;
 
 revoke all on function public.get_farm_financial_summary(date, date) from public, anon;
 grant execute on function public.get_farm_financial_summary(date, date) to authenticated;
