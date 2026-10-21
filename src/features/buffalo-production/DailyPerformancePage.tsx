@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
+import { useIsViewer } from '@/lib/farm-access';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -16,6 +17,7 @@ import type { BuffaloProductionAnimal } from './types';
 import { useProductionSheetQuery, useSaveProductionSheetMutation } from './buffalo-production.queries';
 
 export default function DailyPerformancePage() {
+  const isViewer = useIsViewer();
   const [date, setDate] = useState(() => localDateKey());
   const [shift, setShift] = useState<MilkEntryShift>('MORNING');
   const [values, setValues] = useState<Record<string, string>>({});
@@ -158,7 +160,7 @@ export default function DailyPerformancePage() {
           <div className="production-save-context"><span>{entered} of {rows.length} filled</span><strong>{milkTxt(total)}</strong></div>
           <Button className="production-save-button" type="button" disabled={saveMutation.isPending || sheetQuery.isPending || !rows.length || sheetQuery.isFetching} onClick={() => void save()}>
             {saveMutation.isPending ? 'Saving production…' : 'Save production'}
-          </Button>
+          </Button>}
         </div>
       </section>
     </AppShell>
