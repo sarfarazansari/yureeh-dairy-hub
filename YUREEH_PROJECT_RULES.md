@@ -293,3 +293,32 @@ Shared UI consistency rules:
 - Shared tables must own their column labels, row styling, empty-state conventions where applicable, and user-facing date formatting.
 - Never display raw ISO business-date keys (YYYY-MM-DD) in user-facing tables. Use the canonical `formatDate` helper and the established full-month format `D MMMM YYYY` where space allows.
 - When fixing a repeated UI issue, search all affected routes and migrate them to the same shared component in the same task; do not patch only one screen.
+
+
+--------------------------------------------------
+
+ROLE-BASED ACCESS CONTROL (RBAC) — MANDATORY
+
+See `docs/RBAC_IMPLEMENTATION_PLAN.md` for the authoritative phase plan and acceptance criteria.
+
+Initial roles:
+- `super_admin`: full control over the farm and all existing modules.
+- `viewer`: read-only access to explicitly permitted farm data.
+
+Security rules:
+- Authorization is enforced in PostgreSQL RLS and every callable RPC/function, not merely by hiding UI controls.
+- Resolve role from trusted farm-membership records. Never trust client-provided role values or user-editable metadata.
+- Existing owner-scoped `user_id = auth.uid()` policies do not automatically support a second farm member. Map ownership and dependent relationships before changing policies or schema.
+- Open signup must never automatically grant membership or administrator access. Viewer provisioning must be initiated through a secure Super Admin-controlled flow.
+- Audit `SECURITY DEFINER` functions, execution grants, scheduled operations, views, triggers, and alternate mutation paths.
+- Protect against self-promotion, cross-farm data access, stale authorization/cache state, and role changes by unauthorized users.
+- Keep milk, customer payment, expense, buffalo lifecycle, feed purchase/inventory/consumption, diet-plan, and financial reconciliation invariants intact.
+- Read access to sensitive customer and financial information is a separate decision from write access; follow the explicit viewer data scope documented in the RBAC plan.
+
+RBAC workflow:
+1. Read `docs/RBAC_IMPLEMENTATION_PLAN.md` and inspect all affected routes, services, schema, RLS, RPCs and scheduled functions.
+2. Complete the route/table/action/RPC permission inventory before broad schema changes.
+3. Use additive versioned migrations; never rewrite migrations that may already have been applied.
+4. Test both allowed reads and forbidden mutations through UI and direct Supabase API/RPC calls.
+5. Keep all RBAC phases on the same explicitly selected feature branch when requested; do not create a branch per phase.
+6. Do not create a PR or merge unless the user explicitly asks. Never claim a test or database operation was run unless it was actually executed.

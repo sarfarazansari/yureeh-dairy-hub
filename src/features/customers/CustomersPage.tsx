@@ -26,7 +26,9 @@ import {
   useUpdateCustomerPricingMutation,
 } from './customer.queries';
 import type { CustomerSummary } from './types';
+import { useIsViewer } from '@/lib/farm-access';
 export default function CustomersPage() {
+  const isViewer = useIsViewer();
   const [name, setName] = useState(''),
     [rate, setRate] = useState(''),
     [type, setType] = useState<PricingType>('FIXED_PER_LITRE'),
@@ -141,7 +143,7 @@ export default function CustomersPage() {
   return (
     <AppShell title="Customers" subtitle="Manage customer pricing and sales history">
       <div className="management-stack">
-        <form className="card customer-create-card" onSubmit={create}>
+        {!isViewer && <form className="card customer-create-card" onSubmit={create}>
           <h2 className="section-title customer-create-heading">Add customer</h2>
           <div className="field">
             <Label htmlFor="customer-create-name">Name</Label>
@@ -178,7 +180,7 @@ export default function CustomersPage() {
             {busy ? 'Saving…' : 'Add customer'}
           </Button>
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-        </form>
+        </form>}
         <div className="card">
           <div className="row">
             <h2 className="section-title">Customer directory</h2>
@@ -190,7 +192,7 @@ export default function CustomersPage() {
             <div role="alert" className="rounded-md border border-destructive/30 p-4 text-sm"><p>{directoryQuery.error.message}</p><Button type="button" variant="outline" className="mt-3" onClick={() => void directoryQuery.refetch()}>Retry</Button></div>
           ) : rows.length ? (
             <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[850px]">
-              <TableHeader><TableRow><TableHead>Customer</TableHead><TableHead>Pricing</TableHead><TableHead>Default rate</TableHead><TableHead>Total milk</TableHead><TableHead>Revenue</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Customer</TableHead><TableHead>Pricing</TableHead><TableHead>Default rate</TableHead><TableHead>Total milk</TableHead><TableHead>Revenue</TableHead><TableHead>Status</TableHead>{!isViewer && <TableHead className="text-right">Actions</TableHead>}</TableRow></TableHeader>
               <TableBody>
                 {rows.map((c) => <TableRow key={c.id}>
                     <TableCell><Link href={`/customers/${c.id}`} className="font-semibold text-[var(--ink)]">{c.name}</Link><div className="kpi-foot">{c.phone || '—'}</div></TableCell>
@@ -208,7 +210,7 @@ export default function CustomersPage() {
                         {c.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
-                    <TableCell><div className="flex justify-end gap-2"><Button variant="outline" size="sm" type="button" onClick={() => openEdit(c)}>Edit</Button><Button variant="outline" size="sm" type="button" onClick={() => openPricing(c)}>Rate</Button><Button variant="outline" size="sm" type="button" disabled={statusMutation.isPending} onClick={() => void toggle(c)}>{statusMutation.isPending ? 'Updating…' : c.is_active ? 'Pause' : 'Activate'}</Button></div></TableCell>
+                    {!isViewer && <TableCell><div className="flex justify-end gap-2"><Button variant="outline" size="sm" type="button" onClick={() => openEdit(c)}>Edit</Button><Button variant="outline" size="sm" type="button" onClick={() => openPricing(c)}>Rate</Button><Button variant="outline" size="sm" type="button" disabled={statusMutation.isPending} onClick={() => void toggle(c)}>{statusMutation.isPending ? 'Updating…' : c.is_active ? 'Pause' : 'Activate'}</Button></div></TableCell>}
                   </TableRow>)}
               </TableBody>
             </Table></div>

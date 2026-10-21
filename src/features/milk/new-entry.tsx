@@ -176,7 +176,7 @@ export default function NewEntryForm() {
             </div>
             <div className="field">
               <Label htmlFor="entry-customer">Customer</Label>
-              <Select value={customerId || undefined} onValueChange={chooseCustomer} disabled={customersQuery.isPending || createMutation.isPending}>
+              <Select value={customerId} onValueChange={chooseCustomer} disabled={customersQuery.isPending || createMutation.isPending}>
                 <SelectTrigger id="entry-customer" aria-invalid={!!errors.customer_id}><SelectValue placeholder="Select customer" /></SelectTrigger>
                 <SelectContent>{customers.map((item) => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}</SelectContent>
               </Select>

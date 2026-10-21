@@ -32,7 +32,9 @@ import {
   useRecordCustomerPaymentMutation,
 } from './customer.queries';
 import type { CustomerPaymentMethod } from './types';
+import { useIsViewer } from '@/lib/farm-access';
 export default function CustomerDetailPage({ id }: { id: string }) {
+  const isViewer = useIsViewer();
   const detailQuery = useCustomerDetailQuery(id);
   const paymentsQuery = useCustomerPaymentsQuery(id);
   const paymentMutation = useRecordCustomerPaymentMutation();
@@ -172,7 +174,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
           <p className="sub">Address: {c.address || '—'}</p>
           <p className="sub">Notes: {c.notes || '—'}</p>
         </div>
-        <div className="card">
+        {!isViewer && <div className="card">
           <h2 className="section-title">Record customer payment</h2>
           <p className="sub">
             Current outstanding: <b>{money(outstanding)}</b>
@@ -208,7 +210,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
               {paymentMutation.isPending ? 'Recording…' : outstanding > 0 ? 'Record payment' : 'Record advance'}
             </Button>
           </form>
-        </div>
+        </div>}
       </div>
 
       <div style={{ height: 14 }} />

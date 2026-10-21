@@ -17,6 +17,7 @@ import { money } from '@/lib/farm-format';
 import { buffaloPaymentType, buffaloPurchaseSchema } from './validation';
 import { useBuffaloDirectory, useCreateBuffaloPurchase } from './hooks/use-buffaloes';
 import type { BuffaloListItem } from './types';
+import { useIsViewer } from '@/lib/farm-access';
 
 const INITIAL_FORM = {
   buffalo_code: '', buffalo_name: '', breed: 'Murrah', purchase_date: '',
@@ -35,6 +36,7 @@ function paymentLabel(status?: string) {
 }
 
 export default function BuffaloesPage() {
+  const isViewer = useIsViewer();
   const [form, setForm] = useState({ ...INITIAL_FORM, purchase_date: getToday() });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState('');
@@ -67,7 +69,7 @@ export default function BuffaloesPage() {
   return (
     <AppShell title="Buffaloes" subtitle="Individual animal records and purchase details">
       <div className="management-stack">
-        <form className="card space-y-4" onSubmit={handleSubmit} noValidate>
+        {!isViewer && <form className="card space-y-4" onSubmit={handleSubmit} noValidate>
           <h2 className="section-title">Add buffalo</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <Field label="Buffalo code" error={errors.buffalo_code}><Input value={form.buffalo_code} onChange={(event) => updateField('buffalo_code', event.target.value)} onBlur={() => updateField('buffalo_code', form.buffalo_code.trim().toUpperCase())} placeholder="BUFF-001" aria-invalid={Boolean(errors.buffalo_code)} /></Field>
@@ -85,7 +87,7 @@ export default function BuffaloesPage() {
           </div>
           {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
           <Button type="submit" disabled={createMutation.isPending}>{createMutation.isPending ? 'Saving…' : 'Save buffalo'}</Button>
-        </form>
+        </form>}
         <HerdOverview rows={directoryQuery.data ?? []} isLoading={directoryQuery.isPending} error={directoryQuery.error?.message} />
       </div>
     </AppShell>

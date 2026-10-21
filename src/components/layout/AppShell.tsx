@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { Sidebar } from './Sidebar';
+import { useFarmRole } from '@/lib/farm-access';
 
 export function AppShell({
   children,
@@ -14,10 +15,18 @@ export function AppShell({
   subtitle: string;
   actions?: ReactNode;
 }) {
+  const role = useFarmRole();
+
   return (
     <div className="app">
       <Sidebar />
       <main className="main">
+        {role === 'viewer' && (
+          <div className="card" role="status" aria-live="polite">
+            <strong>Read-only access</strong>
+            <p className="sub">You can view farm records and reports. Changes, payments, adjustments and settings are restricted.</p>
+          </div>
+        )}
         <header className="topbar">
           <div className="page-heading">
             <div className="eyebrow">YUREEH FARM · MANAGEMENT</div>
