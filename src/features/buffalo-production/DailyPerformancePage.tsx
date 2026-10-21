@@ -114,7 +114,7 @@ export default function DailyPerformancePage() {
         <div className="production-fat-row">
           <div className="field production-fat-field">
             <Label htmlFor="pooled-milk-fat">Mixed milk fat (%) · {shift === 'MORNING' ? 'Morning' : 'Evening'}</Label>
-            <Input id="pooled-milk-fat" type="number" min="0" max="100" step="0.01" inputMode="decimal"
+            <Input id="pooled-milk-fat" type="number" min="0" max="100" step="0.01" inputMode="decimal" readOnly={isViewer}
               placeholder="Enter pooled milk fat" disabled={saveMutation.isPending || sheetQuery.isFetching}
               value={getFatValue()} aria-describedby="pooled-milk-fat-help"
               onChange={(event) => { setFatValue(event.target.value); setMessage(''); setError(''); }} />
@@ -133,7 +133,7 @@ export default function DailyPerformancePage() {
         {sheetQuery.isPending ? <div className="empty">Loading buffaloes and saved production…</div> : (
           <>
             <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)] production-desktop-table"><Table className="production-table min-w-[650px]"><TableHeader><TableRow><TableHead>BUFFALO</TableHead><TableHead>MILK (L)</TableHead><TableHead>STATUS</TableHead></TableRow></TableHeader>
-              <TableBody>{rows.map((animal) => { const status = statusFor(animal); return <TableRow key={animal.id}><TableCell><b>{animal.name || animal.buffalo_code}</b><div className="text-xs text-muted-foreground">{animal.buffalo_code}</div></TableCell><TableCell><Input aria-label={`${animal.name || animal.buffalo_code} milk quantity in litres`} className="production-input" type="number" min="0" step="0.001" inputMode="decimal" placeholder="No record" disabled={saveMutation.isPending || sheetQuery.isFetching} value={getValue(animal.id)} onChange={(event) => updateQuantity(animal.id, event.target.value)} /></TableCell><TableCell><span className={status.className}>{status.label}</span></TableCell></TableRow>; })}</TableBody>
+              <TableBody>{rows.map((animal) => { const status = statusFor(animal); return <TableRow key={animal.id}><TableCell><b>{animal.name || animal.buffalo_code}</b><div className="text-xs text-muted-foreground">{animal.buffalo_code}</div></TableCell><TableCell><Input aria-label={`${animal.name || animal.buffalo_code} milk quantity in litres`} className="production-input" type="number" min="0" step="0.001" inputMode="decimal" placeholder="No record" disabled={isViewer || saveMutation.isPending || sheetQuery.isFetching} value={getValue(animal.id)} onChange={(event) => updateQuantity(animal.id, event.target.value)} /></TableCell><TableCell><span className={status.className}>{status.label}</span></TableCell></TableRow>; })}</TableBody>
             </Table></div>
             <div className="production-mobile-list">
               {rows.map((animal) => {
@@ -160,7 +160,7 @@ export default function DailyPerformancePage() {
           <div className="production-save-context"><span>{entered} of {rows.length} filled</span><strong>{milkTxt(total)}</strong></div>
           <Button className="production-save-button" type="button" disabled={saveMutation.isPending || sheetQuery.isPending || !rows.length || sheetQuery.isFetching} onClick={() => void save()}>
             {saveMutation.isPending ? 'Saving production…' : 'Save production'}
-          </Button>}
+          </Button>}}
         </div>
       </section>
     </AppShell>
