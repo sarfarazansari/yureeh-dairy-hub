@@ -52,11 +52,23 @@ export default function NewExpense() {
         return;
       }
       try {
-        await ensureExpenseCategories(supabase);
         const { data: { user }, error } = await supabase.auth.getUser();
         if (error || !user) throw error ?? new Error('Session expired. Sign in again.');
+
+        const [{ data: farmOwnerId, error: ownerError }, { data: role, error: roleError }] = await Promise.all([
+          supabase.rpc('current_farm_owner_id'),
+          supabase.rpc('current_farm_role'),
+        ]);
+        if (ownerError || roleError) {
+          throw ownerError ?? roleError ?? new Error('Could not resolve farm access.');
+        }
+        if (!farmOwnerId) throw new Error('No active farm access was found for this account.');
+
+        // Category setup writes rows, so never run it in a read-only Viewer session.
+        if (role === 'super_admin') await ensureExpenseCategories(supabase);
+
         if (alive) {
-          setOwnerId(user.id);
+          setOwnerId(farmOwnerId);
           setOptionsReady(true);
         }
       } catch (error) {
