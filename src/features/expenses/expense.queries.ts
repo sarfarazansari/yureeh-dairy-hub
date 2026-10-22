@@ -161,9 +161,20 @@ export function useExpenseCategoriesQuery(ownerId: string, enabled = true) {
     queryFn: async () => {
       if (!supabase) throw new Error('Supabase is not configured.');
       const { data, error } = await supabase.from('expense_categories').select('*')
-        .eq('owner_id', ownerId).order('category_group').order('name');
+        .or(`owner_id.is.null,owner_id.eq.${ownerId}`)
+        .order('category_group').order('name');
       if (error) throw new Error(error.message);
-      return data ?? [];
+
+      // Prefer farm-owned categories when older data already contains an override.
+      const byName = new Map<string, NonNullable<typeof data>[number]>();
+      for (const category of data ?? []) {
+        const key = category.name.trim().toLocaleLowerCase();
+        const existing = byName.get(key);
+        if (!existing || (existing.owner_id == null && category.owner_id === ownerId)) {
+          byName.set(key, category);
+        }
+      }
+      return [...byName.values()];
     },
   });
 }
