@@ -259,7 +259,7 @@ export function useNewExpenseOptionsQuery(ownerId: string, enabled = true) {
       if (error) throw new Error(error.message);
       // Prefer a farm-owned category over a shared default with the same name.
       // This keeps custom settings effective without hiding defaults when setup is incomplete.
-      const categoryByName = new Map<string, (typeof categories.data)[number]>();
+      const categoryByName = new Map<string, NonNullable<typeof categories.data>[number]>();
       for (const category of categories.data ?? []) {
         const key = category.name.trim().toLocaleLowerCase();
         const existing = categoryByName.get(key);
