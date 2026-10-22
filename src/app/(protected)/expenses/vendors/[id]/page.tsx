@@ -2,6 +2,8 @@
 import { formatDate } from '@/lib/date-format';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useIsViewer } from '@/lib/farm-access';
 import { supabase } from '@/lib/supabase';
 import { ExpenseShell } from '@/features/expenses/components/ExpenseNavigationShell';
 import { money } from '@/features/expenses/utils/expense-format';
@@ -11,10 +13,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 
 export default function ExpenseVendorDetail({ params }: { params: Promise<{ id: string }> }) {
+  const isViewer = useIsViewer();
+  const router = useRouter();
   const [vendor, setVendor] = useState<ExpenseVendor | null>(null),
     [rows, setRows] = useState<ExpenseRow[]>([]),
     [error, setError] = useState('');
   useEffect(() => {
+    if (isViewer) {
+      router.replace('/expenses/history');
+      return;
+    }
     Promise.resolve(params).then(async ({ id }) => {
       if (!supabase) return;
       const [v, e] = await Promise.all([
@@ -30,10 +38,12 @@ export default function ExpenseVendorDetail({ params }: { params: Promise<{ id: 
       setVendor(v.data);
       setRows(e.data ?? []);
     });
-  }, [params]);
+  }, [isViewer, params, router]);
   const total = rows.reduce((s, r) => s + Number(r.total_amount), 0),
     paid = rows.reduce((s, r) => s + Number(r.paid_amount), 0),
     pending = rows.reduce((s, r) => s + Number(r.pending_amount), 0);
+  if (isViewer) return null;
+
   return (
     <ExpenseShell
       title={vendor?.name ?? 'Vendor detail'}
