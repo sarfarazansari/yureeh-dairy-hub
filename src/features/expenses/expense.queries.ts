@@ -258,14 +258,16 @@ export function useNewExpenseOptionsQuery(ownerId: string, enabled = true) {
     enabled: Boolean(ownerId && enabled),
     queryFn: async () => {
       if (!supabase) throw new Error('Supabase is not configured.');
-      const [categories, vendors, buffaloes] = await Promise.all([
+      const [categories, vendors, buffaloes, feedItems] = await Promise.all([
         supabase.from('expense_categories').select('*')
           .or(`owner_id.is.null,owner_id.eq.${ownerId}`)
           .order('name'),
         supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
         supabase.from('buffaloes').select('id,buffalo_code,name').order('buffalo_code'),
+        supabase.from('feed_items').select('id,name,category,base_unit,purchase_unit,purchase_unit_quantity,is_active')
+          .eq('user_id', ownerId).eq('is_active', true).order('name'),
       ]);
-      const error = categories.error ?? vendors.error ?? buffaloes.error;
+      const error = categories.error ?? vendors.error ?? buffaloes.error ?? feedItems.error;
       if (error) throw new Error(error.message);
       // Resolve overrides before filtering active rows. An inactive farm-owned
       // category intentionally hides the shared default with the same name.
@@ -283,6 +285,7 @@ export function useNewExpenseOptionsQuery(ownerId: string, enabled = true) {
           .sort((a, b) => a.name.localeCompare(b.name)),
         vendors: vendors.data ?? [],
         buffaloes: buffaloes.data ?? [],
+        feedItems: feedItems.data ?? [],
       };
     },
   });
