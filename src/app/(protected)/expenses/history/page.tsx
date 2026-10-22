@@ -23,7 +23,7 @@ import { ensureExpenseCategories } from '@/features/expenses/services/expense-se
 import { money, todayLocal } from '@/features/expenses/utils/expense-format';
 import type { ExpenseBuffaloOption, ExpenseRow } from '@/lib/expense-types';
 import { TimedNotice } from '@/components/ui/TimedNotice';
-import { useExpenseHistoryQuery, useSoftDeleteExpenseMutation, useUpdateExpenseMutation } from '@/features/expenses/expense.queries';
+import { useExpenseHistoryExportQuery, useExpenseHistoryQuery, useSoftDeleteExpenseMutation, useUpdateExpenseMutation } from '@/features/expenses/expense.queries';
 import { useIsViewer } from '@/lib/farm-access';
 export default function ExpenseHistory() {
   const isViewer = useIsViewer();
@@ -59,6 +59,10 @@ export default function ExpenseHistory() {
     [busy, setBusy] = useState(false),
     [message, setMessage] = useState('');
   const historyQuery = useExpenseHistoryQuery(
+    { page, pageSize, from, to, category, group, vendor, status, method, buffalo, outstandingOnly, search, sort, sortDirection },
+    setupReady,
+  );
+  const exportQuery = useExpenseHistoryExportQuery(
     { page, pageSize, from, to, category, group, vendor, status, method, buffalo, outstandingOnly, search, sort, sortDirection },
     setupReady,
   );
@@ -225,6 +229,60 @@ export default function ExpenseHistory() {
       setDeleteBusy(false);
     }
   }
+  function exportPdf() {
+    const exportRows = exportQuery.data ?? [];
+    if (exportQuery.isPending || exportQuery.isError || !exportRows.length) {
+      setMessage(exportQuery.isError ? 'Could not prepare the expense PDF. Please retry.' : exportQuery.isPending ? 'Preparing the expense PDF…' : 'No expenses match the current filters.');
+      if (exportQuery.isError) void exportQuery.refetch();
+      return;
+    }
+    const safe = (value: unknown) => String(value ?? '').replace(/[&<>"]/g, (character) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+    })[character] ?? character);
+    const total = exportRows.reduce((sum, row) => sum + Number(row.total_amount || 0), 0);
+    const paid = exportRows.reduce((sum, row) => sum + Number(row.paid_amount || 0), 0);
+    const pending = exportRows.reduce((sum, row) => sum + Number(row.pending_amount || 0), 0);
+    const detailRows = exportRows.map((row) => '<tr>' +
+      '<td>' + safe(formatDate(row.business_date)) + '</td>' +
+      '<td>' + safe(row.category_name_snapshot) + '<small>' + safe(row.category_group_snapshot.replaceAll('_', ' ')) + '</small></td>' +
+      '<td>' + safe(row.vendor_name_snapshot ?? '—') + '</td>' +
+      '<td>' + safe(row.description ?? '—') + '</td>' +
+      '<td class="num">' + safe(row.quantity == null ? '—' : Number(row.quantity).toLocaleString('en-IN', { maximumFractionDigits: 3 }) + ' ' + (row.unit ?? '')) + '</td>' +
+      '<td class="num">' + safe(row.rate == null ? '—' : money(Number(row.rate))) + '</td>' +
+      '<td class="num">' + safe(money(Number(row.total_amount))) + '</td>' +
+      '<td class="num">' + safe(money(Number(row.paid_amount))) + '</td>' +
+      '<td class="num">' + safe(money(Number(row.pending_amount))) + '</td>' +
+      '<td>' + safe(row.payment_status) + '<small>' + safe((row.payment_method ?? '—').replaceAll('_', ' ')) + '</small></td>' +
+      '<td>' + safe(formatDate(row.due_date)) + '</td></tr>').join('');
+    const rangeLabel = from || to
+      ? (from ? formatDate(from) : 'All dates') + ' to ' + (to ? formatDate(to) : 'All dates')
+      : 'All dates';
+    const popup = window.open('', '_blank', 'width=1200,height=850');
+    if (!popup) {
+      setMessage('Allow pop-ups to generate the PDF, then try again.');
+      return;
+    }
+    popup.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Yureeh Farm — Expense Report</title><style>' +
+      'body{font:12px Arial,sans-serif;color:#24352f;padding:26px}h1{font-size:22px;margin:0 0 5px}' +
+      '.muted{color:#64756d}.summary{display:flex;gap:12px;margin:20px 0}.tile{border:1px solid #dce5df;border-radius:8px;padding:12px;flex:1}' +
+      '.tile strong{display:block;font-size:18px;margin-top:6px}table{width:100%;border-collapse:collapse}' +
+      'th,td{padding:7px 5px;border-bottom:1px solid #e2e8e4;text-align:left;vertical-align:top}' +
+      'th{font-size:9px;color:#64756d}td{font-size:10px}small{display:block;color:#64756d;margin-top:3px}' +
+      '.num{text-align:right;white-space:nowrap}.total{font-weight:bold}@media print{body{padding:0}.no-print{display:none}}' +
+      '</style></head><body><h1>Yureeh Farm — Expense Report</h1>' +
+      '<div class="muted">' + safe(rangeLabel) + ' · ' + exportRows.length + ' expenses · Generated ' + safe(formatDate(new Date())) + '</div>' +
+      '<div class="summary"><div class="tile">Total expenses<strong>' + safe(money(total)) + '</strong></div>' +
+      '<div class="tile">Paid<strong>' + safe(money(paid)) + '</strong></div><div class="tile">Outstanding<strong>' + safe(money(pending)) + '</strong></div>' +
+      '<div class="tile">Transactions<strong>' + exportRows.length + '</strong></div></div>' +
+      '<table><thead><tr><th>Date</th><th>Category / Group</th><th>Vendor</th><th>Description</th><th class="num">Quantity</th><th class="num">Rate</th><th class="num">Total</th><th class="num">Paid</th><th class="num">Pending</th><th>Status / Method</th><th>Due date</th></tr></thead>' +
+      '<tbody>' + detailRows + '<tr class="total"><td colspan="6">TOTAL</td><td class="num">' + safe(money(total)) + '</td><td class="num">' + safe(money(paid)) + '</td><td class="num">' + safe(money(pending)) + '</td><td colspan="2"></td></tr></tbody></table>' +
+      '<p class="muted">This report reflects the selected expense-history filters. It is a report, not a payment receipt.</p>' +
+      '<button class="no-print" onclick="window.print()">Print / Save as PDF</button></body></html>');
+    popup.document.close();
+    popup.focus();
+    popup.setTimeout(() => popup.print(), 300);
+  }
+
   return (
     <ExpenseShell title="Expense history" subtitle="Filter, review and edit farm expenses">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -259,6 +317,8 @@ export default function ExpenseHistory() {
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">{totalCount} matching {totalCount === 1 ? 'expense' : 'expenses'}</span>
+            <Button type="button" onClick={exportPdf} disabled={!setupReady || exportQuery.isPending || exportQuery.isError || !(exportQuery.data?.length)}>{exportQuery.isPending ? 'Preparing…' : 'Export PDF'}</Button>
+            {exportQuery.isError && <Button type="button" variant="outline" onClick={() => void exportQuery.refetch()}>Retry export</Button>}
             <Button type="button" variant="ghost" onClick={() => { setFrom(''); setTo(''); setSearch(''); setCategory(''); setGroup(''); setVendor(''); setStatus(''); setMethod(''); setBuffalo(''); setOutstandingOnly(false); setSort('date'); }}>Reset filters</Button>
           </div>
         </div>
