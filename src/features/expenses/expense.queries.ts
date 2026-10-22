@@ -248,7 +248,9 @@ export function useNewExpenseOptionsQuery(ownerId: string, enabled = true) {
     queryFn: async () => {
       if (!supabase) throw new Error('Supabase is not configured.');
       const [categories, vendors, buffaloes] = await Promise.all([
-        supabase.from('expense_categories').select('*').eq('owner_id', ownerId).eq('is_active', true).order('name'),
+        // RLS scopes this to shared defaults and the authenticated user's farm.
+        // Filtering owner_id here incorrectly excludes shared rows where owner_id IS NULL.
+        supabase.from('expense_categories').select('*').eq('is_active', true).order('name'),
         supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
         supabase.from('buffaloes').select('id,buffalo_code,name').order('buffalo_code'),
       ]);
