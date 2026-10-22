@@ -196,6 +196,42 @@ export type ExpenseHistoryFilters = {
   sortDirection: 'asc' | 'desc';
 };
 
+export function useExpenseHistoryExportQuery(filters: ExpenseHistoryFilters, enabled = true) {
+  return useQuery({
+    queryKey: [...expenseQueryKeys.list(), 'export', filters] as const,
+    enabled,
+    queryFn: async () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const chunkSize = 500;
+      const rows: ExpenseRow[] = [];
+      for (let offset = 0; ; offset += chunkSize) {
+        let query = supabase.from('expenses').select('*').is('deleted_at', null);
+        if (filters.from) query = query.gte('business_date', filters.from);
+        if (filters.to) query = query.lte('business_date', filters.to);
+        if (filters.category) query = query.eq('category_id', filters.category);
+        if (filters.group) query = query.eq('category_group_snapshot', filters.group);
+        if (filters.vendor) query = query.eq('vendor_id', filters.vendor);
+        if (filters.status) query = query.eq('payment_status', filters.status);
+        if (filters.method) query = query.eq('payment_method', filters.method);
+        if (filters.buffalo) query = query.eq('buffalo_id', filters.buffalo);
+        if (filters.outstandingOnly) query = query.gt('pending_amount', 0);
+        const term = filters.search.trim().replace(/[(),]/g, ' ').replace(/[%_]/g, '');
+        if (term) query = query.or(`category_name_snapshot.ilike.%${term}%,vendor_name_snapshot.ilike.%${term}%,description.ilike.%${term}%`);
+        const sortColumn = filters.sort === 'amount' ? 'total_amount' : filters.sort === 'pending' ? 'pending_amount' : filters.sort === 'category' ? 'category_name_snapshot' : 'business_date';
+        const { data, error } = await query
+          .order(sortColumn, { ascending: filters.sortDirection === 'asc' })
+          .order('id', { ascending: true })
+          .range(offset, offset + chunkSize - 1);
+        if (error) throw new Error(error.message);
+        const batch = (data ?? []) as ExpenseRow[];
+        rows.push(...batch);
+        if (batch.length < chunkSize) break;
+      }
+      return rows;
+    },
+  });
+}
+
 export function useExpenseHistoryQuery(filters: ExpenseHistoryFilters, enabled = true) {
   return useQuery({
     queryKey: [...expenseQueryKeys.list(), filters] as const,
