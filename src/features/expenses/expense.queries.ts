@@ -250,15 +250,14 @@ export function useNewExpenseOptionsQuery(ownerId: string, enabled = true) {
       const [categories, vendors, buffaloes] = await Promise.all([
         supabase.from('expense_categories').select('*')
           .or(`owner_id.is.null,owner_id.eq.${ownerId}`)
-          .eq('is_active', true)
           .order('name'),
         supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
         supabase.from('buffaloes').select('id,buffalo_code,name').order('buffalo_code'),
       ]);
       const error = categories.error ?? vendors.error ?? buffaloes.error;
       if (error) throw new Error(error.message);
-      // Prefer a farm-owned category over a shared default with the same name.
-      // This keeps custom settings effective without hiding defaults when setup is incomplete.
+      // Resolve overrides before filtering active rows. An inactive farm-owned
+      // category intentionally hides the shared default with the same name.
       const categoryByName = new Map<string, NonNullable<typeof categories.data>[number]>();
       for (const category of categories.data ?? []) {
         const key = category.name.trim().toLocaleLowerCase();
@@ -268,7 +267,9 @@ export function useNewExpenseOptionsQuery(ownerId: string, enabled = true) {
         }
       }
       return {
-        categories: [...categoryByName.values()].sort((a, b) => a.name.localeCompare(b.name)),
+        categories: [...categoryByName.values()]
+          .filter((category) => category.is_active)
+          .sort((a, b) => a.name.localeCompare(b.name)),
         vendors: vendors.data ?? [],
         buffaloes: buffaloes.data ?? [],
       };
