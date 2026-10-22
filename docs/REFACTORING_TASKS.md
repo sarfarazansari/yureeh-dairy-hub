@@ -451,3 +451,6 @@ The user confirmed the application is working after merging the previous audit w
 - **Files changed:** `src/features/milk/components/MixedMilkFatHistoryTable.tsx`, `src/features/milk/MilkPoolPage.tsx`, `src/features/analytics/SalesAnalyticsPage.tsx`, `YUREEH_PROJECT_RULES.md`, `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`.
 - **Validation:** Source changes written on the existing branch; read-back, typecheck, lint, build, and browser comparison are still required. Do not claim runtime verified until executed.
 - **PR/merge:** Not created; user retains PR/merge control.
+
+
+| EXP-EXPORT-001 | P2 | Add filtered PDF export to Expense History matching Milk Entries | Implemented (static review; runtime validation pending) | — | `docs/EXPENSE_HISTORY_EXPORT.md`; run typecheck/lint/format/build, test each filter, verify totals and export over 1,000 rows |
