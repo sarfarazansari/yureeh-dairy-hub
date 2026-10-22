@@ -451,3 +451,13 @@ The user confirmed the application is working after merging the previous audit w
 - **Files changed:** `src/features/milk/components/MixedMilkFatHistoryTable.tsx`, `src/features/milk/MilkPoolPage.tsx`, `src/features/analytics/SalesAnalyticsPage.tsx`, `YUREEH_PROJECT_RULES.md`, `docs/REFACTORING_TASKS.md`, `docs/WORKFLOW_AND_HANDOFF.md`.
 - **Validation:** Source changes written on the existing branch; read-back, typecheck, lint, build, and browser comparison are still required. Do not claim runtime verified until executed.
 - **PR/merge:** Not created; user retains PR/merge control.
+
+
+### EXP-EXPORT-001 — Expense History PDF export (2026-10-22)
+
+- **Priority:** P2
+- **Status:** Implemented; static review complete, runtime validation pending.
+- **Branch:** `feature/expense-history-export` (based on `master` SHA `26d9cdd3f647aaa38dc2be14653ae7fea391e8f7`).
+- **Implementation/docs:** `src/app/(protected)/expenses/history/page.tsx`, `src/features/expenses/expense.queries.ts`, `docs/EXPENSE_HISTORY_EXPORT.md`, and `docs/WORKFLOW_AND_HANDOFF.md`.
+- **Required validation:** typecheck, lint, format check, build, all filter combinations, summary reconciliation, pop-up/error paths, and export with more than 1,000 matching rows.
+- **PR/merge:** none created; user owns PR and merge.

@@ -322,3 +322,19 @@ RBAC workflow:
 4. Test both allowed reads and forbidden mutations through UI and direct Supabase API/RPC calls.
 5. Keep all RBAC phases on the same explicitly selected feature branch when requested; do not create a branch per phase.
 6. Do not create a PR or merge unless the user explicitly asks. Never claim a test or database operation was run unless it was actually executed.
+
+
+--------------------------------------------------
+
+EXPENSE CATEGORIES VS FEED ITEMS — MANDATORY DATA BOUNDARY
+
+Before modifying generic expenses, expense categories, Feed Master, or feed purchases, read `docs/EXPENSE_CATEGORIES_AND_FEED_ITEMS.md`.
+
+- `expense_categories` are accounting/reporting classifications. `expenses.category_id` must reference an `expense_categories.id`.
+- `feed_items` are physical inventory master records. `feed_purchases.feed_item_id` references a `feed_items.id`.
+- Never treat `feed_items.id` as an expense category ID. Similar names do not make the records interchangeable.
+- The generic `/expenses/new` form and dedicated `/feeds/purchases/new` workflow are not equivalent. Generic expense creation does not stock inventory; feed purchases must go through the transactional purchase workflow when stock-in is intended.
+- Shared system expense categories (`owner_id IS NULL`) must not be cloned into farm-owned rows as a form initialization side effect. Read shared plus farm-owned categories and resolve case-insensitive duplicate names by preferring farm-owned records. Resolve overrides before filtering active categories.
+- Feed item names must not require one-to-one expense categories. Feed-purchase accounting uses an exact/known mapping when available and the shared active `Other Feed` fallback otherwise, preserving the physical item name in the expense description.
+- A missing item in the New Expense dropdown must first be diagnosed at the form/query/RLS data source. An RPC/category fallback migration alone cannot make Feed Master items appear in that dropdown.
+- Never claim the fix is verified until the affected query, RLS, save behavior, and relevant dedicated purchase/inventory behavior have been checked. Clearly distinguish GitHub static review from local build/browser tests and live database verification.

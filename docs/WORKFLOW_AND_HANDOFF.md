@@ -476,3 +476,59 @@ The user's short command `1 refactor karo` means:
 - Important remaining work: complete the page-by-page mutation-control audit; inspect all views, policies, grants, RPCs and scheduled paths; the old `get_buffalo_production_sheet` client dependency has been replaced with direct RLS-scoped table reads because no migration definition was found; verify migration backfill against actual database contents; and test invite/revoke, cross-farm reads, direct API/RPC writes, and Super Admin regression.
 - Verification boundary: GitHub source was fetched back for static review. This session cannot run a local checkout or access the live Supabase database, so typecheck, lint, build, browser tests, SQL parse/apply, and live security tests have not been run. Do not apply to production or merge until these checks pass.
 - User owns PR creation and merging. Do not create a PR or merge without explicit instruction.
+
+---
+
+## Session handoff — Expense categories and missing Feed Master items (2026-10-22)
+
+Read docs/EXPENSE_CATEGORIES_AND_FEED_ITEMS.md before touching this area.
+
+### What went wrong
+
+The user's screenshot showed the Category dropdown on /expenses/new missing physical items already configured in Feed Master. The form's useNewExpenseOptionsQuery only queried expense_categories, expense_vendors, and buffaloes; it did not query feed_items. Fixing the feed-purchase RPC's accounting-category fallback could not fix a dropdown that never loaded feed items.
+
+There was also a separate data-model confusion: feed_items represent physical inventory items, while expense_categories represent accounting/reporting classification. Their UUIDs are not interchangeable. Requiring one accounting category per physical feed item caused mapping errors; shared default category cloning also caused duplicate-name errors.
+
+### Changes currently on feature branch (not merged/verified)
+
+- Branch: fix/expense-categories-master (continue on this same branch when asked; do not create another branch for this task).
+- 5306a918956c30a70a197c30e610848999a451c3: src/features/expenses/expense.queries.ts now loads active farm-owned feed_items as part of useNewExpenseOptionsQuery.
+- eb1da2cf09fa6855bd354c864c96eacba25103c6: src/app/(protected)/expenses/new/page.tsx displays those feed items in the Category selector with a FEED ITEM label. Selecting one preserves its name as the description, chooses an active FEED expense category for the foreign key, and sets quantity mode/unit.
+- supabase/migrations/20261022100000_feed_purchase_category_fallback_redeploy.sql was added earlier on this feature branch to reapply the feed-purchase Other Feed fallback. Its live application has not been verified.
+
+### Important functional caveat
+
+The New Expense selection still submits through the generic expenses insert path. It does not create a feed_purchases record or an inventory stock-in movement. Use /feeds/purchases/new when the user intends to record a feed purchase that increases inventory. Do not conflate the two workflows; confirm desired behavior if the product requirement expects a feed item selected in generic New Expense to also change stock.
+
+### Verification status
+
+- GitHub source read-back confirmed the two feature-branch code changes.
+- No local typecheck, lint, build, browser test, or live Supabase migration/RPC test was run.
+- This feature branch is not confirmed merged to master. User retains PR/merge control.
+- The present documentation updates are being committed directly to master as requested, independently of the feature branch's code changes.
+
+### Next steps
+
+1. Read the domain-boundary document and inspect latest master plus the same feature branch before coding.
+2. Run local typecheck/lint/build and inspect any errors from the New Expense query/selector changes.
+3. Verify RLS allows the farm owner to read only their own active feed_items.
+4. Manually verify /expenses/new: active feed items appear; inactive/other-farm items do not; normal expense categories still work; selected item saves the expected description/category/unit/amount.
+5. Explicitly verify that generic expense selection is intended not to change inventory. If user expects stock-in, route the operation through the dedicated feed-purchase transaction rather than adding a second, non-atomic write to the generic expense form.
+6. Separately inspect migration history and the live definition/grants of create_feed_purchase before applying or claiming the category fallback migration is deployed.
+7. Do not report complete until checks actually run; do not create a PR or merge without the user's instruction.
+
+
+## Expense History PDF export — 2026-10-22
+
+- **Working branch:** `feature/expense-history-export`, based on `master` SHA `26d9cdd3f647aaa38dc2be14653ae7fea391e8f7`. Continue on this branch until the task is complete; do not switch branches mid-task.
+- **Implementation:** added an Export PDF action to `/expenses/history`, matching the Milk Entries print-to-PDF pattern. It uses the active date, search, category/group, vendor, status, payment method, buffalo, outstanding-only and sort filters.
+- **Full result set:** added `useExpenseHistoryExportQuery` to fetch all matching expenses in 500-row batches, independent of the current page/page size.
+- **Report fields:** readable business/due dates, category/group, vendor, description, quantity/unit, rate, total, paid, outstanding, payment status/method; includes totals and transaction count.
+- **Documentation:** see `docs/EXPENSE_HISTORY_EXPORT.md` for behavior and acceptance checks.
+- **Verification boundary:** source was committed through GitHub and statically reviewed/read back. Local typecheck, lint, format check, build, browser printing and large-result/filter regression tests were not run in this environment. Do not claim runtime verification until they pass locally.
+- **PR/merge:** none created. The user retains PR and merge control.
+
+
+## 2026-10-22 — Separate feed operations from generic expenses
+
+Decision: generic Expenses and Expense Categories are only for non-feed farm expenses. Feed items are added in Feed Master and feed purchases are recorded through Feed Purchases. Keep FEED accounting categories in the database for the dedicated feed-purchase accounting workflow; hide them only from generic expense selection and category management. Never remove or rewrite historical feed-linked expense/purchase records as part of this UI separation.

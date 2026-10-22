@@ -196,6 +196,47 @@ export type ExpenseHistoryFilters = {
   sortDirection: 'asc' | 'desc';
 };
 
+export function useExpenseHistoryExportQuery(filters: ExpenseHistoryFilters, enabled = true) {
+  return useQuery({
+    queryKey: [...expenseQueryKeys.list(), 'export', {
+      from: filters.from, to: filters.to, category: filters.category, group: filters.group,
+      vendor: filters.vendor, status: filters.status, method: filters.method, buffalo: filters.buffalo,
+      outstandingOnly: filters.outstandingOnly, search: filters.search, sort: filters.sort,
+      sortDirection: filters.sortDirection,
+    }] as const,
+    enabled,
+    queryFn: async () => {
+      if (!supabase) throw new Error('Supabase is not configured.');
+      const chunkSize = 500;
+      const rows: ExpenseRow[] = [];
+      for (let offset = 0; ; offset += chunkSize) {
+        let query = supabase.from('expenses').select('*').is('deleted_at', null);
+        if (filters.from) query = query.gte('business_date', filters.from);
+        if (filters.to) query = query.lte('business_date', filters.to);
+        if (filters.category) query = query.eq('category_id', filters.category);
+        if (filters.group) query = query.eq('category_group_snapshot', filters.group);
+        if (filters.vendor) query = query.eq('vendor_id', filters.vendor);
+        if (filters.status) query = query.eq('payment_status', filters.status);
+        if (filters.method) query = query.eq('payment_method', filters.method);
+        if (filters.buffalo) query = query.eq('buffalo_id', filters.buffalo);
+        if (filters.outstandingOnly) query = query.gt('pending_amount', 0);
+        const term = filters.search.trim().replace(/[(),]/g, ' ').replace(/[%_]/g, '');
+        if (term) query = query.or(`category_name_snapshot.ilike.%${term}%,vendor_name_snapshot.ilike.%${term}%,description.ilike.%${term}%`);
+        const sortColumn = filters.sort === 'amount' ? 'total_amount' : filters.sort === 'pending' ? 'pending_amount' : filters.sort === 'category' ? 'category_name_snapshot' : 'business_date';
+        const { data, error } = await query
+          .order(sortColumn, { ascending: filters.sortDirection === 'asc' })
+          .order('id', { ascending: true })
+          .range(offset, offset + chunkSize - 1);
+        if (error) throw new Error(error.message);
+        const batch = (data ?? []) as ExpenseRow[];
+        rows.push(...batch);
+        if (batch.length < chunkSize) break;
+      }
+      return rows;
+    },
+  });
+}
+
 export function useExpenseHistoryQuery(filters: ExpenseHistoryFilters, enabled = true) {
   return useQuery({
     queryKey: [...expenseQueryKeys.list(), filters] as const,
@@ -258,16 +299,14 @@ export function useNewExpenseOptionsQuery(ownerId: string, enabled = true) {
     enabled: Boolean(ownerId && enabled),
     queryFn: async () => {
       if (!supabase) throw new Error('Supabase is not configured.');
-      const [categories, vendors, buffaloes, feedItems] = await Promise.all([
+      const [categories, vendors, buffaloes] = await Promise.all([
         supabase.from('expense_categories').select('*')
           .or(`owner_id.is.null,owner_id.eq.${ownerId}`)
           .order('name'),
         supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
         supabase.from('buffaloes').select('id,buffalo_code,name').order('buffalo_code'),
-        supabase.from('feed_items').select('id,name,category,base_unit,purchase_unit,purchase_unit_quantity,is_active')
-          .eq('user_id', ownerId).eq('is_active', true).order('name'),
       ]);
-      const error = categories.error ?? vendors.error ?? buffaloes.error ?? feedItems.error;
+      const error = categories.error ?? vendors.error ?? buffaloes.error;
       if (error) throw new Error(error.message);
       // Resolve overrides before filtering active rows. An inactive farm-owned
       // category intentionally hides the shared default with the same name.
@@ -280,12 +319,13 @@ export function useNewExpenseOptionsQuery(ownerId: string, enabled = true) {
         }
       }
       return {
+        // Generic expenses are for non-feed costs only. Feed purchases must use
+        // the dedicated purchase workflow so inventory and accounting stay linked.
         categories: [...categoryByName.values()]
-          .filter((category) => category.is_active)
+          .filter((category) => category.is_active && category.category_group !== 'FEED')
           .sort((a, b) => a.name.localeCompare(b.name)),
         vendors: vendors.data ?? [],
         buffaloes: buffaloes.data ?? [],
-        feedItems: feedItems.data ?? [],
       };
     },
   });
