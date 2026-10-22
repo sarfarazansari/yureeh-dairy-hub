@@ -197,9 +197,13 @@ export type ExpenseHistoryFilters = {
 };
 
 export function useExpenseHistoryExportQuery(filters: ExpenseHistoryFilters, enabled = true) {
-  const { page: _page, pageSize: _pageSize, ...exportFilters } = filters;
   return useQuery({
-    queryKey: [...expenseQueryKeys.list(), 'export', exportFilters] as const,
+    queryKey: [...expenseQueryKeys.list(), 'export', {
+      from: filters.from, to: filters.to, category: filters.category, group: filters.group,
+      vendor: filters.vendor, status: filters.status, method: filters.method, buffalo: filters.buffalo,
+      outstandingOnly: filters.outstandingOnly, search: filters.search, sort: filters.sort,
+      sortDirection: filters.sortDirection,
+    }] as const,
     enabled,
     queryFn: async () => {
       if (!supabase) throw new Error('Supabase is not configured.');
