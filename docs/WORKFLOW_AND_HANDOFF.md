@@ -520,7 +520,7 @@ The New Expense selection still submits through the generic expenses insert path
 
 ## Expense History PDF export — 2026-10-22
 
-- **Working branch:** `feature/expense-history-export`, created directly from the current `master` branch. Continue on this branch until the task is complete; do not switch branches mid-task.
+- **Working branch:** `feature/expense-history-export`, based on `master` SHA `26d9cdd3f647aaa38dc2be14653ae7fea391e8f7`. Continue on this branch until the task is complete; do not switch branches mid-task.
 - **Implementation:** added an Export PDF action to `/expenses/history`, matching the Milk Entries print-to-PDF pattern. It uses the active date, search, category/group, vendor, status, payment method, buffalo, outstanding-only and sort filters.
 - **Full result set:** added `useExpenseHistoryExportQuery` to fetch all matching expenses in 500-row batches, independent of the current page/page size.
 - **Report fields:** readable business/due dates, category/group, vendor, description, quantity/unit, rate, total, paid, outstanding, payment status/method; includes totals and transaction count.
