@@ -104,6 +104,15 @@ export default function ExpenseCategories() {
       is_quantity_based: quantity,
       description: description || null,
     };
+    const duplicate = rows.some(
+      (category) =>
+        category.id !== id &&
+        category.name.trim().toLocaleLowerCase() === values.name.toLocaleLowerCase(),
+    );
+    if (duplicate) {
+      setMessage('A category with this name already exists. Use the existing category or choose a different name.');
+      return;
+    }
     try {
       await saveCategoryMutation.mutateAsync({ id: id || undefined, ownerId, values });
       setMessage(id ? 'Category updated.' : 'Category created.');
