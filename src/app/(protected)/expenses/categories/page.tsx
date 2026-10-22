@@ -168,7 +168,7 @@ export default function ExpenseCategories() {
   return (
     <ExpenseShell
       title="Expense categories"
-      subtitle="Edit your farm’s expense categories and defaults"
+      subtitle="Shared system categories are read-only; add and manage farm-specific categories here."
     >
       <div className="management-stack">
         {!id && categoryForm}
@@ -195,7 +195,16 @@ export default function ExpenseCategories() {
                       <TableCell>{c.default_unit ?? '—'}</TableCell>
                       <TableCell>{c.is_quantity_based ? 'Quantity × rate' : 'Direct amount'}</TableCell>
                       <TableCell><Badge variant={c.is_active ? 'secondary' : 'muted'}>{c.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
-                      <TableCell><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" size="sm" onClick={() => edit(c)}>Edit</Button><Button type="button" variant="outline" size="sm" onClick={() => c.is_active ? setStatusTarget(c) : void toggle(c)}>{c.is_active ? 'Deactivate' : 'Activate'}</Button></div></TableCell>
+                      <TableCell>
+                        {c.owner_id == null ? (
+                          <span className="text-sm text-muted-foreground">System default</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            <Button type="button" variant="outline" size="sm" onClick={() => edit(c)}>Edit</Button>
+                            <Button type="button" variant="outline" size="sm" onClick={() => c.is_active ? setStatusTarget(c) : void toggle(c)}>{c.is_active ? 'Deactivate' : 'Activate'}</Button>
+                          </div>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
