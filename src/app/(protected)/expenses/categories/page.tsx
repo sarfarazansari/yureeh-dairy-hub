@@ -46,10 +46,19 @@ export default function ExpenseCategories() {
         return;
       }
       try {
-        await ensureExpenseCategories(supabase);
         const { data: { user }, error } = await supabase.auth.getUser();
         if (error || !user) throw error ?? new Error('Sign in again to load expense categories.');
-        if (alive) setOwnerId(user.id);
+
+        const [{ data: farmOwnerId, error: ownerError }, { data: role, error: roleError }] = await Promise.all([
+          supabase.rpc('current_farm_owner_id'),
+          supabase.rpc('current_farm_role'),
+        ]);
+        if (ownerError || roleError) {
+          throw ownerError ?? roleError ?? new Error('Could not resolve farm access.');
+        }
+        if (!farmOwnerId) throw new Error('No active farm access was found for this account.');
+        if (role === 'super_admin') await ensureExpenseCategories(supabase);
+        if (alive) setOwnerId(farmOwnerId);
       } catch (error) {
         if (alive) setSetupError(error instanceof Error ? error.message : 'Could not load expense categories.');
       }
