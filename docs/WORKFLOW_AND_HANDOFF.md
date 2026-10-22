@@ -527,3 +527,8 @@ The New Expense selection still submits through the generic expenses insert path
 - **Documentation:** see `docs/EXPENSE_HISTORY_EXPORT.md` for behavior and acceptance checks.
 - **Verification boundary:** source was committed through GitHub and statically reviewed/read back. Local typecheck, lint, format check, build, browser printing and large-result/filter regression tests were not run in this environment. Do not claim runtime verification until they pass locally.
 - **PR/merge:** none created. The user retains PR and merge control.
+
+
+## 2026-10-22 — Separate feed operations from generic expenses
+
+Decision: generic Expenses and Expense Categories are only for non-feed farm expenses. Feed items are added in Feed Master and feed purchases are recorded through Feed Purchases. Keep FEED accounting categories in the database for the dedicated feed-purchase accounting workflow; hide them only from generic expense selection and category management. Never remove or rewrite historical feed-linked expense/purchase records as part of this UI separation.

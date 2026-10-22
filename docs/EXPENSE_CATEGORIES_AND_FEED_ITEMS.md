@@ -89,3 +89,15 @@ The dedicated Feed Purchase workflow is different from generic New Expense:
 - Do not claim the UI, build, or live database is verified based only on reading GitHub source.
 - Do not create a new branch when the user says to continue on the same branch.
 - Do not merge a feature branch into master; the user owns merges unless explicitly instructed otherwise.
+
+
+## Follow-up decision: separate generic expenses from feed operations (2026-10-22)
+
+The intended UX is now explicit: the generic Expense form and Expense Categories screen are for non-feed farm expenses only.
+
+- Do not show physical `feed_items` in the generic New Expense category selector.
+- Do not show `FEED` accounting categories in the generic New Expense selector or the normal Expense Categories management list.
+- Show a short note on both screens directing users to Feed Master to add/edit feed items and Feed Purchases to record stock-in purchases.
+- Keep FEED accounting categories in the database and available to the dedicated feed-purchase RPC/workflow for linked accounting entries. Hiding them from generic screens must not delete, deactivate, or rename them.
+- The dedicated Feed Purchases flow remains responsible for creating the feed purchase, linked expense, and inventory movement atomically.
+- This is a UI/query boundary; existing feed-purchase records and expense history must remain intact.
