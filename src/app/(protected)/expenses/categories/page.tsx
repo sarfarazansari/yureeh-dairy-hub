@@ -39,7 +39,7 @@ export default function ExpenseCategories() {
   const categoryQuery = useExpenseCategoriesQuery(ownerId);
   const saveCategoryMutation = useSaveExpenseCategoryMutation();
   const toggleCategoryMutation = useToggleExpenseCategoryMutation();
-  const rows = categoryQuery.data ?? [];
+  const rows = (categoryQuery.data ?? []).filter((category) => category.category_group !== 'FEED');
   const loading = !ownerId || categoryQuery.isPending;
   const loadError = setupError || categoryQuery.error?.message || '';
 
@@ -88,7 +88,7 @@ export default function ExpenseCategories() {
   function clear() {
     setId('');
     setName('');
-    setGroup('FEED');
+    setGroup('ADMIN');
     setUnit('');
     setQuantity(true);
     setDescription('');
@@ -151,7 +151,7 @@ export default function ExpenseCategories() {
       </div>
       <div className="field">
         <Label htmlFor="expense-category-group">Group</Label>
-        <Select value={group} onValueChange={(value) => setGroup(value as ExpenseGroup)}><SelectTrigger id="expense-category-group"><SelectValue /></SelectTrigger><SelectContent>{EXPENSE_GROUPS.map((g) => <SelectItem key={g} value={g}>{g.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
+        <Select value={group} onValueChange={(value) => setGroup(value as ExpenseGroup)}><SelectTrigger id="expense-category-group"><SelectValue /></SelectTrigger><SelectContent>{EXPENSE_GROUPS.filter((g) => g !== 'FEED').map((g) => <SelectItem key={g} value={g}>{g.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
       </div>
       <div className="field">
         <Label htmlFor="expense-category-unit">Default unit</Label>
@@ -177,8 +177,12 @@ export default function ExpenseCategories() {
   return (
     <ExpenseShell
       title="Expense categories"
-      subtitle="Shared system categories are read-only; add and manage farm-specific categories here."
+      subtitle="Manage normal farm expense categories here. Feed items and feed purchases are managed in the Feed module."
     >
+      <div role="note" className="mb-4 rounded-md border border-[var(--line)] bg-muted/30 p-3 text-sm">
+        <strong>Feed is managed separately.</strong> Add or edit feed items in Feed Master and record stock purchases in Feed Purchases. Feed accounting categories remain available to the dedicated purchase workflow but are hidden from this normal-expense list.
+        {' '}<a href="/feeds" className="font-medium underline underline-offset-4">Open Feed module</a>
+      </div>
       <div className="management-stack">
         {!id && categoryForm}
         {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
