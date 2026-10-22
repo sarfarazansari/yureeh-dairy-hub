@@ -248,16 +248,27 @@ export function useNewExpenseOptionsQuery(ownerId: string, enabled = true) {
     queryFn: async () => {
       if (!supabase) throw new Error('Supabase is not configured.');
       const [categories, vendors, buffaloes] = await Promise.all([
-        // RLS scopes this to shared defaults and the authenticated user's farm.
-        // Filtering owner_id here incorrectly excludes shared rows where owner_id IS NULL.
-        supabase.from('expense_categories').select('*').eq('is_active', true).order('name'),
+        supabase.from('expense_categories').select('*')
+          .or(`owner_id.is.null,owner_id.eq.${ownerId}`)
+          .eq('is_active', true)
+          .order('name'),
         supabase.from('expense_vendors').select('id,name').eq('is_active', true).order('name'),
         supabase.from('buffaloes').select('id,buffalo_code,name').order('buffalo_code'),
       ]);
       const error = categories.error ?? vendors.error ?? buffaloes.error;
       if (error) throw new Error(error.message);
+      // Prefer a farm-owned category over a shared default with the same name.
+      // This keeps custom settings effective without hiding defaults when setup is incomplete.
+      const categoryByName = new Map<string, (typeof categories.data)[number]>();
+      for (const category of categories.data ?? []) {
+        const key = category.name.trim().toLocaleLowerCase();
+        const existing = categoryByName.get(key);
+        if (!existing || (existing.owner_id == null && category.owner_id === ownerId)) {
+          categoryByName.set(key, category);
+        }
+      }
       return {
-        categories: categories.data ?? [],
+        categories: [...categoryByName.values()].sort((a, b) => a.name.localeCompare(b.name)),
         vendors: vendors.data ?? [],
         buffaloes: buffaloes.data ?? [],
       };
