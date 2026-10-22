@@ -28,6 +28,7 @@ export default function NewExpense() {
     [optionsReady, setOptionsReady] = useState(false),
     [date, setDate] = useState(todayLocal()),
     [categoryId, setCategoryId] = useState(''),
+    [categoryOption, setCategoryOption] = useState(''),
     [vendorId, setVendorId] = useState(''),
     [buffaloId, setBuffaloId] = useState(''),
     [description, setDescription] = useState(''),
@@ -48,6 +49,7 @@ export default function NewExpense() {
   const categories = (optionsQuery.data?.categories ?? []) as ExpenseCategory[];
   const vendors = optionsQuery.data?.vendors ?? [];
   const buffaloes = optionsQuery.data?.buffaloes ?? [];
+  const feedItems = optionsQuery.data?.feedItems ?? [];
 
   useEffect(() => {
     let alive = true;
@@ -109,9 +111,42 @@ export default function NewExpense() {
   }, [amount, paidNumber]);
   const status =
     amount && paidNumber <= amount ? expensePaymentStatus(amount, paidNumber) : 'CREDIT';
-  function selectCategory(id: string) {
-    setCategoryId(id);
-    const c = categories.find((x) => x.id === id);
+  function selectCategoryOption(option: string) {
+    setCategoryOption(option);
+
+    if (option.startsWith('feed:')) {
+      const feedItemId = option.slice('feed:'.length);
+      const feedItem = feedItems.find((item) => item.id === feedItemId);
+      if (!feedItem) return;
+
+      // Feed items are inventory masters, not expense categories. Link the
+      // expense to an existing FEED category while preserving the actual item
+      // name in the description.
+      const mappedCategory =
+        categories.find((item) => item.category_group === 'FEED' && item.name.trim().toLocaleLowerCase() === feedItem.name.trim().toLocaleLowerCase()) ??
+        categories.find((item) => item.category_group === 'FEED' && item.name.trim().toLocaleLowerCase() === 'other feed') ??
+        categories.find((item) => item.category_group === 'FEED');
+
+      if (!mappedCategory) {
+        setMessage('No active FEED expense category is available. Activate or add a FEED category first.');
+        setCategoryOption('');
+        setCategoryId('');
+        return;
+      }
+
+      setMessage('');
+      setCategoryId(mappedCategory.id);
+      setDescription(feedItem.name);
+      setUseQuantity(true);
+      setQuantity('');
+      setRate('');
+      setManual('');
+      setUnit(feedItem.purchase_unit || feedItem.base_unit || mappedCategory.default_unit || '');
+      return;
+    }
+
+    setCategoryId(option);
+    const c = categories.find((x) => x.id === option);
     if (c) {
       setUseQuantity(Boolean(c.is_quantity_based));
       setUnit(c.default_unit ?? '');
@@ -207,7 +242,7 @@ export default function NewExpense() {
             </div>
             <div className="field">
               <Label htmlFor="expense-category">Category</Label>
-              <Select value={categoryId || undefined} onValueChange={selectCategory} required><SelectTrigger id="expense-category"><SelectValue placeholder="Select category" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} · {c.category_group.replaceAll('_', ' ')}</SelectItem>)}</SelectContent></Select>
+              <Select value={categoryOption || undefined} onValueChange={selectCategoryOption} required><SelectTrigger id="expense-category"><SelectValue placeholder="Select category" /></SelectTrigger><SelectContent>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name} · {c.category_group.replaceAll('_', ' ')}</SelectItem>)}{feedItems.length > 0 && feedItems.map((item) => <SelectItem key={`feed:${item.id}`} value={`feed:${item.id}`}>{item.name} · FEED ITEM</SelectItem>)}</SelectContent></Select>
             </div>
             <div className="field">
               <Label htmlFor="expense-vendor">Vendor (optional)</Label>
