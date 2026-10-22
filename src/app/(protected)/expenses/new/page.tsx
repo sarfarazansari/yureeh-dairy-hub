@@ -10,6 +10,8 @@ import Link from 'next/link';
 import { DatePicker } from '@/components/ui/date-picker';
 import { LoaderCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useFarmRole } from '@/lib/farm-access';
 import { supabase } from '@/lib/supabase';
 import { calculateExpenseTotal, calculatePending, expensePaymentStatus, UNITS } from '@/lib/expenses';
 import { ExpenseShell } from '@/features/expenses/components/ExpenseNavigationShell';
@@ -19,6 +21,9 @@ import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseCategory } from '@/lib/expense-types';
 import { useCreateExpenseMutation, useNewExpenseOptionsQuery } from '@/features/expenses/expense.queries';
 export default function NewExpense() {
+  const router = useRouter();
+  const farmRole = useFarmRole();
+  const isViewer = farmRole === 'viewer';
   const [ownerId, setOwnerId] = useState(''),
     [optionsReady, setOptionsReady] = useState(false),
     [date, setDate] = useState(todayLocal()),
@@ -51,12 +56,25 @@ export default function NewExpense() {
         setMessage('Supabase is not configured.');
         return;
       }
+      if (isViewer) {
+        router.replace('/expenses/history');
+        return;
+      }
       try {
+        const [{ data: { user }, error: userError }, { data: farmOwnerId, error: ownerError }, { data: role, error: roleError }] = await Promise.all([
+          supabase.auth.getUser(),
+          supabase.rpc('current_farm_owner_id'),
+          supabase.rpc('current_farm_role'),
+        ]);
+        if (userError || !user) throw userError ?? new Error('Session expired. Sign in again.');
+        if (ownerError || roleError) throw ownerError ?? roleError ?? new Error('Could not resolve farm access.');
+        if (role !== 'super_admin' || !farmOwnerId || farmOwnerId !== user.id) {
+          router.replace('/expenses/history');
+          return;
+        }
         await ensureExpenseCategories(supabase);
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error || !user) throw error ?? new Error('Session expired. Sign in again.');
         if (alive) {
-          setOwnerId(user.id);
+          setOwnerId(farmOwnerId);
           setOptionsReady(true);
         }
       } catch (error) {
@@ -65,7 +83,7 @@ export default function NewExpense() {
     }
     void initialize();
     return () => { alive = false; };
-  }, []);
+  }, [isViewer, router]);
   const category = categories.find((c) => c.id === categoryId);
   useEffect(() => {
     if (optionsQuery.error) setMessage(optionsQuery.error.message);
@@ -137,7 +155,7 @@ export default function NewExpense() {
       } = await supabase.auth.getUser();
       if (userError || !user) throw new Error('Session expired. Sign in again.');
       await createExpenseMutation.mutateAsync({
-        userId: user.id,
+        userId: ownerId,
         businessDate: date,
         categoryId: category.id,
         vendorId: vendorId || null,
@@ -171,6 +189,8 @@ export default function NewExpense() {
       setBusy(false);
     }
   }
+  if (isViewer) return null;
+
   return (
     <ExpenseShell title="New expense" subtitle="Record a purchase, payment or farm cost">
       <div className="row" style={{ marginBottom: 14 }}>
