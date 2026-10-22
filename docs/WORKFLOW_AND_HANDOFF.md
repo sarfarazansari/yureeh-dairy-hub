@@ -516,3 +516,14 @@ The New Expense selection still submits through the generic expenses insert path
 5. Explicitly verify that generic expense selection is intended not to change inventory. If user expects stock-in, route the operation through the dedicated feed-purchase transaction rather than adding a second, non-atomic write to the generic expense form.
 6. Separately inspect migration history and the live definition/grants of create_feed_purchase before applying or claiming the category fallback migration is deployed.
 7. Do not report complete until checks actually run; do not create a PR or merge without the user's instruction.
+
+
+## Expense History PDF export — 2026-10-22
+
+- **Working branch:** `feature/expense-history-export`, created directly from the current `master` branch. Continue on this branch until the task is complete; do not switch branches mid-task.
+- **Implementation:** added an Export PDF action to `/expenses/history`, matching the Milk Entries print-to-PDF pattern. It uses the active date, search, category/group, vendor, status, payment method, buffalo, outstanding-only and sort filters.
+- **Full result set:** added `useExpenseHistoryExportQuery` to fetch all matching expenses in 500-row batches, independent of the current page/page size.
+- **Report fields:** readable business/due dates, category/group, vendor, description, quantity/unit, rate, total, paid, outstanding, payment status/method; includes totals and transaction count.
+- **Documentation:** see `docs/EXPENSE_HISTORY_EXPORT.md` for behavior and acceptance checks.
+- **Verification boundary:** source was committed through GitHub and statically reviewed/read back. Local typecheck, lint, format check, build, browser printing and large-result/filter regression tests were not run in this environment. Do not claim runtime verification until they pass locally.
+- **PR/merge:** none created. The user retains PR and merge control.
