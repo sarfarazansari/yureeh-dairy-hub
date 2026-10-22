@@ -48,6 +48,7 @@ export default function ExpenseDashboard() {
 
   useEffect(() => {
     let alive = true;
+    if (isViewer) return () => { alive = false; };
     if (!supabase) {
       setCategoryError('Supabase is not configured.');
       return () => { alive = false; };
@@ -56,7 +57,7 @@ export default function ExpenseDashboard() {
       if (alive) setCategoryError(loadError instanceof Error ? loadError.message : 'Could not prepare expense categories.');
     });
     return () => { alive = false; };
-  }, []);
+  }, [isViewer]);
   const total = rows.reduce((s, r) => s + Number(r.total_amount), 0),
     paid = rows.reduce((s, r) => s + Number(r.paid_amount), 0),
     pending = rows.reduce((s, r) => s + Number(r.pending_amount), 0),
