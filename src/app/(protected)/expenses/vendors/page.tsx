@@ -10,13 +10,21 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useIsViewer } from '@/lib/farm-access';
 import { ExpenseShell } from '@/features/expenses/components/ExpenseNavigationShell';
 import { money } from '@/features/expenses/utils/expense-format';
 import { useExpenseVendorDirectoryQuery, useSaveExpenseVendorMutation, useToggleExpenseVendorMutation } from '@/features/expenses/expense.queries';
 import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseVendor } from '@/lib/expense-types';
 export default function ExpenseVendors() {
+  const isViewer = useIsViewer();
+  const router = useRouter();
+  useEffect(() => {
+    if (isViewer) router.replace('/expenses/history');
+  }, [isViewer, router]);
+
   const [name, setName] = useState(''),
     [mobile, setMobile] = useState(''),
     [city, setCity] = useState(''),
@@ -100,6 +108,8 @@ export default function ExpenseVendors() {
       setStatusBusy(false);
     }
   }
+  if (isViewer) return null;
+
   return (
     <ExpenseShell title="Expense vendors" subtitle="Suppliers, transporters and service providers">
       <div className="management-stack">

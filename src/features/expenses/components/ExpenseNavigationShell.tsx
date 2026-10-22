@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AppShell } from '@/components/layout/AppShell';
+import { useFarmRole } from '@/lib/farm-access';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { DateRangePicker } from '@/components/ui/date-range-picker';
@@ -18,12 +19,16 @@ export function ExpenseShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const farmRole = useFarmRole();
+  const isViewer = farmRole === 'viewer';
   const links = [
-    { href: '/expenses', label: 'Overview', match: (path: string) => path === '/expenses' },
-    { href: '/expenses/new', label: 'New expense', match: (path: string) => path === '/expenses/new' },
+    ...(!isViewer ? [{ href: '/expenses', label: 'Overview', match: (path: string) => path === '/expenses' }] : []),
+    ...(!isViewer ? [{ href: '/expenses/new', label: 'New expense', match: (path: string) => path === '/expenses/new' }] : []),
     { href: '/expenses/history', label: 'History', match: (path: string) => path === '/expenses/history' },
-    { href: '/expenses/categories', label: 'Categories', match: (path: string) => path.startsWith('/expenses/categories') },
-    { href: '/expenses/vendors', label: 'Vendors', match: (path: string) => path.startsWith('/expenses/vendors') },
+    ...(!isViewer ? [
+      { href: '/expenses/categories', label: 'Categories', match: (path: string) => path.startsWith('/expenses/categories') },
+      { href: '/expenses/vendors', label: 'Vendors', match: (path: string) => path.startsWith('/expenses/vendors') },
+    ] : []),
   ];
 
   return (

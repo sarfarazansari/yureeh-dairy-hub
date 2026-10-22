@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useFarmRole } from '@/lib/farm-access';
 import { supabase } from '@/lib/supabase';
 import { EXPENSE_GROUPS, UNITS, type ExpenseGroup } from '@/lib/expenses';
 import { ExpenseShell } from '@/features/expenses/components/ExpenseNavigationShell';
@@ -19,6 +21,9 @@ import { TimedNotice } from '@/components/ui/TimedNotice';
 import type { ExpenseCategory } from '@/lib/expense-types';
 import { useExpenseCategoriesQuery, useSaveExpenseCategoryMutation, useToggleExpenseCategoryMutation } from '@/features/expenses/expense.queries';
 export default function ExpenseCategories() {
+  const router = useRouter();
+  const farmRole = useFarmRole();
+  const isViewer = farmRole === 'viewer';
   const [ownerId, setOwnerId] = useState(''),
     [setupError, setSetupError] = useState(''),
     [id, setId] = useState(''),
@@ -45,18 +50,31 @@ export default function ExpenseCategories() {
         setSetupError('Supabase is not configured.');
         return;
       }
+      if (isViewer) {
+        router.replace('/expenses/history');
+        return;
+      }
       try {
+        const [{ data: { user }, error: userError }, { data: farmOwnerId, error: ownerError }, { data: role, error: roleError }] = await Promise.all([
+          supabase.auth.getUser(),
+          supabase.rpc('current_farm_owner_id'),
+          supabase.rpc('current_farm_role'),
+        ]);
+        if (userError || !user) throw userError ?? new Error('Session expired. Sign in again.');
+        if (ownerError || roleError) throw ownerError ?? roleError ?? new Error('Could not resolve farm access.');
+        if (role !== 'super_admin' || !farmOwnerId || farmOwnerId !== user.id) {
+          router.replace('/expenses/history');
+          return;
+        }
         await ensureExpenseCategories(supabase);
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error || !user) throw error ?? new Error('Sign in again to load expense categories.');
-        if (alive) setOwnerId(user.id);
+        if (alive) setOwnerId(farmOwnerId);
       } catch (error) {
         if (alive) setSetupError(error instanceof Error ? error.message : 'Could not load expense categories.');
       }
     }
     void initialize();
     return () => { alive = false; };
-  }, []);
+  }, [isViewer, router]);
 
   const load = async () => { await categoryQuery.refetch(); };
   function edit(c: ExpenseCategory) {
@@ -86,6 +104,15 @@ export default function ExpenseCategories() {
       is_quantity_based: quantity,
       description: description || null,
     };
+    const duplicate = rows.some(
+      (category) =>
+        category.id !== id &&
+        category.name.trim().toLocaleLowerCase() === values.name.toLocaleLowerCase(),
+    );
+    if (duplicate) {
+      setMessage('A category with this name already exists. Use the existing category or choose a different name.');
+      return;
+    }
     try {
       await saveCategoryMutation.mutateAsync({ id: id || undefined, ownerId, values });
       setMessage(id ? 'Category updated.' : 'Category created.');
@@ -145,10 +172,12 @@ export default function ExpenseCategories() {
     </form>
   );
 
+  if (isViewer) return null;
+
   return (
     <ExpenseShell
       title="Expense categories"
-      subtitle="Edit your farm’s expense categories and defaults"
+      subtitle="Shared system categories are read-only; add and manage farm-specific categories here."
     >
       <div className="management-stack">
         {!id && categoryForm}
@@ -175,7 +204,16 @@ export default function ExpenseCategories() {
                       <TableCell>{c.default_unit ?? '—'}</TableCell>
                       <TableCell>{c.is_quantity_based ? 'Quantity × rate' : 'Direct amount'}</TableCell>
                       <TableCell><Badge variant={c.is_active ? 'secondary' : 'muted'}>{c.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
-                      <TableCell><div className="flex flex-wrap gap-2"><Button type="button" variant="outline" size="sm" onClick={() => edit(c)}>Edit</Button><Button type="button" variant="outline" size="sm" onClick={() => c.is_active ? setStatusTarget(c) : void toggle(c)}>{c.is_active ? 'Deactivate' : 'Activate'}</Button></div></TableCell>
+                      <TableCell>
+                        {c.owner_id == null ? (
+                          <span className="text-sm text-muted-foreground">System default</span>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            <Button type="button" variant="outline" size="sm" onClick={() => edit(c)}>Edit</Button>
+                            <Button type="button" variant="outline" size="sm" onClick={() => c.is_active ? setStatusTarget(c) : void toggle(c)}>{c.is_active ? 'Deactivate' : 'Activate'}</Button>
+                          </div>
+                        )}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

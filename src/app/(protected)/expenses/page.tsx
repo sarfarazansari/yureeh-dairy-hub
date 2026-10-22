@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { formatDate } from '@/lib/date-format';
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Area,
   AreaChart,
@@ -27,6 +28,7 @@ import { useIsViewer } from '@/lib/farm-access';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 export default function ExpenseDashboard() {
   const isViewer = useIsViewer();
+  const router = useRouter();
   const today = todayLocal(),
     monthStart = `${today.slice(0, 8)}01`,
     [from, setFrom] = useState(monthStart),
@@ -34,6 +36,10 @@ export default function ExpenseDashboard() {
     [range, setRange] = useState('month'),
     [feedCategory, setFeedCategory] = useState(''),
     [categoryError, setCategoryError] = useState('');
+  useEffect(() => {
+    if (isViewer) router.replace('/expenses/history');
+  }, [isViewer, router]);
+
   const expenseQuery = useExpenseDashboardQuery(from, to);
   const rows = expenseQuery.data?.rows ?? [];
   const outstandingRows = expenseQuery.data?.outstandingRows ?? [];
@@ -42,6 +48,7 @@ export default function ExpenseDashboard() {
 
   useEffect(() => {
     let alive = true;
+    if (isViewer) return () => { alive = false; };
     if (!supabase) {
       setCategoryError('Supabase is not configured.');
       return () => { alive = false; };
@@ -50,7 +57,7 @@ export default function ExpenseDashboard() {
       if (alive) setCategoryError(loadError instanceof Error ? loadError.message : 'Could not prepare expense categories.');
     });
     return () => { alive = false; };
-  }, []);
+  }, [isViewer]);
   const total = rows.reduce((s, r) => s + Number(r.total_amount), 0),
     paid = rows.reduce((s, r) => s + Number(r.paid_amount), 0),
     pending = rows.reduce((s, r) => s + Number(r.pending_amount), 0),
@@ -140,6 +147,8 @@ export default function ExpenseDashboard() {
         amount,
       }));
   }, [rows, isMonthRange]);
+  if (isViewer) return null;
+
   return (
     <ExpenseShell
       title="Expense dashboard"
