@@ -22,7 +22,7 @@ export function ExpenseShell({
   const farmRole = useFarmRole();
   const isViewer = farmRole === 'viewer';
   const links = [
-    { href: '/expenses', label: 'Overview', match: (path: string) => path === '/expenses' },
+    ...(!isViewer ? [{ href: '/expenses', label: 'Overview', match: (path: string) => path === '/expenses' }] : []),
     ...(!isViewer ? [{ href: '/expenses/new', label: 'New expense', match: (path: string) => path === '/expenses/new' }] : []),
     { href: '/expenses/history', label: 'History', match: (path: string) => path === '/expenses/history' },
     ...(!isViewer ? [
