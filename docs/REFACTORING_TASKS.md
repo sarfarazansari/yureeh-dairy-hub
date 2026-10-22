@@ -453,4 +453,11 @@ The user confirmed the application is working after merging the previous audit w
 - **PR/merge:** Not created; user retains PR/merge control.
 
 
-| EXP-EXPORT-001 | P2 | Add filtered PDF export to Expense History matching Milk Entries | Implemented (static review; runtime validation pending) | — | `docs/EXPENSE_HISTORY_EXPORT.md`; run typecheck/lint/format/build, test each filter, verify totals and export over 1,000 rows |
+### EXP-EXPORT-001 — Expense History PDF export (2026-10-22)
+
+- **Priority:** P2
+- **Status:** Implemented; static review complete, runtime validation pending.
+- **Branch:** `feature/expense-history-export` (based on `master` SHA `26d9cdd3f647aaa38dc2be14653ae7fea391e8f7`).
+- **Implementation/docs:** `src/app/(protected)/expenses/history/page.tsx`, `src/features/expenses/expense.queries.ts`, `docs/EXPENSE_HISTORY_EXPORT.md`, and `docs/WORKFLOW_AND_HANDOFF.md`.
+- **Required validation:** typecheck, lint, format check, build, all filter combinations, summary reconciliation, pop-up/error paths, and export with more than 1,000 matching rows.
+- **PR/merge:** none created; user owns PR and merge.
