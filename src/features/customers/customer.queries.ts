@@ -9,6 +9,8 @@ import {
   getCustomerDetails,
   getCustomerDirectory,
   getCustomerPayments,
+  getCustomerEntryHistoryPage,
+  getCustomerPaymentsPage,
   recordCustomerPayment,
   setCustomerActive,
   updateCustomer,
@@ -40,10 +42,18 @@ export function useCustomerDetailQuery(customerId: string) {
   });
 }
 
-export function useCustomerPaymentsQuery(customerId: string) {
-  return useQuery<CustomerPayment[], Error>({
-    queryKey: customerQueryKeys.payments(customerId),
-    queryFn: () => getCustomerPayments(requireSupabase(), customerId),
+export function useCustomerPaymentsQuery(customerId: string, page: number, pageSize: number) {
+  return useQuery({
+    queryKey: [...customerQueryKeys.payments(customerId), page, pageSize],
+    queryFn: () => getCustomerPaymentsPage(requireSupabase(), customerId, page, pageSize),
+    enabled: Boolean(customerId),
+  });
+}
+
+export function useCustomerEntryHistoryQuery(customerId: string, page: number, pageSize: number) {
+  return useQuery({
+    queryKey: [...customerQueryKeys.detail(customerId), 'entry-history', page, pageSize],
+    queryFn: () => getCustomerEntryHistoryPage(requireSupabase(), customerId, page, pageSize),
     enabled: Boolean(customerId),
   });
 }
