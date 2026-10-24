@@ -8,7 +8,6 @@ import {
   createCustomer,
   getCustomerDetails,
   getCustomerDirectory,
-  getCustomerPayments,
   getCustomerEntryHistoryPage,
   getCustomerPaymentsPage,
   recordCustomerPayment,
@@ -16,7 +15,7 @@ import {
   updateCustomer,
   updateCustomerPricing,
 } from './services/customer.service';
-import type { CustomerEntry, CustomerFinancialSummary, CustomerPayment, CustomerSummary } from './types';
+import type { CustomerEntry, CustomerFinancialSummary, CustomerSummary } from './types';
 
 const requireSupabase = () => {
   if (!supabase) throw new Error('Supabase is not configured.');
