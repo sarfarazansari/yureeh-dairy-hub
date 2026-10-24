@@ -1,6 +1,6 @@
 # Yureeh Dairy Hub — Engineering Rules and Handoff
 
-Last updated: 2026-10-18
+Last updated: 2026-10-24
 
 ## Project context
 
@@ -532,3 +532,13 @@ The New Expense selection still submits through the generic expenses insert path
 ## 2026-10-22 — Separate feed operations from generic expenses
 
 Decision: generic Expenses and Expense Categories are only for non-feed farm expenses. Feed items are added in Feed Master and feed purchases are recorded through Feed Purchases. Keep FEED accounting categories in the database for the dedicated feed-purchase accounting workflow; hide them only from generic expense selection and category management. Never remove or rewrite historical feed-linked expense/purchase records as part of this UI separation.
+
+
+## Customer detail navigation — 2026-10-24
+
+- **Branch:** `feature/customer-detail-navigation`, created from the latest observed `master`.
+- **Change:** Added a `View details` button in every customer directory row, linking to `/customers/[id]`. The button is visible to Viewer accounts as well as editable roles; existing Edit, Rate, Pause/Activate actions remain restricted to non-Viewer roles. The Edit action still opens its existing modal.
+- **Purpose:** Expose the existing customer detail page, including the customer payment form and payment history, from the directory.
+- **Changed files:** `src/features/customers/CustomersPage.tsx`, `docs/WORKFLOW_AND_HANDOFF.md`.
+- **Verification boundary:** GitHub source inspection and read-back only. Local typecheck, lint, build and browser checks were not run.
+- **PR/merge:** Not created. User owns PR and merge.
