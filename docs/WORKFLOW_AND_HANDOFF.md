@@ -542,3 +542,12 @@ Decision: generic Expenses and Expense Categories are only for non-feed farm exp
 - **Changed files:** `src/features/customers/CustomersPage.tsx`, `docs/WORKFLOW_AND_HANDOFF.md`.
 - **Verification boundary:** GitHub source inspection and read-back only. Local typecheck, lint, build and browser checks were not run.
 - **PR/merge:** Not created. User owns PR and merge.
+
+
+### Customer detail history pagination — 2026-10-24
+
+- Continued on `feature/customer-detail-navigation`; no branch switch.
+- Added independent 20/50/100 page-size selectors, visible result counts, and Previous/Next controls to payment history and milk entry history on the customer detail page.
+- Current limitation: pagination is presentation-side over the already loaded history data. Milk entry history remains capped by the existing detail query at 500 rows; payment history is still loaded as a full result set. Server-side pagination should be a follow-up before history volume grows significantly.
+- Verification: GitHub read-back/static inspection only; local typecheck, lint, build and browser tests were not run.
+- PR/merge: not created. User owns PR and merge.
