@@ -8,14 +8,13 @@ import {
   createCustomer,
   getCustomerDetails,
   getCustomerDirectory,
-  getCustomerEntryHistoryPage,
-  getCustomerPaymentsPage,
+  getCustomerPayments,
   recordCustomerPayment,
   setCustomerActive,
   updateCustomer,
   updateCustomerPricing,
 } from './services/customer.service';
-import type { CustomerEntry, CustomerFinancialSummary, CustomerSummary } from './types';
+import type { CustomerEntry, CustomerFinancialSummary, CustomerPayment, CustomerSummary } from './types';
 
 const requireSupabase = () => {
   if (!supabase) throw new Error('Supabase is not configured.');
@@ -41,18 +40,10 @@ export function useCustomerDetailQuery(customerId: string) {
   });
 }
 
-export function useCustomerPaymentsQuery(customerId: string, page: number, pageSize: number) {
-  return useQuery({
-    queryKey: [...customerQueryKeys.payments(customerId), page, pageSize],
-    queryFn: () => getCustomerPaymentsPage(requireSupabase(), customerId, page, pageSize),
-    enabled: Boolean(customerId),
-  });
-}
-
-export function useCustomerEntryHistoryQuery(customerId: string, page: number, pageSize: number) {
-  return useQuery({
-    queryKey: [...customerQueryKeys.detail(customerId), 'entry-history', page, pageSize],
-    queryFn: () => getCustomerEntryHistoryPage(requireSupabase(), customerId, page, pageSize),
+export function useCustomerPaymentsQuery(customerId: string) {
+  return useQuery<CustomerPayment[], Error>({
+    queryKey: customerQueryKeys.payments(customerId),
+    queryFn: () => getCustomerPayments(requireSupabase(), customerId),
     enabled: Boolean(customerId),
   });
 }
