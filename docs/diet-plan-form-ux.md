@@ -16,3 +16,10 @@ Base: `master` at `6409336b6faecf4c3dd943e26ad1c73520857b2f`
 - Static source inspection confirms prepend behavior and the compact responsive layout.
 - Local lint, typecheck, build, browser testing, and Supabase verification were not run in this environment.
 - Date-readability regression scan: this change does not alter any displayed dates or date ranges.
+
+## Follow-up: compact overall form
+- Plan details now use a responsive four-column desktop grid and two-column medium-screen grid.
+- Reduced vertical spacing and made the notes field shorter.
+- Buffalo selection uses a compact responsive multi-column grid with tighter row spacing.
+- Plan name and status controls use reduced heights.
+- Validation: source-level inspection only; browser, lint, typecheck, and build remain unrun.
