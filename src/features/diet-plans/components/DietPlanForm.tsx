@@ -146,7 +146,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
 
       <div className="row" style={{ marginTop: 28 }}>
         <h2 className="section-title">Feed quantities per feeding</h2>
-        <Button type="button" variant="outline" disabled={busy} onClick={() => setField('items', [blankItem(), ...values.items])}>+ Add feed</Button>
+        <Button type="button" variant="default" disabled={busy} onClick={() => setField('items', [blankItem(), ...values.items])}>+ Add feed</Button>
       </div>
       {errors.items && <span className="auth-message">{errors.items}</span>}
       <div className="management-stack" style={{ gap: 8, marginTop: 10 }}>
