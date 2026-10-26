@@ -551,3 +551,13 @@ Decision: generic Expenses and Expense Categories are only for non-feed farm exp
 - Current limitation: pagination is presentation-side over the already loaded history data. Milk entry history remains capped by the existing detail query at 500 rows; payment history is still loaded as a full result set. Server-side pagination should be a follow-up before history volume grows significantly.
 - Verification: GitHub read-back/static inspection only; local typecheck, lint, build and browser tests were not run.
 - PR/merge: not created. User owns PR and merge.
+
+
+### Add Customer modal — 2026-10-26
+
+- Continued on `feature/customer-detail-navigation` as requested.
+- Replaced the inline Add Customer card with an Add Customer button that opens the shared `Dialog` pattern already used by Edit Customer and customer pricing.
+- Preserved fields and defaults (name, pricing model defaulting to fixed per litre, default rate), current Supabase-backed mutation, query invalidation, and viewer-role restriction.
+- Inputs are disabled while saving; dialog cannot be dismissed through its open-change handler while the mutation is pending. Cancel/close controls are disabled while saving.
+- Verification boundary: GitHub source read-back/static review only. Local `npm ci`, typecheck, lint, formatting, build and browser/regression tests were not run.
+- PR/merge: not created. User owns PR and merge.
