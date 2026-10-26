@@ -212,3 +212,49 @@ export async function getActiveCustomersForMilkEntry(client: SupabaseClient) {
   if (error) throw new Error('Could not load active customers. Please try again.');
   return (data ?? []) as CustomerOption[];
 }
+
+
+export type CustomerHistoryPage<T> = {
+  rows: T[];
+  totalCount: number;
+};
+
+export async function getCustomerEntryHistoryPage(
+  client: SupabaseClient,
+  customerId: string,
+  page: number,
+  pageSize: number,
+): Promise<CustomerHistoryPage<CustomerEntry>> {
+  const from = (page - 1) * pageSize;
+  const { data, error, count } = await client
+    .from('milk_entries')
+    .select('id,business_date,shift,milk_quantity,fat,pricing_type,applied_rate,calculated_amount', { count: 'exact' })
+    .eq('customer_id', customerId)
+    .is('deleted_at', null)
+    .order('business_date', { ascending: false })
+    .order('shift', { ascending: true })
+    .range(from, from + pageSize - 1);
+  if (error) throw new Error('Could not load customer entry history. Please try again.');
+  return { rows: (data ?? []) as CustomerEntry[], totalCount: count ?? 0 };
+}
+
+export async function getCustomerPaymentsPage(
+  client: SupabaseClient,
+  customerId: string,
+  page: number,
+  pageSize: number,
+): Promise<CustomerHistoryPage<CustomerPayment>> {
+  const from = (page - 1) * pageSize;
+  const { data, error, count } = await client
+    .from('customer_payments')
+    .select('id,payment_date,amount,payment_method,transaction_reference,notes', { count: 'exact' })
+    .eq('customer_id', customerId)
+    .order('payment_date', { ascending: false })
+    .order('created_at', { ascending: false })
+    .range(from, from + pageSize - 1);
+  if (error) throw new Error('Could not load customer payment history. Please try again.');
+  return {
+    rows: (data ?? []).map((payment) => ({ ...payment, amount: Number(payment.amount) })) as CustomerPayment[],
+    totalCount: count ?? 0,
+  };
+}
