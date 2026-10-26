@@ -124,7 +124,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
         </FormField>
         <div className="field" style={{ gridColumn: '1 / -1' }}>
           <Label htmlFor="diet-plan-notes">Notes</Label>
-          <Textarea id="diet-plan-notes" rows={2} maxLength={1000} value={values.notes ?? ''} disabled={busy} onChange={(e) => setField('notes', e.target.value)} />
+          <Textarea className="min-h-12" id="diet-plan-notes" rows={1} maxLength={1000} value={values.notes ?? ''} disabled={busy} onChange={(e) => setField('notes', e.target.value)} />
         </div>
       </div>
 
