@@ -89,14 +89,14 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
     <form className="card space-y-4" onSubmit={submit}>
       <h2 className="section-title mb-0">Plan details</h2>
       <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
-        <div className="field">
-          <Label htmlFor="diet-plan-name">Plan name</Label>
-          <Input id="diet-plan-name" value={values.name} maxLength={120} disabled={busy} aria-invalid={!!errors.name} onChange={(e) => setField('name', e.target.value)} />
+        <div className="field" style={{ gap: 4 }}>
+          <Label className="text-xs" htmlFor="diet-plan-name">Plan name</Label>
+          <Input className="h-9" id="diet-plan-name" value={values.name} maxLength={120} disabled={busy} aria-invalid={!!errors.name} onChange={(e) => setField('name', e.target.value)} />
           {errors.name && <span className="auth-message">{errors.name}</span>}
         </div>
-        <div className="field">
-          <Label htmlFor="diet-plan-status">Status</Label>
-          <Select value={values.status} onValueChange={(value) => setField('status', value as DietPlanFormValues['status'])} disabled={busy}><SelectTrigger id="diet-plan-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ACTIVE">Active</SelectItem><SelectItem value="PAUSED">Paused</SelectItem><SelectItem value="STOPPED">Stopped</SelectItem></SelectContent></Select>
+        <div className="field" style={{ gap: 4 }}>
+          <Label className="text-xs" htmlFor="diet-plan-status">Status</Label>
+          <Select value={values.status} onValueChange={(value) => setField('status', value as DietPlanFormValues['status'])} disabled={busy}><SelectTrigger className="h-9" id="diet-plan-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ACTIVE">Active</SelectItem><SelectItem value="PAUSED">Paused</SelectItem><SelectItem value="STOPPED">Stopped</SelectItem></SelectContent></Select>
         </div>
         <FormField id="diet-plan-start" label="Start date" error={errors.startDate}>
           {(controlProps) => (
@@ -133,9 +133,9 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
         <span className="tag">{values.buffaloIds.length} selected</span>
       </div>
       <p className="sub">Only buffaloes active on the plan start date are listed. Feed quantities below are totals for this entire group, not per buffalo.</p>
-      <div className="management-stack" style={{ gap: 8, marginTop: 12 }}>
+      <div className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2 xl:grid-cols-3" style={{ marginTop: 8 }}>
         {buffaloes.map((buffalo) => (
-          <Label key={buffalo.id} className="row" style={{ justifyContent: 'flex-start', gap: 10, padding: '8px 0' }}>
+          <Label key={buffalo.id} className="row rounded-md px-2 py-1.5 hover:bg-[#f4f8f4]" style={{ justifyContent: 'flex-start', gap: 8, padding: '6px 8px' }}>
             <Checkbox disabled={busy} checked={values.buffaloIds.includes(buffalo.id)} onCheckedChange={(checked) => setField('buffaloIds', checked === true ? [...values.buffaloIds, buffalo.id] : values.buffaloIds.filter((id) => id !== buffalo.id))} />
             <span><b>{buffalo.buffalo_code}</b>{buffalo.name ? ` · ${buffalo.name}` : ''}</span>
           </Label>
