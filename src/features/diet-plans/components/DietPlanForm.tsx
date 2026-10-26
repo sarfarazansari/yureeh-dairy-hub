@@ -146,30 +146,30 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
 
       <div className="row" style={{ marginTop: 28 }}>
         <h2 className="section-title">Feed quantities per feeding</h2>
-        <Button type="button" variant="outline" disabled={busy} onClick={() => setField('items', [...values.items, blankItem()])}>Add feed</Button>
+        <Button type="button" variant="outline" disabled={busy} onClick={() => setField('items', [blankItem(), ...values.items])}>+ Add feed</Button>
       </div>
       {errors.items && <span className="auth-message">{errors.items}</span>}
-      <div className="management-stack" style={{ gap: 12 }}>
+      <div className="management-stack" style={{ gap: 8, marginTop: 10 }}>
         {values.items.map((item, index) => {
           const feed = feeds.find((candidate) => candidate.id === item.feedItemId);
           return (
-            <div className="card" key={index} style={{ padding: 14 }}>
-              <div className="expense-form-grid">
-                <div className="field">
-                  <Label>Feed item</Label>
-                  <Select value={item.feedItemId || undefined} onValueChange={(value) => updateItem(index, 'feedItemId', value)} disabled={busy}><SelectTrigger><SelectValue placeholder="Select feed" /></SelectTrigger><SelectContent>{feeds.map((candidate) => <SelectItem key={candidate.id} value={candidate.id} disabled={selectedFeedIds.has(candidate.id) && candidate.id !== item.feedItemId}>{candidate.name}</SelectItem>)}</SelectContent></Select>
-                  {feed && <span className="sub">Unit: {feed.base_unit}</span>}
+            <div className="card" key={`${item.feedItemId || "new"}-${index}`} style={{ padding: 10, borderColor: "var(--line)", background: "#fcfdfc" }}>
+              <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1.35fr)_minmax(140px,1fr)_minmax(140px,1fr)_auto]">
+                <div className="field" style={{ gap: 4 }}>
+                  <Label className="text-xs">Feed item</Label>
+                  <Select value={item.feedItemId || undefined} onValueChange={(value) => updateItem(index, 'feedItemId', value)} disabled={busy}><SelectTrigger className="h-9"><SelectValue placeholder="Select feed" /></SelectTrigger><SelectContent>{feeds.map((candidate) => <SelectItem key={candidate.id} value={candidate.id} disabled={selectedFeedIds.has(candidate.id) && candidate.id !== item.feedItemId}>{candidate.name}</SelectItem>)}</SelectContent></Select>
+                  {feed && <span className="sub text-xs">Unit: {feed.base_unit}</span>}
                 </div>
-                <div className="field">
-                  <Label>Morning total ({feed?.base_unit ?? 'unit'})</Label>
-                  <Input type="number" min="0" step="0.001" disabled={busy} value={item.morningQuantity} onChange={(e) => updateItem(index, 'morningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
+                <div className="field" style={{ gap: 4 }}>
+                  <Label className="text-xs">Morning total ({feed?.base_unit ?? 'unit'})</Label>
+                  <Input className="h-9" type="number" min="0" step="0.001" disabled={busy} value={item.morningQuantity} onChange={(e) => updateItem(index, 'morningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
                 </div>
-                <div className="field">
-                  <Label>Evening total ({feed?.base_unit ?? 'unit'})</Label>
-                  <Input type="number" min="0" step="0.001" disabled={busy} value={item.eveningQuantity} onChange={(e) => updateItem(index, 'eveningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
+                <div className="field" style={{ gap: 4 }}>
+                  <Label className="text-xs">Evening total ({feed?.base_unit ?? 'unit'})</Label>
+                  <Input className="h-9" type="number" min="0" step="0.001" disabled={busy} value={item.eveningQuantity} onChange={(e) => updateItem(index, 'eveningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
                 </div>
-                <div className="field" style={{ alignSelf: 'end' }}>
-                  <Button type="button" variant="outline" size="sm" disabled={busy || values.items.length === 1} onClick={() => setField('items', values.items.filter((_, itemIndex) => itemIndex !== index))}>Remove</Button>
+                <div className="field" style={{ alignSelf: 'end', paddingBottom: 1 }}>
+                  <Button type="button" variant="destructive" size="sm" disabled={busy || values.items.length === 1} onClick={() => setField('items', values.items.filter((_, itemIndex) => itemIndex !== index))}>Remove</Button>
                 </div>
               </div>
             </div>
