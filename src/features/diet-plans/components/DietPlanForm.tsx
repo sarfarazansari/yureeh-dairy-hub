@@ -158,7 +158,6 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
                 <div className="field" style={{ gap: 4 }}>
                   <Label className="text-xs">Feed item</Label>
                   <Select value={item.feedItemId || undefined} onValueChange={(value) => updateItem(index, 'feedItemId', value)} disabled={busy}><SelectTrigger className="h-9"><SelectValue placeholder="Select feed" /></SelectTrigger><SelectContent>{feeds.map((candidate) => <SelectItem key={candidate.id} value={candidate.id} disabled={selectedFeedIds.has(candidate.id) && candidate.id !== item.feedItemId}>{candidate.name}</SelectItem>)}</SelectContent></Select>
-                  {feed && <span className="sub text-xs">Unit: {feed.base_unit}</span>}
                 </div>
                 <div className="field" style={{ gap: 4 }}>
                   <Label className="text-xs">Morning total ({feed?.base_unit ?? 'unit'})</Label>
@@ -168,8 +167,9 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
                   <Label className="text-xs">Evening total ({feed?.base_unit ?? 'unit'})</Label>
                   <Input className="h-9" type="number" min="0" step="0.001" disabled={busy} value={item.eveningQuantity} onChange={(e) => updateItem(index, 'eveningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
                 </div>
-                <div className="field" style={{ alignSelf: 'end', paddingBottom: 1 }}>
-                  <Button type="button" variant="destructive" size="sm" disabled={busy || values.items.length === 1} onClick={() => setField('items', values.items.filter((_, itemIndex) => itemIndex !== index))}>Remove</Button>
+                <div className="field" style={{ alignSelf: 'end' }}>
+                  <Label className="text-xs">&nbsp;</Label>
+                  <Button type="button" variant="destructive" disabled={busy || values.items.length === 1} onClick={() => setField('items', values.items.filter((_, itemIndex) => itemIndex !== index))}>Remove</Button>
                 </div>
               </div>
             </div>
