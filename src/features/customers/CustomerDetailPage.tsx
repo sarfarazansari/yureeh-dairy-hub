@@ -38,6 +38,10 @@ export default function CustomerDetailPage({ id }: { id: string }) {
   const detailQuery = useCustomerDetailQuery(id);
   const paymentsQuery = useCustomerPaymentsQuery(id);
   const paymentMutation = useRecordCustomerPaymentMutation();
+  const [paymentPage, setPaymentPage] = useState(1);
+  const [entryPage, setEntryPage] = useState(1);
+  const [paymentPageSize, setPaymentPageSize] = useState(20);
+  const [entryPageSize, setEntryPageSize] = useState(20);
   const [paymentDate, setPaymentDate] = useState(() => localDateKey());
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<CustomerPaymentMethod>('CASH');
@@ -47,7 +51,13 @@ export default function CustomerDetailPage({ id }: { id: string }) {
   const c = detailQuery.data?.customer ?? null;
   const rows = detailQuery.data?.entries ?? [];
   const financialSummary = detailQuery.data?.financialSummary;
-  const payments = paymentsQuery.data ?? [];
+  const allPayments = paymentsQuery.data ?? [];
+  const paymentCount = allPayments.length;
+  const paymentPageCount = Math.max(1, Math.ceil(paymentCount / paymentPageSize));
+  const payments = allPayments.slice((paymentPage - 1) * paymentPageSize, paymentPage * paymentPageSize);
+  const entryCount = rows.length;
+  const entryPageCount = Math.max(1, Math.ceil(entryCount / entryPageSize));
+  const entryHistory = rows.slice((entryPage - 1) * entryPageSize, entryPage * entryPageSize);
   const total = financialSummary?.total_milk_quantity ?? 0,
     rev = financialSummary?.total_sales_amount ?? 0,
     paymentsTotal = financialSummary?.total_payments_amount ?? 0,
@@ -215,7 +225,7 @@ export default function CustomerDetailPage({ id }: { id: string }) {
 
       <div style={{ height: 14 }} />
       <div className="card">
-        <h2 className="section-title">Recent payment history (latest 500)</h2>
+        <div className="row" style={{ alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}><h2 className="section-title">Payment history</h2><label className="flex items-center gap-2 text-sm">Show <Select value={String(paymentPageSize)} onValueChange={(value) => { setPaymentPageSize(Number(value)); setPaymentPage(1); }}><SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="20">20</SelectItem><SelectItem value="50">50</SelectItem><SelectItem value="100">100</SelectItem></SelectContent></Select> per page</label></div><p className="sub">{paymentCount ? `Showing ${(paymentPage - 1) * paymentPageSize + 1}–${Math.min(paymentPage * paymentPageSize, paymentCount)} of ${paymentCount} payments` : "0 payments"}</p>
         {paymentsQuery.isPending ? (
           <div className="empty">Loading payments…</div>
         ) : paymentsQuery.isError ? (
@@ -225,13 +235,15 @@ export default function CustomerDetailPage({ id }: { id: string }) {
         ) : (
           <div className="empty">No customer payments recorded yet.</div>
         )}
+        {!paymentsQuery.isPending && !paymentsQuery.isError && paymentCount > 0 && <div className="mt-3 flex items-center justify-between gap-3"><Button variant="outline" size="sm" disabled={paymentPage <= 1} onClick={() => setPaymentPage((page) => page - 1)}>Previous</Button><span className="text-sm">Page {paymentPage} of {paymentPageCount}</span><Button variant="outline" size="sm" disabled={paymentPage >= paymentPageCount} onClick={() => setPaymentPage((page) => page + 1)}>Next</Button></div>}
       </div>
 
       <div style={{ height: 14 }} />
       <div className="card">
-        <h2 className="section-title">Recent entry history (latest 500)</h2>
-                <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[750px]"><TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>SHIFT</TableHead><TableHead>MILK</TableHead><TableHead>FAT</TableHead><TableHead>RATE SNAPSHOT</TableHead><TableHead>AMOUNT</TableHead></TableRow></TableHeader><TableBody>{rows.map((r) => <TableRow key={r.id}><TableCell>{formatDate(r.business_date)}</TableCell><TableCell>{r.shift}</TableCell><TableCell>{milkTxt(Number(r.milk_quantity))}</TableCell><TableCell>{r.fat == null ? '—' : `${r.fat}%`}</TableCell><TableCell>{r.pricing_type === 'FIXED_PER_LITRE' ? `₹${r.applied_rate}/L` : `₹${r.applied_rate}/fat`}</TableCell><TableCell>{money(Number(r.calculated_amount))}</TableCell></TableRow>)}</TableBody></Table></div>
-        {!rows.length && <div className="empty">No entries for this customer yet.</div>}
+        <div className="row" style={{ alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}><h2 className="section-title">Milk entry history</h2><label className="flex items-center gap-2 text-sm">Show <Select value={String(entryPageSize)} onValueChange={(value) => { setEntryPageSize(Number(value)); setEntryPage(1); }}><SelectTrigger className="w-[90px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="20">20</SelectItem><SelectItem value="50">50</SelectItem><SelectItem value="100">100</SelectItem></SelectContent></Select> per page</label></div><p className="sub">{entryCount ? `Showing ${(entryPage - 1) * entryPageSize + 1}–${Math.min(entryPage * entryPageSize, entryCount)} of ${entryCount} entries` : "0 entries"}</p>
+                <div className="w-full min-w-0 overflow-x-auto rounded-md border border-[var(--line)]"><Table className="min-w-[750px]"><TableHeader><TableRow><TableHead>DATE</TableHead><TableHead>SHIFT</TableHead><TableHead>MILK</TableHead><TableHead>FAT</TableHead><TableHead>RATE SNAPSHOT</TableHead><TableHead>AMOUNT</TableHead></TableRow></TableHeader><TableBody>{entryHistory.map((r) => <TableRow key={r.id}><TableCell>{formatDate(r.business_date)}</TableCell><TableCell>{r.shift}</TableCell><TableCell>{milkTxt(Number(r.milk_quantity))}</TableCell><TableCell>{r.fat == null ? '—' : `${r.fat}%`}</TableCell><TableCell>{r.pricing_type === 'FIXED_PER_LITRE' ? `₹${r.applied_rate}/L` : `₹${r.applied_rate}/fat`}</TableCell><TableCell>{money(Number(r.calculated_amount))}</TableCell></TableRow>)}</TableBody></Table></div>
+        {!entryHistory.length && <div className="empty">No entries for this customer yet.</div>}
+        {entryCount > 0 && <div className="mt-3 flex items-center justify-between gap-3"><Button variant="outline" size="sm" disabled={entryPage <= 1} onClick={() => setEntryPage((page) => page - 1)}>Previous</Button><span className="text-sm">Page {entryPage} of {entryPageCount}</span><Button variant="outline" size="sm" disabled={entryPage >= entryPageCount} onClick={() => setEntryPage((page) => page + 1)}>Next</Button></div>}
       </div>
     </AppShell>
   );
