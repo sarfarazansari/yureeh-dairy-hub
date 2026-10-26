@@ -29,7 +29,8 @@ import type { CustomerSummary } from './types';
 import { useIsViewer } from '@/lib/farm-access';
 export default function CustomersPage() {
   const isViewer = useIsViewer();
-  const [name, setName] = useState(''),
+  const [createOpen, setCreateOpen] = useState(false),
+    [name, setName] = useState(''),
     [rate, setRate] = useState(''),
     [type, setType] = useState<PricingType>('FIXED_PER_LITRE'),
     [pricingCustomer, setPricingCustomer] = useState<CustomerSummary | null>(null),
@@ -67,6 +68,7 @@ export default function CustomersPage() {
       });
       setName('');
       setRate('');
+      setCreateOpen(false);
       setMessage('Customer added.');
     } catch (createError) {
       setMessage(createError instanceof Error ? createError.message : 'Could not add customer.');
@@ -143,44 +145,9 @@ export default function CustomersPage() {
   return (
     <AppShell title="Customers" subtitle="Manage customer pricing and sales history">
       <div className="management-stack">
-        {!isViewer && <form className="card customer-create-card" onSubmit={create}>
-          <h2 className="section-title customer-create-heading">Add customer</h2>
-          <div className="field">
-            <Label htmlFor="customer-create-name">Name</Label>
-            <Input
-              id="customer-create-name"
-              required
-              disabled={busy}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Customer or party name"
-            />
-          </div>
-          <div className="field">
-            <Label htmlFor="customer-create-pricing">Pricing model</Label>
-            <Select value={type} disabled={busy} onValueChange={(value) => setType(value as PricingType)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent><SelectItem value="FIXED_PER_LITRE">Fixed per litre</SelectItem><SelectItem value="FAT_BASED">Fat based</SelectItem></SelectContent>
-            </Select>
-          </div>
-          <div className="field">
-            <Label htmlFor="customer-create-rate">Default rate · ₹</Label>
-            <Input
-              id="customer-create-rate"
-              required
-              disabled={busy}
-              min="0.01"
-              step="0.01"
-              type="number"
-              value={rate}
-              onChange={(e) => setRate(e.target.value)}
-            />
-          </div>
-          <Button type="submit" className="customer-create-submit" disabled={busy}>
-            {busy ? 'Saving…' : 'Add customer'}
-          </Button>
-          {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
-        </form>}
+        <div className="row" style={{ justifyContent: 'flex-end' }}>
+          {!isViewer && <Button type="button" onClick={() => { setMessage(''); setCreateOpen(true); }}>Add customer</Button>}
+        </div>
         <div className="card">
           <div className="row">
             <h2 className="section-title">Customer directory</h2>
@@ -221,6 +188,45 @@ export default function CustomersPage() {
           )}
         </div>
       </div>
+      <Dialog
+        open={createOpen}
+        onOpenChange={(open) => {
+          if (!open && !busy) setCreateOpen(false);
+        }}
+        labelledBy="customer-create-title"
+      >
+        <form onSubmit={create}>
+          <div className="dialog-header">
+            <div>
+              <p className="eyebrow">CUSTOMER PROFILE</p>
+              <h2 className="dialog-title" id="customer-create-title">Add customer</h2>
+              <p className="dialog-description">Create a customer and set their initial pricing.</p>
+            </div>
+            <Button variant="ghost" size="icon" type="button" aria-label="Close add customer dialog" disabled={busy} onClick={() => setCreateOpen(false)}>×</Button>
+          </div>
+          <div className="field">
+            <Label htmlFor="customer-create-name">Name</Label>
+            <Input id="customer-create-name" required disabled={busy} value={name} onChange={(event) => setName(event.target.value)} placeholder="Customer or party name" />
+          </div>
+          <div className="field">
+            <Label htmlFor="customer-create-pricing">Pricing model</Label>
+            <Select value={type} disabled={busy} onValueChange={(value) => setType(value as PricingType)}>
+              <SelectTrigger id="customer-create-pricing"><SelectValue /></SelectTrigger>
+              <SelectContent><SelectItem value="FIXED_PER_LITRE">Fixed per litre</SelectItem><SelectItem value="FAT_BASED">Fat based</SelectItem></SelectContent>
+            </Select>
+          </div>
+          <div className="field">
+            <Label htmlFor="customer-create-rate">Default rate · ₹</Label>
+            <Input id="customer-create-rate" required disabled={busy} min="0.01" step="0.01" type="number" value={rate} onChange={(event) => setRate(event.target.value)} />
+          </div>
+          {message && <TimedNotice message={message} onDismiss={() => setMessage('')} />}
+          <div className="dialog-footer">
+            <Button variant="secondary" type="button" disabled={busy} onClick={() => setCreateOpen(false)}>Cancel</Button>
+            <Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Add customer'}</Button>
+          </div>
+        </form>
+      </Dialog>
+
       <Dialog
         open={!!editCustomer}
         onOpenChange={(open) => {
