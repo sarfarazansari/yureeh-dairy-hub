@@ -86,17 +86,17 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
   }
 
   return (
-    <form className="card" onSubmit={submit}>
-      <h2 className="section-title">Plan details</h2>
-      <div className="expense-form-grid">
-        <div className="field">
-          <Label htmlFor="diet-plan-name">Plan name</Label>
-          <Input id="diet-plan-name" value={values.name} maxLength={120} disabled={busy} aria-invalid={!!errors.name} onChange={(e) => setField('name', e.target.value)} />
+    <form className="card space-y-4" onSubmit={submit}>
+      <h2 className="section-title mb-0">Plan details</h2>
+      <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="field" style={{ gap: 4 }}>
+          <Label className="text-xs" htmlFor="diet-plan-name">Plan name</Label>
+          <Input className="h-9" id="diet-plan-name" value={values.name} maxLength={120} disabled={busy} aria-invalid={!!errors.name} onChange={(e) => setField('name', e.target.value)} />
           {errors.name && <span className="auth-message">{errors.name}</span>}
         </div>
-        <div className="field">
-          <Label htmlFor="diet-plan-status">Status</Label>
-          <Select value={values.status} onValueChange={(value) => setField('status', value as DietPlanFormValues['status'])} disabled={busy}><SelectTrigger id="diet-plan-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ACTIVE">Active</SelectItem><SelectItem value="PAUSED">Paused</SelectItem><SelectItem value="STOPPED">Stopped</SelectItem></SelectContent></Select>
+        <div className="field" style={{ gap: 4 }}>
+          <Label className="text-xs" htmlFor="diet-plan-status">Status</Label>
+          <Select value={values.status} onValueChange={(value) => setField('status', value as DietPlanFormValues['status'])} disabled={busy}><SelectTrigger className="h-9" id="diet-plan-status"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="ACTIVE">Active</SelectItem><SelectItem value="PAUSED">Paused</SelectItem><SelectItem value="STOPPED">Stopped</SelectItem></SelectContent></Select>
         </div>
         <FormField id="diet-plan-start" label="Start date" error={errors.startDate}>
           {(controlProps) => (
@@ -124,18 +124,18 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
         </FormField>
         <div className="field" style={{ gridColumn: '1 / -1' }}>
           <Label htmlFor="diet-plan-notes">Notes</Label>
-          <Textarea id="diet-plan-notes" rows={2} maxLength={1000} value={values.notes ?? ''} disabled={busy} onChange={(e) => setField('notes', e.target.value)} />
+          <Textarea className="min-h-12" id="diet-plan-notes" rows={1} maxLength={1000} value={values.notes ?? ''} disabled={busy} onChange={(e) => setField('notes', e.target.value)} />
         </div>
       </div>
 
-      <div className="row" style={{ marginTop: 24 }}>
+      <div className="row" style={{ marginTop: 8 }}>
         <h2 className="section-title">Buffalo group</h2>
         <span className="tag">{values.buffaloIds.length} selected</span>
       </div>
       <p className="sub">Only buffaloes active on the plan start date are listed. Feed quantities below are totals for this entire group, not per buffalo.</p>
-      <div className="management-stack" style={{ gap: 8, marginTop: 12 }}>
+      <div className="grid grid-cols-1 gap-x-4 gap-y-1 sm:grid-cols-2 xl:grid-cols-3" style={{ marginTop: 8 }}>
         {buffaloes.map((buffalo) => (
-          <Label key={buffalo.id} className="row" style={{ justifyContent: 'flex-start', gap: 10, padding: '8px 0' }}>
+          <Label key={buffalo.id} className="row rounded-md px-2 py-1.5 hover:bg-[#f4f8f4]" style={{ justifyContent: 'flex-start', gap: 8, padding: '6px 8px' }}>
             <Checkbox disabled={busy} checked={values.buffaloIds.includes(buffalo.id)} onCheckedChange={(checked) => setField('buffaloIds', checked === true ? [...values.buffaloIds, buffalo.id] : values.buffaloIds.filter((id) => id !== buffalo.id))} />
             <span><b>{buffalo.buffalo_code}</b>{buffalo.name ? ` · ${buffalo.name}` : ''}</span>
           </Label>
@@ -144,32 +144,32 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
       </div>
       {errors.buffaloIds && <span className="auth-message">{errors.buffaloIds}</span>}
 
-      <div className="row" style={{ marginTop: 28 }}>
+      <div className="row" style={{ marginTop: 12 }}>
         <h2 className="section-title">Feed quantities per feeding</h2>
-        <Button type="button" variant="outline" disabled={busy} onClick={() => setField('items', [...values.items, blankItem()])}>Add feed</Button>
+        <Button className="!text-white" type="button" variant="default" disabled={busy} onClick={() => setField('items', [blankItem(), ...values.items])}>+ Add feed</Button>
       </div>
       {errors.items && <span className="auth-message">{errors.items}</span>}
-      <div className="management-stack" style={{ gap: 12 }}>
+      <div className="management-stack" style={{ gap: 8, marginTop: 10 }}>
         {values.items.map((item, index) => {
           const feed = feeds.find((candidate) => candidate.id === item.feedItemId);
           return (
-            <div className="card" key={index} style={{ padding: 14 }}>
-              <div className="expense-form-grid">
-                <div className="field">
-                  <Label>Feed item</Label>
-                  <Select value={item.feedItemId || undefined} onValueChange={(value) => updateItem(index, 'feedItemId', value)} disabled={busy}><SelectTrigger><SelectValue placeholder="Select feed" /></SelectTrigger><SelectContent>{feeds.map((candidate) => <SelectItem key={candidate.id} value={candidate.id} disabled={selectedFeedIds.has(candidate.id) && candidate.id !== item.feedItemId}>{candidate.name}</SelectItem>)}</SelectContent></Select>
-                  {feed && <span className="sub">Unit: {feed.base_unit}</span>}
+            <div className="card" key={`${item.feedItemId || "new"}-${index}`} style={{ padding: 10, borderColor: "var(--line)", background: "#fcfdfc" }}>
+              <div className="grid grid-cols-1 items-end gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1.35fr)_minmax(140px,1fr)_minmax(140px,1fr)_auto]">
+                <div className="field" style={{ gap: 4 }}>
+                  <Label className="text-xs">Feed item</Label>
+                  <Select value={item.feedItemId || undefined} onValueChange={(value) => updateItem(index, 'feedItemId', value)} disabled={busy}><SelectTrigger className="h-9"><SelectValue placeholder="Select feed" /></SelectTrigger><SelectContent>{feeds.map((candidate) => <SelectItem key={candidate.id} value={candidate.id} disabled={selectedFeedIds.has(candidate.id) && candidate.id !== item.feedItemId}>{candidate.name}</SelectItem>)}</SelectContent></Select>
                 </div>
-                <div className="field">
-                  <Label>Morning total ({feed?.base_unit ?? 'unit'})</Label>
-                  <Input type="number" min="0" step="0.001" disabled={busy} value={item.morningQuantity} onChange={(e) => updateItem(index, 'morningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
+                <div className="field" style={{ gap: 4 }}>
+                  <Label className="text-xs">Morning total ({feed?.base_unit ?? 'unit'})</Label>
+                  <Input className="h-9" type="number" min="0" step="0.001" disabled={busy} value={item.morningQuantity} onChange={(e) => updateItem(index, 'morningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
                 </div>
-                <div className="field">
-                  <Label>Evening total ({feed?.base_unit ?? 'unit'})</Label>
-                  <Input type="number" min="0" step="0.001" disabled={busy} value={item.eveningQuantity} onChange={(e) => updateItem(index, 'eveningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
+                <div className="field" style={{ gap: 4 }}>
+                  <Label className="text-xs">Evening total ({feed?.base_unit ?? 'unit'})</Label>
+                  <Input className="h-9" type="number" min="0" step="0.001" disabled={busy} value={item.eveningQuantity} onChange={(e) => updateItem(index, 'eveningQuantity', e.target.value === '' ? 0 : Number(e.target.value))} />
                 </div>
                 <div className="field" style={{ alignSelf: 'end' }}>
-                  <Button type="button" variant="outline" size="sm" disabled={busy || values.items.length === 1} onClick={() => setField('items', values.items.filter((_, itemIndex) => itemIndex !== index))}>Remove</Button>
+                  <Label className="text-xs">&nbsp;</Label>
+                  <Button type="button" variant="destructive" disabled={busy || values.items.length === 1} onClick={() => setField('items', values.items.filter((_, itemIndex) => itemIndex !== index))}>Remove</Button>
                 </div>
               </div>
             </div>
@@ -178,7 +178,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
       </div>
       <p className="sub" style={{ marginTop: 12 }}>Scheduled slots: morning and evening (Asia/Kolkata). Exact clock times will be configured with the scheduler in the next phase.</p>
       {errors.form && <div className="auth-message" role="alert">{errors.form}</div>}
-      <div className="row" style={{ marginTop: 20 }}>
+      <div className="row" style={{ marginTop: 8 }}>
         <Button type="submit" disabled={busy}>{busy ? 'Saving…' : submitLabel}</Button>
       </div>
     </form>
