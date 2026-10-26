@@ -86,9 +86,9 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
   }
 
   return (
-    <form className="card" onSubmit={submit}>
-      <h2 className="section-title">Plan details</h2>
-      <div className="expense-form-grid">
+    <form className="card space-y-4" onSubmit={submit}>
+      <h2 className="section-title mb-0">Plan details</h2>
+      <div className="grid grid-cols-1 gap-x-4 gap-y-3 md:grid-cols-2 xl:grid-cols-4">
         <div className="field">
           <Label htmlFor="diet-plan-name">Plan name</Label>
           <Input id="diet-plan-name" value={values.name} maxLength={120} disabled={busy} aria-invalid={!!errors.name} onChange={(e) => setField('name', e.target.value)} />
@@ -128,7 +128,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
         </div>
       </div>
 
-      <div className="row" style={{ marginTop: 24 }}>
+      <div className="row" style={{ marginTop: 8 }}>
         <h2 className="section-title">Buffalo group</h2>
         <span className="tag">{values.buffaloIds.length} selected</span>
       </div>
@@ -144,7 +144,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
       </div>
       {errors.buffaloIds && <span className="auth-message">{errors.buffaloIds}</span>}
 
-      <div className="row" style={{ marginTop: 28 }}>
+      <div className="row" style={{ marginTop: 12 }}>
         <h2 className="section-title">Feed quantities per feeding</h2>
         <Button className="!text-white" type="button" variant="default" disabled={busy} onClick={() => setField('items', [blankItem(), ...values.items])}>+ Add feed</Button>
       </div>
@@ -178,7 +178,7 @@ export function DietPlanForm({ feeds, buffaloes, onDateChange, onSave, busy, ini
       </div>
       <p className="sub" style={{ marginTop: 12 }}>Scheduled slots: morning and evening (Asia/Kolkata). Exact clock times will be configured with the scheduler in the next phase.</p>
       {errors.form && <div className="auth-message" role="alert">{errors.form}</div>}
-      <div className="row" style={{ marginTop: 20 }}>
+      <div className="row" style={{ marginTop: 8 }}>
         <Button type="submit" disabled={busy}>{busy ? 'Saving…' : submitLabel}</Button>
       </div>
     </form>
